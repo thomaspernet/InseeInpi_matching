@@ -1,0 +1,1383 @@
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:black;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:black;}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+</style>
+<table class="tg">
+  <tr>
+    <th class="tg-0pky">Balise</th>
+    <th class="tg-0pky">Libellé traité</th>
+    <th class="tg-0pky">Commentaires</th>
+    <th class="tg-0pky">O/F</th>
+    <th class="tg-0pky">M/P</th>
+    <th class="tg-0pky">Chemin</th>
+    <th class="tg-0pky">tag</th>
+    <th class="tg-0pky">Correspondance TC</th>
+    <th class="tg-0pky">Réf. Fichiers</th>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Numéro de RCS (Précédé de statut)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">rcs</td>
+    <td class="tg-0pky">Siren (hors éléments relatifs au statut)</td>
+    <td class="tg-0pky">En-tęte</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">1 partie du nom ou Raison sociale</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">nom_raison_soc</td>
+    <td class="tg-0pky">Nom_PatronymiqueDenomination</td>
+    <td class="tg-0pky">PP, PP_EVTPM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">2 partie du nom (Prénom)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">prenom</td>
+    <td class="tg-0pky">Prénoms</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Code forme juridique</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">code_form_jur</td>
+    <td class="tg-0pky">Forme_Juridique</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Complément information Forme juridique</td>
+    <td class="tg-0pky">Valeur 1 : Associé unique</td>
+    <td class="tg-0pky">F</td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">assoc_unique</td>
+    <td class="tg-0pky">Associé_Unique</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Nom - Ligne 1</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">nom_1</td>
+    <td class="tg-0pky">Adresse_Ligne1Adresse_Ligne2Adresse_Ligne3Code_PostalVilleCode_CommunePays</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Ligne 2</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">nom_2</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Résidence - Ligne 3</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">resid</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge  N° de voie - Ligne 4</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">num_voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Type de voie - Ligne 4</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">type_voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Nom de la voie - Ligne 4</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">nom_voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Localité - Ligne 5</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">local</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Code postal - Ligne 6</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">cp</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Bureau + Cedex - Ligne 6</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">bur_cdx</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse Sičge - Pays</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">siege/adr_1</td>
+    <td class="tg-0pky">pays</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Code de radiation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">radiation</td>
+    <td class="tg-0pky">code</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">Voir fichier obs.csv</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Motif de radiation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">radiation</td>
+    <td class="tg-0pky">motif</td>
+    <td class="tg-0pky">Texte</td>
+    <td class="tg-0pky">OBS</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Date de radiation au RCS</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">rad</td>
+    <td class="tg-0pky">dat</td>
+    <td class="tg-0pky">Date_Radiation</td>
+    <td class="tg-0pky">PM_EVTPP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Date dimmatriculation au greffe</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">immat</td>
+    <td class="tg-0pky">dat</td>
+    <td class="tg-0pky">Date_Immatriculation</td>
+    <td class="tg-0pky">PM, PM_EVTPP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Date de premičre immatriculation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">immat</td>
+    <td class="tg-0pky">dat_prem_immat</td>
+    <td class="tg-0pky">Date_1re_Immatriculation</td>
+    <td class="tg-0pky">PM, PM_EVTPP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Date de naissance</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">commerct</td>
+    <td class="tg-0pky">dat_naiss</td>
+    <td class="tg-0pky">Date_Naissance</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Lieu de naissance</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">commerct</td>
+    <td class="tg-0pky">lieu_naiss</td>
+    <td class="tg-0pky">Ville_Naissance</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Code activité</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">ape_naf</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Activités principales de la société</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M ou P</td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">activ_princip</td>
+    <td class="tg-0pky">Activité_Principale</td>
+    <td class="tg-0pky">PM, PM_EVT PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Montant du capital</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">cap</td>
+    <td class="tg-0pky">montant</td>
+    <td class="tg-0pky">Capital</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Devise</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">cap</td>
+    <td class="tg-0pky">devise</td>
+    <td class="tg-0pky">Devise</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Montants (Capital minimum)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">cap</td>
+    <td class="tg-0pky">montant_min</td>
+    <td class="tg-0pky">Capital_Actuel</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Durée de la personne morale (Société)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">durees</td>
+    <td class="tg-0pky">duree_pm</td>
+    <td class="tg-0pky">Durée_PM</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Date de clôture de l'exercice</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">durees</td>
+    <td class="tg-0pky">dat_cloture_jjmm</td>
+    <td class="tg-0pky">Date_Clôture</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Nom d'usage</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">divers</td>
+    <td class="tg-0pky">nom_usage</td>
+    <td class="tg-0pky">Nom_Usage</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Pseudonyme</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">divers</td>
+    <td class="tg-0pky">pseudo</td>
+    <td class="tg-0pky">Pseudonyme</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Sigle</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">divers</td>
+    <td class="tg-0pky">sigle</td>
+    <td class="tg-0pky">Sigle</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Nom commercial</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">divers</td>
+    <td class="tg-0pky">nom_commercial</td>
+    <td class="tg-0pky">Nom_Commercial</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Greffe du sičge</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">divers</td>
+    <td class="tg-0pky">greffe_siege</td>
+    <td class="tg-0pky">Greffe</td>
+    <td class="tg-0pky">En-tęte</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Statut pour édition extraits</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">divers</td>
+    <td class="tg-0pky">statut_edit_extrait</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Date de clôture du 1er exercice</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">prem_exer</td>
+    <td class="tg-0pky">dat_cloture</td>
+    <td class="tg-0pky">Date_Clôture_Except.</td>
+    <td class="tg-0pky">PM, PM_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Date du transfert de sičge</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dern_ajout</td>
+    <td class="tg-0pky">dat_trsft_siege</td>
+    <td class="tg-0pky">Date_Transfert</td>
+    <td class="tg-0pky">PM, PM_EVTPP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Dénomination de la société domiciliataire</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">denom</td>
+    <td class="tg-0pky">Domiciliataire_Nom</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Adresse (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">adr</td>
+    <td class="tg-0pky">Domiciliataire_Complément</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Numéro voie (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">adr_num_voie</td>
+    <td class="tg-0pky">Domiciliataire_Complément</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Type de voie (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">adr_typ_voie</td>
+    <td class="tg-0pky">Domiciliataire_Complément</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Nom de la voie (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">adr_nom_voie</td>
+    <td class="tg-0pky">Domiciliataire_Complément</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Résidence (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">adr_resid</td>
+    <td class="tg-0pky">Domiciliataire_Complément</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Code postal (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">adr_cp</td>
+    <td class="tg-0pky">Domiciliataire_Complément</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Bureau distributeur (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">adr_bur</td>
+    <td class="tg-0pky">Domiciliataire_Complément</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Numéro RCS (société domiciliataire)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">domicil</td>
+    <td class="tg-0pky">rcs</td>
+    <td class="tg-0pky">Domiciliataire_Sirenets</td>
+    <td class="tg-0pky">ets, ets_nouveau_modifie_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Indicateur EIRL</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky">eirl</td>
+    <td class="tg-0pky">eirl_indic</td>
+    <td class="tg-0pky">EIRL</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Dénomination</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky">eirl</td>
+    <td class="tg-0pky">denom</td>
+    <td class="tg-0pky">DAP_Dénomination</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Objet</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky">eirl</td>
+    <td class="tg-0pky">objet</td>
+    <td class="tg-0pky">DAP_Objet</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Jour et mois de clôture de l'exercice</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky">eirl</td>
+    <td class="tg-0pky">dat_cloture_jjmm</td>
+    <td class="tg-0pky">DAP_Date_Clôture</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Résidence</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">resid</td>
+    <td class="tg-0pky">DAP_Adresse_Ligne1DAP_Adresse_Ligne2DAP_Adresse_Ligne3DAP_Code_PostalDAP_VilleDAP_Code_CommuneDAP_Pays</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">N° de voie et indice de répétition</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">num_voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Type de voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">type_voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Nom de voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">nom_voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Localité</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">local</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">cp</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Bureau + Cedex</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">bur_cdx</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Pays</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">eirl/adr</td>
+    <td class="tg-0pky">pays</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">idt</td>
+    <td class="tg-0pky">Indicateur Personne Physique auto-entrepreneur</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">auto_ent</td>
+    <td class="tg-0pky">pp_indic</td>
+    <td class="tg-0pky">Auto-entrepreneur</td>
+    <td class="tg-0pky">PP, PP_EVT</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Qualité</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">qual</td>
+    <td class="tg-0pky">Qualité</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Nom, dénomination, prénoms</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">rais_nom</td>
+    <td class="tg-0pky">Nom_Patronymique Prénoms Dénomination</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Nom ou dénomination</td>
+    <td class="tg-0pky">Nom</td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">nom_denom</td>
+    <td class="tg-0pky">Nom_PatronymiqueDénomination</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Type de dirigeant : PM ou PP</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">type_dir</td>
+    <td class="tg-0pky">Type</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Date de création du représentant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_crea_rep</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Date de modification du représentant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_modif</td>
+    <td class="tg-0pky">Date_Greffe</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Date de radiation du représentant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_radiation</td>
+    <td class="tg-0pky">Date_Greffe (rep_partant_EVT)</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Adresse1 - Résidence</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">resid</td>
+    <td class="tg-0pky">Adresse_ligne1 Adresse_ligne2 Adresse_ligne3 Code_Postal Ville</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">voie</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">cp_bur</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">local</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">pays</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Pseudonyme</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_physique</td>
+    <td class="tg-0pky">pseudo</td>
+    <td class="tg-0pky">Pseudonyme</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Date naissance</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_physique</td>
+    <td class="tg-0pky">dat_naiss</td>
+    <td class="tg-0pky">Date_Naissance</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Lieu naissance</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_physique</td>
+    <td class="tg-0pky">lieu_naiss</td>
+    <td class="tg-0pky">Ville_Naissance</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Code du pays naissance du représentant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_physique</td>
+    <td class="tg-0pky">rep_pays_naiss</td>
+    <td class="tg-0pky">Pays_Naissance</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Nationalité du représentant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_physique</td>
+    <td class="tg-0pky">nation</td>
+    <td class="tg-0pky">Nationalité</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Nom usage du représentant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_physique</td>
+    <td class="tg-0pky">rep_nom_usage</td>
+    <td class="tg-0pky">Nom_Usage</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Greffe d'immatriculation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor</td>
+    <td class="tg-0pky">greffe_immat</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">No gestion ou sirene</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor</td>
+    <td class="tg-0pky">siren_num_gestion</td>
+    <td class="tg-0pky">Siren</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Forme juridique</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor</td>
+    <td class="tg-0pky">form_jur</td>
+    <td class="tg-0pky">Forme_Juridique</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Commentaires représentants (personne morale)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor</td>
+    <td class="tg-0pky">rep_comment</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Nom patronymique (nom de naissance)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor/rep_perm</td>
+    <td class="tg-0pky">nom</td>
+    <td class="tg-0pky">Rep_Perm_Nom</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Prénom</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor/rep_perm</td>
+    <td class="tg-0pky">prenom</td>
+    <td class="tg-0pky">Rep_Perm_Prénoms</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Nom d'usage</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor/rep_perm</td>
+    <td class="tg-0pky">nom_usage</td>
+    <td class="tg-0pky">Rep_Perm_Nom_Usage</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Date de naissance</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor/rep_perm</td>
+    <td class="tg-0pky">dat_naiss</td>
+    <td class="tg-0pky">Rep_Perm_Date_Naissance</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Lieu de naissance</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">M</td>
+    <td class="tg-0pky">pers_mor/rep_perm</td>
+    <td class="tg-0pky">lieu_naiss</td>
+    <td class="tg-0pky">Rep_Perm_Ville_Naissance</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Code pays du lieu de naissance</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_mor/rep_perm</td>
+    <td class="tg-0pky">pays_naiss</td>
+    <td class="tg-0pky">Rep_Perm_Pays_Naissance</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">reps</td>
+    <td class="tg-0pky">Adresse du représentant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">pers_mor/rep_perm</td>
+    <td class="tg-0pky">adr</td>
+    <td class="tg-0pky">Rep_Perm_Adr_Ligne1 Rep_Perm_Adr_Ligne2 Rep_Perm_Adr_Ligne3 Rep_Perm_Code_Postal Rep_Perm_Ville Rep_Perm_Code_Commune Rep_Perm_Pays</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Categorie de l'etablissement</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">O</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">categ</td>
+    <td class="tg-0pky">Type</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Code siret de létablissement</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">siret</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">activité</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">ape_naf</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Enseigne</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">enseigne</td>
+    <td class="tg-0pky">Enseigne</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Nom commercial de l'établissement</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">nom_commerc</td>
+    <td class="tg-0pky">Nom_Commercial</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Adresse partie 1</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">part_1</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">part_2</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">resid</td>
+    <td class="tg-0pky">Adresse_Ligne1 Adresse_Ligne2 Adresse_Ligne3 Code_Commune Code_Postal Ville</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">voie</td>
+    <td class="tg-0pky">Adresse_Ligne1 Adresse_Ligne2 Adresse_Ligne3 Code_Commune Code_Postal Ville</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">local</td>
+    <td class="tg-0pky">Adresse_Ligne1 Adresse_Ligne2 Adresse_Ligne3 Code_Commune Code_Postal Ville</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">adr1</td>
+    <td class="tg-0pky">cp_bur</td>
+    <td class="tg-0pky">Adresse_Ligne1 Adresse_Ligne2 Adresse_Ligne3 Code_Commune Code_Postal Ville</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Date de début dactivité</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">date_debut_activ</td>
+    <td class="tg-0pky">Date_Début_Activité</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Origine du fonds</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">orig_fonds</td>
+    <td class="tg-0pky">Origine_Fonds</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Type d'activité</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">activ</td>
+    <td class="tg-0pky">type_activité</td>
+    <td class="tg-0pky">Activité_Ambulante Activité_Saisonničre Activité_Non_Sédentaire</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Date de cessation d'activité</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">fonds</td>
+    <td class="tg-0pky">dat_cessat_activite</td>
+    <td class="tg-0pky">Date_Cessation_Activité</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Type dexploitation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">exploitation</td>
+    <td class="tg-0pky">type</td>
+    <td class="tg-0pky">Type_Exploitation</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Nom du précédent exploitant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">prec_exploit</td>
+    <td class="tg-0pky">nom</td>
+    <td class="tg-0pky">Origine_fonds_Info</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Nom dusage du précédent exploitant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">prec_exploit</td>
+    <td class="tg-0pky">nom_usage</td>
+    <td class="tg-0pky">Origine_fonds_Info</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">etabs</td>
+    <td class="tg-0pky">Prénoms du précédent exploitant</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">prec_exploit</td>
+    <td class="tg-0pky">prenom</td>
+    <td class="tg-0pky">Origine_fonds_Info</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">procs</td>
+    <td class="tg-0pky">Code de lobservation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">P</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">code_obs</td>
+    <td class="tg-0pky">Texte</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">procs</td>
+    <td class="tg-0pky">Texte (complément du code observation)</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">texte_obs</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">procs</td>
+    <td class="tg-0pky">Date de l'observation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_obs</td>
+    <td class="tg-0pky">Date_greffe</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">procs</td>
+    <td class="tg-0pky">Numéro de l'observation</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">num_obs</td>
+    <td class="tg-0pky">Numéro_Observation</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">acts</td>
+    <td class="tg-0pky">Type</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">type</td>
+    <td class="tg-0pky">Type_Acte</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">acts</td>
+    <td class="tg-0pky">Nature de l'acte</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">nature</td>
+    <td class="tg-0pky">Décision</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">acts</td>
+    <td class="tg-0pky">Date du dépôt</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_depot</td>
+    <td class="tg-0pky">Date_Dépôt</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">acts</td>
+    <td class="tg-0pky">Date de l'acte</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_acte</td>
+    <td class="tg-0pky">Date_Acte</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">acts</td>
+    <td class="tg-0pky">Numéro de dépôt manuel</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">num_depot_manuel</td>
+    <td class="tg-0pky">Numéro_Dépôt</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">bils</td>
+    <td class="tg-0pky">Millésime de clôture</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">date_cloture_aa</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">bils</td>
+    <td class="tg-0pky">Date de dépôt</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_depot</td>
+    <td class="tg-0pky">Date_Dépôt</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">bils</td>
+    <td class="tg-0pky">Indicateur de confidentialité des documents comptables</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">confid_ind</td>
+    <td class="tg-0pky">Confidentialité</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">bils</td>
+    <td class="tg-0pky">Indicateur de confidentialité des comptes de résultat</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">confid_ind_CR</td>
+    <td class="tg-0pky">Confidentialité_Compte_résultat</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">bils</td>
+    <td class="tg-0pky">Numéro de dépôt</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">num_depot</td>
+    <td class="tg-0pky">Numéro_Dépôt</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">bils</td>
+    <td class="tg-0pky">Date de clôture</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">dat_cloture_jjmm</td>
+    <td class="tg-0pky">Date_Clôture</td>
+    <td class="tg-0pky"></td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">bils</td>
+    <td class="tg-0pky">Durée de l'exercice</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky">duree_exercice</td>
+    <td class="tg-0pky">Durée_Exercice</td>
+    <td class="tg-0pky"></td>
+  </tr>
+</table>
