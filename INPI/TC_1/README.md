@@ -1,4 +1,10 @@
-# TITMC
+﻿# TITMC
+
+Le dossier log_copy regroupe les logs lors du rapatriement des fichiers de G vers C.
+
+Toutes les données se trouvent dans AWS a l'adresse suivante:
+
+- [](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/Flux/2017)
 
 ## Les tribunaux d’Instance et tribunaux mixtes de commerce
 
