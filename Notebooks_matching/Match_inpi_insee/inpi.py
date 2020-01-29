@@ -1,63 +1,69 @@
 import pandas as pd
 import glob
 import re
+from sagemaker import get_execution_role
+import boto3
 
-def appendData(
-    dtype, parse_date, path, flux=False,
-    origin="PP",EVT=False,
-    list_unique=False
-):
-    """
-    Append all csv files in a folder to a Pandas DataFrame
+class inpiStock:
+    def __init__(self, instance_aws, bucket):
+        self.instance_aws = instance_aws
+        self.bucket = bucket
 
-    Args:
-    Flux: Boolean: True to parse flux, else Stock
-    origin: String, from list ['ACTES', 'COMPTES_ANNUELS','ETS',
+    def appendInpiStock(self, option_extract,dtype, parse_date, partiel = False):
+        """
+        Append all csv files in a folder to a Pandas DataFrame
+
+        Args:
+        Flux: Boolean: True to parse flux, else Stock
+        origin: String, from list ['ACTES', 'COMPTES_ANNUELS','ETS',
                       'OBS', 'PM', 'PP','REP']
-    EVT: Boolean: True for EVT / False
+        EVT: Boolean: True for EVT / False
 
-    dtype: variables type, use 'str', for the data and pd.Int64Dtype()
-    for integer. If possible
-    parse_date: A list with the variables to convert into dates
-    path: Path to find the csv
-    """
+        dtype: variables type, use 'str', for the data and pd.Int64Dtype()
+        for integer. If possible
+        parse_date: A list with the variables to convert into dates
+        path: Path to find the csv
+        
+        
+        """
     # Test if in
-    if origin not in ["ACTES", "COMPTES_ANNUELS", "ETS",
-                      "OBS", "PM", "PP", "REP"]:
-        print(
+        list_option = ["ACTES", "COMPTES_ANNUELS", "ETS",
+                      "OBS", "PM", "PP", "REP"]
+        
+        role = get_execution_role() 
+    
+        if option_extract not in list_option:
+            return print(
             "Veuillez utiliser l'un des mots clés suivants {} \n \
-        pour l'argument origin"
+        pour l'argument origin".format(list_option)
         )
-        exit()
 
-    matches_evt = re.search("Stock", path)
-    if matches_evt:
-        pathcsv = "{}\{}".format(path, origin)
-    else:
-        if EVT:
-            pathcsv = "{}\{}\{}".format(path, origin, "EVT")
+        s3 = boto3.resource('s3')
+        my_bucket = s3.Bucket(self.bucket)
+        if partiel:
+            subfilter = "INPI/TC_1/Stock/Stock_partiel/{}".format(option_extract)
         else:
-            pathcsv = "{}\{}\{}".format(path, origin, "NEW")
+            subfilter = "INPI/TC_1/Stock/Stock_initial/{}".format(option_extract)
+        
+        df_output = pd.DataFrame()
+        for object_summary in my_bucket.objects.filter(Prefix=subfilter):
+            if object_summary.key.endswith(".csv"):
+                filename = '{}/{}'.format(
+                    self.instance_aws,
+                    #self.bucket,
+                    object_summary.key)
+
+                df_temp = pd.read_csv(filename, sep=";",
+                                      dtype=dtype,
+                                      parse_dates=parse_date)
+                df_output = df_output.append(df_temp)
+                
+        return df_output
+
+        
 
 
-    df_ = pd.concat(
-        [
-            pd.read_csv(file, sep=";", dtype=dtype, parse_dates=parse_date)
-            for file in glob.glob("{}\*.csv".format(pathcsv))
-        ],
-        ignore_index=True,
-    )
-
-    if list_unique:
-        df_unique = []
-        for c in list(df_pp):
-            unique_ = df_pp[c].unique().tolist()
-
-            df_ = {"col": c, "values": unique_}
-            df_unique.append(df_)
-        json.dumps(df_unique, indent=4, sort_keys=True, default=str)
-
-    return df_
+    
 
 
 #for i,file in enumerate(glob.glob('{}\*.csv'.format(path_pp))):
