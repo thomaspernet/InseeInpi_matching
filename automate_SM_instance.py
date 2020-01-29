@@ -40,19 +40,23 @@ client = boto3.client(
 )
 
 if option == 'open':
+    try:
 
-    client.start_notebook_instance(
+        client.start_notebook_instance(
         NotebookInstanceName=nameinstance)
 
-    time.sleep(200)
-    print("Instance {} is open.".format(nameinstance))
-    url = "https://{}.notebook.eu-west-3.sagemaker.aws/lab".format(
+        time.sleep(200)
+        print("Instance {} is open.".format(nameinstance))
+        url = "https://{}.notebook.eu-west-3.sagemaker.aws/lab".format(
         nameinstance)
-    webbrowser.open_new(url)
+        webbrowser.open_new(url)
+    except Exception as e: print(e)
 
 
 else:
-    client.stop_notebook_instance(
+    try:
+        client.stop_notebook_instance(
     NotebookInstanceName=nameinstance
 )
-    print("Instance {} is closed.".format(nameinstance))
+        print("Instance {} is closed.".format(nameinstance))
+    except Exception as e: print(e)
