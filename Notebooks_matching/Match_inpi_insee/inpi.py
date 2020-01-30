@@ -43,6 +43,27 @@ class inpiStock:
                        year = 2017,
                        return_frame = True):
         
+        """
+        Append all csv files in a folder to a Pandas DataFrame and save the 
+        output in S3: INPI/TC_1/Stock_processed
+        
+        format output-> gz 
+        - Option + filename +stock +gz: 
+            - 2017_NEW_PP.gz
+
+        Args:
+        option_extract: String, from list ['ACTES', 'COMPTES_ANNUELS','ETS',
+                      'OBS', 'PM', 'PP','REP']
+        dtype: variables type, use 'str', for the data and pd.Int64Dtype()
+        for integer. If possible
+        parse_date: A list with the variables to convert into dates
+        new: Boolean, if true, then go NEW folder, else EVT
+        year: integer. Locate year folder, 2017,2018,2019,2020
+        
+        Return:
+            Pandas DataFrame
+        """
+        
         # Test if in
         list_option = ["ACTES", "COMPTES_ANNUELS", "ETS",
                       "OBS", "PM", "PP", "REP"]
@@ -113,14 +134,14 @@ class inpiStock:
 
         self.s3.meta.client.upload_file('{}.json'.format(name_stored_data),
                            self.bucket,
-                           'INPI/TC_1/Stock/Stock_processed/{}.json'.format(
+                           'INPI/TC_1/Stock_processed/{}.json'.format(
                                name_stored_data)
                           )
         
         ### store gz
         self.s3.meta.client.upload_file('{}.gz'.format(name_stored_data),
                            self.bucket,
-                           'INPI/TC_1/Stock/Stock_processed/{}.gz'.format(
+                           'INPI/TC_1/Stock_processed/{}.gz'.format(
                                name_stored_data)
                           )
         
@@ -146,7 +167,7 @@ class inpiStock:
         
         format output-> gz 
         - Option + filename +stock +gz: 
-            - 0101_S1_20170504_3_PP_initial.gz
+            - initial_PP.gz
 
         Args:
         option_extract: String, from list ['ACTES', 'COMPTES_ANNUELS','ETS',
@@ -219,14 +240,14 @@ class inpiStock:
 
         self.s3.meta.client.upload_file('{}.json'.format(name_stored_data),
                            self.bucket,
-                           'INPI/TC_1/Stock/Stock_processed/{}.json'.format(
+                           'INPI/TC_1/Stock_processed/{}.json'.format(
                                name_stored_data)
                           )
         
         ### store gz
         self.s3.meta.client.upload_file('{}.gz'.format(name_stored_data),
                            self.bucket,
-                           'INPI/TC_1/Stock/Stock_processed/{}.gz'.format(
+                           'INPI/TC_1/Stock_processed/{}.gz'.format(
                                name_stored_data)
                           )
         
