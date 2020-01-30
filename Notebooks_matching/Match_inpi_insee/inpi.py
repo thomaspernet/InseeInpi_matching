@@ -92,7 +92,7 @@ class inpiStockFlux:
                                                                 month,
                                                                 option_extract)
                 new_option = 'EVT'
-            print(subfilter)
+
             df_output = pd.DataFrame()
             #regex = r"[^\/]+(?=\.[^\/.]*$)"
             for object_summary in my_bucket.objects.filter(Prefix=subfilter):
