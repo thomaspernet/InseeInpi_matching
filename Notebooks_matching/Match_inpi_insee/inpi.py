@@ -35,6 +35,106 @@ class inpiStock:
         
         #return data_location
         
+    def appendInpiFlux(self,
+                       option_extract,
+                       dtype,
+                       parse_date,
+                       new = True,
+                       year = 2017,
+                       return_frame = True):
+        
+        # Test if in
+        list_option = ["ACTES", "COMPTES_ANNUELS", "ETS",
+                      "OBS", "PM", "PP", "REP"]
+        
+        role = get_execution_role() 
+    
+        if option_extract not in list_option:
+            return print(
+            "Veuillez utiliser l'un des mots clés suivants {} \n \
+        pour l'argument origin".format(list_option)
+        )
+        
+        my_bucket = self.s3.Bucket(self.bucket)
+        
+        list_mois =  ["01", "02", "03", "04", "05", "06",
+                     "07","08", "09", "10", "11", "12"]
+        
+        for month in list_mois:
+            if new:
+                subfilter = "INPI/TC_1/Flux/{0}/{1}/{2}/NEW".format(str(year),
+                                                                   month,
+                                                                   option_extract)
+                new_option = 'NEW'
+            else:
+                subfilter = "INPI/TC_1/Flux/{0}/{1}/{2}/EVT".format(str(year),
+                                                                month,
+                                                                option_extract)
+                new_option = 'EVT'
+            print(subfilter)
+            df_output = pd.DataFrame()
+            #regex = r"[^\/]+(?=\.[^\/.]*$)"
+            for object_summary in my_bucket.objects.filter(Prefix=subfilter):
+                if object_summary.key.endswith(".csv"):
+                    filename = '{}/{}'.format(
+                    self.instance_aws,
+                    object_summary.key)
+
+                    df_temp = pd.read_csv(filename, sep=";",
+                                      dtype=dtype,
+                                      parse_dates=parse_date)
+                    df_output = df_output.append(df_temp)
+                
+        ### generate log
+        log_ = {
+            'filename': 'name_stored_data',
+            'variables': list(df_output),
+            'size': df_output.shape[0],
+            'dtype':df_output.dtypes.apply(lambda x: x.name).to_dict(),
+            'created_at':datetime.datetime.now()
+        }
+
+        ### save data to S3
+        #matches = re.search(regex, object_summary.key)
+        name_stored_data = '{0}_{1}_{2}'.format(
+            year,
+            new_option,
+            option_extract)
+        
+        df_output.to_csv('{}.gz'.format(name_stored_data),
+            index = False,
+            compression='gzip')
+        
+        with open('{}.json'.format(name_stored_data),
+                  'w', encoding='utf8') as outfile:
+            json.dump(log_, outfile, default = self.myconverter,ensure_ascii=False)
+            
+        ### store log
+
+        self.s3.meta.client.upload_file('{}.json'.format(name_stored_data),
+                           self.bucket,
+                           'INPI/TC_1/Stock/Stock_processed/{}.json'.format(
+                               name_stored_data)
+                          )
+        
+        ### store gz
+        self.s3.meta.client.upload_file('{}.gz'.format(name_stored_data),
+                           self.bucket,
+                           'INPI/TC_1/Stock/Stock_processed/{}.gz'.format(
+                               name_stored_data)
+                          )
+        
+        
+        
+        os.remove('{}.gz'.format(name_stored_data))
+        os.remove('{}.json'.format(name_stored_data))
+        
+        if return_frame:
+            return df_output
+        
+        return subfilter
+        
+        
 
     def appendInpiStock(self, option_extract,
                         dtype, parse_date,
