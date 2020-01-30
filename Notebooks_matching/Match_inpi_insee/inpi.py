@@ -2,7 +2,7 @@ import pandas as pd
 import re, os, glob, boto3, json, datetime
 from sagemaker import get_execution_role
 
-class inpiStock:
+class inpiStockFlux:
     def __init__(self, instance_aws, bucket):
         self.instance_aws = instance_aws
         self.bucket = bucket
