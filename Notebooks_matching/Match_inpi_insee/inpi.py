@@ -1,32 +1,65 @@
-import pandas as pd
-import glob
-import re
+import pandas as pd 
+import re, os, glob, boto3, json, datetime
 from sagemaker import get_execution_role
-import boto3
 
 class inpiStock:
     def __init__(self, instance_aws, bucket):
         self.instance_aws = instance_aws
         self.bucket = bucket
-
-    def appendInpiStock(self, option_extract,dtype, parse_date, partiel = False):
+        self.s3 = boto3.resource('s3')
+        
+    def myconverter(self,o):
         """
-        Append all csv files in a folder to a Pandas DataFrame
+        Convert datetime to json serializable format
+        """
+        if isinstance(o, datetime.datetime):
+            return o.__str__()
+        
+    def uploadFileBucket(self,pathfile):
+        """
+        Download file from S3 bucket
+        
+        args:
+        pathfile: path where the filename is located in S3,
+        including filename
+        ex: INPI/TC_1/Stock/dtypes_stock.json
+        """
+        
+        regex = r"([^\/]+$)"
+        matches = re.search(regex, pathfile)
+        self.s3.meta.client.download_file(
+            self.bucket,
+            pathfile,
+            matches.group()
+        )
+        
+        #return data_location
+        
+
+    def appendInpiStock(self, option_extract,
+                        dtype, parse_date,
+                        partiel = False,
+                        return_frame = True):
+        """
+        Append all csv files in a folder to a Pandas DataFrame and save the 
+        output in S3: INPI/TC_1/Stock/Stock_processed
+        
+        format output-> gz 
+        - Option + filename +stock +gz: 
+            - 0101_S1_20170504_3_PP_initial.gz
 
         Args:
-        Flux: Boolean: True to parse flux, else Stock
-        origin: String, from list ['ACTES', 'COMPTES_ANNUELS','ETS',
+        option_extract: String, from list ['ACTES', 'COMPTES_ANNUELS','ETS',
                       'OBS', 'PM', 'PP','REP']
-        EVT: Boolean: True for EVT / False
-
         dtype: variables type, use 'str', for the data and pd.Int64Dtype()
         for integer. If possible
         parse_date: A list with the variables to convert into dates
-        path: Path to find the csv
+        partiel: Boolean, if true, then go partiel folder, else stock
         
-        
+        Return:
+            Pandas DataFrame
         """
-    # Test if in
+        # Test if in
         list_option = ["ACTES", "COMPTES_ANNUELS", "ETS",
                       "OBS", "PM", "PP", "REP"]
         
@@ -38,19 +71,20 @@ class inpiStock:
         pour l'argument origin".format(list_option)
         )
 
-        s3 = boto3.resource('s3')
-        my_bucket = s3.Bucket(self.bucket)
+        my_bucket = self.s3.Bucket(self.bucket)
         if partiel:
             subfilter = "INPI/TC_1/Stock/Stock_partiel/{}".format(option_extract)
+            stock_ = 'partiel'
         else:
             subfilter = "INPI/TC_1/Stock/Stock_initial/{}".format(option_extract)
+            stock_ = 'initial'
         
         df_output = pd.DataFrame()
+        #regex = r"[^\/]+(?=\.[^\/.]*$)"
         for object_summary in my_bucket.objects.filter(Prefix=subfilter):
             if object_summary.key.endswith(".csv"):
                 filename = '{}/{}'.format(
                     self.instance_aws,
-                    #self.bucket,
                     object_summary.key)
 
                 df_temp = pd.read_csv(filename, sep=";",
@@ -58,20 +92,48 @@ class inpiStock:
                                       parse_dates=parse_date)
                 df_output = df_output.append(df_temp)
                 
-        return df_output
+        ### generate log
+        log_ = {
+            'filename': 'name_stored_data',
+            'variables': list(df_output),
+            'size': df_output.shape[0],
+            'dtype':df_output.dtypes.apply(lambda x: x.name).to_dict(),
+            'created_at':datetime.datetime.now()
+        }
 
+        ### save data to S3
+        #matches = re.search(regex, object_summary.key)
+        name_stored_data = '{}_{}'.format(
+            stock_,
+            option_extract)
         
+        df_output.to_csv('{}.gz'.format(name_stored_data),
+            index = False,
+            compression='gzip')
+        
+        with open('{}.json'.format(name_stored_data),
+                  'w', encoding='utf8') as outfile:
+            json.dump(log_, outfile, default = self.myconverter,ensure_ascii=False)
+            
+        ### store log
 
-
-    
-
-
-#for i,file in enumerate(glob.glob('{}\*.csv'.format(path_pp))):
-#    try:
-#        df_ = pd.read_csv(file, sep = ";",
-#                          dtype = dtype,
-#                          parse_dates  =parse_dates)
-#        df_open = pd.concat([df_open],
-#        ignore_index=True)
-#    except Exception as e:
-#        print(file, e)
+        self.s3.meta.client.upload_file('{}.json'.format(name_stored_data),
+                           self.bucket,
+                           'INPI/TC_1/Stock/Stock_processed/{}.json'.format(
+                               name_stored_data)
+                          )
+        
+        ### store gz
+        self.s3.meta.client.upload_file('{}.gz'.format(name_stored_data),
+                           self.bucket,
+                           'INPI/TC_1/Stock/Stock_processed/{}.gz'.format(
+                               name_stored_data)
+                          )
+        
+        
+        
+        os.remove('{}.gz'.format(name_stored_data))
+        os.remove('{}.json'.format(name_stored_data))
+        
+        if return_frame:
+            return df_output
