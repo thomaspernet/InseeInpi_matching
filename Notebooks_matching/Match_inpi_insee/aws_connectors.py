@@ -51,6 +51,13 @@ class aws_instantiate:
                 matches.group()
         )
             print('File {} downloaded'.format(file))
+            
+    def url_instance_bucket(self, path_file):
+        """
+        """
+        pathtofile = "{}/{}".format(self.instance_aws,path_file)
+        
+        return pathtofile
 
     def load_df_dd(self, path_file, dtypes = None, usecols = None):
         """
@@ -95,4 +102,49 @@ class aws_instantiate:
                                  low_memory=False
                             )
 
+        return df_dask
+    
+    def load_insee(self, option ='etb', for_matching = True):
+        """
+        Load INSEE data from S3 bucket
+        
+        args:
+        option: string: etb or ul
+        for_matching: Boolean. If True, import only variables 
+        candidates for matchibng
+        
+        return 
+        pandas dataframe
+        
+        """
+        path_file = "INSEE/Stock/ETS/StockEtablissement_utf8.csv"
+        pathtofile = "{}/{}".format(self.instance_aws,path_file)
+        dtype={'codeCommune2Etablissement': 'object',
+       'codeCommuneEtablissement': 'object',
+       'codePostalEtablissement': 'float64',
+       'complementAdresse2Etablissement': 'object',
+       'enseigne2Etablissement': 'object',
+       'enseigne3Etablissement': 'object',
+       'indiceRepetition2Etablissement': 'object',
+       'libelleCommuneEtrangerEtablissement': 'object',
+       'libellePaysEtrangerEtablissement': 'object',
+       'numeroVoieEtablissement': 'object'}
+        
+        if for_matching:
+            usecols = ['siren', 'siret']
+        
+            df_dask= dd.read_csv(pathtofile,
+                                 usecols = usecols,
+                                 dtype = dtype,
+                                 blocksize=None,
+                                 low_memory=False
+                            )
+        else:
+            df_dask= dd.read_csv(pathtofile,
+                                 #usecols = usecols,
+                                 dtype = dtype,
+                                 blocksize=None,
+                                 low_memory=False
+                            )
+        
         return df_dask
