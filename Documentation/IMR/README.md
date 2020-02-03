@@ -2,7 +2,34 @@
 
 ## Table des matières
 
+Le détail se trouve dans le PDF suivant: [Doc_Tech_IMR_Mai_2019_v1.5.1.pdf](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Documentation/IMR/Doc_Tech_IMR_Mai_2019_v1.5.1.pdf)
+
+- [Actes](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#actes) -> Pages 39-40
+- [Comptes Annuels](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#comptes-annuels) -> Pages 40-41
+- [Observations](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#observations) -> Pages 38-39
+- [Etablissements](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#etablissements) -> Pages 25-29
+- [Personnes Morales](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#personnes-morales) -> Pages 15-18
+- [Personnes Physiques](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#personnes-physiques) -> Pages 19-24
+- [Représentants](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#repr%C3%A9sentants) -> Pages 30-37
+
+Les fichiers transmis permettent d’exploiter les données de flux en provenance des greffes des tribunaux de commerce, et plus précisément :
+* Constitution du dossier d’une personne morale ou personne physique (identifiée par son siren et son n° de gestion), dans le cas d’une 1ère immatriculation,
+* Mise à jour des informations disponibles sur une personne morale ou personne physique en cas de modification ou de radiation.
+
+Dans le cas d’une immatriculation (Personne morale ou Personne physique), le dossier est composé :
+* A minima, d’informations sur l’identité de la personne (ex. date d’immatriculation, inscription principale ou secondaire, dénomination, nom, prénom, forme juridique, capital, activité principale etc.)
+* Complété éventuellement par des informations relatives aux :
+  * Représentants
+  * Etablissements (établissement principal et/ou établissements secondaires)
+  * Observations (incluant les procédures collectives, mentions de radiation etc.)
+  * Dépôt des comptes annuels
+  * Dépôt des actes
+Les fichiers sont de 2 types :
+* Fichiers créés à l’immatriculation d’un dossier
+* Fichiers créés suite à un événement sur un dossier (modification, radiation)
+
 ### Actes
+
 
 
 | Champ        | Nom                  | Mise a jour                  |
