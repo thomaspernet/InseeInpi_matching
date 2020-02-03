@@ -54,9 +54,7 @@ if option == 'open':
 
 
 else:
-    try:
-        client.stop_notebook_instance(
-    NotebookInstanceName=nameinstance
+    print("Instance {} is closed.".format(nameinstance))
+    client.stop_notebook_instance(
+    NotebookInstanceName=str(nameinstance)
 )
-        print("Instance {} is closed.".format(nameinstance))
-    except Exception as e: print(e)
