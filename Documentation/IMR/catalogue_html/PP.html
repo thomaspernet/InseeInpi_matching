@@ -1,0 +1,356 @@
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Champ</th>
+      <th>Nom</th>
+      <th>PP</th>
+      <th>PP_EVT</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Code Greffe</td>
+      <td>Code Greffe</td>
+      <td>Valeur obligatoire</td>
+      <td>Valeur obligatoire</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Nom_Greffe</td>
+      <td>Nom greffe</td>
+      <td>Valeur obligatoire</td>
+      <td>Valeur obligatoire</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Numero_Gestion</td>
+      <td>Numéro de gestion</td>
+      <td>Valeur obligatoire</td>
+      <td>Valeur obligatoire</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Siren</td>
+      <td>Siren</td>
+      <td>Valeur obligatoire</td>
+      <td>Valeur obligatoire</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Type_Inscription</td>
+      <td>Type d’inscription (P ou S)</td>
+      <td>Valeur obligatoire</td>
+      <td>Valeur toujours renseignée.</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Date_Immatriculation</td>
+      <td>Date d’immatriculation</td>
+      <td>Valeur renseignée de manière aléatoire (en fonction des greffes)</td>
+      <td>Valeur renseignée en cas de modification, sinon vide</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Date_1re_Immatriculation</td>
+      <td>Date 1ere immatriculation</td>
+      <td>Valeur renseignée de manière aléatoire (en fonction des greffes)</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>Date_Radiation</td>
+      <td>Date de radiation</td>
+      <td>Toujours vide</td>
+      <td>Valeur renseignée en cas de modification ou de radiation, sinon vide.\nEn cas de déradiation, la valeur indiquée est (Déradiation).</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>Date_Transfert</td>
+      <td>Date de transfert</td>
+      <td>Valeur renseignée en cas de transfert ou de modification, sinon vide.\n(date d’effet)</td>
+      <td>Toujours vide</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Sans_Activité</td>
+      <td>Flag « sans activité »</td>
+      <td>La valeur est Oui ou vide</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>Date_Debut_Activité</td>
+      <td>Date début d’activité (si renseignée)</td>
+      <td>Valeur renseignée de manière aléatoire (en fonction des greffes).\nJamais renseignée lorsque le flag « sans activité » = oui</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>Date_Début_1re_Activité</td>
+      <td>Date début première activité (si renseignée)</td>
+      <td>Valeur renseignée de manière aléatoire (en fonction des greffes)</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>Date_Cessation_Activité</td>
+      <td>Date cessation activité (si renseignée)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.\nSi renseignée, supprimer le libellé du champ « activité principale »</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>Nom_Patronymique</td>
+      <td>Nom patronymique</td>
+      <td>Valeur obligatoire</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>Nom_Usage</td>
+      <td>Nom usage</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>Pseudonyme</td>
+      <td>Pseudonyme</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>Prénoms</td>
+      <td>Prénoms</td>
+      <td>Attention : Parfois le prénom est renseigné dans la balise « Nom_Usage » ou « Nom_Patronymique »</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.\nAttention : Parfois le prénom est renseigné dans la balise « Nom_Usage » ou « Nom_Patronymique »</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>Date_Naissance</td>
+      <td>Date naissance</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>Ville_Naissance</td>
+      <td>Ville naissance</td>
+      <td>Valeur renseignée si existe</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>Pays_Naissance</td>
+      <td>Pays naissance</td>
+      <td>Valeur renseignée si existe</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>Nationalité</td>
+      <td>Nationalité</td>
+      <td>Valeur renseignée si existe</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>Adresse_Ligne1</td>
+      <td>Ligne 1 – Adresse</td>
+      <td>Selon les greffes, l’adresse (n°+ voie) sera présente soit en ligne1 adresse, soit en ligne2 adresse.\nToutes les lignes d’adresse ne sont pas nécessairement renseignées.</td>
+      <td>Toutes les valeurs existantes sont renvoyées (adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>Adresse_Ligne2</td>
+      <td>Ligne 2 – Adresse</td>
+      <td>Selon les greffes, l’adresse (n°+ voie) sera présente soit en ligne1 adresse, soit en ligne2 adresse.\nToutes les lignes d’adresse ne sont pas nécessairement renseignées.</td>
+      <td>Toutes les valeurs existantes sont renvoyées (adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>Adresse_Ligne3</td>
+      <td>Ligne 3 – Adresse</td>
+      <td>Selon les greffes, l’adresse (n°+ voie) sera présente soit en ligne1 adresse, soit en ligne2 adresse.\nToutes les lignes d’adresse ne sont pas nécessairement renseignées.</td>
+      <td>Toutes les valeurs existantes sont renvoyées (adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>Code_Postal</td>
+      <td>Code postal</td>
+      <td>Selon les greffes, l’adresse (n°+ voie) sera présente soit en ligne1 adresse, soit en ligne2 adresse.\nToutes les lignes d’adresse ne sont pas nécessairement renseignées.</td>
+      <td>Toutes les valeurs existantes sont renvoyées (adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>Ville</td>
+      <td>Ville</td>
+      <td>Selon les greffes, l’adresse (n°+ voie) sera présente soit en ligne1 adresse, soit en ligne2 adresse.\nToutes les lignes d’adresse ne sont pas nécessairement renseignées.</td>
+      <td>Toutes les valeurs existantes sont renvoyées (adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>Code_Commune</td>
+      <td>Code commune</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>Pays</td>
+      <td>Pays</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>Activité_Forain</td>
+      <td>Flag « Forain »</td>
+      <td>Valeur toujours renseignée</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>DAP</td>
+      <td>Flag « DAP »</td>
+      <td>Valeur toujours renseignée</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>DAP_Dénomination</td>
+      <td>Dénomination (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>DAP_Objet</td>
+      <td>Objet (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>32</th>
+      <td>DAP_Date_Clôture</td>
+      <td>Date de clôture (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>DAP_Adresse_Ligne1</td>
+      <td>Adresse (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>DAP_Adresse_Ligne2</td>
+      <td>Adresse (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>DAP_Adresse_Ligne3</td>
+      <td>Adresse (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>36</th>
+      <td>DAP_Code_Postal</td>
+      <td>Adresse (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>37</th>
+      <td>DAP_Ville</td>
+      <td>Adresse (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>38</th>
+      <td>DAP_Code_Commune</td>
+      <td>Adresse (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>39</th>
+      <td>DAP_Pays</td>
+      <td>Adresse (DAP)</td>
+      <td>Valeur renseignée si flag « DAP » = OUI</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>40</th>
+      <td>EIRL</td>
+      <td>Flag « EIRL »</td>
+      <td>Valeur toujours renseignée</td>
+      <td>Valeur renseignée en cas de modification, sinon vide.</td>
+    </tr>
+    <tr>
+      <th>41</th>
+      <td>Auto-entrepreneur</td>
+      <td>Flag « Auto-entrepreneur »</td>
+      <td>Valeur renseignée de manière aléatoire</td>
+      <td>Valeur renseignée de manière aléatoire</td>
+    </tr>
+    <tr>
+      <th>42</th>
+      <td>Conjoint_Collab_Nom_Patronym</td>
+      <td>Nom patronymique (conjoint collab.)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Toutes les valeurs existantes sont renseignées (valeurs relatives au conjoint collaborateur) en cas de mise à jour de l’une ou l’autre des valeurs.\nDans le cas de la suppression, chaque champ prend la valeur « supprimé » et la date de fin est renseignée.</td>
+    </tr>
+    <tr>
+      <th>43</th>
+      <td>Conjoint_Collab_Nom_Usage</td>
+      <td>Nom usage (conjoint collab.)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Toutes les valeurs existantes sont renseignées (valeurs relatives au conjoint collaborateur) en cas de mise à jour de l’une ou l’autre des valeurs.\nDans le cas de la suppression, chaque champ prend la valeur « supprimé » et la date de fin est renseignée.</td>
+    </tr>
+    <tr>
+      <th>44</th>
+      <td>Conjoint_Collab_Pseudo</td>
+      <td>Pseudonyme (conjoint collab.)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Toutes les valeurs existantes sont renseignées (valeurs relatives au conjoint collaborateur) en cas de mise à jour de l’une ou l’autre des valeurs.\nDans le cas de la suppression, chaque champ prend la valeur « supprimé » et la date de fin est renseignée.</td>
+    </tr>
+    <tr>
+      <th>45</th>
+      <td>Conjoint_Collab_Prénoms</td>
+      <td>Prénoms (conjoint collab.)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Toutes les valeurs existantes sont renseignées (valeurs relatives au conjoint collaborateur) en cas de mise à jour de l’une ou l’autre des valeurs.\nDans le cas de la suppression, chaque champ prend la valeur « supprimé » et la date de fin est renseignée.</td>
+    </tr>
+    <tr>
+      <th>46</th>
+      <td>Conjoint_Collab_Date_Fin</td>
+      <td>Date fin (conjoint collab.)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Toutes les valeurs existantes sont renseignées (valeurs relatives au conjoint collaborateur) en cas de mise à jour de l’une ou l’autre des valeurs.\nDans le cas de la suppression, chaque champ prend la valeur « supprimé » et la date de fin est renseignée.</td>
+    </tr>
+    <tr>
+      <th>47</th>
+      <td>Date_Greffe</td>
+      <td>Date de l’événement</td>
+      <td>Obligatoire</td>
+      <td>Obligatoire</td>
+    </tr>
+    <tr>
+      <th>48</th>
+      <td>Libelle_Evt</td>
+      <td>Libellé de l’évenement</td>
+      <td>Obligatoire</td>
+      <td>Obligatoire</td>
+    </tr>
+  </tbody>
+</table>

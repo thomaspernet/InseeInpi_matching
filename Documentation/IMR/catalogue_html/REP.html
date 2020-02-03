@@ -1,0 +1,382 @@
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Champ</th>
+      <th>Nom</th>
+      <th>rep.csv</th>
+      <th>Rep_nouveau_modifie_EVT.csv</th>
+      <th>Rep_partant_EVT.csv</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Code Greffe</td>
+      <td>Code Greffe</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Nom_Greffe</td>
+      <td>Nom greffe</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Numero_Gestion</td>
+      <td>Numéro de gestion</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Siren</td>
+      <td>Siren</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Type</td>
+      <td>Type (physique ou morale)</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Nom_Patronymique</td>
+      <td>Nom patronymique (si PP)</td>
+      <td>Valeur systématiquement renseignée si le champ « Type » = P.Physique</td>
+      <td>Valeur systématiquement renseignée si le champ « Type » = P.Physique</td>
+      <td>Valeur systématiquement renseignée si le champ « Type » = P.Physique</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Nom_Usage</td>
+      <td>Nom usage (si PP)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée si existe.</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>Pseudonyme</td>
+      <td>Pseudonyme (si PP)</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée si existe.</td>
+      <td>Valeur renseignée si existe.</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>Prénoms</td>
+      <td>Prénoms (si PP)</td>
+      <td>Valeur systématiquement renseignée si champ « Type » = P.Physique\nAttention : Parfois le prénom est renseigné dans la balise « Nom_Usage » ou « Nom_Patronymique »</td>
+      <td>Valeur systématiquement renseignée si champ « Type » = P.Physique\nAttention : Parfois le prénom est renseigné dans la balise « Nom_Usage » ou « Nom_Patronymique »</td>
+      <td>Valeur systématiquement renseignée si champ « Type » = P.Physique\nAttention : Parfois le prénom est renseigné dans la balise « Nom_Usage » ou « Nom_Patronymique »</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Dénomination</td>
+      <td>Dénomination (si PM)</td>
+      <td>Valeur obligatoire.\nValeur renseignée si champ « Type » = P. Morale</td>
+      <td>Valeur toujours renseignée.</td>
+      <td>Valeur toujours renseignée.</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>Siren</td>
+      <td>Siren (si PM)</td>
+      <td>Valeur facultative.\nValeur renseignée si champ « Type » = P. Morale</td>
+      <td>Valeur toujours renseignée, si existe.</td>
+      <td>Valeur toujours renseignée, si existe.</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>Forme_Juridique</td>
+      <td>Forme juridique (si PM)</td>
+      <td>Valeur facultative.\nValeur renseignée si champ « Type » = P. Morale</td>
+      <td>Valeur toujours renseignée, si existe.</td>
+      <td>Valeur toujours renseignée, si existe.</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>Adresse_Ligne1</td>
+      <td>Ligne 1 – Adresse</td>
+      <td>Obligatoire\nAttention aux cas particuliers : dans le cas des adresses à l’étranger, tous les champs ne sont pas forcément renseignés.</td>
+      <td>Toutes les valeurs existantes sont renseignées (Adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>Adresse_Ligne2</td>
+      <td>Ligne 2 – Adresse</td>
+      <td>Obligatoire\nAttention aux cas particuliers : dans le cas des adresses à l’étranger, tous les champs ne sont pas forcément renseignés.</td>
+      <td>Toutes les valeurs existantes sont renseignées (Adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>Adresse_Ligne3</td>
+      <td>Ligne 3 – Adresse</td>
+      <td>Obligatoire\nAttention aux cas particuliers : dans le cas des adresses à l’étranger, tous les champs ne sont pas forcément renseignés.</td>
+      <td>Toutes les valeurs existantes sont renseignées (Adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>Code_Postal</td>
+      <td>Code postal</td>
+      <td>Obligatoire\nAttention aux cas particuliers : dans le cas des adresses à l’étranger, tous les champs ne sont pas forcément renseignés.</td>
+      <td>Toutes les valeurs existantes sont renseignées (Adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>Ville</td>
+      <td>Ville</td>
+      <td>Obligatoire\nAttention aux cas particuliers : dans le cas des adresses à l’étranger, tous les champs ne sont pas forcément renseignés.</td>
+      <td>Toutes les valeurs existantes sont renseignées (Adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>Code_Commune</td>
+      <td>Code commune</td>
+      <td>Obligatoire\nAttention aux cas particuliers : dans le cas des adresses à l’étranger, tous les champs ne sont pas forcément renseignés.</td>
+      <td>Toutes les valeurs existantes sont renseignées (Adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>Pays</td>
+      <td>Pays</td>
+      <td>Obligatoire\nAttention aux cas particuliers : dans le cas des adresses à l’étranger, tous les champs ne sont pas forcément renseignés.</td>
+      <td>Toutes les valeurs existantes sont renseignées (Adresse etc.) en cas de mise à jour de l’une ou l’autre des valeurs.</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>Date_Naissance</td>
+      <td>Date naissance (si PP)</td>
+      <td>Valeur renseignée si le champ « Type » = P.Physique</td>
+      <td>Toutes les valeurs existantes sont renseignées (Date naissance etc.) en cas de mise à jour de l’une ou l’autre des valeurs.\nOu si le libellé évènement = nouveau dirigeant</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>Ville_Naissance</td>
+      <td>Ville naissance (si PP)</td>
+      <td>Valeur renseignée si le champ « Type » = P.Physique</td>
+      <td>Toutes les valeurs existantes sont renseignées (Date naissance etc.) en cas de mise à jour de l’une ou l’autre des valeurs.\nOu si le libellé évènement = nouveau dirigeant</td>
+      <td>Valeur non renseignée</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>Nationalité</td>
+      <td>Nationalité (si PP)</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>Qualité</td>
+      <td>Qualité</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+      <td>Valeur obligatoire pour les 3 fichiers</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>Rep_Perm_Nom</td>
+      <td>Nom représentant permanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>Rep_Perm_Nom_Usage</td>
+      <td>Prénoms représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>Rep_Perm_Pseudo</td>
+      <td>Pseudonyme représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>Rep_Perm_Prénoms</td>
+      <td>Prénoms représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>Rep_Perm_Date_Naissance</td>
+      <td>Date naissance représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>Rep_Perm_Ville_Naissance</td>
+      <td>Ville naissance représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>Rep_Perm_Pays_Naissance</td>
+      <td>Pays naissance représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>Rep_Perm_Nationalité</td>
+      <td>Nationalité représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>Rep_Perm_Adr_Ligne1</td>
+      <td>Ligne 1 – Adresse\nreprésentant permanent (si\nPM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>32</th>
+      <td>Rep_Perm_Adr_Ligne2</td>
+      <td>Ligne 2 – Adresse\nreprésentant permanent (si\nPM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>Rep_Perm_Adr_Ligne3</td>
+      <td>Ligne 3 – Adresse\nreprésentant permanent (si\nPM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>Rep_Perm_Code_Postal</td>
+      <td>Code postal représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>Rep_Perm_Ville</td>
+      <td>Ville représentant permanent\n(si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>36</th>
+      <td>Rep_Perm_Code_Commune</td>
+      <td>Code commune représentant\npermanent (si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>37</th>
+      <td>Rep_Perm_Pays</td>
+      <td>Pays représentant permanent\n(si PM)</td>
+      <td>Valeur\nrenseignée si\nexiste\n(uniquement\nlorsque le\nchamp « Type »</td>
+      <td>Toutes les valeurs\nrelatives au\nreprésentant\npermanent\nexistantes sont\nrenseignées (Date naissance\nreprésentant\npermanent\netc.) en cas de\nmise à jour de\nl’une ou l’autre\ndes valeurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>38</th>
+      <td>Conjoint_Collab_Nom_Patronym</td>
+      <td>Nom patronymique (conjoint\ncollab.)</td>
+      <td>Valeur\nrenseignée si\nexiste.</td>
+      <td>Toutes les valeurs\nexistantes sont\nrenseignées\n(valeurs relatives\nau conjoint\ncollaborateur) en\ncas de mise à jour\nde l’une ou\nl’autre des\nvaleurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>39</th>
+      <td>Conjoint_Collab_Nom_Usage</td>
+      <td>Nom usage (conjoint collab.</td>
+      <td>Valeur\nrenseignée si\nexiste.</td>
+      <td>Toutes les valeurs\nexistantes sont\nrenseignées\n(valeurs relatives\nau conjoint\ncollaborateur) en\ncas de mise à jour\nde l’une ou\nl’autre des\nvaleurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>40</th>
+      <td>Conjoint_Collab_Pseudo</td>
+      <td>Pseudonyme (conjoint collab.)</td>
+      <td>Valeur\nrenseignée si\nexiste.</td>
+      <td>Toutes les valeurs\nexistantes sont\nrenseignées\n(valeurs relatives\nau conjoint\ncollaborateur) en\ncas de mise à jour\nde l’une ou\nl’autre des\nvaleurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>41</th>
+      <td>Conjoint_Collab_Prénoms</td>
+      <td>Prénoms (conjoint collab.)</td>
+      <td>Valeur\nrenseignée si\nexiste.</td>
+      <td>Toutes les valeurs\nexistantes sont\nrenseignées\n(valeurs relatives\nau conjoint\ncollaborateur) en\ncas de mise à jour\nde l’une ou\nl’autre des\nvaleurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>42</th>
+      <td>Conjoint_Collab_Date_Fin</td>
+      <td>Date fin (conjoint collab.)</td>
+      <td>Valeur\nrenseignée si\nexiste.</td>
+      <td>Toutes les valeurs\nexistantes sont\nrenseignées\n(valeurs relatives\nau conjoint\ncollaborateur) en\ncas de mise à jour\nde l’une ou\nl’autre des\nvaleurs.</td>
+      <td>Valeur non\nrenseignée</td>
+    </tr>
+    <tr>
+      <th>43</th>
+      <td>ID_Représentant</td>
+      <td>ID (numéro unique\nd’identification d’un\nreprésentant)</td>
+      <td>Valeur obligatoire.\nCet identifiant sert à faciliter l’intégration des mises à jour\npour un représentant donné.</td>
+      <td>Valeur obligatoire.\nCet identifiant sert à faciliter l’intégration des mises à jour\npour un représentant donné.</td>
+      <td>Valeur obligatoire.\nCet identifiant sert à faciliter l’intégration des mises à jour\npour un représentant donné.</td>
+    </tr>
+    <tr>
+      <th>44</th>
+      <td>date_greffe</td>
+      <td>Date de l’événement</td>
+      <td>Obligatoire</td>
+      <td>Obligatoire</td>
+      <td>Obligatoire</td>
+    </tr>
+    <tr>
+      <th>45</th>
+      <td>Libelle_Evt</td>
+      <td>Libellé de l’évènement</td>
+      <td>Obligatoire</td>
+      <td>Obligatoire</td>
+      <td>Obligatoire</td>
+    </tr>
+  </tbody>
+</table>
