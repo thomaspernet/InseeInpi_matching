@@ -148,3 +148,16 @@ class aws_instantiate:
                             )
         
         return df_dask
+
+    def save_to_s3(self, file_name, file_path):
+        """
+        """
+        #Upload a file to an S3 bucket
+
+        self.s3.meta.client.upload_file(
+            file_name,
+            self.bucket,
+            file_path
+        )
+        
+        os.remove(file_name)
