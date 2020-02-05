@@ -50,7 +50,7 @@ La documentation détaillée de l'INSEE est disponible ci dessous pour:
 | 1  | activitePrincipaleRegistreMetiersEtablissement | Activité exercée par l?artisan inscrit au registre des métiers                        | 6        | Liste de codes | 8     |
 | 2  | anneeEffectifsEtablissement                    | Année de validité de la tranche d?effectif salarié de l?établissement                  | 4        | Date           | 7     |
 | 3  | caractereEmployeurEtablissement                | Caractère employeur de l?établissement                                                | 1        | Liste de codes | 48    |
-| 4  | codeCedex2Etablissement                        | Code cedex de l?adresse secondaire                                                    | 9        | Texte          | 36    |
+| 4  | codeCedex2Etablissement                        | Code cedex de l'adresse secondaire                                                    | 9        | Texte          | 36    |
 | 5  | codeCedexEtablissement                         | Code cedex                                                                           | 9        | Texte          | 22    |
 | 6  | codeCommune2Etablissement                      | Code commune de l?adresse secondaire                                                  | 5        | Liste de codes | 35    |
 | 7  | codeCommuneEtablissement                       | Code commune de l?établissement                                                       | 5        | Liste de codes | 21    |
@@ -94,3 +94,5 @@ La documentation détaillée de l'INSEE est disponible ci dessous pour:
 | 45 | trancheEffectifsEtablissement                  | Tranche d?effectif salarié de l?établissement                                          | 2        | Liste de codes | 6     |
 | 46 | typeVoie2Etablissement                         | Type de voie de l?adresse secondaire                                                  | 4        | Liste de codes | 29    |
 | 47 | typeVoieEtablissement                          | Type de voie                                                                         | 4        | Liste de codes | 15    |
+
+

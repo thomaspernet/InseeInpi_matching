@@ -8,6 +8,7 @@ __pycache__/
 
 Documentation/Archive
 RawData/
+*.gz
 *.csv
 *.zip
 *.md5
