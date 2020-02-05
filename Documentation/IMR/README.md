@@ -9,8 +9,8 @@ Le détail se trouve dans le PDF suivant: [Doc_Tech_IMR_Mai_2019_v1.5.1.pdf](htt
 
 - [Actes](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#actes): ACTES -> Pages 39-40
 - [Comptes Annuels](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#comptes-annuels):COMPTESANN -> Pages 40-41
-- [Observations](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#observations):ETS -> Pages 38-39
-- [Etablissements](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#etablissements):OBS -> Pages 25-29
+- [Observations](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#observations):OBS -> Pages 38-39
+- [Etablissements](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#etablissements):ETS -> Pages 25-29
 - [Personnes Morales](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#personnes-morales):PM -> Pages 15-18
 - [Personnes Physiques](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#personnes-physiques):PP -> Pages 19-24
 - [Représentants](https://github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR#repr%C3%A9sentants): REP -> Pages 30-37
