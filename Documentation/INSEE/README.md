@@ -1,9 +1,13 @@
 # Données INSEE
 
+La définition de l'ensemble des termes se trouvent [ici](https://www.sirene.fr/sirene/public/static/definitions)
+
 La documentation détaillée de l'INSEE est disponible ci dessous pour:
 
 - [Unite legale](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Documentation/INSEE/Description%20fichier%20StockUniteLegale.pdf)
 - [Etablissement](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Documentation/INSEE/description-fichier-stocketablissement.pdf)
+
+L'INSEE fournit une documentation exhaustive pour les bases de données UL et établissements. Toutes les informations sont regroupées dans cette [adresse](https://www.sirene.fr/sirene/public/static/liste-variables#). Nous avons regroupé les informations dans les tableaux ci dessous.
 
 ## Unité légale
 
@@ -42,6 +46,8 @@ La documentation détaillée de l'INSEE est disponible ci dessous pour:
 | statutDiffusionUniteLegale                | Statut de diffusion de l’unité légale                                  | https://www.sirene.fr/sirene/public/variable/statutDiffusionUniteLegale                | 1        | Liste de codes | 2     |
 | trancheEffectifsUniteLegale               | Tranche d’effectif salarié de l’unité légale                           | https://www.sirene.fr/sirene/public/variable/trancheEffectifsUniteLegale               | 2        | Liste de codes | 14    |
 | unitePurgeeUniteLegale                    | Unité légale purgée                                                    | https://www.sirene.fr/sirene/public/variable/unitePurgeeUniteLegale                    | 5        | Texte          | 3     |
+
+
 ## Etablissement
 
 | Nom                                            | Libellé                                                                              | url                                                                                         | Longueur | Type           | Ordre |
