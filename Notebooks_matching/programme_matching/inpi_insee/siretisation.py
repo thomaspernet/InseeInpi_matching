@@ -411,6 +411,18 @@ class siretisation_inpi:
                                    'libelleCommuneEtablissement',
                                    'codeCommuneEtablissement',
                                    '_merge']))
+        if 'count_insee' in df_input.columns:
+            df_input = (df_input
+                    .drop(columns=['count_insee']))
+
+
+        insee = insee.merge(
+        (insee
+         .groupby('siren')['siren']
+         .count()
+         .rename('count_insee')
+         .reset_index())
+    )
 
         temp = df_input.merge(insee,
                           how='left',
@@ -449,17 +461,18 @@ class siretisation_inpi:
             to_check = to_check.compute()
 
     # calcul le nombre cas de figure 2 -> très conservative
-        return to_check
+
         test_match = (to_check
                   .merge(
                       (to_check
                        .groupby(['siren', group_option])['siren']
                        .count()
-                       .rename('count')
+                       .rename('count_inpi')
                        .reset_index()
                        )
                   )
                   )
+
         if matching_voie:
             true_match = (test_match
                   .loc[lambda x:
@@ -470,7 +483,7 @@ class siretisation_inpi:
                   .reindex(columns=self.list_inpi))
         else:
             true_match = (test_match
-                  .loc[lambda x:x['count'] == 1]
+                  .loc[lambda x:x['count_inpi'] == 1]
                   .reindex(columns=self.list_inpi))
 
         dic_ = {
