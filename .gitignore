@@ -10,6 +10,7 @@ Documentation/Archive
 RawData/
 *.csv
 *.zip
+*.gz
 *.md5
 *.xlsx
 # Distribution / packaging
