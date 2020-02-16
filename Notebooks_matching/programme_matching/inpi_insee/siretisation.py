@@ -391,7 +391,7 @@ class siretisation_inpi:
         return unmatched
 
     def merge_siren_candidat(self,
-    df_input, regex_go = False, matching_voie =False,
+    df_input, regex_go = False, matching_voie =False,relax_regex = False,
     option=['ncc', 'libelleCommuneEtablissement']):
         """
         option list can only be one of these:
@@ -403,7 +403,18 @@ class siretisation_inpi:
                         usecols=self.insee_col, dtype=self.insee_dtype)
 
         if '_merge' in df_input.columns:
-            df_input = (df_input
+            try:
+                df_input = (df_input
+                    .drop(columns=['siret',
+                                   'numeroVoieEtablissement',
+                                   'libelleVoieEtablissement',
+                                   'codePostalEtablissement',
+                                   'libelleCommuneEtablissement',
+                                   'codeCommuneEtablissement',
+                                   'count_insee',
+                                   '_merge']))
+            except:
+                df_input = (df_input
                     .drop(columns=['siret',
                                    'numeroVoieEtablissement',
                                    'libelleVoieEtablissement',
@@ -411,11 +422,6 @@ class siretisation_inpi:
                                    'libelleCommuneEtablissement',
                                    'codeCommuneEtablissement',
                                    '_merge']))
-        if 'count_insee' in df_input.columns:
-            df_input = (df_input
-                    .drop(columns=['count_insee']))
-
-
         insee = insee.merge(
         (insee
          .groupby('siren')['siren']
@@ -435,6 +441,12 @@ class siretisation_inpi:
         nomatch = temp[~temp['_merge'].isin(['both'])]
 
         if regex_go:
+            if relax_regex:
+
+                to_check['Adresse_new_clean_reg'] = \
+                to_check['Adresse_new_clean_reg'].str.replace('$', '')
+
+
             to_check['siret_test1'] = to_check.map_partitions(
             lambda df:
                 df.apply(lambda x:
