@@ -25,6 +25,8 @@ class siretisation_inpi:
         insee_col = ['siren',
  'siret',
  'dateCreationEtablissement',
+ "etablissementSiege",
+ "etatAdministratifEtablissement",
  'complementAdresseEtablissement',
  'numeroVoieEtablissement',
  'indiceRepetitionEtablissement',
@@ -56,6 +58,8 @@ class siretisation_inpi:
         insee_dtype = {
     'siren': 'object',
     'siret': 'object',
+    "etablissementSiege": "object",
+    "etatAdministratifEtablissement": "object",
     'dateCreationEtablissement': 'object',
     'complementAdresseEtablissement': 'object',
     'numeroVoieEtablissement': 'object',
@@ -392,12 +396,15 @@ class siretisation_inpi:
 
     def merge_siren_candidat(self,
     df_input, regex_go = False, matching_voie =False,relax_regex = False,
-    option=['ncc', 'libelleCommuneEtablissement']):
+    siege_etat=False, option=['ncc', 'libelleCommuneEtablissement'],
+    var_adress_insee = 'libelleVoieEtablissement'):
         """
         option list can only be one of these:
         - ['ncc', 'libelleCommuneEtablissement']
-        - ['ncc', 'libelleCommuneEtablissement']
-        - ['ncc', 'libelleCommuneEtablissement']
+        - ['Code_Postal', 'codePostalEtablissement']
+        - ['Code_Commune', 'codeCommuneEtablissement']
+        var_adress_insee: libelleVoieEtablissement ou
+        complementAdresseEtablissement.exemple siren  322385949
         """
         insee = self.import_dask(file=self.insee,
                         usecols=self.insee_col, dtype=self.insee_dtype)
@@ -411,6 +418,7 @@ class siretisation_inpi:
                                    'codePostalEtablissement',
                                    'libelleCommuneEtablissement',
                                    'codeCommuneEtablissement',
+                                   'complementAdresseEtablissement',
                                    'count_insee',
                                    '_merge']))
             except:
@@ -421,7 +429,17 @@ class siretisation_inpi:
                                    'codePostalEtablissement',
                                    'libelleCommuneEtablissement',
                                    'codeCommuneEtablissement',
+                                   'complementAdresseEtablissement',
                                    '_merge']))
+
+        if siege_etat:
+            ### On retire les etb fermées et les etb non principaux
+            insee = insee.loc[
+            (insee['etablissementSiege'].isin(['true']))
+            & (insee['etatAdministratifEtablissement'].isin(['A']))
+            ]
+
+            df_input = df_input.loc[df_input['Type'].isin(['PRI', 'SEP'])]
         insee = insee.merge(
         (insee
          .groupby('siren')['siren']
@@ -452,10 +470,12 @@ class siretisation_inpi:
                 df.apply(lambda x:
                     self.find_regex(
                      x['Adresse_new_clean_reg'],
-                     x['libelleVoieEtablissement'],
+                     x[var_adress_insee],
                      x['siret']), axis=1)
     )
+
             to_check = to_check.dropna(subset=['siret_test1']).compute()
+
             group_option = 'Adress_new'
             if matching_voie:
                 to_check['digit_inpi'] = \
