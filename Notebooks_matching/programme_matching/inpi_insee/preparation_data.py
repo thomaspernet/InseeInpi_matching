@@ -278,7 +278,7 @@ class preparation:
             compression='gzip', index = False)
 
             print('Creating SQL database')
-            query = "CREATE TABLE SIREN (Code Greffe,Nom_Greffe,Numero_Gestion,\
+            query = "CREATE TABLE INPI (Code_Greffe,Nom_Greffe,Numero_Gestion,\
              siren,Type,Siège_PM,RCS_Registre,Adresse_Ligne1,Adresse_Ligne2,\
              Adresse_Ligne3,Code_Postal,Ville,Code_Commune,Pays,\
              Domiciliataire_Nom,Domiciliataire_Siren,Domiciliataire_Greffe,\
@@ -290,7 +290,7 @@ class preparation:
             self.save_sql(
             df = subset_inpi_cleaned,
             db = r'App\SQL\inpi_origine.db',
-            table = 'SIREN',
+            table = 'INPI',
             query =query)
 
     def normalize_insee(self, siren_inpi_gz, save= True):
@@ -342,8 +342,8 @@ class preparation:
                                    ]
 
         dtype={
-            'siren': 'object',
-            'siret': 'object',
+            'siren': 'int',
+            'siret': 'int',
             "etablissementSiege": "object",
             "etatAdministratifEtablissement": "object",
             "numeroVoieEtablissement": 'object',
@@ -366,10 +366,11 @@ class preparation:
             usecols = usecols,
             dtype=dtype)
 
-        siren_inpi = pd.read_csv(siren_inpi_gz, compression = 'gzip')
+        siren_inpi = pd.read_csv(siren_inpi_gz,
+        compression = 'gzip')['siren'].to_list()
 
         subset_insee = (dd_df_insee
-        .loc[dd_df_insee['siren'].isin(siren_inpi['siren'].to_list())]
+        .loc[dd_df_insee['siren'].isin(siren_inpi)]
         .loc[dd_df_insee['dateCreationEtablissement'] <= self.date_end]
         .assign(
             libelleCommuneEtablissement = lambda x:
@@ -399,9 +400,16 @@ class preparation:
  codeCommuneEtablissement,codeCedexEtablissement, libelleCedexEtablissement,  \
  codePaysEtrangerEtablissement, libellePaysEtrangerEtablissement,  \
  etatAdministratifEtablissement,count_initial_insee)"
-
-            self.save_sql(
-            df = subset_insee,
-            db = r'App\SQL\App_insee.db',
-            table = 'INSEE',
-            query =query)
+            try:
+                self.save_sql(
+                df = subset_insee,
+                db = r'App\SQL\App_insee.db',
+                table = 'INSEE',
+                query =query)
+            except:
+                os.remove(r'App\SQL\App_insee.db')
+                self.save_sql(
+                df = subset_insee,
+                db = r'App\SQL\App_insee.db',
+                table = 'INSEE',
+                query =query)
