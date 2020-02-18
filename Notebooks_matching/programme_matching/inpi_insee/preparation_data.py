@@ -368,14 +368,14 @@ class preparation:
 
             try:
                 self.save_sql(
-                df = subset_insee,
+                df = subset_inpi_cleaned,
                 db = r'App\SQL\inpi_origine.db',
                 table = 'INPI',
                 query =query)
             except:
                 os.remove(r'App\SQL\inpi_origine.db')
                 self.save_sql(
-                df = subset_insee,
+                df = subset_inpi_cleaned,
                 db = r'App\SQL\App_insee.db',
                 table = 'INPI',
                 query =query)
