@@ -401,7 +401,7 @@ class preparation:
  etatAdministratifEtablissement,count_initial_insee)"
 
             self.save_sql(
-            df = subset_inpi_cleaned,
+            df = subset_insee,
             db = r'App\SQL\App_insee.db',
             table = 'INSEE',
             query =query)
