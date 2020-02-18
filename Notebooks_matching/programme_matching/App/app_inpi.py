@@ -14,16 +14,15 @@ r"\Notebooks_matching\programme_matching\App\calf1.png"
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-inpi_col =[
-        'Code Greffe','Nom_Greffe','Numero_Gestion','siren','Type','Siège_PM',
- 'RCS_Registre','Adresse_Ligne1','Adresse_Ligne2','Adresse_Ligne3','Code_Postal',
- 'Ville','Code_Commune','Pays','Domiciliataire_Nom','Domiciliataire_Siren',
- 'Domiciliataire_Greffe','Domiciliataire_Complément',
+inpi_col =['Code Greffe','Nom_Greffe','Numero_Gestion','siren','Type',
+ 'Siège_PM','RCS_Registre','Adresse_Ligne1','Adresse_Ligne2','Adresse_Ligne3',
+ 'Code_Postal','Ville','Code_Commune','Pays','Domiciliataire_Nom',
+ 'Domiciliataire_Siren','Domiciliataire_Greffe','Domiciliataire_Complément',
  'Siege_Domicile_Représentant','Nom_Commercial','Enseigne','Activité_Ambulante',
  'Activité_Saisonnière','Activité_Non_Sédentaire','Date_Début_Activité',
- 'Activité','Origine_Fonds', 'Origine_Fonds_Info', 'Type_Exploitation',
- 'ID_Etablissement','Date_Greffe','Libelle_Evt', 'count_initial_inpi', 'ncc'
-    ]
+ 'Activité','Origine_Fonds','Origine_Fonds_Info','Type_Exploitation',
+ 'ID_Etablissement','Date_Greffe','Libelle_Evt','count_initial_inpi',
+ 'ncc','Adress_new','Adresse_new_clean_reg']
 
 #all_options = {
     #'America': ['New York City', 'San Francisco', 'Cincinnati'],
