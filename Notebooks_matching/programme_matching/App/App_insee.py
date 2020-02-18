@@ -80,7 +80,7 @@ app.layout = html.Div([
 def update_output_div(siren):
     conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
     r"\InseeInpi_matching\Notebooks_matching" \
-    r"\programme_matching\App\SQL\insee.db")
+    r"\programme_matching\App\SQL\App_insee.db")
     c = conn.cursor()
     query = '''SELECT * FROM INSEE WHERE siren = {} '''.format(siren)
     c.execute(query)
