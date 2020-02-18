@@ -8,6 +8,16 @@ from nltk.corpus import stopwords
 pbar = ProgressBar()
 pbar.register()
 
+
+chunks = self.split(temp_adresse, 60000)
+try:
+    for i in range(0, 15):
+        chunks[i].to_csv(
+    r'Data\input\unmatched\chunk\chunk_{}.gz'.format(i),
+        index = False, compression ='gzip')
+except:
+    pass
+ ################
 class siretisation_inpi:
     def __init__(self, parameters = None):
         """
@@ -175,23 +185,6 @@ class siretisation_inpi:
 
         return unmatch_
 
-    def create_split_adress(self,x):
-        """
-        """
-        split_ = x.str.split().to_list()
-        return  split_
-
-
-    def create_regex_adress(self, x):
-        """
-        """
-        try:
-            split_ = [i + "$" for i in x]
-            reg = '|'.join(split_)
-        except:
-            reg = np.nan
-        return  reg
-
     def find_regex(self,regex, test_str, siret):
         """
         """
@@ -217,54 +210,6 @@ class siretisation_inpi:
 
         indices = self.index_marks(dfm.shape[0], chunk_size)
         return np.split(dfm, indices)
-
-
-
-    def prepare_adress(self, df):
-        """
-        """
-        temp_adresse = df.compute().assign(
-
-        Adress_new = lambda x:
-        x['Adresse_Ligne1'].fillna('') + ' '+\
-        x['Adresse_Ligne2'].fillna('') + ' '+\
-        x['Adresse_Ligne3'].fillna(''),
-        Adresse_new_clean=lambda x: x['Adress_new'].str.normalize(
-            'NFKD')
-        .str.encode('ascii', errors='ignore')
-        .str.decode('utf-8')
-        .str.replace('[^\w\s]|\d+', ' ')
-        .str.upper(),
-
-    )
-        temp_adresse['Adresse_new_clean'] = (temp_adresse['Adresse_new_clean']
-                                            .apply(lambda x:
-                                                   ' '.join([word for word in
-                                                             str(x).split() if
-                                                             word not in
-                                                             (self.upper_word)]))
-                                            )
-
-        temp_adresse = temp_adresse.assign(
-        Adresse_new_clean_split=lambda x:
-        self.create_split_adress(x['Adresse_new_clean'])
-    )
-
-        temp_adresse['Adresse_new_clean_reg'] = \
-        temp_adresse['Adresse_new_clean_split'].apply(lambda x:
-                                                     self.create_regex_adress(x))
-
-        temp_adresse = temp_adresse.drop(columns = ['Adresse_new_clean',
-                                                'Adresse_new_clean_split'])
-
-        chunks = self.split(temp_adresse, 60000)
-        try:
-            for i in range(0, 15):
-                chunks[i].to_csv(
-            r'Data\input\unmatched\chunk\chunk_{}.gz'.format(i),
-                index = False, compression ='gzip')
-        except:
-            pass
 
     def match_unique_etb(self, df_ets):
         """
