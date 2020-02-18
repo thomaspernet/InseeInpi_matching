@@ -31,6 +31,8 @@ class preparation:
         self.insee = parameters['insee']
         self.inpi_etb = parameters['inpi_etb']
         self.date_end = parameters['date_end']
+        self.upper_word = pd.read_csv(parameters['upper_word']
+        ).iloc[:,0].to_list()
 
     def save_sql(self,df,  db,table,  query):
         """
@@ -198,6 +200,79 @@ class preparation:
 
         return df_inpi
 
+    def create_split_adress(self,x):
+        """
+
+        """
+        split_ = x.str.split().to_list()
+        return  split_
+
+    def create_regex_adress(self, x):
+        """
+        Regroupe les mots de l'adresse ensemble avec comme séparateur "|" et
+        le signe $ en fin de mot pour indiquer qu'il ne faut parser que le mot
+        en question et pas ce qu'il y a après.
+
+        Args:
+        - x: column conntenant l'adresse dans un dataFrame pandas
+
+        Returns:
+        un String concatenés des mots de la colonne
+        """
+        try:
+            split_ = [i + "$" for i in x]
+            reg = '|'.join(split_)
+        except:
+            reg = np.nan
+        return  reg
+
+    def prepare_adress(self, df):
+        """
+        Créer deux colonnes nétoyées de l'adresse a partir d'un dataframe INPI.
+        La première variable va nétoyer l'adresse en enlevant les valeurs comme
+        route, avenue qui ne sont pas indiquées dans l'INSEE (variables de
+        matching)n netoie les accents, digits, etc. La deuxième variable va
+        concatener l'adresse en vue d'un parsing regex
+
+        Args:
+        - df: Pandas DataFrame
+
+        Returns:
+        DataFrame Pandas nétoyé avec les variables adresses nétoyées
+        """
+        temp_adresse = df.assign(
+
+        Adress_new = lambda x:
+            x['Adresse_Ligne1'].fillna('') + ' '+\
+            x['Adresse_Ligne2'].fillna('') + ' '+\
+            x['Adresse_Ligne3'].fillna(''),
+            Adresse_new_clean=lambda x: x['Adress_new'].str.normalize(
+                'NFKD')
+            .str.encode('ascii', errors='ignore')
+            .str.decode('utf-8')
+            .str.replace('[^\w\s]|\d+', ' ')
+            .str.upper(),
+
+        )
+        temp_adresse['Adresse_new_clean'] = (
+        temp_adresse['Adresse_new_clean'].apply(
+        lambda x:' '.join([word for word in str(x).split() if word not in
+        (self.upper_word)])))
+
+        temp_adresse = temp_adresse.assign(
+            Adresse_new_clean_split=lambda x:
+            self.create_split_adress(x['Adresse_new_clean'])
+        )
+
+        temp_adresse['Adresse_new_clean_reg'] = \
+        temp_adresse['Adresse_new_clean_split'].apply(lambda x:
+                                                    self.create_regex_adress(x))
+
+        temp_adresse = temp_adresse.drop(columns = ['Adresse_new_clean',
+                                                    'Adresse_new_clean_split'])
+
+        return temp_adresse
+
     def normalize_inpi(self, save = True):
         """
         Prepare le fichier gz en vue de la siretisation
@@ -259,6 +334,8 @@ class preparation:
 
         subset_inpi_cleaned = self.clean_commune(df_inpi = subset_inpi)
 
+        subset_inpi_cleaned = self.prepare_adress(df = subset_inpi_cleaned)
+
         if save:
             size_ = subset_inpi.shape[0]
             print('Saving {} observations'.format(size_))
@@ -285,13 +362,23 @@ class preparation:
              Domiciliataire_Complément,Siege_Domicile_Représentant,\
              Nom_Commercial,Enseigne,Activité_Ambulante,Activité_Saisonnière,\
              Activité_Non_Sédentaire,Date_Début_Activité,Activité,\
-             Origine_Fonds)"
+             Origine_Fonds, Origine_Fonds_Info,Type_Exploitation,\
+             ID_Etablissement,Date_Greffe,Libelle_Evt,count_initial_inpi,\
+             ncc,Adress_new,Adresse_new_clean_reg)"
 
-            self.save_sql(
-            df = subset_inpi_cleaned,
-            db = r'App\SQL\inpi_origine.db',
-            table = 'INPI',
-            query =query)
+            try:
+                self.save_sql(
+                df = subset_insee,
+                db = r'App\SQL\inpi_origine.db',
+                table = 'INPI',
+                query =query)
+            except:
+                os.remove(r'App\SQL\inpi_origine.db')
+                self.save_sql(
+                df = subset_insee,
+                db = r'App\SQL\App_insee.db',
+                table = 'INPI',
+                query =query)
 
     def normalize_insee(self, siren_inpi_gz, save= True):
         """
