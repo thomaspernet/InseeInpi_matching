@@ -271,6 +271,9 @@ class preparation:
         temp_adresse = temp_adresse.drop(columns = ['Adresse_new_clean',
                                                     'Adresse_new_clean_split'])
 
+        temp_adresse['digit_inpi'] = \
+        temp_adresse['Adress_new'].str.extract(r'(\d+)')
+
         return temp_adresse
 
     def normalize_inpi(self, save = True):
@@ -295,8 +298,8 @@ class preparation:
         """
 
         dtype={
-        'Type': 'object',
         'Siren': 'object',
+        'Type': 'object',
         'Code_Postal': 'object',
         'Code_Commune': 'object',
         'Adresse_Ligne1': 'object',
@@ -364,7 +367,7 @@ class preparation:
              Activité_Non_Sédentaire,Date_Début_Activité,Activité,\
              Origine_Fonds, Origine_Fonds_Info,Type_Exploitation,\
              ID_Etablissement,Date_Greffe,Libelle_Evt,count_initial_inpi,\
-             ncc,Adress_new,Adresse_new_clean_reg)"
+             ncc,Adress_new,Adresse_new_clean_reg, digit_inpi)"
 
             try:
                 self.save_sql(
@@ -429,8 +432,8 @@ class preparation:
                                    ]
 
         dtype={
-            'siren': 'int',
-            'siret': 'int',
+            'siren': 'object',
+            'siret': 'object',
             "etablissementSiege": "object",
             "etatAdministratifEtablissement": "object",
             "numeroVoieEtablissement": 'object',
@@ -479,9 +482,9 @@ class preparation:
             compression='gzip', index = False))
 
             print('Creating SQL database')
-            query = "CREATE TABLE INSEE (siren,siret,dateCreationEtablissement, \
+            query = "CREATE TABLE INSEE (siren,siret,dateCreationEtablissement,\
  etablissementSiege,complementAdresseEtablissement,numeroVoieEtablissement,  \
- indiceRepetitionEtablissement,typeVoieEtablissement,libelleVoieEtablissement,  \
+ indiceRepetitionEtablissement,typeVoieEtablissement,libelleVoieEtablissement, \
  codePostalEtablissement,libelleCommuneEtablissement,  \
  libelleCommuneEtrangerEtablissement,distributionSpecialeEtablissement,  \
  codeCommuneEtablissement,codeCedexEtablissement, libelleCedexEtablissement,  \

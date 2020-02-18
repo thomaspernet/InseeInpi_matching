@@ -22,7 +22,7 @@ inpi_col =['Code Greffe','Nom_Greffe','Numero_Gestion','siren','Type',
  'Activité_Saisonnière','Activité_Non_Sédentaire','Date_Début_Activité',
  'Activité','Origine_Fonds','Origine_Fonds_Info','Type_Exploitation',
  'ID_Etablissement','Date_Greffe','Libelle_Evt','count_initial_inpi',
- 'ncc','Adress_new','Adresse_new_clean_reg']
+ 'ncc','Adress_new','Adresse_new_clean_reg', 'digit_inpi']
 
 #all_options = {
     #'America': ['New York City', 'San Francisco', 'Cincinnati'],

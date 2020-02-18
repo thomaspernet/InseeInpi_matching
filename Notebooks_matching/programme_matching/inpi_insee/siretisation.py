@@ -9,14 +9,6 @@ pbar = ProgressBar()
 pbar.register()
 
 
-chunks = self.split(temp_adresse, 60000)
-try:
-    for i in range(0, 15):
-        chunks[i].to_csv(
-    r'Data\input\unmatched\chunk\chunk_{}.gz'.format(i),
-        index = False, compression ='gzip')
-except:
-    pass
  ################
 class siretisation_inpi:
     def __init__(self, parameters = None):
@@ -25,135 +17,46 @@ class siretisation_inpi:
 
         Args:
         - parameters: Dictionary, les "keys" sont les suivantes:
-            - communes_insee: Path pour localiser le fichier des communes de
-            France
             - insee: Path pour localiser le fichier de l'INSEE. Format gz
             - inpi_etb: Path pour localiser le fichier de l'INPI, etablissement.
             Format gz
 
         """
-        insee_col = ['siren',
- 'siret',
- 'dateCreationEtablissement',
- "etablissementSiege",
- "etatAdministratifEtablissement",
- 'complementAdresseEtablissement',
- 'numeroVoieEtablissement',
- 'indiceRepetitionEtablissement',
- 'typeVoieEtablissement',
- 'libelleVoieEtablissement',
- 'codePostalEtablissement',
- 'libelleCommuneEtablissement',
- 'libelleCommuneEtrangerEtablissement',
- 'distributionSpecialeEtablissement',
- 'codeCommuneEtablissement',
- 'codeCedexEtablissement',
- 'libelleCedexEtablissement',
- 'codePaysEtrangerEtablissement',
- 'libellePaysEtrangerEtablissement',
- 'count_initial_insee']
-
-        inpi_col =['siren',
-        'index',
- 'Type',
- 'Adresse_Ligne1',
- 'Adresse_Ligne2',
- 'Adresse_Ligne3',
- 'Code_Postal',
- 'Ville',
- 'Code_Commune',
- 'Pays',
- 'count_initial_inpi',
- 'ncc']
-        insee_dtype = {
-    'siren': 'object',
-    'siret': 'object',
-    "etablissementSiege": "object",
-    "etatAdministratifEtablissement": "object",
-    'dateCreationEtablissement': 'object',
-    'complementAdresseEtablissement': 'object',
-    'numeroVoieEtablissement': 'object',
-    'indiceRepetitionEtablissement': 'object',
-    'typeVoieEtablissement': 'object',
-    'libelleVoieEtablissement': 'object',
-    'codePostalEtablissement': 'object',
-    'libelleCommuneEtablissement': 'object',
-    'libelleCommuneEtrangerEtablissement': 'object',
-    'distributionSpecialeEtablissement': 'object',
-    'codeCommuneEtablissement': 'object',
-    'codeCedexEtablissement': 'object',
-    'libelleCedexEtablissement': 'object',
-    'codePaysEtrangerEtablissement': 'object',
-    'libellePaysEtrangerEtablissement': 'object',
-    'count_initial_insee': 'int'
-}
-
-        inpi_dtype = {
-    'siren': 'object',
-    'index': 'object',
- 'Type': 'object',
- 'Adresse_Ligne1': 'object',
- 'Adresse_Ligne2': 'object',
- 'Adresse_Ligne3': 'object',
- 'Code_Postal': 'object',
- 'Ville': 'object',
- 'Code_Commune': 'object',
- 'Pays': 'object',
- 'count_initial_inpi': 'int',
- 'ncc': 'object',
-}
-
-        list_inpi = [
-        'siren',
-             'siret',
-        'index',
-             'Type',
-             'Adresse_Ligne1',
-             'Adresse_Ligne2',
-             'Adresse_Ligne3',
-             'Code_Postal',
-             'Ville',
-             'Code_Commune',
-             'Pays',
-             'ncc',
-             '_merge']
-        self.communes = parameters['communes_insee']
         self.insee = parameters['insee']
-        self.insee_col = insee_col
-        self.insee_dtype = insee_dtype
         self.inpi_etb = parameters['inpi_etb']
-        self.inpi_col = inpi_col
-        self.inpi_dtype = inpi_dtype
-        self.list_inpi = list_inpi
-        self.upper_word = pd.read_csv(parameters['upper_word']
-        ).iloc[:,0].to_list()
+        #self.insee_col = insee_col
+        #self.insee_dtype = insee_dtype
+
+        #self.inpi_col = inpi_col
+        #self.inpi_dtype = inpi_dtype
+        #self.list_inpi = list_inpi
 
     def import_dask(self, file, usecols = None, dtype=None):
         """
+        Import un fichier gzip ou csv en format Dask
+
+        Deja dans preparation data
+
+        Args:
+        - file: String, Path pour localiser le fichier, incluant le nom et
+        l'extension
+        - usecols: List: les noms des colonnes a importer. Par defaut, None
+        - dtype: Dictionary: La clé indique le nom de la variable, la valeur
+        indique le type de la variable
         """
-        dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
-        blocksize=None,compression='gzip')
+        extension = os.path.splitext(file)[1]
+        if usecols == None:
+            low_memory = False
+        else:
+            low_memory = True
+        if extension == '.gz':
+            dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
+        blocksize=None,compression='gzip', low_memory = low_memory)
+        else:
+            dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
+        blocksize=None, low_memory = low_memory)
 
         return dd_df
-
-    def log_detail(self, df_, option = 'left_only'):
-        """
-        option -> right_only ou left_only
-        """
-        log_ = {
-
-    'total_match':[int(df_['_merge'].value_counts()['both']),
-                   float(df_['_merge'].value_counts()['both']/df_.shape[0])
-                  ],
-    'total_unmatch':[int(df_['_merge'].value_counts()[option]),
-                   float(df_['_merge'].value_counts()[option]/df_.shape[0])
-                  ],
-    'details_unmatch': {
-        'Code_Postal':int(df_.loc[lambda x: x['_merge'].isin([option])].isna().sum()[['Code_Postal']][0]),
-        'Code_Commune':int(df_.loc[lambda x: x['_merge'].isin([option])].isna().sum()[['Code_Commune']][0]),
-    }
-}
-        return log_
 
     def match_unmatch(self, df_inpi_initial, df_inpi_mergeboth,
      step = '1_unique_siren',
@@ -211,38 +114,6 @@ class siretisation_inpi:
         indices = self.index_marks(dfm.shape[0], chunk_size)
         return np.split(dfm, indices)
 
-    def match_unique_etb(self, df_ets):
-        """
-
-
-        """
-        insee = self.import_dask(file = self.insee,
-        usecols = self.insee_col, dtype= self.insee_dtype)
-
-        inpi = self.import_dask(file = df_ets,
-        usecols = self.inpi_col, dtype=self.inpi_dtype)
-
-        m1_unique = (
-        insee.loc[insee['count_initial_insee'].isin([1])]
-        .merge(inpi.loc[inpi['count_initial_inpi'].isin([1])],
-               how='right', indicator=True)
-    )
-
-        unmatched = self.match_unmatch(
-        df_inpi_initial=inpi.compute(),
-        df_inpi_mergeboth=(m1_unique.compute()
-                       .reindex(columns=self.list_inpi)
-                       .loc[lambda x:
-                            x['_merge'].isin(['both'])]
-                       .drop(columns=['_merge'])),
-        step='1_unique_siren',
-        to_csv=True)
-
-        log_ = self.log_detail(m1_unique, option = 'right_only')
-        with open(r'data\logs\1_unique_siren.json', 'w') as outfile:
-                json.dump(log_, outfile)
-
-        return unmatched
 
     def merge_siren_candidat(self,
     df_input, regex_go = False, matching_voie =False,relax_regex = False,
@@ -256,8 +127,55 @@ class siretisation_inpi:
         var_adress_insee: libelleVoieEtablissement ou
         complementAdresseEtablissement.exemple siren  322385949
         """
-        insee = self.import_dask(file=self.insee,
-                        usecols=self.insee_col, dtype=self.insee_dtype)
+        insee_col = ['siren',
+         'siret',
+         'dateCreationEtablissement',
+         "etablissementSiege",
+         "etatAdministratifEtablissement",
+         'complementAdresseEtablissement',
+         'numeroVoieEtablissement',
+         'indiceRepetitionEtablissement',
+         'typeVoieEtablissement',
+         'libelleVoieEtablissement',
+         'codePostalEtablissement',
+         'libelleCommuneEtablissement',
+         'libelleCommuneEtrangerEtablissement',
+         'distributionSpecialeEtablissement',
+         'codeCommuneEtablissement',
+         'codeCedexEtablissement',
+         'libelleCedexEtablissement',
+         'codePaysEtrangerEtablissement',
+         'libellePaysEtrangerEtablissement',
+         'count_initial_insee']
+
+        insee_dtype = {
+             'siren': 'object',
+             'siret': 'object',
+             "etablissementSiege": "object",
+             "etatAdministratifEtablissement": "object",
+             'dateCreationEtablissement': 'object',
+             'complementAdresseEtablissement': 'object',
+             'numeroVoieEtablissement': 'object',
+             'indiceRepetitionEtablissement': 'object',
+             'typeVoieEtablissement': 'object',
+             'libelleVoieEtablissement': 'object',
+             'codePostalEtablissement': 'object',
+             'libelleCommuneEtablissement': 'object',
+             'libelleCommuneEtrangerEtablissement': 'object',
+             'distributionSpecialeEtablissement': 'object',
+             'codeCommuneEtablissement': 'object',
+             'codeCedexEtablissement': 'object',
+             'libelleCedexEtablissement': 'object',
+             'codePaysEtrangerEtablissement': 'object',
+             'libellePaysEtrangerEtablissement': 'object',
+             'count_initial_insee': 'int'
+         }
+
+
+        insee = self.import_dask(
+        file=self.insee,
+        usecols=insee_col,
+        dtype=insee_dtype)
 
         if '_merge' in df_input.columns:
             try:
@@ -307,6 +225,8 @@ class siretisation_inpi:
 
         to_check = temp[temp['_merge'].isin(['both'])]
         nomatch = temp[~temp['_merge'].isin(['both'])]
+
+        return to_check
 
         if regex_go:
             if relax_regex:
