@@ -369,7 +369,7 @@ class preparation:
         siren_inpi = pd.read_csv(siren_inpi_gz, compression = 'gzip')
 
         subset_insee = (dd_df_insee
-        .loc[dd_df_insee['siren'].isin(siren_inpi)]
+        .loc[dd_df_insee['siren'].isin(siren_inpi['siren'].to_list())]
         .loc[dd_df_insee['dateCreationEtablissement'] <= self.date_end]
         .assign(
             libelleCommuneEtablissement = lambda x:
