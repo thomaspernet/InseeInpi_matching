@@ -1,12 +1,15 @@
-import json, os, re
+import json, os, re, sqlite3
 from dask.diagnostics import ProgressBar
 from dask.multiprocessing import get
 import dask.dataframe as dd
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
+from sqlalchemy import create_engine
 pbar = ProgressBar()
 pbar.register()
+
+
 
 class preparation:
     def __init__(self, parameters = None):
@@ -20,10 +23,37 @@ class preparation:
             - insee: Path pour localiser le fichier de l'INSEE. Format csv
             - inpi_etb: Path pour localiser le fichier de l'INPI, etablissement.
             Format gz
+            - date_end: Indique une date de fin pour filtrer le fichier insee
+            format: "YYYY-MM-DD"
 
         """
+        self.communes = parameters['communes_insee']
         self.insee = parameters['insee']
+        self.inpi_etb = parameters['inpi_etb']
         self.date_end = parameters['date_end']
+
+    def save_sql(self,df,  db,table,  query):
+        """
+        SAuvegarde un dataframe vers un serveur SQL
+
+        Args:
+        - df: Pandas DataFrame
+        - db: String: Path ou doit etre sauvegardé la dataframe
+        - table: String, Nom de la table
+        - query: String: SQL query
+
+        """
+
+        conn = sqlite3.connect(db)
+        c = conn.cursor()
+        c.execute(query)
+        conn.commit()
+
+        if 'index' in df.columns:
+            df = df.drop(columns = 'index')
+        df.to_sql(table, conn, if_exists='replace', index = False)
+
+
 
     def import_dask(self, file, usecols = None, dtype=None):
         """
@@ -37,12 +67,16 @@ class preparation:
         indique le type de la variable
         """
         extension = os.path.splitext(file)[1]
-        if == '.gz':
+        if usecols == None:
+            low_memory = False
+        else:
+            low_memory = True
+        if extension == '.gz':
             dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
-        blocksize=None,compression='gzip')
+        blocksize=None,compression='gzip', low_memory = low_memory)
         else:
             dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
-        blocksize=None)
+        blocksize=None, low_memory = low_memory)
 
         return dd_df
 
@@ -83,11 +117,209 @@ class preparation:
 
         return df_dd_count
 
-    def normalize_insee(self):
-            """
-            """
+    def clean_commune(self, df_inpi):
+        """
+        Prepare les fichiers de l'INPI -> Nettoie la variable Ville dans l'INPI
+        pour correspondre au fichier communes_insee.
 
-            usecols=[
+        Le nettoyage utilise le regex pour:
+        - Enlever les mots suivants:
+            CEDEX, cedex, Cedex, ,COMMUNE DE ,COMMUNE DE,commune de ,commune de,
+                Commune de ,Commune de
+        - Enlève les caractères spéciaux
+        - Enlève les espaces
+        - Enlèves les digits
+
+        Returns: Un dataframe avec les nouvelles variables suivantes:
+        -
+
+            """
+        regex = "CEDEX|cedex|Cedex|\([^)]*\)|/\s\s+/" \
+            "|^\d+\s|\s\d+\s|\s\d+$|\d+|\.|\--|COMMUNE DE |" \
+            "COMMUNE DE|commune de |commune de|Commune de |Commune de |\s$"
+            ### Voir si on peut faire avec Dask
+        communes = pd.read_csv(self.communes, low_memory=False)
+
+        df_inpi['test'] =df_inpi['Ville'].str.extract(r'(\d+)')
+        df_inpi['Ville_clean'] = df_inpi['Ville'].str.replace(
+            regex,'')
+        df_inpi['Ville_clean'] = df_inpi['Ville_clean'].str.replace(
+            '\s$|\s^','')
+
+            ### arrondissement
+        df_inpi['ville2'] = np.where(
+            np.logical_and(
+             ~df_inpi['test'].isin([np.nan]),
+            df_inpi['test'].str.len() <=2
+        )
+       ,
+        df_inpi['Ville_clean'] + '' + df_inpi['test'].astype(str),
+        df_inpi['Ville_clean']
+    )
+
+        df_inpi['Ville_upper'] = df_inpi['Ville_clean'].str.upper()
+
+        df_inpi = df_inpi.merge(communes,
+                             left_on='ville2',
+                             right_on='possibilite',
+                             how='left',
+                             indicator=True)
+
+        df_inpi = pd.concat([
+        df_inpi.loc[lambda x: x['_merge'].isin(['both'])],
+        (df_inpi
+         .loc[lambda x: x['_merge'].isin(['left_only'])]
+         .drop(columns=['ncc', 'possibilite', '_merge'])
+         .merge(communes,
+                left_on='Ville_upper',
+                right_on='possibilite',
+                how='left',
+                indicator=True)
+         )
+    ])
+
+        df_inpi = pd.concat([
+        df_inpi.loc[lambda x: x['_merge'].isin(['both'])],
+        (df_inpi
+         .loc[lambda x: x['_merge'].isin(['left_only'])]
+         .drop(columns=['ncc', 'possibilite', '_merge'])
+         .assign(
+             noaccent=lambda x: x['Ville_clean'].str.normalize('NFKD')
+             .str.encode('ascii', errors='ignore')
+             .str.decode('utf-8'))
+         ).merge(communes,
+                 left_on='noaccent',
+                 right_on='possibilite',
+                 how='left',
+                 indicator=True)])
+
+        df_inpi = df_inpi.drop(columns = ['test', 'Ville_clean',
+         'ville2', 'Ville_upper','possibilite', '_merge', 'noaccent'])
+
+        return df_inpi
+
+    def normalize_inpi(self, save = True):
+        """
+        Prepare le fichier gz en vue de la siretisation
+        La fonction prend le fichier d'origine de l'INPII définit dans
+        l'instantiation de la classe. Ensuite, Ensuite, la fonction Enlève
+        toutes les lignes dont les variables de matching ont uniquement des nan
+        . Une liste de SIREN est
+        aussi renseignée afin de ne contenir que les SIREN a recuperer.
+        Cela permet de gagner en mémoire lors de la siretisation_inpi
+
+        Args:
+        - siren_inpi: List: liste de siren a retrouver
+
+        Return:
+        - Trois fichiers sont sauvegardé:
+            - Un dataframe pandas filtré et avec une nouvelle variable,
+            le count de SIRET par SIREN et la nromalisation des communes
+            - Une liste avec les SIREN a filtrer dans l'INSEE
+            - Le dataframe sauvegardé dans une base SQL
+        """
+
+        dtype={
+        'Type': 'object',
+        'Siren': 'object',
+        'Code_Postal': 'object',
+        'Code_Commune': 'object',
+        'Adresse_Ligne1': 'object',
+        'Adresse_Ligne2': 'object',
+        'Adresse_Ligne3': 'object',
+        'Ville': 'object',
+        'Pays': 'object',
+        'Domiciliataire_Greffe': 'object'
+                         }
+
+        dd_df_inpi = self.import_dask(file = self.inpi_etb,
+            usecols = None,
+            dtype=dtype)
+
+        dd_df_inpi = dd_df_inpi.rename(columns={"Siren": "siren"}).compute()
+
+        siren_fullna = dd_df_inpi.loc[
+                      (dd_df_inpi['Adresse_Ligne1'].isin([np.nan]))
+                     & (dd_df_inpi['Adresse_Ligne2'].isin([np.nan]))
+                     & (dd_df_inpi['Adresse_Ligne3'].isin([np.nan]))
+                     & (dd_df_inpi['Code_Postal'].isin([np.nan]))
+                     & (dd_df_inpi['Ville'].isin([np.nan]))
+                     & (dd_df_inpi['Code_Commune'].isin([np.nan]))
+                     ]['siren']
+
+        siren_inpi = dd_df_inpi['siren'].drop_duplicates()
+
+        subset_inpi = dd_df_inpi.loc[
+                                 (~dd_df_inpi['siren'].isin(
+                                 siren_fullna.to_list()))
+                                 ]
+
+        subset_inpi = self.nombre_siret_siren(df_dd = subset_inpi,
+             origin = 'INPI')
+
+        subset_inpi_cleaned = self.clean_commune(df_inpi = subset_inpi)
+
+        if save:
+            size_ = subset_inpi.shape[0]
+            print('Saving {} observations'.format(size_))
+            (subset_inpi_cleaned
+            .assign(index = lambda x:
+            x.index)
+            .to_csv('data\input\inpi_etb_stock_{}.gz'.format(size_
+            ),
+            compression='gzip', index = False))
+
+            size_ = len(siren_inpi)
+            print('Saving {} observations'.format(size_))
+            siren_inpi.to_csv(
+            'data\input\SIREN_INPI\inpi_etb_stock_{}.gz'.format(
+            size_
+            ),
+            compression='gzip', index = False)
+
+            print('Creating SQL database')
+            query = "CREATE TABLE SIREN (Code Greffe,Nom_Greffe,Numero_Gestion,\
+             siren,Type,Siège_PM,RCS_Registre,Adresse_Ligne1,Adresse_Ligne2,\
+             Adresse_Ligne3,Code_Postal,Ville,Code_Commune,Pays,\
+             Domiciliataire_Nom,Domiciliataire_Siren,Domiciliataire_Greffe,\
+             Domiciliataire_Complément,Siege_Domicile_Représentant,\
+             Nom_Commercial,Enseigne,Activité_Ambulante,Activité_Saisonnière,\
+             Activité_Non_Sédentaire,Date_Début_Activité,Activité,\
+             Origine_Fonds)"
+
+            self.save_sql(
+            df = subset_inpi_cleaned,
+            db = r'App\SQL\inpi_origine.db',
+            table = 'SIREN',
+            query =query)
+
+    def normalize_insee(self, siren_inpi_gz, save= True):
+        """
+        Prepare le fichier gz en vue de la siretisation
+        La fonction prend le fichier d'origine de l'INSEE définit dans
+        l'instantiation de la classe. Ensuite, la date de création de l'
+        etablissement permet de filtrer la base. Une liste de SIREN est
+        aussi renseignée afin de ne contenir que les SIREN a recuperer.
+        Cela permet de gagner en mémoire lors de la siretisation_inpi
+
+        Args:
+        - siren_inpi: strig: Indique le nom du fichier gz contenant les
+        siret a filter ->liste de siren a retrouver
+
+        Return:
+
+        Un dataframe pandas filtré et avec une nouvelle variable, le count de
+        SIRET par SIREN
+
+        Return:
+        - Deux fichiers sont sauvegardé:
+            - Un dataframe pandas filtré et avec une nouvelle variable,
+            le count de SIRET par SIREN
+            - Le dataframe sauvegardé dans une base SQL
+
+        """
+
+        usecols=[
             'siren',
             'siret',
              "etablissementSiege",
@@ -109,7 +341,7 @@ class preparation:
                "dateCreationEtablissement"
                                    ]
 
-            dtype={
+        dtype={
             'siren': 'object',
             'siret': 'object',
             "etablissementSiege": "object",
@@ -130,17 +362,46 @@ class preparation:
             "libellePaysEtrangerEtablissement": 'object'
                                  }
 
-            dd_df_insee = self.import_dask(file = self.insee,
+        dd_df_insee = self.import_dask(file = self.insee,
             usecols = usecols,
             dtype=dtype)
 
-            subset_insee = (dd_df_insee
-            .loc[data_insee_['dateCreationEtablissement'] <= self.date_end]
-            .assign(
+        siren_inpi = pd.read_csv(siren_inpi_gz, compression = 'gzip')
+
+        subset_insee = (dd_df_insee
+        .loc[dd_df_insee['siren'].isin(siren_inpi)]
+        .loc[dd_df_insee['dateCreationEtablissement'] <= self.date_end]
+        .assign(
             libelleCommuneEtablissement = lambda x:
             x['libelleCommuneEtablissement'].str.replace('-', ' ')
                 )
                )
 
-            subset_insee = nombre_siret_siren(df_dd = subset_insee,
-             origin = 'INSEE')
+        subset_insee = self.nombre_siret_siren(df_dd = subset_insee,
+             origin = 'INSEE').compute()
+
+        if save:
+            size_ = subset_insee.shape[0]
+            print('Saving {} observations'.format(size_))
+            (subset_insee
+            .assign(index = lambda x:
+            x.index)
+            .to_csv('data\input\insee_2017_{}.gz'.format(size_
+            ),
+            compression='gzip', index = False))
+
+            print('Creating SQL database')
+            query = "CREATE TABLE INSEE (siren,siret,dateCreationEtablissement, \
+ etablissementSiege,complementAdresseEtablissement,numeroVoieEtablissement,  \
+ indiceRepetitionEtablissement,typeVoieEtablissement,libelleVoieEtablissement,  \
+ codePostalEtablissement,libelleCommuneEtablissement,  \
+ libelleCommuneEtrangerEtablissement,distributionSpecialeEtablissement,  \
+ codeCommuneEtablissement,codeCedexEtablissement, libelleCedexEtablissement,  \
+ codePaysEtrangerEtablissement, libellePaysEtrangerEtablissement,  \
+ etatAdministratifEtablissement,count_initial_insee)"
+
+            self.save_sql(
+            df = subset_inpi_cleaned,
+            db = r'App\SQL\App_insee.db',
+            table = 'INSEE',
+            query =query)
