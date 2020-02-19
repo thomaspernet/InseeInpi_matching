@@ -33,6 +33,7 @@ class preparation:
         self.date_end = parameters['date_end']
         self.upper_word = pd.read_csv(parameters['upper_word']
         ).iloc[:,0].to_list()
+        self.voie = pd.read_csv(parameters['voie'])
 
     def save_sql(self,df,  db,table,  query):
         """
@@ -252,7 +253,6 @@ class preparation:
             .str.decode('utf-8')
             .str.replace('[^\w\s]|\d+', ' ')
             .str.upper(),
-
         )
         temp_adresse['Adresse_new_clean'] = (
         temp_adresse['Adresse_new_clean'].apply(
@@ -273,6 +273,14 @@ class preparation:
 
         temp_adresse['digit_inpi'] = \
         temp_adresse['Adress_new'].str.extract(r'(\d+)')
+
+
+        ### ajouter voie
+        temp_adresse['possibilite'] = (temp_adresse['Adress_new']
+        .str
+        .extract(r'(' + '|'.join(self.voie['possibilite'].to_list()) +')'))
+
+        temp_adresse = temp_adresse.merge(self.voie, how = 'left')
 
         return temp_adresse
 
@@ -337,7 +345,8 @@ class preparation:
 
         subset_inpi_cleaned = self.clean_commune(df_inpi = subset_inpi)
 
-        subset_inpi_cleaned = self.prepare_adress(df = subset_inpi_cleaned)
+        subset_inpi_cleaned = self.prepare_adress(df =
+        subset_inpi_cleaned)
 
         if save:
             size_ = subset_inpi.shape[0]
@@ -367,7 +376,8 @@ class preparation:
              Activité_Non_Sédentaire,Date_Début_Activité,Activité,\
              Origine_Fonds, Origine_Fonds_Info,Type_Exploitation,\
              ID_Etablissement,Date_Greffe,Libelle_Evt,count_initial_inpi,\
-             ncc,Adress_new,Adresse_new_clean_reg, digit_inpi)"
+             ncc,Adress_new,Adresse_new_clean_reg, digit_inpi, possibilite, \
+             INSEE)"
 
             try:
                 self.save_sql(
@@ -457,7 +467,7 @@ class preparation:
             dtype=dtype)
 
         siren_inpi = pd.read_csv(siren_inpi_gz,
-        compression = 'gzip')['siren'].to_list()
+        compression = 'gzip', dtype = {'siren':'object'})['siren'].to_list()
 
         subset_insee = (dd_df_insee
         .loc[dd_df_insee['siren'].isin(siren_inpi)]
