@@ -91,17 +91,17 @@ class siretisation_inpi:
 
         return unmatch_
 
-    def find_regex(self,regex, test_str, siret):
+    def find_regex(self,regex, test_str):
         """
         """
         try:
             matches = re.search(regex, test_str)
             if matches:
-                return siret
+                return True
             else:
-                return np.nan
+                return False
         except:
-            return np.nan
+            return False
 
     def index_marks(self, nrows, chunk_size):
 
@@ -317,7 +317,101 @@ class siretisation_inpi:
         test_3_non.shape[0]
         ), compression ="gzip")
 
+        ### SAve in case of
+        df_no_duplication.to_csv(
+        r"data\input\TESTS\df_no_duplication_{}.gz".format(
+        df_no_duplication.shape[0]
+        ), compression ="gzip")
+
+        df_duplication.to_csv(
+        r"data\input\TESTS\df_duplication_{}.gz".format(
+        df_duplication.shape[0]
+        ), compression ="gzip")
+
         return (df_no_duplication, df_duplication)
+
+    def assess_test(self, df):
+        """
+        """
+        ## Calcul nb siren/siret
+        df_ = (df
+        .merge(
+        (df
+        .groupby([
+        'siren','ncc',
+        'Code_Postal','Code_Commune',
+        'INSEE','digit_inpi'])['siren']
+             .count()
+             .rename('count_siren_siret')
+             .reset_index()
+             )
+             )
+             )
+
+        ## Test 1: address
+        df_ = dd.from_pandas(df_, npartitions=10)
+        df_['test_address'] = df_.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    self.find_regex(
+                     x['Adresse_new_clean_reg'],
+                     x['libelleVoieEtablissement']), axis=1)
+                     ).compute()
+        return df_              
+        df_ = df_.compute()
+        ## Test 2: Date
+        df_.loc[
+        (df_['dateCreationEtablissement'] >=
+        df_['Date_Début_Activité'])
+        | (df_['Date_Début_Activité'].isin([np.nan]))
+        | (df_['count_siren_siret'].isin([1])
+        & df_['count_initial_insee'].isin([1])),
+        'test_1'] = True
+
+        df_.loc[df_['test_1'].isin([np.nan]),'test_1'] = False
+
+        ## Test 3: siege
+        df_['test_siege'] = np.where(
+        np.logical_and(
+        df_['Type'].isin(['SEP', 'SIE']),
+        df_['etablissementSiege'].isin(['true'])
+        ),
+        True, False
+        )
+
+        ## Test 4: voie
+        df_.loc[
+        df_['INSEE'] == df_['typeVoieEtablissement'],
+        'test_voie'
+        ] = True
+
+        df_.loc[
+        df_['INSEE'] != df_['typeVoieEtablissement'],
+        'test_voie'
+        ] = False
+
+        ## Test 5: numero voie
+        df_.loc[
+        df_['digit_inpi'] == df_['numeroVoieEtablissement'],
+        'test_numero'
+        ] = True
+
+        df_.loc[
+        df_['digit_inpi'] != df_['numeroVoieEtablissement'],
+        'test_numero'
+        ] = False
+
+        ## Final test: count unique index
+        df_ = df_.merge(
+        (df_
+        .groupby('index')['index']
+        .count()
+        .rename('count_duplicates_final')
+        .reset_index()
+        )
+        )
+
+        return df_
 
 
     def merge_siren_candidat(self,left_on, right_on,
