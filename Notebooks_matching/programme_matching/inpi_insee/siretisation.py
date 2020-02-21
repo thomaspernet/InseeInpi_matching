@@ -146,7 +146,7 @@ class siretisation_inpi:
 
         return dic_
 
-    def create_test(self,left_on, right_on,df_input):
+    def step_one(self,left_on, right_on,df_input):
         """
         Le calcul DAsk se fait dans la focntion split_duplication
         """
