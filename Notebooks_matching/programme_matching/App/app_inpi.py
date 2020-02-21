@@ -49,7 +49,8 @@ def update_output_div(siren):
     r"\InseeInpi_matching\Notebooks_matching" \
     r"\programme_matching\App\SQL\inpi_origine.db")
     c = conn.cursor()
-    query = '''SELECT * FROM INPI WHERE siren = {} '''.format(siren)
+    query = '''SELECT * FROM INPI WHERE siren = {}
+    ORDER BY Ville'''.format(siren)
     c.execute(query)
     df = pd.DataFrame(c.fetchall(), columns= inpi_col)
     return df.to_html()

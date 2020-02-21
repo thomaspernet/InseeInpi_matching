@@ -38,6 +38,8 @@ insee_col =['siren',
 reindex_col = ['siren',
  'siret',
  'count_initial_insee',
+ 'libelleCommuneEtablissement',
+ 'codePostalEtablissement',
  'etatAdministratifEtablissement',
  'dateCreationEtablissement',
  'etablissementSiege',
@@ -46,8 +48,6 @@ reindex_col = ['siren',
  'indiceRepetitionEtablissement',
  'typeVoieEtablissement',
  'libelleVoieEtablissement',
- 'codePostalEtablissement',
- 'libelleCommuneEtablissement',
  'libelleCommuneEtrangerEtablissement',
  'distributionSpecialeEtablissement',
  'codeCommuneEtablissement',
@@ -82,11 +82,12 @@ def update_output_div(siren):
     r"\InseeInpi_matching\Notebooks_matching" \
     r"\programme_matching\App\SQL\App_insee.db")
     c = conn.cursor()
-    query = '''SELECT * FROM INSEE WHERE siren = {} '''.format(siren)
+    query = '''SELECT * FROM INSEE WHERE siren = {}
+    ORDER BY etablissementSiege, libelleCommuneEtablissement'''.format(siren)
     c.execute(query)
     df = pd.DataFrame(c.fetchall(), columns= insee_col).sort_values(
-    by = "etablissementSiege",
-     ascending = False)#.reindex( columns = reindex_col)
+    by = ["etablissementSiege", 'libelleCommuneEtablissement'],
+     ascending = False).reindex( columns = reindex_col)
     return df.to_html()
 
 def open_browser():
