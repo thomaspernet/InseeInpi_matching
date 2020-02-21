@@ -284,7 +284,7 @@ class preparation:
 
         return temp_adresse
 
-    def normalize_inpi(self, save = True):
+    def normalize_inpi(self, save_gz = True, save_sql =False):
         """
         Prepare le fichier gz en vue de la siretisation
         La fonction prend le fichier d'origine de l'INPII définit dans
@@ -315,7 +315,8 @@ class preparation:
         'Adresse_Ligne3': 'object',
         'Ville': 'object',
         'Pays': 'object',
-        'Domiciliataire_Greffe': 'object'
+        'Domiciliataire_Greffe': 'object',
+        'Date_Début_Activité':'object'
                          }
 
         dd_df_inpi = self.import_dask(file = self.inpi_etb,
@@ -348,7 +349,7 @@ class preparation:
         subset_inpi_cleaned = self.prepare_adress(df =
         subset_inpi_cleaned)
 
-        if save:
+        if save_gz:
             size_ = subset_inpi.shape[0]
             print('Saving {} observations'.format(size_))
             (subset_inpi_cleaned
@@ -365,7 +366,7 @@ class preparation:
             size_
             ),
             compression='gzip', index = False)
-
+        if save_sql:
             print('Creating SQL database')
             query = "CREATE TABLE INPI (Code_Greffe,Nom_Greffe,Numero_Gestion,\
              siren,Type,Siège_PM,RCS_Registre,Adresse_Ligne1,Adresse_Ligne2,\
@@ -378,18 +379,12 @@ class preparation:
              ID_Etablissement,Date_Greffe,Libelle_Evt,count_initial_inpi,\
              ncc,Adress_new,Adresse_new_clean_reg, digit_inpi, possibilite, \
              INSEE)"
-
             try:
+                os.remove(r'App\SQL\inpi_origine.db')
+            except:
                 self.save_sql(
                 df = subset_inpi_cleaned,
                 db = r'App\SQL\inpi_origine.db',
-                table = 'INPI',
-                query =query)
-            except:
-                os.remove(r'App\SQL\inpi_origine.db')
-                self.save_sql(
-                df = subset_inpi_cleaned,
-                db = r'App\SQL\App_insee.db',
                 table = 'INPI',
                 query =query)
 
@@ -459,7 +454,8 @@ class preparation:
             "distributionSpecialeEtablissement": 'object',
             "libelleCommuneEtrangerEtablissement": 'object',
             "codePaysEtrangerEtablissement": 'object',
-            "libellePaysEtrangerEtablissement": 'object'
+            "libellePaysEtrangerEtablissement": 'object',
+            "dateCreationEtablissement":'object'
                                  }
 
         dd_df_insee = self.import_dask(file = self.insee,
