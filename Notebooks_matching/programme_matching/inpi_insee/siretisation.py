@@ -330,7 +330,7 @@ class siretisation_inpi:
 
         return (df_no_duplication, df_duplication)
 
-    def assess_test(self, df):
+    def step_two_assess_test(self, df):
         """
         """
         ## Calcul nb siren/siret
@@ -432,10 +432,10 @@ class siretisation_inpi:
 
         return df_
 
-    def test_doublon(self, df_duplication):
+    def step_two_duplication(self, df_duplication):
         """
         """
-        duplicates_ = self.assess_test(df = df_duplication)
+        duplicates_ = self.step_two_assess_test(df = df_duplication)
         df_not_duplicate = pd.DataFrame()
         copy_duplicate = duplicates_.copy()
 
