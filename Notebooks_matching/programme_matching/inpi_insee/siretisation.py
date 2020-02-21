@@ -344,21 +344,40 @@ class siretisation_inpi:
              .count()
              .rename('count_siren_siret')
              .reset_index()
-             )
+             ),how = 'left'
              )
              )
 
         ## Test 1: address
         df_ = dd.from_pandas(df_, npartitions=10)
-        df_['test_address'] = df_.map_partitions(
+        df_['test_address_libelle'] = df_.map_partitions(
             lambda df:
                 df.apply(lambda x:
                     self.find_regex(
                      x['Adresse_new_clean_reg'],
                      x['libelleVoieEtablissement']), axis=1)
                      ).compute()
-        return df_              
+
+        df_['test_address_complement'] = df_.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    self.find_regex(
+                     x['Adresse_new_clean_reg'],
+                     x['complementAdresseEtablissement']), axis=1)
+                     ).compute()
+
         df_ = df_.compute()
+
+        ## test join Adress
+        df_.loc[
+        (df_['test_address_libelle'] == True)
+        &(df_['test_address_complement'] == True),
+        'test_join_address'] = True
+
+        df_.loc[
+        (df_['test_join_address'] != True),
+        'test_join_address'] = False
+
         ## Test 2: Date
         df_.loc[
         (df_['dateCreationEtablissement'] >=
@@ -366,9 +385,9 @@ class siretisation_inpi:
         | (df_['Date_Début_Activité'].isin([np.nan]))
         | (df_['count_siren_siret'].isin([1])
         & df_['count_initial_insee'].isin([1])),
-        'test_1'] = True
+        'test_date'] = True
 
-        df_.loc[df_['test_1'].isin([np.nan]),'test_1'] = False
+        df_.loc[df_['test_date'].isin([np.nan]),'test_1'] = False
 
         ## Test 3: siege
         df_['test_siege'] = np.where(
@@ -413,6 +432,50 @@ class siretisation_inpi:
 
         return df_
 
+    def test_doublon(self, df_duplication):
+        """
+        """
+        duplicates_ = self.assess_test(df = df_duplication)
+        df_not_duplicate = pd.DataFrame()
+        copy_duplicate = duplicates_.copy()
+
+        for i in ['test_join_address','test_address_libelle',
+         'test_address_complement']:
+         ### split duplication
+            test_1 = self.split_duplication(
+            copy_duplicate[
+            copy_duplicate[i].isin([True])]
+    )
+
+            ### append unique
+            df_not_duplicate = (
+            df_not_duplicate
+            .append(test_1['not_duplication']
+            .assign(test = i)
+            )
+            )
+
+            copy_duplicate = (copy_duplicate
+                   .loc[~copy_duplicate['index'].isin(
+                       pd.concat([
+                           test_1['duplication'],
+                           test_1['not_duplication']
+                       ], axis = 0)['index']
+                       .drop_duplicates())])
+
+        (df_not_duplicate
+        .to_csv(r'data\output\not_duplicate_{}.gz'.format(
+        df_not_duplicate.shape[0]),
+        compression = 'gzip'))
+
+        # Special treatment
+        sp = (duplicates_[
+        ~duplicates_['index']
+        .isin(df_not_duplicate['index'])])
+
+        (sp.to_csv(r'data\output\special_treatment_{}.gz'.format(
+        sp.shape[0]),
+        compression = 'gzip'))
 
     def merge_siren_candidat(self,left_on, right_on,
     df_input, regex_go = False, matching_voie =False,relax_regex = False,
