@@ -31,7 +31,7 @@ class siretisation_inpi:
         #self.inpi_dtype = inpi_dtype
         #self.list_inpi = list_inpi
 
-    def import_dask(self, file, usecols = None, dtype=None):
+    def import_dask(self, file, usecols = None, dtype=None, parse_dates = False):
         """
         Import un fichier gzip ou csv en format Dask
 
@@ -43,6 +43,8 @@ class siretisation_inpi:
         - usecols: List: les noms des colonnes a importer. Par defaut, None
         - dtype: Dictionary: La clé indique le nom de la variable, la valeur
         indique le type de la variable
+        - parse_dates: bool or list of int or names or list of lists or dict,
+         default False
         """
         extension = os.path.splitext(file)[1]
         if usecols == None:
@@ -51,10 +53,11 @@ class siretisation_inpi:
             low_memory = True
         if extension == '.gz':
             dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
-        blocksize=None,compression='gzip', low_memory = low_memory)
+        blocksize=None,compression='gzip', low_memory = low_memory,
+        parse_dates = parse_dates)
         else:
             dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
-        blocksize=None, low_memory = low_memory)
+        blocksize=None, low_memory = low_memory,parse_dates = parse_dates)
 
         return dd_df
 
@@ -114,8 +117,170 @@ class siretisation_inpi:
         indices = self.index_marks(dfm.shape[0], chunk_size)
         return np.split(dfm, indices)
 
+    def split_duplication(self, df):
+        """
+        """
+        if 'count_duplicates_' in df.columns:
+            df = df.drop(columns = 'count_duplicates_')
 
-    def merge_siren_candidat(self,
+        df = df.merge(
+            (df
+                .groupby('index')['index']
+                .count()
+                .rename('count_duplicates_')
+                .reset_index()
+                )
+                )
+
+        dic_ = {
+            'not_duplication':df[df['count_duplicates_'].isin([1])],
+            'duplication' : df[~df['count_duplicates_'].isin([1])],
+            'report_dup':df[
+            ~df['count_duplicates_'].isin([1])
+            ]['count_duplicates_'].value_counts()
+            }
+
+        return dic_
+
+    def create_test(self,left_on, right_on,df_input):
+        """
+        """
+        insee_col = ['siren',
+         'siret',
+         'dateCreationEtablissement',
+         "etablissementSiege",
+         "etatAdministratifEtablissement",
+         'complementAdresseEtablissement',
+         'numeroVoieEtablissement',
+         'indiceRepetitionEtablissement',
+         'typeVoieEtablissement',
+         'libelleVoieEtablissement',
+         'codePostalEtablissement',
+         'libelleCommuneEtablissement',
+         'libelleCommuneEtrangerEtablissement',
+         'distributionSpecialeEtablissement',
+         'codeCommuneEtablissement',
+         'codeCedexEtablissement',
+         'libelleCedexEtablissement',
+         'codePaysEtrangerEtablissement',
+         'libellePaysEtrangerEtablissement',
+         'count_initial_insee']
+
+        insee_dtype = {
+             'siren': 'object',
+             'siret': 'object',
+             "etablissementSiege": "object",
+             "etatAdministratifEtablissement": "object",
+             #'dateCreationEtablissement': 'object',
+             'complementAdresseEtablissement': 'object',
+             'numeroVoieEtablissement': 'object',
+             'indiceRepetitionEtablissement': 'object',
+             'typeVoieEtablissement': 'object',
+             'libelleVoieEtablissement': 'object',
+             'codePostalEtablissement': 'object',
+             'libelleCommuneEtablissement': 'object',
+             'libelleCommuneEtrangerEtablissement': 'object',
+             'distributionSpecialeEtablissement': 'object',
+             'codeCommuneEtablissement': 'object',
+             'codeCedexEtablissement': 'object',
+             'libelleCedexEtablissement': 'object',
+             'codePaysEtrangerEtablissement': 'object',
+             'libellePaysEtrangerEtablissement': 'object',
+             'count_initial_insee': 'int'
+         }
+
+
+        insee = self.import_dask(
+        file=self.insee,
+        usecols=insee_col,
+        dtype=insee_dtype,
+        parse_dates = ['dateCreationEtablissement'])
+
+        temp = df_input.merge(insee,
+                          how='left',
+                          left_on=left_on,
+                          right_on= right_on,
+                          indicator=True,
+                          suffixes=['_insee', '_inpi']).compute()
+
+        to_check = temp[temp['_merge'].isin(['both'])].drop(columns= '_merge')
+        nomatch = temp[~temp['_merge'].isin(['both'])].drop(columns= '_merge')
+
+        ### Solution temporaire
+        to_check["Date_Début_Activité"] = \
+        to_check["Date_Début_Activité"].map_partitions(
+            pd.to_datetime,
+            format='%d/%m/%Y',
+            errors = 'coerce',
+            meta = ('datetime64[ns]'))
+
+        test_1 = self.split_duplication(df = to_check)
+
+        return test_1
+
+
+        # Test 1: doublon -> non
+        test_1['not_duplication'].compute().to_csv(
+        r"data\input\TESTS\test1_nodup_{}.gz".format(
+        test_1['not_duplication'].shape[0]), compression ="gzip")
+
+        ## Test 2: Date equal -> oui
+        test_2_oui = test_1['duplication'][
+        (test_1['duplication']['Date_Début_Activité'] ==
+                     test_1['duplication']['dateCreationEtablissement'])
+                     ]
+        ### Test 2: Date equal -> oui, Test 2 bis: doublon
+        test_2_bis = self.split_duplication(df = test_2_oui)
+
+        #### Test 2: Date equal -> oui, Test 2 bis: doublon: non
+        test_2_bis['not_duplication'].to_csv(
+        r"data\input\TESTS\test2_nodup_{}.gz".format(
+        test_2_bis['not_duplication'].shape[0]), compression ="gzip")
+
+        #### Test 2: Date equal -> oui, Test 2 bis: doublon: oui
+        test_2_bis['duplication'].to_csv(
+        r"data\input\TESTS\test2_dup_{}.gz".format(
+        test_2_bis['duplication'].shape[0]), compression ="gzip")
+
+        ## Test 2: Date equal -> non
+        ### Test 2: Date equal -> non -> test 3: Date sup -> oui
+        test_3_oui = test_1['duplication'].loc[
+        (test_1['duplication']['dateCreationEtablissement'] >
+        test_1['duplication']['Date_Début_Activité'])
+        & (~test_1['duplication']['index'].isin(test_2_oui['index'].to_list()))
+        ]
+
+        ##### Test 2: Date equal -> non -> test 3: Date sup -> oui
+        ##### Test 3 bis: doublon:
+        test_3_oui_bis = self.split_duplication(df = test_3_oui)
+
+        ###### Test 3 bis: doublon: non
+        test_3_oui_bis['not_duplication'].to_csv(
+        r"data\input\TESTS\test3_nodup_{}.gz".format(
+        test_3_oui_bis['not_duplication'].shape[0]), compression ="gzip")
+
+        ###### Test 3 bis: doublon:oui
+        test_3_oui_bis['duplication'].to_csv(
+        r"data\input\TESTS\test3_nodup_{}.gz".format(
+        test_3_oui_bis['duplication'].shape[0]), compression ="gzip")
+
+        ###### Test 3: Date equal -> non -> test 3: Date sup -> non
+        test_3_non = test_1['duplication'].loc[
+        (~test_1['duplication']['index'].isin(
+        test_2_oui['index'].to_list()+
+        test_3_oui['index'].to_list()
+        )
+        )
+        ]
+
+        test_3_non.to_csv(
+        r"data\input\TESTS\test3_specialtreat_{}.gz".format(
+        test_3_non.shape[0]
+        ), compression ="gzip")
+
+
+
+    def merge_siren_candidat(self,left_on, right_on,
     df_input, regex_go = False, matching_voie =False,relax_regex = False,
     siege_etat=False, option=['ncc', 'libelleCommuneEtablissement'],
     var_adress_insee = 'libelleVoieEtablissement'):
@@ -153,7 +318,7 @@ class siretisation_inpi:
              'siret': 'object',
              "etablissementSiege": "object",
              "etatAdministratifEtablissement": "object",
-             'dateCreationEtablissement': 'object',
+             #'dateCreationEtablissement': 'object',
              'complementAdresseEtablissement': 'object',
              'numeroVoieEtablissement': 'object',
              'indiceRepetitionEtablissement': 'object',
@@ -175,7 +340,8 @@ class siretisation_inpi:
         insee = self.import_dask(
         file=self.insee,
         usecols=insee_col,
-        dtype=insee_dtype)
+        dtype=insee_dtype,
+        parse_dates = ['dateCreationEtablissement'])
 
         if '_merge' in df_input.columns:
             try:
@@ -208,6 +374,7 @@ class siretisation_inpi:
             ]
 
             df_input = df_input.loc[df_input['Type'].isin(['PRI', 'SEP'])]
+
         insee = insee.merge(
         (insee
          .groupby('siren')['siren']
@@ -218,13 +385,16 @@ class siretisation_inpi:
 
         temp = df_input.merge(insee,
                           how='left',
-                          left_on=['siren', option[0]],
-                          right_on=['siren',  option[1]],
+                          left_on=left_on,
+                          right_on= right_on,
                           indicator=True,
                           suffixes=['_insee', '_inpi'])
 
         to_check = temp[temp['_merge'].isin(['both'])]
         nomatch = temp[~temp['_merge'].isin(['both'])]
+
+        ### Prepare les tests
+
 
         return to_check
 
@@ -242,7 +412,7 @@ class siretisation_inpi:
                      x['Adresse_new_clean_reg'],
                      x[var_adress_insee],
                      x['siret']), axis=1)
-    )
+                     )
 
             to_check = to_check.dropna(subset=['siret_test1']).compute()
 
