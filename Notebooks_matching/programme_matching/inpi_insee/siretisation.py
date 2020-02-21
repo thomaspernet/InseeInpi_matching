@@ -477,6 +477,9 @@ class siretisation_inpi:
         sp.shape[0]),
         compression = 'gzip'))
 
+        return df_not_duplicate, sp
+    
+
     def merge_siren_candidat(self,left_on, right_on,
     df_input, regex_go = False, matching_voie =False,relax_regex = False,
     siege_etat=False, option=['ncc', 'libelleCommuneEtablissement'],
