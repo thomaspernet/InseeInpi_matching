@@ -130,7 +130,11 @@ class siretisation_inpi:
                 .rename('count_duplicates_')
                 .reset_index()
                 )
-                ).compute()
+                )
+        try:
+            df = df.compute()
+        except:
+            pass
 
         dic_ = {
             'not_duplication':df[df['count_duplicates_'].isin([1])],
@@ -217,11 +221,20 @@ class siretisation_inpi:
         )
 
         test_1 = self.split_duplication(df = to_check)
+        #df_no_duplication = pd.DataFrame()
+        #df_duplication = pd.DataFrame()
+        ### On aggège les "no_duplications" et "duplication"
+
 
         # Test 1: doublon -> non
-        test_1['not_duplication'].to_csv(
-        r"data\input\TESTS\test1_nodup_{}.gz".format(
-        test_1['not_duplication'].shape[0]), compression ="gzip")
+        #test_1['not_duplication'].to_csv(
+        #r"data\input\TESTS\test1_nodup_{}.gz".format(
+        #test_1['not_duplication'].shape[0]), compression ="gzip")
+
+        test_1['not_duplication'] = test_1['not_duplication'].assign(
+        origin = 'test_1_no_duplication'
+        )
+
 
         ## Test 2: Date equal -> oui
         test_2_oui = test_1['duplication'][
@@ -232,14 +245,21 @@ class siretisation_inpi:
         test_2_bis = self.split_duplication(df = test_2_oui)
 
         #### Test 2: Date equal -> oui, Test 2 bis: doublon: non
-        test_2_bis['not_duplication'].to_csv(
-        r"data\input\TESTS\test2_nodup_{}.gz".format(
-        test_2_bis['not_duplication'].shape[0]), compression ="gzip")
+        #test_2_bis['not_duplication'].to_csv(
+        #r"data\input\TESTS\test2_nodup_{}.gz".format(
+        #test_2_bis['not_duplication'].shape[0]), compression ="gzip")
+        test_2_bis['not_duplication'] = test_2_bis['not_duplication'].assign(
+        origin = 'test_2_no_duplication'
+        )
 
         #### Test 2: Date equal -> oui, Test 2 bis: doublon: oui
-        test_2_bis['duplication'].to_csv(
-        r"data\input\TESTS\test2_dup_{}.gz".format(
-        test_2_bis['duplication'].shape[0]), compression ="gzip")
+        #test_2_bis['duplication'].to_csv(
+        #r"data\input\TESTS\test2_dup_{}.gz".format(
+        #test_2_bis['duplication'].shape[0]), compression ="gzip")
+
+        test_2_bis['duplication'] = test_2_bis['duplication'].assign(
+        origin = 'test_2_duplication'
+        )
 
         ## Test 2: Date equal -> non
         ### Test 2: Date equal -> non -> test 3: Date sup -> oui
@@ -254,14 +274,34 @@ class siretisation_inpi:
         test_3_oui_bis = self.split_duplication(df = test_3_oui)
 
         ###### Test 3 bis: doublon: non
-        test_3_oui_bis['not_duplication'].to_csv(
-        r"data\input\TESTS\test3_nodup_{}.gz".format(
-        test_3_oui_bis['not_duplication'].shape[0]), compression ="gzip")
+        #test_3_oui_bis['not_duplication'].to_csv(
+        #r"data\input\TESTS\test3_nodup_{}.gz".format(
+        #test_3_oui_bis['not_duplication'].shape[0]), compression ="gzip")
+        test_3_oui_bis['not_duplication'] = \
+        test_3_oui_bis['not_duplication'].assign(
+         origin = 'test_3_no_duplication'
+         )
 
         ###### Test 3 bis: doublon:oui
-        test_3_oui_bis['duplication'].to_csv(
-        r"data\input\TESTS\test3_nodup_{}.gz".format(
-        test_3_oui_bis['duplication'].shape[0]), compression ="gzip")
+        #test_3_oui_bis['duplication'].to_csv(
+        #r"data\input\TESTS\test3_nodup_{}.gz".format(
+        #test_3_oui_bis['duplication'].shape[0]), compression ="gzip")
+        test_3_oui_bis['duplication'] = \
+        test_3_oui_bis['duplication'].assign(
+         origin = 'test_3_duplication'
+         )
+
+        ### Append to dataframes
+        df_no_duplication = pd.concat([
+        test_1['not_duplication'],
+        test_2_bis['not_duplication'],
+        test_3_oui_bis['not_duplication']
+        ], axis = 0)
+
+        df_duplication = pd.concat([
+        test_2_bis['duplication'],
+        test_3_oui_bis['duplication']
+        ], axis =0)
 
         ###### Test 3: Date equal -> non -> test 3: Date sup -> non
         test_3_non = test_1['duplication'].loc[
@@ -277,6 +317,7 @@ class siretisation_inpi:
         test_3_non.shape[0]
         ), compression ="gzip")
 
+        return (df_no_duplication, df_duplication)
 
 
     def merge_siren_candidat(self,left_on, right_on,
