@@ -330,17 +330,14 @@ class siretisation_inpi:
 
         return (df_no_duplication, df_duplication)
 
-    def step_two_assess_test(self, df):
+    def step_two_assess_test(self, df, var_group):
         """
         """
         ## Calcul nb siren/siret
         df_ = (df
         .merge(
         (df
-        .groupby([
-        'siren','ncc',
-        'Code_Postal','Code_Commune',
-        'INSEE','digit_inpi'])['siren']
+        .groupby(var_group)['siren']
              .count()
              .rename('count_siren_siret')
              .reset_index()
@@ -478,7 +475,7 @@ class siretisation_inpi:
         compression = 'gzip'))
 
         return df_not_duplicate, sp
-    
+
 
     def merge_siren_candidat(self,left_on, right_on,
     df_input, regex_go = False, matching_voie =False,relax_regex = False,
