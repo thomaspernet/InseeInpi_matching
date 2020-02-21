@@ -130,7 +130,7 @@ class siretisation_inpi:
                 .rename('count_duplicates_')
                 .reset_index()
                 )
-                )
+                ).compute()
 
         dic_ = {
             'not_duplication':df[df['count_duplicates_'].isin([1])],
@@ -144,6 +144,7 @@ class siretisation_inpi:
 
     def create_test(self,left_on, right_on,df_input):
         """
+        Le calcul DAsk se fait dans la focntion split_duplication
         """
         insee_col = ['siren',
          'siret',
@@ -201,7 +202,7 @@ class siretisation_inpi:
                           left_on=left_on,
                           right_on= right_on,
                           indicator=True,
-                          suffixes=['_insee', '_inpi']).compute()
+                          suffixes=['_insee', '_inpi'])
 
         to_check = temp[temp['_merge'].isin(['both'])].drop(columns= '_merge')
         nomatch = temp[~temp['_merge'].isin(['both'])].drop(columns= '_merge')
@@ -209,18 +210,16 @@ class siretisation_inpi:
         ### Solution temporaire
         to_check["Date_Début_Activité"] = \
         to_check["Date_Début_Activité"].map_partitions(
-            pd.to_datetime,
-            format='%d/%m/%Y',
-            errors = 'coerce',
-            meta = ('datetime64[ns]'))
+        pd.to_datetime,
+        format='%Y/%m/%d',
+        errors = 'coerce',
+        meta = ('datetime64[ns]')
+        )
 
         test_1 = self.split_duplication(df = to_check)
 
-        return test_1
-
-
         # Test 1: doublon -> non
-        test_1['not_duplication'].compute().to_csv(
+        test_1['not_duplication'].to_csv(
         r"data\input\TESTS\test1_nodup_{}.gz".format(
         test_1['not_duplication'].shape[0]), compression ="gzip")
 
