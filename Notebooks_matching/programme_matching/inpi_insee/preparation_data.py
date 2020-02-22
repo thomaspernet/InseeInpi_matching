@@ -355,7 +355,7 @@ class preparation:
             (subset_inpi_cleaned
             .assign(index = lambda x:
             x.index)
-            .to_csv(r'data\input\inpi_etb_stock_{}.gz'.format(0
+            .to_csv(r'data\input\INPI\inpi_etb_stock_{}.gz'.format(0
             ),
             compression='gzip', index = False))
 
