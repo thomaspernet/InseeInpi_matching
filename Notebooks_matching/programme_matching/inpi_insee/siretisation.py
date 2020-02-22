@@ -23,7 +23,7 @@ class siretisation_inpi:
 
         """
         self.insee = parameters['insee']
-        self.inpi_etb = parameters['inpi_etb']
+        #self.inpi_etb = parameters['inpi_etb']
         #self.insee_col = insee_col
         #self.insee_dtype = insee_dtype
 
@@ -60,36 +60,6 @@ class siretisation_inpi:
         blocksize=None, low_memory = low_memory,parse_dates = parse_dates)
 
         return dd_df
-
-    def match_unmatch(self, df_inpi_initial, df_inpi_mergeboth,
-     step = '1_unique_siren',
-                  to_csv = True):
-        """
-        """
-
-        merge_ = (
-        df_inpi_mergeboth
-        .merge(df_inpi_initial,
-               how='right',
-               indicator=True)
-    )
-
-        match_ = merge_.loc[lambda x:
-                       x['_merge'].isin(['both'])].drop(columns = '_merge')
-
-        unmatch_ = merge_.loc[lambda x:
-                       ~x['_merge'].isin(['both'])].drop(columns = ['_merge',
-                                                                    'siret'])
-
-
-        if to_csv:
-            name_match = 'data/output/match_{}_{}.gz'.format(step, match_.shape[0])
-            name_unmatch = 'data/input/unmatched/unmatch_{}_{}.gz'.format(
-            step, unmatch_.shape[0])
-            match_.to_csv(name_match, index = False, compression='gzip',)
-            unmatch_.to_csv(name_unmatch, index = False,compression='gzip')
-
-        return unmatch_
 
     def find_regex(self,regex, test_str):
         """
@@ -221,16 +191,7 @@ class siretisation_inpi:
         )
 
         test_1 = self.split_duplication(df = to_check)
-        #df_no_duplication = pd.DataFrame()
-        #df_duplication = pd.DataFrame()
-        ### On aggège les "no_duplications" et "duplication"
-
-
         # Test 1: doublon -> non
-        #test_1['not_duplication'].to_csv(
-        #r"data\input\TESTS\test1_nodup_{}.gz".format(
-        #test_1['not_duplication'].shape[0]), compression ="gzip")
-
         test_1['not_duplication'] = test_1['not_duplication'].assign(
         origin = 'test_1_no_duplication'
         )
@@ -245,18 +206,11 @@ class siretisation_inpi:
         test_2_bis = self.split_duplication(df = test_2_oui)
 
         #### Test 2: Date equal -> oui, Test 2 bis: doublon: non
-        #test_2_bis['not_duplication'].to_csv(
-        #r"data\input\TESTS\test2_nodup_{}.gz".format(
-        #test_2_bis['not_duplication'].shape[0]), compression ="gzip")
         test_2_bis['not_duplication'] = test_2_bis['not_duplication'].assign(
         origin = 'test_2_no_duplication'
         )
 
         #### Test 2: Date equal -> oui, Test 2 bis: doublon: oui
-        #test_2_bis['duplication'].to_csv(
-        #r"data\input\TESTS\test2_dup_{}.gz".format(
-        #test_2_bis['duplication'].shape[0]), compression ="gzip")
-
         test_2_bis['duplication'] = test_2_bis['duplication'].assign(
         origin = 'test_2_duplication'
         )
@@ -274,18 +228,12 @@ class siretisation_inpi:
         test_3_oui_bis = self.split_duplication(df = test_3_oui)
 
         ###### Test 3 bis: doublon: non
-        #test_3_oui_bis['not_duplication'].to_csv(
-        #r"data\input\TESTS\test3_nodup_{}.gz".format(
-        #test_3_oui_bis['not_duplication'].shape[0]), compression ="gzip")
         test_3_oui_bis['not_duplication'] = \
         test_3_oui_bis['not_duplication'].assign(
          origin = 'test_3_no_duplication'
          )
 
         ###### Test 3 bis: doublon:oui
-        #test_3_oui_bis['duplication'].to_csv(
-        #r"data\input\TESTS\test3_nodup_{}.gz".format(
-        #test_3_oui_bis['duplication'].shape[0]), compression ="gzip")
         test_3_oui_bis['duplication'] = \
         test_3_oui_bis['duplication'].assign(
          origin = 'test_3_duplication'
@@ -311,23 +259,6 @@ class siretisation_inpi:
         )
         )
         ]
-
-        test_3_non.to_csv(
-        r"data\input\TESTS\test3_specialtreat_{}.gz".format(
-        test_3_non.shape[0]
-        ), compression ="gzip")
-
-        ### SAve in case of
-        df_no_duplication.to_csv(
-        r"data\input\TESTS\df_no_duplication_{}.gz".format(
-        df_no_duplication.shape[0]
-        ), compression ="gzip")
-
-        df_duplication.to_csv(
-        r"data\input\TESTS\df_duplication_{}.gz".format(
-        df_duplication.shape[0]
-        ), compression ="gzip")
-
         return (df_no_duplication, df_duplication)
 
     def step_two_assess_test(self, df, var_group):
@@ -426,7 +357,6 @@ class siretisation_inpi:
         .reset_index()
         )
         )
-
         return df_
 
     def step_two_duplication(self, df_duplication, var_group):
@@ -467,189 +397,3 @@ class siretisation_inpi:
             .isin(df_not_duplicate['index'])])
 
         return df_not_duplicate, sp
-
-
-    def merge_siren_candidat(self,left_on, right_on,
-    df_input, regex_go = False, matching_voie =False,relax_regex = False,
-    siege_etat=False, option=['ncc', 'libelleCommuneEtablissement'],
-    var_adress_insee = 'libelleVoieEtablissement'):
-        """
-        option list can only be one of these:
-        - ['ncc', 'libelleCommuneEtablissement']
-        - ['Code_Postal', 'codePostalEtablissement']
-        - ['Code_Commune', 'codeCommuneEtablissement']
-        var_adress_insee: libelleVoieEtablissement ou
-        complementAdresseEtablissement.exemple siren  322385949
-        """
-        insee_col = ['siren',
-         'siret',
-         'dateCreationEtablissement',
-         "etablissementSiege",
-         "etatAdministratifEtablissement",
-         'complementAdresseEtablissement',
-         'numeroVoieEtablissement',
-         'indiceRepetitionEtablissement',
-         'typeVoieEtablissement',
-         'libelleVoieEtablissement',
-         'codePostalEtablissement',
-         'libelleCommuneEtablissement',
-         'libelleCommuneEtrangerEtablissement',
-         'distributionSpecialeEtablissement',
-         'codeCommuneEtablissement',
-         'codeCedexEtablissement',
-         'libelleCedexEtablissement',
-         'codePaysEtrangerEtablissement',
-         'libellePaysEtrangerEtablissement',
-         'count_initial_insee']
-
-        insee_dtype = {
-             'siren': 'object',
-             'siret': 'object',
-             "etablissementSiege": "object",
-             "etatAdministratifEtablissement": "object",
-             #'dateCreationEtablissement': 'object',
-             'complementAdresseEtablissement': 'object',
-             'numeroVoieEtablissement': 'object',
-             'indiceRepetitionEtablissement': 'object',
-             'typeVoieEtablissement': 'object',
-             'libelleVoieEtablissement': 'object',
-             'codePostalEtablissement': 'object',
-             'libelleCommuneEtablissement': 'object',
-             'libelleCommuneEtrangerEtablissement': 'object',
-             'distributionSpecialeEtablissement': 'object',
-             'codeCommuneEtablissement': 'object',
-             'codeCedexEtablissement': 'object',
-             'libelleCedexEtablissement': 'object',
-             'codePaysEtrangerEtablissement': 'object',
-             'libellePaysEtrangerEtablissement': 'object',
-             'count_initial_insee': 'int'
-         }
-
-
-        insee = self.import_dask(
-        file=self.insee,
-        usecols=insee_col,
-        dtype=insee_dtype,
-        parse_dates = ['dateCreationEtablissement'])
-
-        if '_merge' in df_input.columns:
-            try:
-                df_input = (df_input
-                    .drop(columns=['siret',
-                                   'numeroVoieEtablissement',
-                                   'libelleVoieEtablissement',
-                                   'codePostalEtablissement',
-                                   'libelleCommuneEtablissement',
-                                   'codeCommuneEtablissement',
-                                   'complementAdresseEtablissement',
-                                   'count_insee',
-                                   '_merge']))
-            except:
-                df_input = (df_input
-                    .drop(columns=['siret',
-                                   'numeroVoieEtablissement',
-                                   'libelleVoieEtablissement',
-                                   'codePostalEtablissement',
-                                   'libelleCommuneEtablissement',
-                                   'codeCommuneEtablissement',
-                                   'complementAdresseEtablissement',
-                                   '_merge']))
-
-        if siege_etat:
-            ### On retire les etb fermées et les etb non principaux
-            insee = insee.loc[
-            (insee['etablissementSiege'].isin(['true']))
-            & (insee['etatAdministratifEtablissement'].isin(['A']))
-            ]
-
-            df_input = df_input.loc[df_input['Type'].isin(['PRI', 'SEP'])]
-
-        insee = insee.merge(
-        (insee
-         .groupby('siren')['siren']
-         .count()
-         .rename('count_insee')
-         .reset_index())
-    )
-
-        temp = df_input.merge(insee,
-                          how='left',
-                          left_on=left_on,
-                          right_on= right_on,
-                          indicator=True,
-                          suffixes=['_insee', '_inpi'])
-
-        to_check = temp[temp['_merge'].isin(['both'])]
-        nomatch = temp[~temp['_merge'].isin(['both'])]
-
-        ### Prepare les tests
-
-
-        return to_check
-
-        if regex_go:
-            if relax_regex:
-
-                to_check['Adresse_new_clean_reg'] = \
-                to_check['Adresse_new_clean_reg'].str.replace('$', '')
-
-
-            to_check['siret_test1'] = to_check.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    self.find_regex(
-                     x['Adresse_new_clean_reg'],
-                     x[var_adress_insee],
-                     x['siret']), axis=1)
-                     )
-
-            to_check = to_check.dropna(subset=['siret_test1']).compute()
-
-            group_option = 'Adress_new'
-            if matching_voie:
-                to_check['digit_inpi'] = \
-                to_check['Adress_new'].str.extract(r'(\d+)')
-
-                to_check['test'] = np.where(
-                to_check['digit_inpi'] ==
-                to_check['numeroVoieEtablissement'],
-                True, False)
-
-                to_check = to_check[to_check['test'].isin([True])]
-                group_option = 'numeroVoieEtablissement'
-        else:
-            group_option = option[1]
-            to_check = to_check.compute()
-
-    # calcul le nombre cas de figure 2 -> très conservative
-
-        test_match = (to_check
-                  .merge(
-                      (to_check
-                       .groupby(['siren', group_option])['siren']
-                       .count()
-                       .rename('count_inpi')
-                       .reset_index()
-                       )
-                  )
-                  )
-
-        if matching_voie:
-            true_match = (test_match
-                  .loc[lambda x:
-                       (x['count_inpi'] == 1)
-                      |
-                      (x['count_insee'].isin([1])
-                      & ~x['count_inpi'].isin([1]))]
-                  .reindex(columns=self.list_inpi))
-        else:
-            true_match = (test_match
-                  .loc[lambda x:x['count_inpi'] == 1]
-                  .reindex(columns=self.list_inpi))
-
-        dic_ = {
-        'true_match': true_match,
-        'unmatch': nomatch
-    }
-
-        return dic_
