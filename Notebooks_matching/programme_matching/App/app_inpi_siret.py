@@ -14,21 +14,34 @@ r"\Notebooks_matching\programme_matching\App\calf1.png"
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-cols = ["Code" "Greffe","Nom_Greffe","Numero_Gestion","siren","Type", \
- "Siège_PM","RCS_Registre","Adresse_Ligne1","Adresse_Ligne2","Adresse_Ligne3",  \
- "Code_Postal", "Ville","Code_Commune","Pays","Domiciliataire_Nom","Domiciliataire_Siren",  \
- "Domiciliataire_Greffe","Domiciliataire_Complément","Siege_Domicile_Représentant","Nom_Commercial",  \
- "Enseigne","Activité_Ambulante", "Activité_Saisonnière","Activité_Non_Sédentaire",  \
- "Date_Début_Activité","Activité", "Origine_Fonds","Origine_Fonds_Info",  \
- "Type_Exploitation","ID_Etablissement","Date_Greffe","Libelle_Evt", "count", "siret", "ncc", "Adress_new"]
+cols = ["Code" "Greffe","Nom_Greffe","Numero_Gestion","siren","Type",
+"Siège_PM","RCS_Registre","Adresse_Ligne1","Adresse_Ligne2",
+"Adresse_Ligne3","Code_Postal","Ville","Code_Commune","Pays",
+"Domiciliataire_Nom","Domiciliataire_Siren","Domiciliataire_Greffe",
+"Domiciliataire_Complément","Siege_Domicile_Représentant","Nom_Commercial",
+"Enseigne","Activité_Ambulante","Activité_Saisonnière","Activité_Non_Sédentaire",
+"Date_Début_Activité","Activité","Origine_Fonds","Origine_Fonds_Info",
+"Type_Exploitation","ID_Etablissement","Date_Greffe","Libelle_Evt",
+"count_initial_inpi","ncc","Adress_new","Adresse_new_clean_reg", "digit_inpi",
+"possibilite","INSEE","siret","count_initial_insee","origin","count_siren_siret",
+"test_address_libelle","test_address_complement","test_join_address",
+"test_date","test_1","test_siege","test_voie","test_numero",
+"count_duplicates_final","count_duplicates_","test"]
 
-reindex_cols = ["siren","Type","siret","ncc", "Adress_new", "Code" "Greffe","Nom_Greffe","Numero_Gestion", \
-  "Siège_PM","RCS_Registre","Adresse_Ligne1","Adresse_Ligne2","Adresse_Ligne3",  \
-  "Code_Postal", "Ville","Code_Commune","Pays","Domiciliataire_Nom","Domiciliataire_Siren",  \
-  "Domiciliataire_Greffe","Domiciliataire_Complément","Siege_Domicile_Représentant","Nom_Commercial",  \
-  "Enseigne","Activité_Ambulante", "Activité_Saisonnière","Activité_Non_Sédentaire",  \
-  "Date_Début_Activité","Activité", "Origine_Fonds","Origine_Fonds_Info",  \
-  "Type_Exploitation","ID_Etablissement","Date_Greffe","Libelle_Evt", "count"]
+reindex_cols =["Code" "Greffe","Nom_Greffe","Numero_Gestion","siren","siret",
+"Type",
+"Siège_PM","RCS_Registre","Adresse_Ligne1","Adresse_Ligne2",
+"Adresse_Ligne3","Code_Postal","Ville","Code_Commune","Pays",
+"Domiciliataire_Nom","Domiciliataire_Siren","Domiciliataire_Greffe",
+"Domiciliataire_Complément","Siege_Domicile_Représentant","Nom_Commercial",
+"Enseigne","Activité_Ambulante","Activité_Saisonnière","Activité_Non_Sédentaire",
+"Date_Début_Activité","Activité","Origine_Fonds","Origine_Fonds_Info",
+"Type_Exploitation","ID_Etablissement","Date_Greffe","Libelle_Evt",
+"count_initial_inpi","ncc","Adress_new","Adresse_new_clean_reg", "digit_inpi",
+"possibilite","INSEE","count_initial_insee","origin","count_siren_siret",
+"test_address_libelle","test_address_complement","test_join_address",
+"test_date","test_1","test_siege","test_voie","test_numero",
+"count_duplicates_final","count_duplicates_","test"]
 
 
 #all_options = {
@@ -57,9 +70,9 @@ app.layout = html.Div([
 def set_cities_options(selected_siren):
     conn = conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
     r"\InseeInpi_matching\Notebooks_matching" \
-    r"\programme_matching\App\SQL\siren_inpi.db")
+    r"\programme_matching\App\SQL\inpi_matched.db")
     c = conn.cursor()
-    query = '''SELECT * FROM SIREN WHERE siren = {} '''.format(selected_siren)
+    query = '''SELECT * FROM INPI_MATCHED WHERE siren = {} '''.format(selected_siren)
 
     c.execute(query)
 
@@ -78,9 +91,9 @@ def set_cities_options(selected_siren):
 def update_output_div(siren, city):
     conn = conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
     r"\InseeInpi_matching\Notebooks_matching" \
-    r"\programme_matching\App\SQL\siren_inpi.db")
+    r"\programme_matching\App\SQL\inpi_matched.db")
     c = conn.cursor()
-    query = '''SELECT * FROM SIREN WHERE siren = {} AND ncc = '{}' '''.format(
+    query = '''SELECT * FROM INPI_MATCHED WHERE siren = {} AND ncc = '{}' '''.format(
     siren, city)
     c.execute(query)
     df = pd.DataFrame(c.fetchall(), columns= cols).reindex(columns =
