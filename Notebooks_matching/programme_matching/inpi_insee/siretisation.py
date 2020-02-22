@@ -429,10 +429,11 @@ class siretisation_inpi:
 
         return df_
 
-    def step_two_duplication(self, df_duplication):
+    def step_two_duplication(self, df_duplication, var_group):
         """
         """
-        duplicates_ = self.step_two_assess_test(df = df_duplication)
+        duplicates_ = self.step_two_assess_test(df = df_duplication,
+        var_group=var_group)
         df_not_duplicate = pd.DataFrame()
         copy_duplicate = duplicates_.copy()
 
@@ -460,19 +461,10 @@ class siretisation_inpi:
                        ], axis = 0)['index']
                        .drop_duplicates())])
 
-        (df_not_duplicate
-        .to_csv(r'data\output\not_duplicate_{}.gz'.format(
-        df_not_duplicate.shape[0]),
-        compression = 'gzip'))
-
-        # Special treatment
-        sp = (duplicates_[
-        ~duplicates_['index']
-        .isin(df_not_duplicate['index'])])
-
-        (sp.to_csv(r'data\output\special_treatment_{}.gz'.format(
-        sp.shape[0]),
-        compression = 'gzip'))
+            # Special treatment
+            sp = (duplicates_[
+            ~duplicates_['index']
+            .isin(df_not_duplicate['index'])])
 
         return df_not_duplicate, sp
 
