@@ -355,15 +355,15 @@ class preparation:
             (subset_inpi_cleaned
             .assign(index = lambda x:
             x.index)
-            .to_csv('data\input\inpi_etb_stock_{}.gz'.format(size_
+            .to_csv(r'data\input\inpi_etb_stock_{}.gz'.format(0
             ),
             compression='gzip', index = False))
 
             size_ = len(siren_inpi)
             print('Saving {} observations'.format(size_))
             siren_inpi.to_csv(
-            'data\input\SIREN_INPI\inpi_etb_stock_{}.gz'.format(
-            size_
+            r'data\input\SIREN_INPI\inpi_etb_stock_{}.gz'.format(
+            0
             ),
             compression='gzip', index = False)
         if save_sql:
