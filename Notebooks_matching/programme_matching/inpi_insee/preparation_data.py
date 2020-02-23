@@ -379,8 +379,23 @@ class preparation:
         'Ville': 'object',
         'Pays': 'object',
         'Domiciliataire_Greffe': 'object',
+        'Domiciliataire_Siren': 'object',
         'Date_Début_Activité':'object'
                          }
+
+        reindex = [
+        'Code Greffe', 'Nom_Greffe','Numero_Gestion','RCS_Registre',
+        'Date_Greffe','Libelle_Evt','ID_Etablissement','siren',
+        'Nom_Commercial','Enseigne','Date_Début_Activité',
+        'Domiciliataire_Nom','Domiciliataire_Siren','count_initial_inpi',
+        'Domiciliataire_Greffe','Domiciliataire_Complément','Type','Siège_PM',
+        'Activité','Origine_Fonds','Origine_Fonds_Info','Type_Exploitation',
+        'Pays','Ville','ncc','possibilite','Code_Postal','Code_Commune',
+        'Adresse_Ligne1','Adresse_Ligne2','Adresse_Ligne3','Adress_new',
+        'Adresse_new_clean_reg','INSEE','digit_inpi','list_digit_inpi',
+        'len_digit_address_inpi','len_digit_address_insee',
+        'Siege_Domicile_Représentant','Activité_Ambulante',
+        'Activité_Saisonnière','Activité_Non_Sédentaire']
 
         dd_df_inpi = self.import_dask(file = self.inpi_etb,
             usecols = None,
@@ -412,14 +427,15 @@ class preparation:
         subset_inpi_cleaned = self.prepare_adress(df =
         subset_inpi_cleaned)
 
-        return subset_inpi_cleaned
+        subset_inpi_cleaned = (subset_inpi_cleaned
+        .reindex(columns  = reindex)
+        .assign(index = lambda x:
+        x.index))
 
         if save_gz:
             size_ = subset_inpi.shape[0]
             print('Saving {} observations'.format(size_))
             (subset_inpi_cleaned
-            .assign(index = lambda x:
-            x.index)
             .to_csv(r'data\input\INPI\inpi_etb_stock_{}.gz'.format(0
             ),
             compression='gzip', index = False))
@@ -433,22 +449,23 @@ class preparation:
             compression='gzip', index = False)
         if save_sql:
             print('Creating SQL database')
-            query = "CREATE TABLE INPI (Code_Greffe,Nom_Greffe,Numero_Gestion,\
-             siren,Type,Siège_PM,RCS_Registre,Adresse_Ligne1,Adresse_Ligne2,\
-             Adresse_Ligne3,Code_Postal,Ville,Code_Commune,Pays,\
-             Domiciliataire_Nom,Domiciliataire_Siren,Domiciliataire_Greffe,\
-             Domiciliataire_Complément,Siege_Domicile_Représentant,\
-             Nom_Commercial,Enseigne,Activité_Ambulante,Activité_Saisonnière,\
-             Activité_Non_Sédentaire,Date_Début_Activité,Activité,\
-             Origine_Fonds, Origine_Fonds_Info,Type_Exploitation,\
-             ID_Etablissement,Date_Greffe,Libelle_Evt,count_initial_inpi,\
-             ncc,Adress_new,Adresse_new_clean_reg, digit_inpi, possibilite, \
-             INSEE, list_digit_inpi, len_digit_address_inpi)"
+            query = "CREATE TABLE INPI \
+(Code Greffe, Nom_Greffe,Numero_Gestion,RCS_Registre, \
+ Date_Greffe,Libelle_Evt,ID_Etablissement,siren, Nom_Commercial, \
+ Enseigne,Date_Début_Activité, Domiciliataire_Nom,Domiciliataire_Siren,\
+ Domiciliataire_Greffe,Domiciliataire_Complément,Type,Siège_PM,\
+ Activité,Origine_Fonds,Origine_Fonds_Info,Type_Exploitation,\
+ Adresse_Ligne1,Adresse_Ligne2,Adresse_Ligne3,INSEE,digit_inpi,\
+ Adress_new,Adresse_new_clean_reg, Code_Postal,\
+ Ville,ncc,possibilite,Code_Commune,Pays,Siege_Domicile_Représentant,\
+ count_initial_inpi,len_digit_address_inpi,len_digit_address_insee,\
+ Activité_Ambulante,Activité_Saisonnière,Activité_Non_Sédentaire)"
             try:
                 os.remove(r'App\SQL\inpi_origine.db')
             except:
                 self.save_sql(
-                df = subset_inpi_cleaned.drop(columns = ['list_digit_inpi']),
+                df = subset_inpi_cleaned.drop(columns = ['list_digit_inpi',
+                'index']),
                 db = r'App\SQL\inpi_origine.db',
                 table = 'INPI',
                 query =query)
@@ -523,6 +540,19 @@ class preparation:
             "dateCreationEtablissement":'object'
                                  }
 
+        reindex = [
+    'siren','siret','dateCreationEtablissement','count_initial_insee',
+    'etablissementSiege','complementAdresseEtablissement',
+    'numeroVoieEtablissement','indiceRepetitionEtablissement',
+    'typeVoieEtablissement','libelleVoieEtablissement',
+    'len_digit_address_insee','list_digit_insee','codePostalEtablissement',
+    'libelleCommuneEtablissement','libelleCommuneEtrangerEtablissement',
+    'distributionSpecialeEtablissement','codeCommuneEtablissement',
+    'codeCedexEtablissement','libelleCedexEtablissement',
+    'codePaysEtrangerEtablissement','libellePaysEtrangerEtablissement',
+    'etatAdministratifEtablissement',
+ ]
+
         dd_df_insee = self.import_dask(file = self.insee,
             usecols = usecols,
             dtype=dtype)
@@ -564,6 +594,8 @@ class preparation:
         subset_insee['len_digit_address_insee'] = \
         subset_insee['len_digit_address_insee'].fillna(0)
 
+        subset_insee = subset_insee.reindex(columns = reindex)
+
         if save_gz:
             size_ = subset_insee.shape[0]
             print('Saving {} observations'.format(size_))
@@ -577,14 +609,17 @@ class preparation:
         if save_sql:
 
             print('Creating SQL database')
-            query = "CREATE TABLE INSEE (siren,siret,dateCreationEtablissement,\
- etablissementSiege,complementAdresseEtablissement,numeroVoieEtablissement,  \
- indiceRepetitionEtablissement,typeVoieEtablissement,libelleVoieEtablissement, \
- codePostalEtablissement,libelleCommuneEtablissement,  \
- libelleCommuneEtrangerEtablissement,distributionSpecialeEtablissement,  \
- codeCommuneEtablissement,codeCedexEtablissement, libelleCedexEtablissement,  \
- codePaysEtrangerEtablissement, libellePaysEtrangerEtablissement,  \
- etatAdministratifEtablissement,count_initial_insee, len_digit_address_insee)"
+            query = "CREATE TABLE INSEE (\
+            siren,siret,dateCreationEtablissement,count_initial_insee,\
+         etablissementSiege,complementAdresseEtablissement,\
+         numeroVoieEtablissement,indiceRepetitionEtablissement,\
+         typeVoieEtablissement,libelleVoieEtablissement,\
+         len_digit_address_insee,codePostalEtablissement,\
+         libelleCommuneEtablissement,libelleCommuneEtrangerEtablissement,\
+         distributionSpecialeEtablissement,codeCommuneEtablissement,\
+         codeCedexEtablissement,libelleCedexEtablissement,\
+         codePaysEtrangerEtablissement,libellePaysEtrangerEtablissement,\
+         etatAdministratifEtablissement)"
             try:
                 os.remove(r'App\SQL\App_insee.db')
                 self.save_sql(
