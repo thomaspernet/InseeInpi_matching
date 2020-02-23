@@ -139,7 +139,7 @@ class siretisation_inpi:
          'libelleCedexEtablissement',
          'codePaysEtrangerEtablissement',
          'libellePaysEtrangerEtablissement',
-         'count_initial_insee']
+         'count_initial_insee','len_digit_address_insee','list_digit_insee']
 
         insee_dtype = {
              'siren': 'object',
@@ -161,7 +161,8 @@ class siretisation_inpi:
              'libelleCedexEtablissement': 'object',
              'codePaysEtrangerEtablissement': 'object',
              'libellePaysEtrangerEtablissement': 'object',
-             'count_initial_insee': 'int'
+             'count_initial_insee': 'int',
+             'len_digit_address_insee':'object'
          }
 
 
