@@ -288,7 +288,7 @@ class preparation:
         #special_digit = lambda x:x['Adress_new'].str.findall(r"(\d+)").apply(
         #lambda x:'&'.join([i for i in x])),
         possibilite = lambda x:
-        x['Adresse_new_clean'].str.extract(r'(' + '|'.join(
+        x['Adress_new'].str.extract(r'(' + '|'.join(
         self.voie['possibilite'].to_list()) +')'),
 
         )
