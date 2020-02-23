@@ -14,49 +14,17 @@ r"\Notebooks_matching\programme_matching\App\calf1.png"
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-insee_col =['siren',
- 'siret',
- 'dateCreationEtablissement',
- 'etablissementSiege',
- 'complementAdresseEtablissement',
- 'numeroVoieEtablissement',
- 'indiceRepetitionEtablissement',
- 'typeVoieEtablissement',
- 'libelleVoieEtablissement',
- 'codePostalEtablissement',
- 'libelleCommuneEtablissement',
- 'libelleCommuneEtrangerEtablissement',
- 'distributionSpecialeEtablissement',
- 'codeCommuneEtablissement',
- 'codeCedexEtablissement',
- 'libelleCedexEtablissement',
- 'codePaysEtrangerEtablissement',
- 'libellePaysEtrangerEtablissement',
- 'etatAdministratifEtablissement',
- 'count_initial_insee']
-
-reindex_col = ['siren',
- 'siret',
- 'count_initial_insee',
- 'libelleCommuneEtablissement',
- 'codePostalEtablissement',
- 'etatAdministratifEtablissement',
- 'dateCreationEtablissement',
- 'etablissementSiege',
- 'complementAdresseEtablissement',
- 'numeroVoieEtablissement',
- 'indiceRepetitionEtablissement',
- 'typeVoieEtablissement',
- 'libelleVoieEtablissement',
- 'libelleCommuneEtrangerEtablissement',
- 'distributionSpecialeEtablissement',
- 'codeCommuneEtablissement',
- 'codeCedexEtablissement',
- 'libelleCedexEtablissement',
- 'codePaysEtrangerEtablissement',
- 'libellePaysEtrangerEtablissement',
- ]
-
+insee_col =[
+'siren','siret','dateCreationEtablissement','count_initial_insee',
+'etablissementSiege','complementAdresseEtablissement',
+'numeroVoieEtablissement','indiceRepetitionEtablissement',
+'typeVoieEtablissement','libelleVoieEtablissement',
+'len_digit_address_insee','codePostalEtablissement',
+'libelleCommuneEtablissement','libelleCommuneEtrangerEtablissement',
+'distributionSpecialeEtablissement','codeCommuneEtablissement',
+'codeCedexEtablissement','libelleCedexEtablissement',
+'codePaysEtrangerEtablissement','libellePaysEtrangerEtablissement',
+'etatAdministratifEtablissement']
 
 #all_options = {
     #'America': ['New York City', 'San Francisco', 'Cincinnati'],
@@ -87,7 +55,7 @@ def update_output_div(siren):
     c.execute(query)
     df = pd.DataFrame(c.fetchall(), columns= insee_col).sort_values(
     by = ["etablissementSiege", 'libelleCommuneEtablissement'],
-     ascending = False).reindex( columns = reindex_col)
+     ascending = False)
     return df.to_html()
 
 def open_browser():
