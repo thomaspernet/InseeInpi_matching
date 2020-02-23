@@ -24,7 +24,7 @@ inpi_col = [
 'Pays','Ville','ncc','Code_Postal','Code_Commune',
 'Adresse_Ligne1','Adresse_Ligne2','Adresse_Ligne3','Adress_new',
 'Adresse_new_clean_reg','possibilite','INSEE','digit_inpi'
-,'len_digit_address_inpi','len_digit_address_insee',
+,'len_digit_address_inpi',
 'Siege_Domicile_Représentant','Activité_Ambulante',
 'Activité_Saisonnière','Activité_Non_Sédentaire']
 

@@ -311,41 +311,10 @@ class preparation:
         'list_digit_inpi'
         ] = np.nan
 
-        temp_adresse['len_digit_address_insee'] = \
+        temp_adresse['len_digit_address_inpi'] = \
         temp_adresse['len_digit_address_inpi'].fillna(0)
 
         return temp_adresse
-        #temp_adresse['Adresse_new_clean'] = (
-        #temp_adresse['Adresse_new_clean'].apply(
-        #lambda x:' '.join([word for word in str(x).split() if word not in
-        #(self.upper_word)])))
-
-        #temp_adresse['Adress_new']
-
-        #temp_adresse = temp_adresse.assign(
-    #        Adresse_new_clean_split=lambda x:
-    #        self.create_split_adress(x['Adresse_new_clean'])
-    #    )
-
-        #temp_adresse['Adresse_new_clean_reg'] = \
-        #temp_adresse['Adresse_new_clean_split'].apply(lambda x:
-    #                                                self.create_regex_adress(x))
-
-        #temp_adresse['digit_inpi'] = \
-        #temp_adresse['Adresse_new_clean'].str.extract(r'(\d+)')
-
-
-        ### ajouter voie
-        #temp_adresse['possibilite'] = (temp_adresse['Adresse_new_clean']
-        #.str
-        #.extract(r'(' + '|'.join(self.voie['possibilite'].to_list()) +')'))
-
-        #temp_adresse = temp_adresse.drop(columns = ['Adresse_new_clean',
-    #                                                'Adresse_new_clean_split'])
-
-        #temp_adresse = temp_adresse.merge(self.voie, how = 'left')
-
-        #return temp_adresse
 
     def normalize_inpi(self, save_gz = True, save_sql =False):
         """
@@ -393,7 +362,7 @@ class preparation:
         'Pays','Ville','ncc','Code_Postal','Code_Commune',
         'Adresse_Ligne1','Adresse_Ligne2','Adresse_Ligne3','Adress_new',
         'Adresse_new_clean_reg','possibilite','INSEE','digit_inpi',
-        'list_digit_inpi','len_digit_address_inpi','len_digit_address_insee',
+        'list_digit_inpi','len_digit_address_inpi',
         'Siege_Domicile_Représentant','Activité_Ambulante',
         'Activité_Saisonnière','Activité_Non_Sédentaire']
 
@@ -458,7 +427,7 @@ class preparation:
  Adresse_Ligne1,Adresse_Ligne2,Adresse_Ligne3,INSEE,digit_inpi,\
  Adress_new,Adresse_new_clean_reg, Code_Postal,\
  Ville,ncc,possibilite,Code_Commune,Pays,Siege_Domicile_Représentant,\
- count_initial_inpi,len_digit_address_inpi,len_digit_address_insee,\
+ count_initial_inpi,len_digit_address_inpi,\
  Activité_Ambulante,Activité_Saisonnière,Activité_Non_Sédentaire)"
             try:
                 os.remove(r'App\SQL\inpi_origine.db')
