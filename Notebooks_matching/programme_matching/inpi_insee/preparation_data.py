@@ -283,7 +283,7 @@ class preparation:
         Adresse_new_clean_reg = lambda x:
         x['Adresse_new_clean_split'].apply(lambda x:self.create_regex_adress(x)),
         ### Peut etre a modifier
-        digit_inpi = lambda x: x['Adresse_new_clean'].str.extract(r'(\d+)'),
+        digit_inpi = lambda x: x['Adress_new'].str.extract(r'(\d+)'),
         list_digit_inpi = lambda x:x['Adress_new'].str.findall(r"(\d+)"),
         #special_digit = lambda x:x['Adress_new'].str.findall(r"(\d+)").apply(
         #lambda x:'&'.join([i for i in x])),
@@ -390,10 +390,10 @@ class preparation:
         'Domiciliataire_Nom','Domiciliataire_Siren','count_initial_inpi',
         'Domiciliataire_Greffe','Domiciliataire_Complément','Type','Siège_PM',
         'Activité','Origine_Fonds','Origine_Fonds_Info','Type_Exploitation',
-        'Pays','Ville','ncc','possibilite','Code_Postal','Code_Commune',
+        'Pays','Ville','ncc','Code_Postal','Code_Commune',
         'Adresse_Ligne1','Adresse_Ligne2','Adresse_Ligne3','Adress_new',
-        'Adresse_new_clean_reg','INSEE','digit_inpi','list_digit_inpi',
-        'len_digit_address_inpi','len_digit_address_insee',
+        'Adresse_new_clean_reg','possibilite','INSEE','digit_inpi',
+        'list_digit_inpi','len_digit_address_inpi','len_digit_address_insee',
         'Siege_Domicile_Représentant','Activité_Ambulante',
         'Activité_Saisonnière','Activité_Non_Sédentaire']
 
