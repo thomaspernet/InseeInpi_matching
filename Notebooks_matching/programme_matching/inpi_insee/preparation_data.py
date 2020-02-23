@@ -431,6 +431,12 @@ class preparation:
  Activité_Ambulante,Activité_Saisonnière,Activité_Non_Sédentaire)"
             try:
                 os.remove(r'App\SQL\inpi_origine.db')
+                self.save_sql(
+                df = subset_inpi_cleaned.drop(columns = ['list_digit_inpi',
+                'index']),
+                db = r'App\SQL\inpi_origine.db',
+                table = 'INPI',
+                query =query)
             except:
                 self.save_sql(
                 df = subset_inpi_cleaned.drop(columns = ['list_digit_inpi',
