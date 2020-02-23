@@ -227,6 +227,18 @@ class preparation:
             reg = np.nan
         return  reg
 
+    def len_digit_address(self, x):
+        """
+        On peut faire tout le test dans la fonciton, mais on souhaite garder
+        le nombre de digit dans l'adresse pour plus de clarté dans les logs
+        on ne peut pas cacluler le len sur une valeur manquante, a linsee
+        il y a des lignes sans adresse
+        """
+        try:
+            return len(x)
+        except:
+            np.nan
+
     def prepare_adress(self, df):
         """
         Créer deux colonnes nétoyées de l'adresse a partir d'un dataframe INPI.
@@ -241,7 +253,8 @@ class preparation:
         Returns:
         DataFrame Pandas nétoyé avec les variables adresses nétoyées
         """
-        temp_adresse = df.assign(
+        temp_adresse = (df
+        .assign(
 
         Adress_new = lambda x:
             x['Adresse_Ligne1'].fillna('') + ' '+\
@@ -254,35 +267,85 @@ class preparation:
             .str.replace('[^\w\s]|\d+', ' ')
             .str.upper(),
         )
-        temp_adresse['Adresse_new_clean'] = (
-        temp_adresse['Adresse_new_clean'].apply(
+        .assign(
+        Adresse_new_clean = lambda x: x['Adresse_new_clean'].apply(
         lambda x:' '.join([word for word in str(x).split() if word not in
-        (self.upper_word)])))
+        (self.upper_word)])),
+        Adress_new = lambda x: x['Adress_new'].str.normalize(
+            'NFKD')
+        .str.encode('ascii', errors='ignore')
+        .str.decode('utf-8')
+        .str.replace('[^\w\s]', ' ')
+        .str.upper(),
+        Adresse_new_clean_split=lambda x:
+        self.create_split_adress(x['Adresse_new_clean']
+        ),
+        Adresse_new_clean_reg = lambda x:
+        x['Adresse_new_clean_split'].apply(lambda x:self.create_regex_adress(x)),
+        ### Peut etre a modifier
+        digit_inpi = lambda x: x['Adresse_new_clean'].str.extract(r'(\d+)'),
+        list_digit_inpi = lambda x:x['Adress_new'].str.findall(r"(\d+)"),
+        #special_digit = lambda x:x['Adress_new'].str.findall(r"(\d+)").apply(
+        #lambda x:'&'.join([i for i in x])),
+        possibilite = lambda x:
+        x['Adresse_new_clean'].str.extract(r'(' + '|'.join(
+        self.voie['possibilite'].to_list()) +')'),
 
-        temp_adresse = temp_adresse.assign(
-            Adresse_new_clean_split=lambda x:
-            self.create_split_adress(x['Adresse_new_clean'])
+        )
+        .drop(columns = ['Adresse_new_clean','Adresse_new_clean_split'])
+        .merge(self.voie, how = 'left')
         )
 
-        temp_adresse['Adresse_new_clean_reg'] = \
-        temp_adresse['Adresse_new_clean_split'].apply(lambda x:
-                                                    self.create_regex_adress(x))
+        ### List multiple digits in address -> process to improve
+        temp_adresse['len_digit_address_inpi'] = \
+        temp_adresse['list_digit_inpi'].apply(lambda x:
+        self.len_digit_address(x))
 
-        temp_adresse = temp_adresse.drop(columns = ['Adresse_new_clean',
-                                                    'Adresse_new_clean_split'])
+        temp_adresse.loc[
+        temp_adresse['len_digit_address_inpi'] >= 2,
+        'list_digit_inpi'
+        ] =  temp_adresse['list_digit_inpi']
 
-        temp_adresse['digit_inpi'] = \
-        temp_adresse['Adress_new'].str.extract(r'(\d+)')
+        temp_adresse.loc[
+        temp_adresse['len_digit_address_inpi'] < 2,
+        'list_digit_inpi'
+        ] = np.nan
+
+        temp_adresse['len_digit_address_insee'] = \
+        temp_adresse['len_digit_address_inpi'].fillna(0)
+
+        return temp_adresse
+        #temp_adresse['Adresse_new_clean'] = (
+        #temp_adresse['Adresse_new_clean'].apply(
+        #lambda x:' '.join([word for word in str(x).split() if word not in
+        #(self.upper_word)])))
+
+        #temp_adresse['Adress_new']
+
+        #temp_adresse = temp_adresse.assign(
+    #        Adresse_new_clean_split=lambda x:
+    #        self.create_split_adress(x['Adresse_new_clean'])
+    #    )
+
+        #temp_adresse['Adresse_new_clean_reg'] = \
+        #temp_adresse['Adresse_new_clean_split'].apply(lambda x:
+    #                                                self.create_regex_adress(x))
+
+        #temp_adresse['digit_inpi'] = \
+        #temp_adresse['Adresse_new_clean'].str.extract(r'(\d+)')
 
 
         ### ajouter voie
-        temp_adresse['possibilite'] = (temp_adresse['Adress_new']
-        .str
-        .extract(r'(' + '|'.join(self.voie['possibilite'].to_list()) +')'))
+        #temp_adresse['possibilite'] = (temp_adresse['Adresse_new_clean']
+        #.str
+        #.extract(r'(' + '|'.join(self.voie['possibilite'].to_list()) +')'))
 
-        temp_adresse = temp_adresse.merge(self.voie, how = 'left')
+        #temp_adresse = temp_adresse.drop(columns = ['Adresse_new_clean',
+    #                                                'Adresse_new_clean_split'])
 
-        return temp_adresse
+        #temp_adresse = temp_adresse.merge(self.voie, how = 'left')
+
+        #return temp_adresse
 
     def normalize_inpi(self, save_gz = True, save_sql =False):
         """
@@ -349,6 +412,8 @@ class preparation:
         subset_inpi_cleaned = self.prepare_adress(df =
         subset_inpi_cleaned)
 
+        return subset_inpi_cleaned
+
         if save_gz:
             size_ = subset_inpi.shape[0]
             print('Saving {} observations'.format(size_))
@@ -378,17 +443,17 @@ class preparation:
              Origine_Fonds, Origine_Fonds_Info,Type_Exploitation,\
              ID_Etablissement,Date_Greffe,Libelle_Evt,count_initial_inpi,\
              ncc,Adress_new,Adresse_new_clean_reg, digit_inpi, possibilite, \
-             INSEE)"
+             INSEE, list_digit_inpi, len_digit_address_inpi)"
             try:
                 os.remove(r'App\SQL\inpi_origine.db')
             except:
                 self.save_sql(
-                df = subset_inpi_cleaned,
+                df = subset_inpi_cleaned.drop(columns = ['list_digit_inpi']),
                 db = r'App\SQL\inpi_origine.db',
                 table = 'INPI',
                 query =query)
 
-    def normalize_insee(self, siren_inpi_gz, save= True):
+    def normalize_insee(self, siren_inpi_gz, save_gz= True, save_sql = False):
         """
         Prepare le fichier gz en vue de la siretisation
         La fonction prend le fichier d'origine de l'INSEE définit dans
@@ -470,14 +535,36 @@ class preparation:
         .loc[dd_df_insee['dateCreationEtablissement'] <= self.date_end]
         .assign(
             libelleCommuneEtablissement = lambda x:
-            x['libelleCommuneEtablissement'].str.replace('-', ' ')
-                )
+            x['libelleCommuneEtablissement'].str.replace('-', ' '),
+             list_digit_insee = lambda x:
+             x['libelleVoieEtablissement'].str.findall(r"(\d+)")
+               )
                )
 
         subset_insee = self.nombre_siret_siren(df_dd = subset_insee,
              origin = 'INSEE').compute()
 
-        if save:
+        ### List multiple digit in address
+
+        subset_insee['len_digit_address_insee'] = \
+        subset_insee['list_digit_insee'].apply(lambda x:
+        self.len_digit_address(x))
+
+        subset_insee.loc[
+        subset_insee['len_digit_address_insee'] >= 2,
+        'list_digit_insee'
+        ] =  subset_insee['list_digit_insee']
+
+        subset_insee.loc[
+        subset_insee['len_digit_address_insee'] < 2,
+        'list_digit_insee'
+        ] = np.nan
+
+        #subset_insee = subset_insee.drop(columns = 'temp_len')
+        subset_insee['len_digit_address_insee'] = \
+        subset_insee['len_digit_address_insee'].fillna(0)
+
+        if save_gz:
             size_ = subset_insee.shape[0]
             print('Saving {} observations'.format(size_))
             (subset_insee
@@ -487,6 +574,8 @@ class preparation:
             ),
             compression='gzip', index = False))
 
+        if save_sql:
+
             print('Creating SQL database')
             query = "CREATE TABLE INSEE (siren,siret,dateCreationEtablissement,\
  etablissementSiege,complementAdresseEtablissement,numeroVoieEtablissement,  \
@@ -495,17 +584,17 @@ class preparation:
  libelleCommuneEtrangerEtablissement,distributionSpecialeEtablissement,  \
  codeCommuneEtablissement,codeCedexEtablissement, libelleCedexEtablissement,  \
  codePaysEtrangerEtablissement, libellePaysEtrangerEtablissement,  \
- etatAdministratifEtablissement,count_initial_insee)"
+ etatAdministratifEtablissement,count_initial_insee, len_digit_address_insee)"
             try:
+                os.remove(r'App\SQL\App_insee.db')
                 self.save_sql(
-                df = subset_insee,
+                df = subset_insee.drop(columns = ['list_digit_insee']),
                 db = r'App\SQL\App_insee.db',
                 table = 'INSEE',
                 query =query)
             except:
-                os.remove(r'App\SQL\App_insee.db')
                 self.save_sql(
-                df = subset_insee,
+                df = subset_insee.drop(columns = ['list_digit_insee']),
                 db = r'App\SQL\App_insee.db',
                 table = 'INSEE',
                 query =query)
