@@ -4,22 +4,26 @@ from dask.multiprocessing import get
 import dask.dataframe as dd
 import pandas as pd
 import numpy as np
-from nltk.corpus import stopwords
+#from nltk.corpus import stopwords
 from sqlalchemy import create_engine
 pbar = ProgressBar()
 pbar.register()
 
-
-
 class preparation:
     def __init__(self, parameters = None):
         """
-        Parametrisation du programme de siretisation des fichiers de l'INPI
+        Parametrisation du programme de siretisation des fichiers de l'INPI.
+        La parametrisation sert principalement a définir les paths pour
+        récupérer les fichiers nécéssaires pour le préparer les bases de
+        données INPI/INSEE
 
         Args:
         - parameters: Dictionary, les "keys" sont les suivantes:
             - communes_insee: Path pour localiser le fichier des communes de
             France
+            - upper_word: Path pour localiser les mots a enlever dans la
+            préparation de l'adresse
+            - voie: Path pour localiser les types de voies indéxés par l'INSEE
             - insee: Path pour localiser le fichier de l'INSEE. Format csv
             - inpi_etb: Path pour localiser le fichier de l'INPI, etablissement.
             Format gz
@@ -28,12 +32,12 @@ class preparation:
 
         """
         self.communes = parameters['communes_insee']
-        self.insee = parameters['insee']
-        self.inpi_etb = parameters['inpi_etb']
-        self.date_end = parameters['date_end']
         self.upper_word = pd.read_csv(parameters['upper_word']
         ).iloc[:,0].to_list()
         self.voie = pd.read_csv(parameters['voie'])
+        self.insee = parameters['insee']
+        self.inpi_etb = parameters['inpi_etb']
+        self.date_end = parameters['date_end']
 
     def save_sql(self,df,  db,table,  query):
         """
@@ -68,6 +72,9 @@ class preparation:
         - usecols: List: les noms des colonnes a importer. Par defaut, None
         - dtype: Dictionary: La clé indique le nom de la variable, la valeur
         indique le type de la variable
+
+        Return:
+        Dask Pandas DataFrame
         """
         extension = os.path.splitext(file)[1]
         if usecols == None:
@@ -92,7 +99,7 @@ class preparation:
         - origin: String: Explicite si le Dataframe provient de l'INSEE ou de
         l'INPI. Choix possible: INSEE ou INPI
 
-        Returns:
+        Return:
         Un dataFrame Pandas avec une variable count
 
         """
@@ -133,8 +140,8 @@ class preparation:
         - Enlève les espaces
         - Enlèves les digits
 
-        Returns: Un dataframe avec les nouvelles variables suivantes:
-        -
+        Returns:
+        - Un dataframe avec les nouvelles variables suivantes
 
             """
         regex = "CEDEX|cedex|Cedex|\([^)]*\)|/\s\s+/" \
@@ -203,7 +210,16 @@ class preparation:
 
     def create_split_adress(self,x):
         """
+        Découpe l'adresse en une liste de mots. L'input de la fonction est
+        généralement une adresse au préalable normalisée. Exemple:
+        Adresse : "JONQUILLES JAUNES BORD MER" -> [JONQUILLES,JAUNES,BORD,MER]
 
+        Args:
+        - x: Une serie contenant l'adresse. De préférence, une serie avec une
+        adresse normalisée
+
+        Return:
+        Une liste
         """
         split_ = x.str.split().to_list()
         return  split_
@@ -229,10 +245,21 @@ class preparation:
 
     def len_digit_address(self, x):
         """
-        On peut faire tout le test dans la fonciton, mais on souhaite garder
-        le nombre de digit dans l'adresse pour plus de clarté dans les logs
-        on ne peut pas cacluler le len sur une valeur manquante, a linsee
+        Compte le nombre de digits contenu dans la variable adresse.
+        Si l'adresse est vide, ie pas renseignée par l'INPI ou l'INSEE alors
+        impossible de calculer le len, donc retourne un nan
+
+        Args:
+        - x: Une serie contenant l'adresse. De préférence, une serie avec une
+        adresse normalisée
+
+        Note: On peut faire tout le test dans la fonction, mais on souhaite
+        garder le nombre de digit dans l'adresse pour plus de clarté dans les
+        logs on ne peut pas cacluler le len sur une valeur manquante, a l'insee
         il y a des lignes sans adresse
+
+        Return:
+        Un integer ou un NaN via numpy
         """
         try:
             return len(x)
@@ -281,7 +308,8 @@ class preparation:
         self.create_split_adress(x['Adresse_new_clean']
         ),
         Adresse_new_clean_reg = lambda x:
-        x['Adresse_new_clean_split'].apply(lambda x:self.create_regex_adress(x)),
+        x['Adresse_new_clean_split'].apply(lambda x:
+        self.create_regex_adress(x)),
         ### Peut etre a modifier
         digit_inpi = lambda x: x['Adress_new'].str.extract(r'(\d+)'),
         list_digit_inpi = lambda x:x['Adress_new'].str.findall(r"(\d+)"),
@@ -351,7 +379,6 @@ class preparation:
         'Domiciliataire_Siren': 'object',
         'Date_Début_Activité':'object'
                          }
-
         reindex = [
         'Code Greffe', 'Nom_Greffe','Numero_Gestion','RCS_Registre',
         'Date_Greffe','Libelle_Evt','ID_Etablissement','siren',
@@ -577,7 +604,7 @@ class preparation:
             (subset_insee
             .assign(index = lambda x:
             x.index)
-            .to_csv('data\input\insee_2017_{}.gz'.format(size_
+            .to_csv(r'data\input\INSEE\insee_2017_{}.gz'.format(size_
             ),
             compression='gzip', index = False))
 
