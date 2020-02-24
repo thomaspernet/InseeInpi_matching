@@ -27,21 +27,21 @@ Le fichier INPI doit contenir un seul fichier gz avant d'être ingéré par le p
 
 La normalisation du fichier de l'INPI se fait en plusieurs étapes:
 
-- 1) Exclusion des observations contenant des NaN pour chacune des variables candidates, à savoir:
+1) Exclusion des observations contenant des NaN pour chacune des variables candidates, à savoir:
     - Adresse_Ligne1
     - Adresse_Ligne2
     - Adresse_Ligne3
     - Code_Postal
     - Ville
     - Code_Commune
-- 2) Extraction des SIREN a SIRETISER -> cela evite d'utiliser toute la base INSEE pour la sirétisation. I.e Speedup le process
-- 3) Calcule du nombre de SIRET par SIREN via la fonction `nombre_siret_siren`
-- 4) Normalisation de la variable commune via la fonction `clean_commune`
+2) Extraction des SIREN a SIRETISER -> cela evite d'utiliser toute la base INSEE pour la sirétisation. I.e Speedup le process
+3) Calcule du nombre de SIRET par SIREN via la fonction `nombre_siret_siren`
+4) Normalisation de la variable commune via la fonction `clean_commune`
     - Extraction des digits dans la ville. En effet, certaines communes incluent l'arrondissement dans la variable.
     - Extraction des caractères spéciaux et espaces
     - Capitalisation du nom de la commune
     - Matching avec le fichier commune pour avoir le nom de la commune de l'INSEE.
-- 5) Préparation de l'adresse via la fonction `prepare_adress`
+5) Préparation de l'adresse via la fonction `prepare_adress`
     - Concatenation des variables `Adresse_Ligne1` + `Adresse_Ligne2` + `Adresse_Ligne3`
     - Normalisation de la variable concatenée -> Extraction des caractères speciaux, espace, digit puis capitalisation
     - Extraction de tous les stop words du fichier `upper_word`
@@ -88,12 +88,12 @@ Pour l'étape de siretisation, les variables candidates sont les suivantes:
 
 Comme pour le fichier de l'INPI, le fichier csv est importé en Dask Dataframe. Les étapes sont les suivantes:
 
-- 1) Filtre les SIREN à sirétiser uniquement
-- 2) Filtre la date limite à l'INSEE. Cette étape sert essentiellement pour siretiser les bases de stocks. Cela évite d'utiliser des valeurs "dans le future" -> inconnu à l'INPI
-- 3) Remplacement des "-" par des " " dans la variable `libelleCommuneEtablissement`
-- 4) Extraction des digits en format liste de la variable `libelleVoieEtablissement`
-- 5) Calcule du nombre de SIRET par SIREN
-- 6) Calcule du nombre de digit dans la variable `libelleCommuneEtablissement`
+1) Filtre les SIREN à sirétiser uniquement
+2) Filtre la date limite à l'INSEE. Cette étape sert essentiellement pour siretiser les bases de stocks. Cela évite d'utiliser des valeurs "dans le future" -> inconnu à l'INPI
+3) Remplacement des "-" par des " " dans la variable `libelleCommuneEtablissement`
+4) Extraction des digits en format liste de la variable `libelleVoieEtablissement`
+5) Calcule du nombre de SIRET par SIREN
+6) Calcule du nombre de digit dans la variable `libelleCommuneEtablissement`
     - Si len inférieure a 2, alors NaN. C'est une variable utlisée pendant le matching des règles spéciales
     
 Le fichier est sauvegardé en format gz, et dans un table SQL
