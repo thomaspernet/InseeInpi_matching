@@ -2,9 +2,9 @@
 
 L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
 
-- step_one: permet d'écarter les doublons du merge et d'appliquer les premières règles afin de connaitre l'origine de la siretisation
-- step_two_assess_test: détermine l'origine du matching, a savoir la date, adresse, voie, numéro de voie
-- step_two_duplication: permet de récuperer des SIRET sur les doublons émanant du merge avec l'INSEE
+- `step_one`: permet d'écarter les doublons du merge et d'appliquer les premières règles afin de connaitre l'origine de la siretisation
+- `step_two_assess_test`: détermine l'origine du matching, a savoir la date, adresse, voie, numéro de voie
+- `step_two_duplication`: permet de récuperer des SIRET sur les doublons émanant du merge avec l'INSEE
 
 ## Step One
 
