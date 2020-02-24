@@ -19,7 +19,7 @@ Les données sources de l'INSEE proviennent de [Data Gouv](https://www.data.gouv
 
 Les données de l'INPI proviennent de ses différents Notebooks:
 
-- inpi_etb
+- [inpi_etb](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/Source_intermediates.ipynb)
 
 ## Normalisation du fichier INPI.
 
