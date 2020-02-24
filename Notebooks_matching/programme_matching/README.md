@@ -111,7 +111,24 @@ L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
 - `step_two_assess_test`: détermine l'origine du matching, a savoir la date, adresse, voie, numéro de voie
 - `step_two_duplication`: permet de récuperer des SIRET sur les doublons émanant du merge avec l'INSEE
 
+Dans premier temps, on créer un dictionnaire avec toutes les variables de matching. Toutefois, l'algorithme va utiliser séquentiellement les variables suivantes:
+
+```
+ {'ncc', 'Code_Postal', 'Code_Commune', 'INSEE', 'digit_inpi'},
+ {'ncc', 'Code_Postal', 'Code_Commune', 'INSEE'},
+ {'ncc', 'Code_Postal', 'Code_Commune', 'digit_inpi'},
+ {'ncc', 'Code_Postal', 'Code_Commune'},   
+ {'ncc', 'Code_Postal'},
+ {'ncc'},
+ {'Code_Postal'},
+ {'Code_Commune'}
+```
+
+Pour connaitre l'ensemble des variables de matching INSEE/INPI, veuillez vous rendre en [annexe](#annexe)
+
 ## Step One
+
+
 
 ```
 - Test 1: doublon
@@ -176,3 +193,51 @@ On peut sauvegarder le `df_not_duplicate` et le restant en tant que `special_tre
 
 
 ![](https://www.lucidchart.com/publicSegments/view/5a8cb28f-dc42-4708-babd-423962514878/image.png)
+
+# annexe
+
+```
+[{'match': {'inpi': ['siren',
+    'INSEE',
+    'ncc',
+    'Code_Postal',
+    'Code_Commune',
+    'digit_inpi'],
+   'insee': ['siren',
+    'typeVoieEtablissement',
+    'libelleCommuneEtablissement',
+    'codePostalEtablissement',
+    'codeCommuneEtablissement',
+    'numeroVoieEtablissement']}},
+ {'match': {'inpi': ['siren', 'ncc', 'Code_Commune', 'Code_Postal', 'INSEE'],
+   'insee': ['siren',
+    'libelleCommuneEtablissement',
+    'codeCommuneEtablissement',
+    'codePostalEtablissement',
+    'typeVoieEtablissement']}},
+ {'match': {'inpi': ['siren',
+    'ncc',
+    'Code_Commune',
+    'Code_Postal',
+    'digit_inpi'],
+   'insee': ['siren',
+    'libelleCommuneEtablissement',
+    'codeCommuneEtablissement',
+    'codePostalEtablissement',
+    'numeroVoieEtablissement']}},
+ {'match': {'inpi': ['siren', 'ncc', 'Code_Commune', 'Code_Postal'],
+   'insee': ['siren',
+    'libelleCommuneEtablissement',
+    'codeCommuneEtablissement',
+    'codePostalEtablissement']}},
+ {'match': {'inpi': ['siren', 'ncc', 'Code_Postal'],
+   'insee': ['siren',
+    'libelleCommuneEtablissement',
+    'codePostalEtablissement']}},
+ {'match': {'inpi': ['siren', 'ncc'],
+   'insee': ['siren', 'libelleCommuneEtablissement']}},
+ {'match': {'inpi': ['siren', 'Code_Postal'],
+   'insee': ['siren', 'codePostalEtablissement']}},
+ {'match': {'inpi': ['siren', 'Code_Commune'],
+   'insee': ['siren', 'codeCommuneEtablissement']}}]
+```
