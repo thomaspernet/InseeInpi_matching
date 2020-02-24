@@ -180,8 +180,7 @@ class siretisation_inpi:
 
         Return:
         Deux DataFrame
-            - df_no_duplication: Dataframe ne contenant pas de doublon et avec
-            ajout des variables sur l'origine de la siretisation
+            - df_no_duplication:
             - df_no_duplication: Dataframe contenant des doublons et avec
             ajout des variables sur l'origine de la siretisation
         """
@@ -334,6 +333,21 @@ class siretisation_inpi:
         l'origine du matching Plus précisement, si le matching a pu se faire sur
         la date, l'adresse, la voie, numéro de voie et le nombre unique d'index.
 
+        - Test 1: address libelle
+            - Si mots dans inpi est contenu dans INSEE, True
+        - Test 1 bis: address complement
+            - Si mots dans inpi est contenu dans INSEE, True
+        - Test 2: Date
+            - dateCreationEtablissement >= Date_Début_Activité OR
+            Date_Début_Activité = NaN OR (nombre SIREN a l'INSEE = 1 AND nombre
+            SIREN des variables de matching = 1), True
+        - Test 3: siege
+            - Type = ['SEP', 'SIE'] AND siege = true, True
+        - Test 4: voie
+            - Type voie INPI = Type voie INSEE, True
+        - Test 5: numero voie
+            - Numero voie INPI = Numero voie INSEE, True
+
         Args:
         - df: Pandas Dataframe
         - var_group: Variables de l'INPI utilisées lors du merge avec l'INSEE
@@ -445,6 +459,38 @@ class siretisation_inpi:
         distingue 2 différents dataframe. Un premier pour les doublons
         fraichement siretisés, un deuxième contenant des SIREN qui feront
         l'objet d'un traitement spécial.
+
+        - Si test_join_address = True:
+        - Test 1: doublon:
+            - Oui: append-> `df_not_duplicate`
+            - Non: Pass
+            - Exclue les `index` de df_duplication
+            - then go next
+        - Si test_address_libelle = True:
+            - Test 1: doublon:
+                - Oui: append-> `df_not_duplicate`
+                - Non: Pass
+                - Exclue les `index` de df_duplication
+                - then go next
+        - Si test_address_complement = True:
+            - Test 1: doublon:
+                - Oui: append-> `df_not_duplicate`
+                - Non: Pass
+                - Exclue les `index` de df_duplication
+
+        On peut sauvegarder le `df_not_duplicate` et le restant en tant
+        que `special_treatment`
+
+        Args:
+        - df_duplication: Pandas Dataframe contenant les doublons
+        - var_group: Variables de l'INPI utilisées lors du merge avec l'INSEE
+
+        Returns:
+        - df_not_duplicate: Dataframe ne contenant pas de doublon et avec
+        ajout des variables sur l'origine de la siretisation
+        - sp: DataFrame contenant les SIREN ayant besoin d'une attention
+        particulière
+
         """
         duplicates_ = self.step_two_assess_test(df = df_duplication,
         var_group=var_group)
