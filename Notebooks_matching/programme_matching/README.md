@@ -56,6 +56,7 @@ La normalisation du fichier de l'INPI se fait en plusieurs étapes:
     - Creation d'une variable `index` correspondant à l'index du dataframe. Indispensable
  
 Le fichier est sauvegardé en format gz, et dans un table SQL
+
     - inpi_etb_stock_0.gz
     - inpi_origine.db
     
@@ -96,6 +97,7 @@ Comme pour le fichier de l'INPI, le fichier csv est importé en Dask Dataframe. 
     - Si len inférieure a 2, alors NaN. C'est une variable utlisée pendant le matching des règles spéciales
     
 Le fichier est sauvegardé en format gz, et dans un table SQL
+
     - insee_2017_SIZE.gz
     - App_insee.db
     
