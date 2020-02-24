@@ -287,7 +287,7 @@ class preparation:
             x['Adresse_Ligne1'].fillna('') + ' '+\
             x['Adresse_Ligne2'].fillna('') + ' '+\
             x['Adresse_Ligne3'].fillna(''),
-            Adresse_new_clean=lambda x: x['Adress_new'].str.normalize(
+        Adresse_new_clean=lambda x: x['Adress_new'].str.normalize(
                 'NFKD')
             .str.encode('ascii', errors='ignore')
             .str.decode('utf-8')
