@@ -18,18 +18,9 @@ class siretisation_inpi:
         Args:
         - parameters: Dictionary, les "keys" sont les suivantes:
             - insee: Path pour localiser le fichier de l'INSEE. Format gz
-            - inpi_etb: Path pour localiser le fichier de l'INPI, etablissement.
-            Format gz
 
         """
         self.insee = parameters['insee']
-        #self.inpi_etb = parameters['inpi_etb']
-        #self.insee_col = insee_col
-        #self.insee_dtype = insee_dtype
-
-        #self.inpi_col = inpi_col
-        #self.inpi_dtype = inpi_dtype
-        #self.list_inpi = list_inpi
 
     def import_dask(self, file, usecols = None, dtype=None, parse_dates = False):
         """
@@ -37,7 +28,7 @@ class siretisation_inpi:
 
         Deja dans preparation data
 
-        Args:
+        Args:Merge
         - file: String, Path pour localiser le fichier, incluant le nom et
         l'extension
         - usecols: List: les noms des colonnes a importer. Par defaut, None
@@ -63,6 +54,15 @@ class siretisation_inpi:
 
     def find_regex(self,regex, test_str):
         """
+        Performe une recherche regex entre deux colonnes.
+
+        Args:
+        - regex: string: charactère contenant la formule regex
+        - test_str: String: String contenant le regex a trouver
+
+        Return:
+        Boolean, True si le regex est trouvé, sinon False
+
         """
         try:
             matches = re.search(regex, test_str)
@@ -74,6 +74,16 @@ class siretisation_inpi:
             return False
 
     def index_marks(self, nrows, chunk_size):
+        """
+        Split le dataframe en plusieurs chunks
+
+        Args:
+        - nrows: Int: Nombre de rows par chunk
+        - chunk_size: Nombre de chunks
+
+        Return:
+        Pandas Dataframe
+        """
 
         df_ = range(1 * chunk_size, (nrows // chunk_size + 1) *
         chunk_size, chunk_size)
@@ -82,6 +92,14 @@ class siretisation_inpi:
 
     def split(self,dfm, chunk_size):
         """
+        Split le dataframe en plusieurs matrice
+
+        Args:
+        - dfm: Pandas DataFrame
+        - chunk_size: Nombre de chunks
+
+        Return:
+        Matrices Numpy
         """
 
         indices = self.index_marks(dfm.shape[0], chunk_size)
@@ -89,6 +107,19 @@ class siretisation_inpi:
 
     def split_duplication(self, df):
         """
+        Split un dataframe si l'index (la variable, pas l'index) contient des
+        doublons.
+
+        L'idée est de distinguer les doublons resultants du merge avec l'INSEE
+
+        Args:
+        - df: Pandas dataframe contenant au moins une variable "index"
+
+        Returns:
+        - Un Dictionary avec:
+            - not_duplication: Dataframe ne contenant pas les doublons
+            - duplication: Dataframe contenant les doublons
+            - report_dup: Une Serie avec le nombres de doublons
         """
         if 'count_duplicates_' in df.columns:
             df = df.drop(columns = 'count_duplicates_')
@@ -116,9 +147,43 @@ class siretisation_inpi:
 
         return dic_
 
-    def step_one(self,left_on, right_on,df_input):
+    def step_one(self,df_input, left_on, right_on):
         """
-        Le calcul DAsk se fait dans la focntion split_duplication
+        L'étape "step_one" se fait tout de suite après avoir réalisé le merge
+        avec l'INSEE. Il permet d'écarter les doublons du merge et d'appliquer
+        les premières règles afin de connaitre l'origine de la siretisation
+        - Test 1: doublon
+        - non: Save-> `test_1['not_duplication']`
+        - oui:
+            - Test 2: Date equal
+                - oui:
+                    - Test 2 bis: doublon
+                        - non: Save-> `test_2_bis['not_duplication']`
+                        - oui: Save-> `test_2_bis['duplication']`
+                - non:
+                    - Test 3: Date sup
+                        - oui:
+                            - Test 2 bis: doublon
+                                - non: Save-> `test_3_oui_bis['not_duplication']`
+                                - oui: Save-> `test_3_oui_bis['duplication']`
+                        - non: Save-> `test_3_non`
+
+        Args:
+        - df_input: Pandas DataFrame. Le Pandas DataFrame est celui qui résulte
+        du merge avec l'INSEE.
+        - left_on: Variables de matching de L'INPI:
+            - Ex: 'ncc', 'Code_Postal', 'Code_Commune', 'INSEE', 'digit_inpi'
+        - right_on: Variables de matching de L'INSEE
+            - Ex: 'libelleCommuneEtablissement',
+            'codePostalEtablissement', 'codeCommuneEtablissement',
+            'typeVoieEtablissement','numeroVoieEtablissement'
+
+        Return:
+        Deux DataFrame
+            - df_no_duplication: Dataframe ne contenant pas de doublon et avec
+            ajout des variables sur l'origine de la siretisation
+            - df_no_duplication: Dataframe contenant des doublons et avec
+            ajout des variables sur l'origine de la siretisation
         """
         insee_col = ['siren',
          'siret',
@@ -253,17 +318,28 @@ class siretisation_inpi:
         ], axis =0)
 
         ###### Test 3: Date equal -> non -> test 3: Date sup -> non
-        test_3_non = test_1['duplication'].loc[
-        (~test_1['duplication']['index'].isin(
-        test_2_oui['index'].to_list()+
-        test_3_oui['index'].to_list()
-        )
-        )
-        ]
+        ### USELESS ????
+        #test_3_non = test_1['duplication'].loc[
+        #(~test_1['duplication']['index'].isin(
+        #test_2_oui['index'].to_list()+
+        #test_3_oui['index'].to_list()
+        #)
+        #)
+        #]
         return (df_no_duplication, df_duplication)
 
     def step_two_assess_test(self, df, var_group):
         """
+        Renvoie un dataframe contenant différents tests afin de mieux déterminer
+        l'origine du matching Plus précisement, si le matching a pu se faire sur
+        la date, l'adresse, la voie, numéro de voie et le nombre unique d'index.
+
+        Args:
+        - df: Pandas Dataframe
+        - var_group: Variables de l'INPI utilisées lors du merge avec l'INSEE
+
+        Return:
+        - Pandas DataFrame
         """
         ## Calcul nb siren/siret
         df_ = (df
@@ -362,9 +438,17 @@ class siretisation_inpi:
 
     def step_two_duplication(self, df_duplication, var_group):
         """
+        Dernière étape de l'algorithme permettant de récuperer des SIRET sur les
+        doublons émanant du merge avec l'INSEE. Cette étape va utliser l'étape
+        précédante, a savoir les variables 'test_join_address',
+        'test_address_libelle', 'test_address_complement'. Le résultat du test
+        distingue 2 différents dataframe. Un premier pour les doublons
+        fraichement siretisés, un deuxième contenant des SIREN qui feront
+        l'objet d'un traitement spécial.
         """
         duplicates_ = self.step_two_assess_test(df = df_duplication,
         var_group=var_group)
+
         df_not_duplicate = pd.DataFrame()
         copy_duplicate = duplicates_.copy()
 
