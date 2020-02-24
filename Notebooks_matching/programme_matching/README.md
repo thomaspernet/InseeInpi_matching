@@ -124,11 +124,17 @@ Dans premier temps, on créer un dictionnaire avec toutes les variables de match
  {'Code_Commune'}
 ```
 
-Pour connaitre l'ensemble des variables de matching INSEE/INPI, veuillez vous rendre en [annexe](#annexe)
+Pour connaitre l'ensemble des variables de matching INSEE/INPI, veuillez vous rendre en [annexe](#annexe).
+
+Dans la mesure ou l'algorithme fonctionne de manière séquentielle, et utilise comme input un fichier de l'INPI a siretiser. De fait, après chaque séquence, l'algorithme sauvegarde un fichier gz contenant les siren a trouver. Cette étape de sauvegarde en gz permet de loader le fichier gz en input en Dataframe Dask.
 
 ## Step One
 
+La première étape de la séquence est l'ingestion d'un fichier gz contenant les SIREN a trouver. L'ingestion va se faire en convertissant le dataframe en Dask. L'algorithme tout d'abord utiliser la fonction `step_one` et produit deux dataframes selon si le matching avec l'INSEE a débouté sur des doublons ou non. 
 
+Les doublons sont générés si pour un même nombre de variables de matching, il existe plusieurs possibilités à l'INSEE. Par exemple, pour un siren, ville, adressse donnée, il y a plusieurs possibilité. Cela constitue un double et il sera traiter ultérieurement, dans la mesure du possible. 
+
+Les étapes déroulées lors du premier processus est le suivant:
 
 ```
 - Test 1: doublon
@@ -148,7 +154,12 @@ Pour connaitre l'ensemble des variables de matching INSEE/INPI, veuillez vous re
                         - non: Save-> `test_3_non`
 ```
 
+Deux dataframe sont crées, un ne contenant pas de doublon pas les doublons et un deuxième contenant les doublon. L'algorithme va réaliser les tests sur le premier et faire d'avantage de recherche sur le second
+
 ## step_two_assess_test
+
+Le premier dataframe ne contient pas de doublon, il est donc possible de réaliser différents tests afin de mieux déterminer
+l'origine du matching. Plus précisement, si le matching a pu se faire sur la date, l'adresse, la voie, numéro de voie et le nombre unique d'index. Les règles sont définies ci-dessous.
 
 ```
 - Test 1: address libelle
@@ -167,7 +178,17 @@ Pour connaitre l'ensemble des variables de matching INSEE/INPI, veuillez vous re
             - Numero voie INPI = Numero voie INSEE, True
 ```
 
+Un premier fichier gz est enregistré contenant les "pure matches"
+
 ## step_two_duplication
+
+Les second dataframe contient les doublons obtenus après le matching avec l'INSEE. L'algorithme va travailler sur différentes variables de manière séquencielle pour tenter de trouver les bons siret. Plus précisément, 3 variables qui ont été récemment créé sont utilisées:
+
+- test_join_address -> True si la variable test_address_libelle = True (ie mot INPI trouvé dans INSEE) et test_join_address =  True
+- test_address_libelle ->  True si la variable test_address_libelle = True (ie mot INPI trouvé dans INSEE)
+- test_address_complement -> True si la variable test_join_address =  True
+
+Pour chaque séquence, on réalise les tests suivants:
 
 ```
 - Si test_join_address = True:
