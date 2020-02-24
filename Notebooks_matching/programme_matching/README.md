@@ -9,7 +9,9 @@ L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
 ## Step One
 
 - Test 1: doublon
+
         - non: Save-> `test_1['not_duplication']`
+        
         - oui:
             - Test 2: Date equal
                 - oui:
