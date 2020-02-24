@@ -1,5 +1,7 @@
 # Class preparation Data
 
+Le coude source est disponible [ici](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/inpi_insee/preparation_data.py)
+
 ## INSEE
 
 Les données sources de l'INSEE proviennent de [Data Gouv](https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/)
@@ -100,6 +102,8 @@ Le fichier est sauvegardé en format gz, et dans un table SQL
 Un appercu de la table est disponible via cette application `App_insee`.
 
 # Algorithme Siretisation
+
+Le code source est disponible [ici](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/inpi_insee/siretisation.py)
 
 L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
 
