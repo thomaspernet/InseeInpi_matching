@@ -8,10 +8,9 @@ L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
 
 ## Step One
 
+```
 - Test 1: doublon
-
         - non: Save-> `test_1['not_duplication']`
-        
         - oui:
             - Test 2: Date equal
                 - oui:
@@ -25,9 +24,11 @@ L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
                                 - non: Save-> `test_3_oui_bis['not_duplication']`
                                 - oui: Save-> `test_3_oui_bis['duplication']`
                         - non: Save-> `test_3_non`
-                        
+```
+
 ## step_two_assess_test
 
+```
 - Test 1: address libelle
             - Si mots dans inpi est contenu dans INSEE, True
         - Test 1 bis: address complement
@@ -42,9 +43,11 @@ L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
             - Type voie INPI = Type voie INSEE, True
         - Test 5: numero voie
             - Numero voie INPI = Numero voie INSEE, True
-            
+```
+
 ## step_two_duplication
 
+```
 - Si test_join_address = True:
         - Test 1: doublon:
             - Oui: append-> `df_not_duplicate`
@@ -62,7 +65,8 @@ L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
                 - Oui: append-> `df_not_duplicate`
                 - Non: Pass
                 - Exclue les `index` de df_duplication
-                
+ ```
+ 
 On peut sauvegarder le `df_not_duplicate` et le restant en tant que `special_treatment`
 
 
