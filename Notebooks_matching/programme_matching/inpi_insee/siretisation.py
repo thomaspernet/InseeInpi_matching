@@ -618,3 +618,94 @@ def create_graph_analysis(df):
      .barh(ax=axes[1,2])
      .set_title('Top 10 des villes les plus représentées')
 )
+    
+def crate_graph_report_test(df):
+    """
+    """
+    plt.close('all')
+    fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(15, 15))
+    fig.tight_layout(pad=3.0)
+
+    list_test = ['test_address_libelle', 'test_address_complement',
+             'test_join_address', 'test_siege',
+             'test_voie', 'test_numero']
+
+    i_, j = 0, 0
+    for i, value in enumerate(list_test):
+        if i in [3]:
+            j += 1
+            i_ = 0
+        ax1 = (df
+               .groupby([value])[value]
+               .count()
+               .plot
+               .barh(ax=axes[j, i_], rot=0))
+        i_ += 1
+    
+def create_graph_report(df):
+    """
+    """
+    plt.close('all')
+    fig, axes = plt.subplots(nrows=2, ncols=3,figsize=(15,15))
+    fig.tight_layout(pad=3.0)
+
+    (df
+     .groupby(['Ville'])['Ville']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[0,0])
+     .set_title('Top 10 des villes les plus représentées')
+)
+
+    (df
+     .groupby(['INSEE'])['INSEE']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[0,1])
+     .set_title('Top 10 des voies les plus représentées')
+)
+ 
+    (df
+     .groupby(['origin'])['origin']
+     .count()
+     .plot
+     .barh(ax=axes[0,2])
+     .set_title('Nombre de siège')
+)
+ 
+    (df
+     .groupby(['Type'])['Type']
+     .count()
+     .sort_values()
+     .plot
+     .barh(ax=axes[1,0])
+     .set_title('Nombre de siège')
+)
+ 
+    (df
+     .assign(
+         Date_Début_Activité = lambda x:
+    pd.to_datetime(x['Date_Début_Activité'], errors = 'coerce'),
+         year = lambda x: x['Date_Début_Activité'].dt.year)
+     .groupby(['year'])['year']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[1,1])
+     .set_title('Top 10 des années les plus représentées')
+)
+ 
+    (df
+     .groupby(['Enseigne'])['Enseigne']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[1,2])
+     .set_title('Top 10 des enseignes les plus représentées')
+)
