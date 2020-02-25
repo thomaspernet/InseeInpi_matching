@@ -25,11 +25,11 @@ Les données de l'INPI proviennent de ses différents Notebooks:
 
 ## Normalisation du fichier INPI.
 
-Le fichier INPI doit contenir un seul fichier gz avant d'être ingéré par le programme. Le fichier va être importé dans un format Dask, ce qui permet de paralléliser les calcules et bien sur d'éviter les problèmes de mémoire. 
+Le fichier INPI doit contenir un seul fichier gz avant d'être ingéré par le programme. Le fichier va être importé dans un format Dask, ce qui permet de paralléliser les calculs et bien sur d'éviter les problèmes de mémoire. 
 
 La normalisation du fichier de l'INPI se fait en plusieurs étapes:
 
-1) Exclusion des observations contenant des NaN pour chacune des variables candidates, à savoir:
+1) Exclusion des observations avec des NaN pour chacune des variables candidates, à savoir:
 
     - Adresse_Ligne1
     - Adresse_Ligne2
@@ -38,7 +38,7 @@ La normalisation du fichier de l'INPI se fait en plusieurs étapes:
     - Ville
     - Code_Commune
 2) Extraction des SIREN a SIRETISER -> cela evite d'utiliser toute la base INSEE pour la sirétisation. I.e Speedup le process
-3) Calcule du nombre de SIRET par SIREN via la fonction `nombre_siret_siren`
+3) Calcul du nombre de SIRET par SIREN via la fonction `nombre_siret_siren`
 4) Normalisation de la variable commune via la fonction `clean_commune`
 
     - Extraction des digits dans la ville. En effet, certaines communes incluent l'arrondissement dans la variable.
@@ -47,7 +47,6 @@ La normalisation du fichier de l'INPI se fait en plusieurs étapes:
     - Matching avec le fichier commune pour avoir le nom de la commune de l'INSEE.
 5) Préparation de l'adresse via la fonction `prepare_adress`
     - Concatenation des variables `Adresse_Ligne1` + `Adresse_Ligne2` + `Adresse_Ligne3`
-    
     - Normalisation de la variable concatenée -> Extraction des caractères speciaux, espace, digit puis capitalisation
     - Extraction de tous les stop words du fichier `upper_word`
     - Split de chaque mot restant de l'adresse 
@@ -56,7 +55,7 @@ La normalisation du fichier de l'INPI se fait en plusieurs étapes:
         - Première variable avec le premier digit
         - Seconde variable avec une liste de digit et jointure -> DIGIT1|DIGIT2
     - Merge avec le fichier `voie` pour obtenir le type de voie de l'INSEE
-    - Calcule du nombre de digit dans l'adresse
+    - Calcul du nombre de digit dans l'adresse
         - Si len inférieure a 2, alors NaN. C'est une variable utlisée pendant le matching des règles spéciales
     - Creation d'une variable `index` correspondant à l'index du dataframe. Indispensable
  
@@ -95,15 +94,15 @@ Comme pour le fichier de l'INPI, le fichier csv est importé en Dask Dataframe. 
 
 1) Filtre les SIREN à sirétiser uniquement
 
-2) Filtre la date limite à l'INSEE. Cette étape sert essentiellement pour siretiser les bases de stocks. Cela évite d'utiliser des valeurs "dans le future" -> inconnu à l'INPI
+2) Filtre la date limite à l'INSEE. Cette étape sert essentiellement pour siretiser les bases de stocks. Cela évite d'utiliser des valeurs "dans le future" -> inconnues à l'INPI
 
 3) Remplacement des "-" par des " " dans la variable `libelleCommuneEtablissement`
 
-4) Extraction des digits en format liste de la variable `libelleVoieEtablissement`
+4) Extraction des digits en format "liste" de la variable `libelleVoieEtablissement`
 
-5) Calcule du nombre de SIRET par SIREN
+5) Calcul du nombre de SIRET par SIREN
 
-6) Calcule du nombre de digit dans la variable `libelleCommuneEtablissement`
+6) Calcul du nombre de digit dans la variable `libelleCommuneEtablissement`
 
     - Si len inférieure a 2, alors NaN. C'est une variable utlisée pendant le matching des règles spéciales
     
@@ -118,7 +117,7 @@ Un appercu de la table est disponible via cette application `App_insee`.
 
 Le code source est disponible [ici](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/inpi_insee/siretisation.py) et le notebook pour lancer le programme est disponible [ici](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/Siretisation.ipynb)
 
-L'algorithme de SIRETISATION fonctionne avec l'aidre de trois fonctions:
+L'algorithme de SIRETISATION fonctionne avec l'aide de trois fonctions:
 
 - `step_one`: permet d'écarter les doublons du merge et d'appliquer les premières règles afin de connaitre l'origine de la siretisation
 - `step_two_assess_test`: détermine l'origine du matching, a savoir la date, adresse, voie, numéro de voie
@@ -145,7 +144,7 @@ Dans la mesure ou l'algorithme fonctionne de manière séquentielle, et utilise 
 
 La première étape de la séquence est l'ingestion d'un fichier gz contenant les SIREN a trouver. L'ingestion va se faire en convertissant le dataframe en Dask. L'algorithme tout d'abord utiliser la fonction `step_one` et produit deux dataframes selon si le matching avec l'INSEE a débouté sur des doublons ou non. 
 
-Les doublons sont générés si pour un même nombre de variables de matching, il existe plusieurs possibilités à l'INSEE. Par exemple, pour un siren, ville, adressse donnée, il y a plusieurs possibilité. Cela constitue un double et il sera traiter ultérieurement, dans la mesure du possible. 
+Les doublons sont générés si pour un même nombre de variables de matching, il existe plusieurs possibilités à l'INSEE. Par exemple, pour un siren, ville, adressse donnée, il y a plusieurs possibilités. Cela constitue un doublon et il sera traité ultérieurement, dans la mesure du possible. 
 
 Les étapes déroulées lors du premier processus est le suivant:
 
@@ -167,12 +166,11 @@ Les étapes déroulées lors du premier processus est le suivant:
                         - non: Save-> `test_3_non`
 ```
 
-Deux dataframe sont crées, un ne contenant pas de doublon pas les doublons et un deuxième contenant les doublon. L'algorithme va réaliser les tests sur le premier et faire d'avantage de recherche sur le second
+Deux dataframe sont crées, un ne contenant pas de doublon et un deuxième contenant les doublons. L'algorithme va réaliser les tests sur le premier et faire d'avantage de recherche sur le second.
 
 ## step_two_assess_test
 
-Le premier dataframe ne contient pas de doublon, il est donc possible de réaliser différents tests afin de mieux déterminer
-l'origine du matching. Plus précisement, si le matching a pu se faire sur la date, l'adresse, la voie, numéro de voie et le nombre unique d'index. Les règles sont définies ci-dessous.
+Le premier dataframe ne contient pas de doublon, il est donc possible de réaliser différents tests afin de mieux déterminerl'origine du matching. Plus précisement, si le matching a pu se faire sur la date, l'adresse, la voie, numéro de voie et le nombre unique d'index. Les règles sont définies ci-dessous.
 
 ```
 - Test 1: address libelle
@@ -195,7 +193,7 @@ Un premier fichier gz est enregistré contenant les "pure matches"
 
 ## step_two_duplication
 
-Les second dataframe contient les doublons obtenus après le matching avec l'INSEE. L'algorithme va travailler sur différentes variables de manière séquencielle pour tenter de trouver les bons siret. Plus précisément, 3 variables qui ont été récemment créé sont utilisées:
+Les second dataframe contient les doublons obtenus après le matching avec l'INSEE. L'algorithme va travailler sur différentes variables de manière séquentielle pour tenter de trouver les bons SIRET. Plus précisément, 3 variables qui ont été récemment créé sont utilisées:
 
 - test_join_address -> True si la variable test_address_libelle = True (ie mot INPI trouvé dans INSEE) et test_join_address =  True
 - test_address_libelle ->  True si la variable test_address_libelle = True (ie mot INPI trouvé dans INSEE)
@@ -384,12 +382,16 @@ Ici, on va faire l'exemple sur un fichier INPI créer au cours de la troisième 
 
 Pour la première étape, on va matcher avec les variables suivante à l'INPI et à l'INSEE
 
+Variables a l'INPI
+
 
 
 
     ['siren', 'Code_Postal', 'ncc', 'Code_Commune', 'digit_inpi']
 
 
+
+Variables a l'INSEE
 
 
 
@@ -409,7 +411,7 @@ Le code va produire deux dataframes, un premier sans les doublons et un autre av
     [########################################] | 100% Completed |  1min  1.2s
     
 
-### Etats sur les matchés
+### Etat sur les matchés
 
 Il y a 434488 lignes de matchés, pour un nombre de 324413 de SIREN
 
@@ -585,7 +587,7 @@ Il y a 434488 lignes de matchés, pour un nombre de 324413 de SIREN
 
 
 
-### Etats sur les doublons
+### Etat sur les doublons
 
 Il y a 5424 lignes de doublons, pour un nombre de 1821 de SIREN
 
@@ -784,11 +786,11 @@ Pour rappel, les tests sont les suivants:
     
 
 
-![png](Presentation_files/Presentation_22_0.png)
+![png](Presentation_files/Presentation_24_0.png)
 
 
 
-![png](Presentation_files/Presentation_23_0.png)
+![png](Presentation_files/Presentation_25_0.png)
 
 
 ## Step 2 duplication
@@ -799,11 +801,11 @@ Pour rappel, les tests sont les suivants:
     
 
 
-![png](Presentation_files/Presentation_26_0.png)
+![png](Presentation_files/Presentation_28_0.png)
 
 
 
-![png](Presentation_files/Presentation_27_0.png)
+![png](Presentation_files/Presentation_29_0.png)
 
 
 

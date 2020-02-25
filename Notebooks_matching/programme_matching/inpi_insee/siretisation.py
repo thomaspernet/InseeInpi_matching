@@ -4,7 +4,8 @@ from dask.multiprocessing import get
 import dask.dataframe as dd
 import pandas as pd
 import numpy as np
-from nltk.corpus import stopwords
+#from nltk.corpus import stopwords
+import matplotlib.pyplot as plt
 pbar = ProgressBar()
 pbar.register()
 
@@ -528,3 +529,92 @@ class siretisation_inpi:
             .isin(df_not_duplicate['index'])])
 
         return df_not_duplicate, sp
+
+def create_graph_test(df):
+        """
+        """
+        plt.close('all')
+        fig, axes = plt.subplots(nrows=2, ncols=4,figsize=(15,15))
+        fig.tight_layout(pad=3.0)
+
+        list_test =  ['test_address_libelle','test_address_complement',
+                      'test_join_address','test_siege',
+                      'test_voie','test_numero','count_duplicates_final',
+                      'len_digit_address_insee']
+
+        i_, j =0, 0
+        for i, value in enumerate(list_test):
+            if i in [4]:
+                j+=1
+                i_ =0
+            ax1 = (df
+                   .groupby([value])[value]
+                   .count()
+                   .plot
+                   .barh(ax=axes[j, i_]))
+            i_+=1
+        
+def create_graph_analysis(df):
+    """
+    """
+    plt.close('all')
+    fig, axes = plt.subplots(nrows=2, ncols=3,figsize=(15,15))
+    fig.tight_layout(pad=3.0)
+
+    (df
+     .groupby(['Ville'])['Ville']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[0,0])
+     .set_title('Top 10 des villes les plus représentées')
+)
+
+    (df
+     .groupby(['INSEE'])['INSEE']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[0,1])
+     .set_title('Top 10 des voies les plus représentées')
+)
+ 
+    (df
+     .groupby(['etablissementSiege'])['etablissementSiege']
+     .count()
+     .plot
+     .barh(ax=axes[0,2])
+     .set_title('Nombre de siège')
+)
+ 
+    (df
+     .groupby(['Type'])['Type']
+     .count()
+     .sort_values()
+     .plot
+     .barh(ax=axes[1,0])
+     .set_title('Nombre de siège')
+)
+ 
+    (df
+     .assign(year = lambda x: x['dateCreationEtablissement'].dt.year)
+     .groupby(['year'])['year']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[1,1])
+     .set_title('Top 10 des années les plus représentées')
+)
+ 
+    (df
+     .groupby(['etatAdministratifEtablissement'])['etatAdministratifEtablissement']
+     .count()
+     .sort_values(ascending = False)
+     .head(10)
+     .plot
+     .barh(ax=axes[1,2])
+     .set_title('Top 10 des villes les plus représentées')
+)
