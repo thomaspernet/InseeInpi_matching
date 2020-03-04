@@ -11,8 +11,10 @@ RawData/
 *.gz
 *.csv
 *.zip
+*.gz
 *.md5
 *.xlsx
+*.db
 # Distribution / packaging
 .Python
 build/
