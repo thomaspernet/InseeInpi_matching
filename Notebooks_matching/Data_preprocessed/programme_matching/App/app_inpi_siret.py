@@ -5,11 +5,12 @@ from dash.dependencies import Input, Output
 import pandas as pd
 import numpy as np
 from threading import Timer
+import os
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-image_filename = r"C:\Users\PERNETTH\Documents\Projects\InseeInpi_matching" \
-r"\Notebooks_matching\programme_matching\App\calf1.png"
+#image_filename = r"C:\Users\PERNETTH\Documents\Projects\InseeInpi_matching" \
+#r"\Notebooks_matching\programme_matching\App\calf1.png"
 
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
@@ -50,9 +51,12 @@ app.layout = html.Div([
     Output('choose_city', 'options'),
     [Input('insert_siren', 'value')])
 def set_cities_options(selected_siren):
-    conn = conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
-    r"\InseeInpi_matching\Notebooks_matching" \
-    r"\programme_matching\App\SQL\inpi_matched.db")
+    #conn = conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
+    #r"\InseeInpi_matching\Notebooks_matching" \
+    #r"\programme_matching\App\SQL\inpi_matched.db")
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, 'SQL\inpi_matched.db')
+    conn = sqlite3.connect(filename)
     c = conn.cursor()
     query = '''SELECT * FROM INPI_MATCHED WHERE siren = {} '''.format(
     selected_siren)
@@ -71,9 +75,9 @@ def set_cities_options(selected_siren):
     ]
 )
 def update_output_div(siren, city):
-    conn = conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
-    r"\InseeInpi_matching\Notebooks_matching" \
-    r"\programme_matching\App\SQL\inpi_matched.db")
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, 'SQL\inpi_matched.db')
+    conn = sqlite3.connect(filename)
     c = conn.cursor()
     query = '''SELECT * FROM INPI_MATCHED WHERE siren = {} AND ncc = '{}' '''.format(
     siren, city)

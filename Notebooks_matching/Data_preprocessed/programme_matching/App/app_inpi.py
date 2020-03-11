@@ -5,13 +5,13 @@ from dash.dependencies import Input, Output
 import pandas as pd
 import numpy as np
 from threading import Timer
-
+import os
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-image_filename = r"C:\Users\PERNETTH\Documents\Projects\InseeInpi_matching" \
-r"\Notebooks_matching\programme_matching\App\calf1.png"
+#image_filename = r"C:\Users\PERNETTH\Documents\Projects\InseeInpi_matching" \
+#r"\Notebooks_matching\programme_matching\App\calf1.png"
 
-encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+#encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 inpi_col = [
@@ -44,9 +44,16 @@ app.layout = html.Div([
     ]
 )
 def update_output_div(siren):
-    conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
-    r"\InseeInpi_matching\Notebooks_matching" \
-    r"\programme_matching\App\SQL\inpi_origine.db")
+
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, 'SQL\inpi_origine.db')
+    conn = sqlite3.connect(filename)
+    #conn = sqlite3.connect(r"C:\Users\PERNETTH\Documents\Projects" \
+    #r"\InseeInpi_matching\Notebooks_matching" \
+    #r"\programme_matching\App\SQL\inpi_origine.db")
+
+    conn = sqlite3.connect(filename)
+
     c = conn.cursor()
     query = '''SELECT * FROM INPI WHERE siren = {}
     ORDER BY Ville'''.format(siren)
