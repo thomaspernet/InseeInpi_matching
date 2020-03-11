@@ -2,7 +2,15 @@
 
 ## Préparation préalable
 
-Le dossier `data` comporte
+Le dossier `data` comporte trois sous dossiers:
+
+- `logs`: contient les logs découlant de la siretinsation
+- `output`: Contient les fichiers siretisés
+- `input`: Contient quate sous dossiers
+  - `INPI`: Dossier pivot permettant le stockage des fichiers temporaires a siretiser
+  - `INSEE`: Dossier pivot permettant le stockage des fichiers de l'INSEE
+  - `Parameters`: Contient les csv permettant de préparer les fichiers
+  - `SIREN_INPI`: Fichiers avec le nombre de SIREN a siretiser
 
 # Class preparation Data
 
