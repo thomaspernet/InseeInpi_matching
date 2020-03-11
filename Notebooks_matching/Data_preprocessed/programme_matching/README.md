@@ -1,5 +1,9 @@
 # Presentation Algorithme
 
+## Préparation préalable
+
+Le dossier `data` comporte
+
 # Class preparation Data
 
 Le coude source est disponible [ici](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/inpi_insee/preparation_data.py) et le notebook pour lancer le programme est disponible [ici](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/Preparation_data.ipynb)
@@ -16,8 +20,8 @@ Les données sources de l'INSEE proviennent de [Data Gouv](https://www.data.gouv
     - Le notebook pour reconstituer le csv est disponible a cette [URL](https://github.com/thomaspernet/InseeInpi_matching/blob/dev_thomas/Notebooks_matching/programme_matching/Source_intermediates.ipynb). ⚠️ Repo privé + branche
 - upper_word:
     - La liste des upper word (stop word capitalisé) provient de la librarie [NLTK](https://www.nltk.org/) avec un ajout manuel.
-    
-## INPI 
+
+## INPI
 
 Les données de l'INPI proviennent de ses différents Notebooks:
 
@@ -25,7 +29,7 @@ Les données de l'INPI proviennent de ses différents Notebooks:
 
 ## Normalisation du fichier INPI.
 
-Le fichier INPI doit contenir un seul fichier gz avant d'être ingéré par le programme. Le fichier va être importé dans un format Dask, ce qui permet de paralléliser les calculs et bien sur d'éviter les problèmes de mémoire. 
+Le fichier INPI doit contenir un seul fichier gz avant d'être ingéré par le programme. Le fichier va être importé dans un format Dask, ce qui permet de paralléliser les calculs et bien sur d'éviter les problèmes de mémoire.
 
 La normalisation du fichier de l'INPI se fait en plusieurs étapes:
 
@@ -49,8 +53,8 @@ La normalisation du fichier de l'INPI se fait en plusieurs étapes:
     - Concatenation des variables `Adresse_Ligne1` + `Adresse_Ligne2` + `Adresse_Ligne3`
     - Normalisation de la variable concatenée -> Extraction des caractères speciaux, espace, digit puis capitalisation
     - Extraction de tous les stop words du fichier `upper_word`
-    - Split de chaque mot restant de l'adresse 
-    - Creation du regex de la forme suivante:  `MOT1$|MOT2$` 
+    - Split de chaque mot restant de l'adresse
+    - Creation du regex de la forme suivante:  `MOT1$|MOT2$`
     - Extration des digits:
         - Première variable avec le premier digit
         - Seconde variable avec une liste de digit et jointure -> DIGIT1|DIGIT2
@@ -58,12 +62,12 @@ La normalisation du fichier de l'INPI se fait en plusieurs étapes:
     - Calcul du nombre de digit dans l'adresse
         - Si len inférieure a 2, alors NaN. C'est une variable utlisée pendant le matching des règles spéciales
     - Creation d'une variable `index` correspondant à l'index du dataframe. Indispensable
- 
+
 Le fichier est sauvegardé en format gz, et dans un table SQL
 
     - inpi_etb_stock_0.gz
     - inpi_origine.db
-    
+
 Un appercu de la table est disponible via cette application `App_inpi`.
 
 ## Normalisation du fichier INSEE
@@ -105,12 +109,12 @@ Comme pour le fichier de l'INPI, le fichier csv est importé en Dask Dataframe. 
 6) Calcul du nombre de digit dans la variable `libelleCommuneEtablissement`
 
     - Si len inférieure a 2, alors NaN. C'est une variable utlisée pendant le matching des règles spéciales
-    
+
 Le fichier est sauvegardé en format gz, et dans un table SQL
 
     - insee_2017_SIZE.gz
     - App_insee.db
-    
+
 Un appercu de la table est disponible via cette application `App_insee`.
 
 # Algorithme Siretisation
@@ -142,9 +146,9 @@ Dans la mesure ou l'algorithme fonctionne de manière séquentielle, et utilise 
 
 ## Step One
 
-La première étape de la séquence est l'ingestion d'un fichier gz contenant les SIREN a trouver. L'ingestion va se faire en convertissant le dataframe en Dask. L'algorithme tout d'abord utiliser la fonction `step_one` et produit deux dataframes selon si le matching avec l'INSEE a débouté sur des doublons ou non. 
+La première étape de la séquence est l'ingestion d'un fichier gz contenant les SIREN a trouver. L'ingestion va se faire en convertissant le dataframe en Dask. L'algorithme tout d'abord utiliser la fonction `step_one` et produit deux dataframes selon si le matching avec l'INSEE a débouté sur des doublons ou non.
 
-Les doublons sont générés si pour un même nombre de variables de matching, il existe plusieurs possibilités à l'INSEE. Par exemple, pour un siren, ville, adressse donnée, il y a plusieurs possibilités. Cela constitue un doublon et il sera traité ultérieurement, dans la mesure du possible. 
+Les doublons sont générés si pour un même nombre de variables de matching, il existe plusieurs possibilités à l'INSEE. Par exemple, pour un siren, ville, adressse donnée, il y a plusieurs possibilités. Cela constitue un doublon et il sera traité ultérieurement, dans la mesure du possible.
 
 Les étapes déroulées lors du premier processus est le suivant:
 
@@ -220,9 +224,8 @@ Pour chaque séquence, on réalise les tests suivants:
                 - Non: Pass
                 - Exclue les `index` de df_duplication
  ```
- 
+
 On peut sauvegarder le `df_not_duplicate` et le restant en tant que `special_treatment`
 
 
 ![](https://www.lucidchart.com/publicSegments/view/5a8cb28f-dc42-4708-babd-423962514878/image.png)
-
