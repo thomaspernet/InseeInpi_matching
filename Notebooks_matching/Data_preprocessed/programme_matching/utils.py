@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import datetime
 from datetime import datetime
+
 def get_file_infos(filename):
 
         f_s = filename.split('_')
@@ -66,7 +67,7 @@ def add_source_info(filename,source_path,dest_path = None):
     dest_full_path="{}/{}".format(dest_path,filename)
     
     try:
-        df=pd.read_csv(source_full_path, sep=';', header=0)
+        df=pd.read_csv(source_full_path, sep=';', header=0, dtype='object')
         (nature_,origin_,suborigin_,year_,timestamp_) = get_file_infos(filename)
         df['csv_source']=filename
         df['file_timestamp']=timestamp_
