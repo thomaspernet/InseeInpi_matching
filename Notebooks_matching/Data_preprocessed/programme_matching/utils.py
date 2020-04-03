@@ -82,6 +82,8 @@ def calc_dest(filename):
     return dest_path
 
 
+
+
 def add_source_info(filename,source_path,dest_path = None):
     """
     Add file information inside csv columns to make it available in case of further files agregating operations.
