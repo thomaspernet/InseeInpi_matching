@@ -113,11 +113,27 @@ def add_source_info(filename,source_path,dest_path = None):
         df=pd.read_csv(source_full_path, sep=';', header=0, dtype='object')
         (nature_,origin_,suborigin_,year_,timestamp_) = get_file_infos(filename)
         df['csv_source']=filename
-        df['file_timestamp']=timestamp_
         df['nature']=nature_
         df['type']=origin_
         df['origin']=suborigin_
-
+        
+        if nature_ == 'REP':
+            # Rename col 'date_greffe' to 'Date_Greffe'
+            df=df.rename(columns={"date_greffe": "Date_Greffe"})
+            
+        if origin_=='Stock' and year_ == '2017' and nature_ == 'ACTES': 
+            # Tout le stock étant initialisé à la même date en 2017, on utilise plutôt la Date_Dépôt
+            print('toto')
+            df['file_timestamp']= df['Date_Dépôt'].apply(lambda x : datetime.strptime(x,"%Y-%m-%d"))
+        elif origin_=='Stock' and year_ == '2017' and nature_ == 'COMPTES_ANNUELS': 
+            # Tout le stock étant initialisé à la même date en 2017, on utilise plutôt la Date_Dépôt
+            df['file_timestamp']= df['Date_Dépôt'].apply(lambda x : datetime.strptime(x,"%Y-%m-%d"))
+        elif origin_=='Stock' and year_ == '2017': 
+            # Tout le stock étant initialisé à la même date en 2017, on utilise plutôt la Date_Greffe
+            df['file_timestamp']= df['Date_Greffe'].apply(lambda x : datetime.strptime(x,"%Y-%m-%d"))
+        else:
+            df['file_timestamp']=timestamp_    
+            
         df.to_csv(dest_full_path, index=False)
     except Exception as e:
         print(e)
