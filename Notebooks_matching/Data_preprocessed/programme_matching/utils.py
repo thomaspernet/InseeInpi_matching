@@ -29,8 +29,8 @@ def get_file_infos(filename):
     day_=date_[6:9]
     
     if filename.endswith('EVT.csv'):
-        nature_='ETS'
         suborigin_ = 'EVT'
+        nature_=f_s[5]
 
     time_= f_s[3]    
     if f_s[1].startswith('S'):
@@ -123,7 +123,6 @@ def add_source_info(filename,source_path,dest_path = None):
             
         if origin_=='Stock' and year_ == '2017' and nature_ == 'ACTES': 
             # Tout le stock étant initialisé à la même date en 2017, on utilise plutôt la Date_Dépôt
-            print('toto')
             df['file_timestamp']= df['Date_Dépôt'].apply(lambda x : datetime.strptime(x,"%Y-%m-%d"))
         elif origin_=='Stock' and year_ == '2017' and nature_ == 'COMPTES_ANNUELS': 
             # Tout le stock étant initialisé à la même date en 2017, on utilise plutôt la Date_Dépôt
@@ -134,7 +133,7 @@ def add_source_info(filename,source_path,dest_path = None):
         else:
             df['file_timestamp']=timestamp_    
             
-        df.to_csv(dest_full_path, index=False)
+        df.to_csv(dest_full_path, sep=';',index=False)
     except Exception as e:
         print(e)
         return False
