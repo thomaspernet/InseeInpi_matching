@@ -136,3 +136,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Data
+Notebooks_matching/Data_preprocessed/programme_matching/data/
+
