@@ -110,7 +110,7 @@ def add_source_info(filename,source_path,dest_path = None):
     dest_full_path="{}/{}".format(dest_path,filename)
     
     try:
-        df=pd.read_csv(source_full_path, sep=';', header=0, dtype='object')
+        df=pd.read_csv(source_full_path, sep=';', header=0, dtype='object',engine='python')
         (nature_,origin_,suborigin_,year_,timestamp_) = get_file_infos(filename)
         df['csv_source']=filename
         df['nature']=nature_
