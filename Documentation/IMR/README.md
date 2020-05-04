@@ -5,15 +5,15 @@ Les données sont dans le bucket S3 suivant:
 
 ## Table des matières
 
-Le détail se trouve dans le PDF suivant: [Doc_Tech_IMR_Mai_2019_v1.5.1.pdf](https://scm.saas.cagip.group.gca//InseeInpi_matching/blob/master/Documentation/IMR/Doc_Tech_IMR_Mai_2019_v1.5.1.pdf)
+Le détail se trouve dans le PDF suivant: [Doc_Tech_IMR_Mai_2019_v1.5.1.pdf](https://scm.saas.cagip.group.gca/InseeInpi_matching/blob/master/Documentation/IMR/Doc_Tech_IMR_Mai_2019_v1.5.1.pdf)
 
-- [Actes](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#actes): ACTES -> Pages 39-40
-- [Comptes Annuels](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#comptes-annuels):COMPTESANN -> Pages 40-41
-- [Observations](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#observations):OBS -> Pages 38-39
-- [Etablissements](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#etablissements):ETS -> Pages 25-29
-- [Personnes Morales](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#personnes-morales):PM -> Pages 15-18
+- [Actes](https://scm.saas.cagip.group.gca/InseeInpi_matching/tree/master/Documentation/IMR#actes): ACTES -> Pages 39-40
+- [Comptes Annuels](https://scm.saas.cagip.group.gca/InseeInpi_matching/tree/master/Documentation/IMR#comptes-annuels):COMPTESANN -> Pages 40-41
+- [Observations](https://scm.saas.cagip.group.gca/InseeInpi_matching/tree/master/Documentation/IMR#observations):OBS -> Pages 38-39
+- [Etablissements](https://scm.saas.cagip.group.gca/InseeInpi_matching/tree/master/Documentation/IMR#etablissements):ETS -> Pages 25-29
+- [Personnes Morales](https://scm.saas.cagip.group.gca/InseeInpi_matching/tree/master/Documentation/IMR#personnes-morales):PM -> Pages 15-18
 - [Personnes Physiques](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#personnes-physiques):PP -> Pages 19-24
-- [Représentants](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#repr%C3%A9sentants): REP -> Pages 30-37
+- [Représentants](https://scm.saas.cagip.group.gca/InseeInpi_matching/tree/master/Documentation/IMR#repr%C3%A9sentants): REP -> Pages 30-37
 
 Les fichiers transmis permettent d’exploiter les données de flux en provenance des greffes des tribunaux de commerce, et plus précisément :
 * Constitution du dossier d’une personne morale ou personne physique (identifiée par son siren et son n° de gestion), dans le cas d’une 1ère immatriculation,
