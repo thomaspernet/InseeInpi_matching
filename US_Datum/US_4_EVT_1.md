@@ -18,19 +18,37 @@ En tant que {X} je souhaite {remplir et filtrer les événements de la base INPI
 
 [PO :
 
-La donnée brute de l'INPI est constitutée de deux branches. Une première avec des données de stock (initial et partiel)
+La donnée brute de l'INPI est constitutée de deux branches. Une première avec des données de stock (initial et partiel) et une seconde avec des données de flux. Dans cette dernière, nous pouvons distinguer les créations d'établissements mais aussi les modifications ou suppression. Dans cet US, nous allons nous intéresser au modifications et suppressions dans la mesure ou leur création est plutot originale. Pour rappel, les fichiers transmis permettent d’exploiter les données de flux en provenance des greffes des tribunaux de commerce.
 
-Dans l'US précédent, nous avons mentionné la façon de localiser un établissement unique pour chaque SIREN. Il a été formulé qu'un établissement unique est une séquence avec un classement chronologique pour le quadruplet *siren* + *code greffe* + *numero gestion* + *ID établissement*.
+En cas de mise à jour d’un dossier suite à un événement (modification, radiation), les fichiers transmis ont une structure identique aux fichiers créés à l’immatriculation avec la présence de 2 champs spécifiques : la date de l’événement (Date_Greffe) et le libellé de l’événement (Libelle_Evt).
 
+Attention, il peut arriver que le même dossier fasse l’objet de plusieurs événements (création et modification) dans la même transmission. Il est impératif d’intégrer les événements dans l’ordre d’apparition. Cela veut dire que pour une même transmission, pour une même séquence, il peut avoir plusieurs lignes.
 
-- Une séquence est un classement chronologique pour le quadruplet suivant:
+Le flux de créations, modifications, suppressions est en “différentiel”, c’est à dire qu’une ligne de CSV contiendra des colonnes vides si la donnée n’a pas changé depuis sa dernière version.
 
-  - *siren* + *code greffe* + *numero gestion* + *ID établissement*
+### Exemple
 
+- SIREN: 420844656
+  - même établissement, plusieurs entrées
+  - exemple SIREN 420844656, évenement effectué le 2018/01/03 a 08:48:10. Nom dans le FTP [0101_163_20180103_084810_9_ets_nouveau_modifie_EVT.csv](https://calfdata.s3.eu-west-3.amazonaws.com/INPI/TC_1/01_donnee_source/Flux/2018/ETS/EVT/0101_163_20180103_084810_9_ets_nouveau_modifie_EVT.csv)
+ - [cvs](https://calfdata.s3.eu-west-3.amazonaws.com/INPI/TC_1/02_preparation_donnee/check_csv/420844656.csv) pour un exemple.
 
-Une ligne événement ne modifie que le champs comportant la modification. Les champs non modifiés vont être remplis par la ligne t-1
-Le remplissage doit se faire de deux façons
-une première fois avec la date de transmission (plusieurs informations renseignées pour une meme date de transmission pour une même séquence). La dernière ligne remplie des valeurs précédentes de la séquence
+Dès lors, nous pouvons dégager une nouvelle règle de gestion.
+
+## Règles de gestion
+
+ - Definition partiel
+   - si csv dans le dossier Partiel, année > 2017, alors partiel, c'est a dire, modification complète du dossier due a une anomalie.
+   - la date d’ingestion est indiquée dans le path, ie comme les flux
+
+ - Une séquence est un classement chronologique pour le quadruplet suivant:
+
+   - *siren* + *code greffe* + *numero gestion* + *ID établissement*
+
+- [NEW] Evénement
+  - Une ligne événement ne modifie que le champs comportant la modification. Les champs non modifiés vont être remplis par la ligne t-1
+  - Le remplissage doit se faire de la manière suivate pour la donnée brute
+    - une première fois avec la date de transmission (plusieurs informations renseignées pour une meme date de transmission pour une même séquence). La dernière ligne remplie des valeurs précédentes de la séquence
 
 ]
 
@@ -46,12 +64,12 @@ une première fois avec la date de transmission (plusieurs informations renseign
 
 ## Input
 
-[PO : dans le cas de transformation de données, préciser ,les sources :
+[PO : dans le cas de transformation de données, préciser, les sources :
 
-*   Applications
-*   Schémas
-*   Tables
-*   Champs
+*   inpi_flux_etablissement_nouveau_modifie
+*   inpi_flux_etablissement_supprim
+
+Le detail de la query est dispnible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#query-pr%C3%A9paration-%C3%A9v%C3%A9nement) et la query est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/34)
 
 ]
 
@@ -86,6 +104,14 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
+
+Exemple avec SIREN [513913657](https://calfdata.s3.eu-west-3.amazonaws.com/INPI/TC_1/02_preparation_donnee/check_csv/513913657.xlsx):
+
+* En tout, il y a 83 entrées. Dans la feuille `FROM_FTP`, chaque couleur représente un csv (regroupé par date de transmission). Comme indiqué par Mr Flament, il faut remplir les entrées d’un même csv par l’entrée n-1. La dernière entrée fait foi si différente avec n-1. Dans la feuille, c’est les ligne jaunes.
+* La feuille FILLIN va faire cette étape de remplissage, et la feuille FILTER récupère uniquement la dernière ligne par date de transmission. L’enseigne est indiqué comme supprimée dans la donnée brute a différentes dates de transmission mais supprimé lors de la dernière transmission.
+
+
+Raw data dans S3
 
 # CONCEPTION
 

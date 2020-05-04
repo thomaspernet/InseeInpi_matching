@@ -36,15 +36,15 @@ Le contenu mis à disposition par l’INPI comprend :
 
 Pour chacune des deux branches, il y a 6 catégories:
 
-- [Actes](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#actes): ACTES -> Pages 39-40
-- [Comptes Annuels](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#comptes-annuels):COMPTESANN -> Pages 40-41
-- [Observations](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#observations):OBS -> Pages 38-39
-- [Etablissements](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#etablissements):ETS -> Pages 25-29
-- [Personnes Morales](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#personnes-morales):PM -> Pages 15-18
-- [Personnes Physiques](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#personnes-physiques):PP -> Pages 19-24
-- [Représentants](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#repr%C3%A9sentants): REP -> Pages 30-37
+- [Actes](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#actes): ACTES -> Pages 39-40
+- [Comptes Annuels](https:/PERNETTH/scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR#comptes-annuels):COMPTESANN -> Pages 40-41
+- [Observations](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#observations):OBS -> Pages 38-39
+- [Etablissements](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#etablissements):ETS -> Pages 25-29
+- [Personnes Morales](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#personnes-morales):PM -> Pages 15-18
+- [Personnes Physiques](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#personnes-physiques):PP -> Pages 19-24
+- [Représentants](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#repr%C3%A9sentants): REP -> Pages 30-37
 
-Le détail se trouve dans le PDF suivant: [Doc_Tech_IMR_Mai_2019_v1.5.1.pdf](https://scm.saas.cagip.group.gca//InseeInpi_matching/blob/master/Documentation/IMR/Doc_Tech_IMR_Mai_2019_v1.5.1.pdf)
+Le détail se trouve dans le PDF suivant: [Doc_Tech_IMR_Mai_2019_v1.5.1.pdf](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/blob/master/Documentation/IMR/Doc_Tech_IMR_Mai_2019_v1.5.1.pdf)
 
 Dans le cas d’une immatriculation (Personne morale ou Personne physique), le dossier est composé :
 * A minima, d’informations sur l’identité de la personne (ex. date d’immatriculation, inscription principale ou secondaire, dénomination, nom, prénom, forme juridique, capital, activité principale etc.)

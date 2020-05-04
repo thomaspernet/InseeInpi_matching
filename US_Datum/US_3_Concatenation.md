@@ -58,7 +58,7 @@ En tant que {X} je souhaite {concatener les bases établissements de l'INPI} afi
 - Flux
   *   inpi_flux_etablissement - > Nouveau seulement ?
 
-- Source markdown [gitlab](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#query-pr%C3%A9paration-table)
+- Source markdown [gitlab](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#query-pr%C3%A9paration-table)
 
 ### Champs
 
