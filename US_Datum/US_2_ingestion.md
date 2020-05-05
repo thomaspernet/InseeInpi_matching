@@ -68,7 +68,7 @@ La définition d'un stock partiel n'est pas clairement écrite dans la documenta
   - la date d’ingestion est indiquée dans le path, ie comme les flux
 
 
-![](https://www.lucidchart.com/documents/view/57c22f2b-12a1-4144-a6b5-e339819dc28a)
+![](https://www.lucidchart.com/publicSegments/view/d9e4494d-bfaf-4d0e-9e0f-53011cda7eb9/image.png)
 
 # US / ISSUES liées
 
