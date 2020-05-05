@@ -109,16 +109,10 @@ A revoir les formats
 [PO : dans le cas de transformation de données, préciser les sorties :
 
 *   BDD cibles
-*   Tables
+*   Tables: `ets_stock_new`
 *   Champs
 
 ]
-
-Example sorties dans Athena:
-
-- [ets_initial](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/2a4fdfa2-c06f-489b-9620-9627a2f5aaa4)
-- [ets_new_2017](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/bd3792aa-8fdc-4183-ad8b-c93a5de0b346)
-- [ets_partiel_2018](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/dc6fa7ab-97e3-4744-8e97-45da33038762)
 
 ## Règles de gestion applicables
 
@@ -145,6 +139,12 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
+
+Example sorties dans Athena:
+
+- [ets_initial](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/2a4fdfa2-c06f-489b-9620-9627a2f5aaa4)
+- [ets_new_2017](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/bd3792aa-8fdc-4183-ad8b-c93a5de0b346)
+- [ets_partiel_2018](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/dc6fa7ab-97e3-4744-8e97-45da33038762)
 
 # CONCEPTION
 
