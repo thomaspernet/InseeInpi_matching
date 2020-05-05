@@ -135,7 +135,7 @@ L'ensemble des fichiers collectés doivent être intégrés dans les tables fina
 
 Pour chaque test, le nombre de lignes doit être égale ou supérieure (d'une faible marge).
 
-Le tableau ci dessous compte le nombre d'obs pour la colonne `total`, le nombre de valeurs uniques pour `siren`, `id_ets`, `greffe`, `ville` et `enseigne`. Les deux dernières collones retourne la date minimum/maximum du timestamp.
+Le tableau ci dessous compte le nombre d'obs pour la colonne `total`, le nombre de valeurs uniques pour `siren`, `id_ets`, `greffe`, `ville` et `enseigne`. Les deux dernières colonnes retournent la date minimum/maximum du timestamp.
 
 | origin       |   total |   siren |   id_ets |   greffe |   ville |   enseigne | date_min                | date_max                |
 |:-------------|--------:|--------:|---------:|---------:|--------:|-----------:|:------------------------|:------------------------|
@@ -146,10 +146,9 @@ Le tableau ci dessous compte le nombre d'obs pour la colonne `total`, le nombre 
 | Partiel 2019 |  550229 |  269829 |      586 |      135 |   22978 |      40947 | 2019-05-06 00:00:00.000 | 2019-11-25 00:00:00.000 |
 | Partiel 2018 |     315 |     192 |       11 |       69 |     176 |         13 | 2018-08-24 00:00:00.000 | 2018-08-24 00:00:00.000 |
 
-A noter que le nombre d'ID etb ne correspond pas au nombre d'etablissements présent dans la base. C'est le nombre de valeurs distinctes
+A noter que le nombre d'ID etb ne correspond pas au nombre d’établissements présents dans la base. C'est le nombre de valeurs distinctes
 
 La query utilisée pour générer les valeurs du tableau est dispo dans le snippet suivant :[snippet US 2:Test acceptance 1](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/35)
-
 *   Les 4 tables sont requêtables
 *   Les données sont observables depuis 2017
 
