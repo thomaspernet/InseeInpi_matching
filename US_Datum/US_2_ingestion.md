@@ -68,6 +68,8 @@ La définition d'un stock partiel n'est pas clairement écrite dans la documenta
   - la date d’ingestion est indiquée dans le path, ie comme les flux
 
 
+![](https://www.lucidchart.com/publicSegments/view/d9e4494d-bfaf-4d0e-9e0f-53011cda7eb9/image.png)
+
 # US / ISSUES liées
 
 Prérequis : [#2237-Récupérer l'historique de l'ensemble des données INPI](/project/olivierlubet-air/us/2237)
@@ -130,6 +132,18 @@ L'ensemble des fichiers collectés doivent être intégrés dans les tables fina
 *   Ajouter les métadonnées (date, index, origine, type ...) sur chaque csv
 
 # Tests d'acceptance
+
+Pour chaque test, le nombre de lignes doit être égale ou supérieure (d'une faible marge)
+
+| origin       |   total |   siren |   id_ets |   greffe |   ville |   enseigne | date_min                | date_max                |
+|:-------------|--------:|--------:|---------:|---------:|--------:|-----------:|:------------------------|:------------------------|
+| Initial      | 7575462 | 4824158 |     1207 |      209 |   70072 |     611613 | 0008-07-22 00:00:00.000 | 2017-05-04 00:00:00.000 |
+| New 2018     | 1710178 |  462498 |       67 |      135 |   30276 |      52384 | 2018-01-01 20:15:23.000 | 2018-12-31 20:29:30.000 |
+| New 2019     | 1645466 |  670505 |       95 |      135 |   34167 |      75332 | 2019-01-01 08:45:03.000 | 2019-12-31 20:21:17.000 |
+| New 2017     |  633793 |  248891 |       61 |      134 |   24091 |      26751 | 2017-05-12 09:38:42.000 | 2017-12-30 10:09:01.000 |
+| Partiel 2019 |  550229 |  269829 |      586 |      135 |   22978 |      40947 | 2019-05-06 00:00:00.000 | 2019-11-25 00:00:00.000 |
+| Partiel 2018 |     315 |     192 |       11 |       69 |     176 |         13 | 2018-08-24 00:00:00.000 | 2018-08-24 00:00:00.000 |
+
 
 *   Les 4 tables sont requêtables
 *   Les données sont observables depuis 2017
