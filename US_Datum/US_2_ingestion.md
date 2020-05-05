@@ -68,6 +68,8 @@ La définition d'un stock partiel n'est pas clairement écrite dans la documenta
   - la date d’ingestion est indiquée dans le path, ie comme les flux
 
 
+![](https://www.lucidchart.com/documents/view/57c22f2b-12a1-4144-a6b5-e339819dc28a)
+
 # US / ISSUES liées
 
 Prérequis : [#2237-Récupérer l'historique de l'ensemble des données INPI](/project/olivierlubet-air/us/2237)
