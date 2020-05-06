@@ -115,6 +115,8 @@ Tables :
 *   inpi_flux_etablissement_nouveau_modifie
 *   inpi_flux_etablissement_supprime
 
+Schema potentiel: cd [json Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/Schema_fields/US_2234/fields_2234.json)
+
 ## Règles de gestion applicables
 
 L'ensemble des fichiers collectés doivent être intégrés dans les tables finales.
@@ -149,6 +151,22 @@ Le tableau ci dessous compte le nombre d'obs pour la colonne `total`, le nombre 
 A noter que le nombre d'ID etb ne correspond pas au nombre d’établissements présents dans la base. C'est le nombre de valeurs distinctes
 
 La query utilisée pour générer les valeurs du tableau est dispo dans le snippet suivant :[snippet US 2:Test acceptance 1](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/35)
+
+Verifier que les champs suivants ont bien le bon nombres de charactères ou le bon pattern:
+
+| Variables           | Nb characteres | possibilité           |
+|---------------------|----------------|-----------------------|
+| code greffe         | 4              |                       |
+| numero_gestion      | 10             |                       |
+| siren               | 9              |                       |
+| code_postal         | 0 ou 5         |                       |
+| code_commune        | 0 ou 5         |                       |
+| type                | 3              | SIE/PRI/SEC/SEP       |
+| date_début_activité |                | "2019-05-03"          |
+| id_etablissement    |                | 0/1/2/3/...           |
+| date_greffe         |                | "2019-12-31"          |
+| file_timestamp      |                | "2019-01-30 09:23:48" |
+
 *   Les 4 tables sont requêtables
 *   Les données sont observables depuis 2017
 
