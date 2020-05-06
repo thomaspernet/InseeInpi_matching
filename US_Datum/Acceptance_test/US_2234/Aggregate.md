@@ -44,8 +44,10 @@ import pandas as pd
 
 ```python
 path = os.getcwd()
-index = pd.Series(['Initial', 'New 2019',
-'New 2017', 'New 2018', 'Partiel 2018', 'Partiel 2019'], name = 'origin')
+#index = pd.Series(['Initial', 'New 2019',
+#'New 2017', 'New 2018', 'Partiel 2018', 'Partiel 2019'], name = 'origin')
+index = pd.Series(['EVT 2019', 'EVT 2018',
+'EVT 2017'], name = 'origin')
 df = (pd.concat([
 pd.concat(
 map(pd.read_csv, glob.glob(os.path.join('', "*.csv")))
