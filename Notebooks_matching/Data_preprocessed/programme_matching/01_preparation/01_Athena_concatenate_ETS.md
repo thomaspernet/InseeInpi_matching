@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -486,7 +486,8 @@ Exemple:
     * "INPI/TC_1/01_donnee_source/Flux/2018/ETS/EVT/3801_293_20180627_061209_9_ets_nouveau_modifie_EVT.csv",
     * "INPI/TC_1/01_donnee_source/Flux/2018/ETS/EVT/3801_301_20180711_065600_9_ets_nouveau_modifie_EVT.csv"]
 ```    
-  * Details
+
+* Details
     * La feuille FROM_FTP regroupe tous les événements affectants le siren  513913657 en 2018 uniquement (7 au total)
 ```
       *  3801_189_20180130_065752_9_ets_nouveau_modifie_EVT.csv
@@ -497,8 +498,8 @@ Exemple:
       *  3801_293_20180627_061209_9_ets_nouveau_modifie_EVT.csv
       *  3801_301_20180711_065600_9_ets_nouveau_modifie_EVT.csv
  ```
-    * En tout, il y a 83 entrées. Dans la feuille `FROM_FTP`, chaque couleur représente un csv (regroupé par date de transmission). Comme indiqué par Mr Flament, il faut remplir les entrées d’un même csv par l’entrée n-1. La dernière entrée fait foi si différente avec n-1. Dans la feuille, c’est les ligne jaunes.
-    * La feuille FILLIN va faire cette étape de remplissage, et la feuille FILTER récupère uniquement la dernière ligne par date de transmission. L’enseigne est indiqué comme supprimée dans la donnée brute a différentes dates de transmission mais supprimé lors de la dernière transmission.
+* En tout, il y a 83 entrées. Dans la feuille `FROM_FTP`, chaque couleur représente un csv (regroupé par date de transmission). Comme indiqué par Mr Flament, il faut remplir les entrées d’un même csv par l’entrée n-1. La dernière entrée fait foi si différente avec n-1. Dans la feuille, c’est les ligne jaunes.
+* La feuille FILLIN va faire cette étape de remplissage, et la feuille FILTER récupère uniquement la dernière ligne par date de transmission. L’enseigne est indiqué comme supprimée dans la donnée brute a différentes dates de transmission mais supprimé lors de la dernière transmission.
 <!-- #endregion -->
 
 ```python
