@@ -5,7 +5,7 @@ Usage : copier-coller le texte ci-dessous (en "_mode markdown_") à la création
 Grammaire des US :
 
 ```
-En tant que {X} je souhaite {concatener les bases établissements de l'INPI} afin de {pouvoir préparer la donnée en vue de la siretisation}
+En tant que {X} je souhaite {concatener les bases établissements de l'INPI [Initial/Partiel/New]} afin de {pouvoir préparer la donnée en vue de la siretisation}
 ```
 
 *   Y est une fonctionnalité à valeur ajoutée <-- c'est **le TITRE de l'US**, afin de garder une cohérence, commencer par un **verbe à l'infinitif**
@@ -23,7 +23,7 @@ En tant que {X} je souhaite {concatener les bases établissements de l'INPI} afi
   * Une entreprise » désigne une structure ou organisation dont le but est d’exercer une activité économique en mettant en œuvre des moyens humains, financiers et matériels adaptés.  
   * Pour mieux s’organiser et répondre à la demande, une entreprise peut créer un ou plusieurs établissements.
     * Un établissement est par définition rattaché à une entreprise.
-* Un numéro SIREN est le moyen d'identifier une entreprise (le détail sera disponible dans un US futur). Un numéro SIRET est le numéro d'identification des établissements. C'est un numéro définit par l'INSEE qui n'est pas disponible a L'INPI. Toutefois, l'INPI fournit un numéro d'identification (champs `id_établissement`) unique pour chaque établissement rattaché à un SIREN. Dans la mesure ou une entreprise peut exercer dans plusieurs territoires différents, il est très probable que le numéro d'identification de l'établissement ne soit pas unique. Par exemple, le champs `id_établissement` peut contenir plusieurs `1`, pour des villes differentes. Pour différencier les établissements les uns des autres, il faut augmenter le niveau de granularité, c'est à dire prendre en compte la séquence *siren* + *code greffe* + *numero gestion* + *ID établissement*. De la, nous pouvons dégager une nouvelle règle de gestion:
+* Un numéro SIREN est le moyen d'identifier une entreprise à la fois a l'INSEE et à l'INPI (plus d'information disponibles dans un US futur). Un numéro SIRET est le numéro d'identification des établissements. C'est un numéro définit par l'INSEE qui n'est pas disponible a L'INPI. Toutefois, l'INPI fournit un numéro d'identification (champs `id_établissement`) unique pour chaque établissement rattaché à un SIREN. Dans la mesure ou une entreprise peut exercer dans plusieurs territoires différents, il est très probable que le numéro d'identification de l'établissement ne soit pas unique. Par exemple, le champs `id_établissement` peut contenir plusieurs `1`, pour des villes differentes. Pour différencier les établissements les uns des autres, il faut augmenter le niveau de granularité, c'est à dire prendre en compte la séquence *siren* + *code greffe* + *numero gestion* + *ID établissement*. De la, nous pouvons dégager une nouvelle règle de gestion:
 
 ## Règles de gestion
 
@@ -35,7 +35,7 @@ En tant que {X} je souhaite {concatener les bases établissements de l'INPI} afi
 
   - *siren* + *code greffe* + *numero gestion* + *ID établissement*
 
-
+![workflow](https://www.lucidchart.com/publicSegments/view/d9e4494d-bfaf-4d0e-9e0f-53011cda7eb9/image.png)
 ]
 
 # US / ISSUES liées
@@ -56,53 +56,9 @@ En tant que {X} je souhaite {concatener les bases établissements de l'INPI} afi
   *   inpi_stock_etablissement
   *   inpi_partiel_etablissement ( à définir selon une règle de gestion des dates )
 - Flux
-  *   inpi_flux_etablissement - > Nouveau seulement ?
+  *   inpi_flux_etablissement
 
 - Source markdown [gitlab](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#query-pr%C3%A9paration-table)
-
-### Champs
-
-Ensemble des champs présents dans les stocks et flux.
-
-A revoir les formats
-
-"siren",
-"code greffe",
-"Nom_Greffe",
-"numero_gestion",
-"id_etablissement",
-"file_timestamp",
-"Libelle_Evt",
-"Date_Greffe",    
-"Type",
-"Siège_PM",
-"RCS_Registre",
-"Adresse_Ligne1",
-"Adresse_Ligne2",
-"Adresse_Ligne3",
-"Code_Postal",
-"Ville",
-"Code_Commune",
-"Pays",
-"Domiciliataire_Nom",
-"Domiciliataire_Siren",
-"Domiciliataire_Greffe",
-"Domiciliataire_Complément",
-"Siege_Domicile_Représentant",
-"Nom_Commercial",
-"Enseigne",
-"Activité_Ambulante",
-"Activité_Saisonnière",
-"Activité_Non_Sédentaire",
-"Date_Début_Activité",
-"Activité",
-"Origine_Fonds",
-"Origine_Fonds_Info",
-"Type_Exploitation",
-"csv_source",
-"origin"
-
-]
 
 ## Output
 
@@ -110,7 +66,7 @@ A revoir les formats
 
 *   BDD cibles
 *   Tables: `ets_stock_new`
-*   Champs
+*   Champs: Schema potentiel: cf [json Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/Schema_fields/US_2234/fields_2234.json)
 
 ]
 
@@ -140,11 +96,7 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 [PO : comment contrôler que la réalisation est conforme]
 
-Example sorties dans Athena:
-
-- [ets_initial](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/2a4fdfa2-c06f-489b-9620-9627a2f5aaa4)
-- [ets_new_2017](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/bd3792aa-8fdc-4183-ad8b-c93a5de0b346)
-- [ets_partiel_2018](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/dc6fa7ab-97e3-4744-8e97-45da33038762)
+- Avoir exactement les mêmes valeurs que l'[US 2234](https://tree.taiga.io/project/olivierlubet-air/us/2234) pour les années et catégories concernées (Initial, Partiel et New)
 
 # CONCEPTION
 
