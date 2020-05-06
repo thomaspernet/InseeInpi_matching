@@ -46,17 +46,18 @@ Dès lors, nous pouvons dégager une nouvelle règle de gestion.
 ## Règles de gestion
 
  - Definition partiel
-   - si csv dans le dossier Partiel, année > 2017, alors partiel, c'est a dire, modification complète du dossier due a une anomalie.
+   - si csv dans le dossier Stock, année > 2017, alors partiel, c'est a dire, modification complète du dossier due a une anomalie.
    - la date d’ingestion est indiquée dans le path, ie comme les flux
 
  - Une séquence est un classement chronologique pour le quadruplet suivant:
 
    - *siren* + *code greffe* + *numero gestion* + *ID établissement*
 
-- [NEW] Evénement
-  - Une ligne événement ne modifie que le champs comportant la modification. Les champs non modifiés vont être remplis par la ligne t-1
-  - Le remplissage doit se faire de la manière suivate pour la donnée brute
-    - une première fois avec la date de transmission (plusieurs informations renseignées pour une meme date de transmission pour une même séquence). La dernière ligne remplie des valeurs précédentes de la séquence
+- [NEW] Evénement 1
+  - Les événements doivent impérativement suivre l'ordre d'apparition dans le csv du FTP
+    - Pour les événements, il est possible d'avoir plusieurs informations renseignées pour une meme date de transmission pour une même séquence
+  - Le remplissage doit se faire de la manière suivante pour la donnée brute
+    - Pour une date de transmission donnée, c'est la dernière ligne de la séquence qui doit être utilisée remplie des valeurs manquantes extraites des lignes précédentes. Si la dernière ligne de la séquence contient un champs non vide, il ne faut pas la remplacer par la ligne précédente.
 
 ]
 
@@ -77,8 +78,6 @@ Dès lors, nous pouvons dégager une nouvelle règle de gestion.
 *   inpi_flux_etablissement_nouveau_modifie
 *   inpi_flux_etablissement_supprim
 
-Le detail de la query est dispnible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#query-pr%C3%A9paration-%C3%A9v%C3%A9nement) et la query est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/34)
-
 ]
 
 ## Output
@@ -86,7 +85,7 @@ Le detail de la query est dispnible [ici](https://scm.saas.cagip.group.gca/PERNE
 [PO : dans le cas de transformation de données, préciser les sorties :
 
 *   BDD cibles
-*   Tables
+*   Table: Ets_evt
 *   Champs
 
 ]
@@ -94,6 +93,12 @@ Le detail de la query est dispnible [ici](https://scm.saas.cagip.group.gca/PERNE
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
+
+- [NEW] Evénement 1
+  - Les événements doivent impérativement suivre l'ordre d'apparition dans le csv du FTP
+    - Pour les événements, il est possible d'avoir plusieurs informations renseignées pour une meme date de transmission pour une même séquence
+  - Le remplissage doit se faire de la manière suivante pour la donnée brute
+    - Pour une date de transmission donnée, c'est la dernière ligne de la séquence qui doit être utilisée remplie des valeurs manquantes extraites des lignes précédentes. Si la dernière ligne de la séquence contient un champs non vide, il ne faut pas la remplacer par la ligne précédente.
 
 # Charges de l'équipe
 
@@ -109,17 +114,41 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
+- Enrichissement des champs manquants et filtre sur la dernière ligne d'une séquence pour une date de transmission donnée
+
+Le detail de la query est dispnible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#query-pr%C3%A9paration-%C3%A9v%C3%A9nement) et la query est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/34)
+
+## Exemple avec SIREN: 513913657
+
+- Un fichier Excel appelé [513913657.xlsx](US_Datum/Data_example/US_2172/513913657.xlsx) vient a l'appui de l'exemple
+
+**Ensemble fichier Data brute: `FROM_FTP`**
+
+- Dans le FTP, 7 transmissions ont été réalisée en 2018.
+   *  3801_189_20180130_065752_9_ets_nouveau_modifie_EVT.csv
+   *  3801_190_20180131_065908_9_ets_nouveau_modifie_EVT.csv
+   *  3801_209_20180227_065600_9_ets_nouveau_modifie_EVT.csv
+   *  3801_213_20180303_064240_9_ets_nouveau_modifie_EVT.csv
+   *  3801_222_20180316_063210_9_ets_nouveau_modifie_EVT.csv
+   *  3801_293_20180627_061209_9_ets_nouveau_modifie_EVT.csv
+   *  3801_301_20180711_065600_9_ets_nouveau_modifie_EVT.csv
+
+Toutes les données relatives aux 7 transmissions sont disponibles dans l'onglet `FROM_FTP` (83 entrées), et chaque couleur représente un csv (regroupé par date de transmission). Comme indiqué par l'INPI, il faut remplir les entrées d’un même csv par l’entrée n-1. La dernière entrée fait foi si différente avec n-1. Dans la feuille, c’est les ligne jaunes.
+
+**Etape remplissage: `FILLIN`**
+
+La feuille `FILLIN` se charge du remplissage des valeurs manquantes. La ligne jaune étant celle que nous devons garder
+
+**Etape Filtre: `FILTER`**
+
+La feuille `FILTER` récupère uniquement la dernière ligne par date de transmission. L’enseigne est indiqué comme supprimée dans la donnée brute a différentes dates de transmission mais supprimé lors de la dernière transmission.
+
+Au final, il ne reste plus que 8 lignes sur les 83 initiales.
+
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
 
-Exemple avec SIREN [513913657](https://calfdata.s3.eu-west-3.amazonaws.com/INPI/TC_1/02_preparation_donnee/check_csv/513913657.xlsx):
-
-* En tout, il y a 83 entrées. Dans la feuille `FROM_FTP`, chaque couleur représente un csv (regroupé par date de transmission). Comme indiqué par Mr Flament, il faut remplir les entrées d’un même csv par l’entrée n-1. La dernière entrée fait foi si différente avec n-1. Dans la feuille, c’est les ligne jaunes.
-* La feuille FILLIN va faire cette étape de remplissage, et la feuille FILTER récupère uniquement la dernière ligne par date de transmission. L’enseigne est indiqué comme supprimée dans la donnée brute a différentes dates de transmission mais supprimé lors de la dernière transmission.
-
-
-Raw data dans S3
 
 # CONCEPTION
 
