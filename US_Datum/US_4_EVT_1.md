@@ -5,7 +5,7 @@ Usage : copier-coller le texte ci-dessous (en "_mode markdown_") à la création
 Grammaire des US :
 
 ```
-En tant que {X} je souhaite {Remplir et filter data EVT 1} afin de {pouvoir préparer la donnée en vue de la siretisation}
+En tant que {X} je souhaite {Remplir et filtrer data EVT 1} afin de {pouvoir préparer la donnée en vue de la siretisation}
 ```
 
 *   Y est une fonctionnalité à valeur ajoutée <-- c'est **le TITRE de l'US**, afin de garder une cohérence, commencer par un **verbe à l'infinitif**
@@ -60,6 +60,8 @@ Dès lors, nous pouvons dégager une nouvelle règle de gestion.
     - Pour une date de transmission donnée, c'est la dernière ligne de la séquence qui doit être utilisée remplie des valeurs manquantes extraites des lignes précédentes. Si la dernière ligne de la séquence contient un champs non vide, il ne faut pas la remplacer par la ligne précédente.
 
 ]
+
+![workflow](https://www.lucidchart.com/publicSegments/view/d9e4494d-bfaf-4d0e-9e0f-53011cda7eb9/image.png)
 
 # US / ISSUES liées
 

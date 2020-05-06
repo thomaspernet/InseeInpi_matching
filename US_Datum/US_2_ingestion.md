@@ -13,11 +13,6 @@ En tant que {X} je souhaite {remplir et filtrer les événements de la base INPI
 *   X est la personne (ou le rôle) qui va en bénéficier <-- à placer dans le champ consacré en bas d'US
 
 ]
-
-[github.com/thomaspernet/InseeInpi_matching/tree/master/Documentation/IMR](https://scm.saas.cagip.group.gca//InseeInpi_matching/tree/master/Documentation/IMR)
-
-[github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_stock.ipynb](https://scm.saas.cagip.group.gca//InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_stock.ipynb)
-
 # Contexte
 
 L'INPI met à disposition de ses abonnés un FTP contenant l'ensemble de ses données, historisés depuis 2017. Chaque jour de la semaine, sauf le lundi, de nouvelles données sont déposées sous la forme de plusieurs dizaines de petit fichiers.
