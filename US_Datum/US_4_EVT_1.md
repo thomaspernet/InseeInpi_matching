@@ -5,7 +5,7 @@ Usage : copier-coller le texte ci-dessous (en "_mode markdown_") à la création
 Grammaire des US :
 
 ```
-En tant que {X} je souhaite {remplir et filtrer les événements de la base INPI établissements} afin de {pouvoir préparer la donnée en vue de la siretisation}
+En tant que {X} je souhaite {Remplir et filter data EVT 1} afin de {pouvoir préparer la donnée en vue de la siretisation}
 ```
 
 *   Y est une fonctionnalité à valeur ajoutée <-- c'est **le TITRE de l'US**, afin de garder une cohérence, commencer par un **verbe à l'infinitif**
@@ -141,7 +141,7 @@ La feuille `FILLIN` se charge du remplissage des valeurs manquantes. La ligne ja
 
 **Etape Filtre: `FILTER`**
 
-La feuille `FILTER` récupère uniquement la dernière ligne par date de transmission. L’enseigne est indiqué comme supprimée dans la donnée brute a différentes dates de transmission mais supprimé lors de la dernière transmission.
+La feuille `FILTER` récupère uniquement la dernière ligne par date de transmission.
 
 Au final, il ne reste plus que 8 lignes sur les 83 initiales.
 
@@ -149,6 +149,9 @@ Au final, il ne reste plus que 8 lignes sur les 83 initiales.
 
 [PO : comment contrôler que la réalisation est conforme]
 
+1. Vérifier que le nombre de lignes entre `inpi_flux_etablissement_nouveau_modifie` + `inpi_flux_etablissement_supprim` soit supérieur au nombre de lignes de la table `Ets_evt`
+2. Vérifier que le siren `513913657` a été rempli puis filtrer. Normalement, l'output doit correspondre a la feuille Excel `FILTER`.
+3.
 
 # CONCEPTION
 
