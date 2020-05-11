@@ -36,28 +36,21 @@ En tant que {X} je souhaite {concatener les bases établissements de l'INPI [Ini
   - *siren* + *code greffe* + *numero gestion* + *ID établissement*
 
 ### exemple
-| siren     | code greffe | numero_gestion | id_etablissement | file_timestamp | type | ville             | adresse_ligne1              | adresse_ligne2               | adresse_ligne3 | nom_commercial      |
-|-----------|-------------|----------------|------------------|----------------|------|-------------------|-----------------------------|------------------------------|----------------|---------------------|
-| 000199968 | 7501        | 1983B08179     | 2                | 2017-05-04     | SEC  | Paris             | 9 avenue Niel               |                              |                |                     |
-| 000325175 | 1303        | 2011A00564     | 2                | 2014-01-21     | PRI  | Marseille         | 61 Rue Marx Dormoy          |                              |                |                     |
-| 000499053 | 9301        | 1987B06881     | 10               | 2017-05-04     | SEC  | Villemomble       | 7/11 Avenue FRANCOIS COPPEE |                              |                |                     |
-| 005410428 | 8002        | 1954A70042     | 1                | 2009-01-01     | PRI  | Abbeville         |                             | Rue Des Lingers              |                |                     |
-| 005410428 | 8002        | 1954A70042     | 2                | 2009-01-01     | SEC  | Abbeville         |                             | 2  Voie Nouvelle Rive Droite | de la Somme    |                     |
-| 005411483 | 8002        | 1954A70148     | 1                | 2009-01-01     | PRI  | Crécy-en-Ponthieu |                             |                              |                |                     |
-| 005411954 | 8002        | 1954A70195     | 1                | 2009-01-01     | PRI  | Le Crotoy         |                             | Rue Jules Vernes             |                |                     |
-| 005420021 | 8002        | 1954B70002     | 1                | 2014-10-07     | SIE  | Abbeville         |                             | 21 BIS Boulevard des Prés    |                |                     |
-| 005420021 | 8002        | 1954B70002     | 4                | 2014-10-07     | PRI  | Abbeville         |                             | 21 BIS Boulevard des Prés    |                |                     |
-| 005420120 | 6202        | 1960B00052     | 1                | 2017-03-20     | SEP  | Marconnelle       |                             | route Nationale              |                |                     |
-| 005420120 | 6202        | 1960B00052     | 30               | 2017-03-20     | SEC  | Conchil-le-Temple |                             |                              |                |                     |
-| 005420120 | 8002        | 1995B70001     | 2                | 2009-01-01     | SEC  | Rue               |                             | 1 Rue de la Fontaine         |                |                     |
-| 005420146 | 8002        | 1954B70014     | 1                | 2009-01-01     | SIE  | Rue               |                             | Rue du Général Leclerc       |                |                     |
-| 005420260 | 8002        | 1954B70026     | 1                | 2009-01-01     | SIE  | Dargnies          |                             |                              |                |                     |
-| 005420260 | 8002        | 1954B70026     | 2                | 2009-01-01     | PRI  | Dargnies          |                             |                              |                |                     |
-| 005440219 | 401         | 1954A40021     | 1                | 2009-01-01     | PRI  | 04 VALENSOLE      |                             | PREMIER MOULIN               | VALENSOLE      | GOUIN               |
-| 005440722 | 401         | 1954A40072     | 1                | 2009-01-01     | PRI  | 04 CASTELLANE     |                             | PL. DE LA GRAVE              | CASTELLANE     | AUBERGE BON ACCUEIL |
-| 005440722 | 401         | 1954A40072     | 2                | 2009-01-01     | SEC  | 04                |                             | PL. DE LA GRAVE              | CASTELLANE     |                     |
-| 005440904 | 401         | 1954A40090     | 1                | 2009-01-01     | PRI  | 04                |                             | HAMEAU LES BAUMES            | MISON          | PELLENC EDMOND      |
-| 005440938 | 401         | 1954A40093     | 1                | 2016-05-25     | PRI  | Sisteron          |                             |                              | Mison          |                     |
+
+Par exemple, le siren `1954B70002`, bien qu'ayant le meme *siren* + *code greffe* + *numero gestion* et domicilié à la même adresse, doit être considéré comme deux établissements différents en raison du champs *ID établissement*. En effet, le siren a domicilié son principal et son secondaire a la même adresse, donnant lieu a deux entités distinctes.
+
+| siren     | code greffe | numero_gestion | id_etablissement | file_timestamp | type | ville             | adresse_ligne1              | adresse_ligne2               | adresse_ligne3 | nom_commercial |
+|-----------|-------------|----------------|------------------|----------------|------|-------------------|-----------------------------|------------------------------|----------------|----------------|
+| 000199968 | 7501        | 1983B08179     | 2                | 2017-05-04     | SEC  | Paris             | 9 avenue Niel               |                              |                |                |
+| 000325175 | 1303        | 2011A00564     | 2                | 2014-01-21     | PRI  | Marseille         | 61 Rue Marx Dormoy          |                              |                |                |
+| 000499053 | 9301        | 1987B06881     | 10               | 2017-05-04     | SEC  | Villemomble       | 7/11 Avenue FRANCOIS COPPEE |                              |                |                |
+| 005410428 | 8002        | 1954A70042     | 1                | 2009-01-01     | PRI  | Abbeville         |                             | Rue Des Lingers              |                |                |
+| 005410428 | 8002        | 1954A70042     | 2                | 2009-01-01     | SEC  | Abbeville         |                             | 2  Voie Nouvelle Rive Droite | de la Somme    |                |
+| 005411483 | 8002        | 1954A70148     | 1                | 2009-01-01     | PRI  | Crécy-en-Ponthieu |                             |                              |                |                |
+| 005411954 | 8002        | 1954A70195     | 1                | 2009-01-01     | PRI  | Le Crotoy         |                             | Rue Jules Vernes             |                |                |
+| 005420021 | 8002        | 1954B70002     | 1                | 2014-10-07     | SIE  | Abbeville         |                             | 21 BIS Boulevard des Prés    |                |                |
+| 005420021 | 8002        | 1954B70002     | 4                | 2014-10-07     | PRI  | Abbeville         |                             | 21 BIS Boulevard des Prés    |                |                |
+| 005420120 | 6202        | 1960B00052     | 1                | 2017-03-20     | SEP  | Marconnelle       |                             | route Nationale              |                |                |
 
 ![workflow](https://www.lucidchart.com/publicSegments/view/d9e4494d-bfaf-4d0e-9e0f-53011cda7eb9/image.png)
 ]
