@@ -63,7 +63,7 @@ Dès lors, nous pouvons dégager une nouvelle règle de gestion.
 
 *   Applications
 *   Schémas
-*   Tables
+*   Tables: Ets_stock_new_evt - > A modifier le nom des tables
 *   Champs
 
 ]
@@ -71,6 +71,8 @@ Dès lors, nous pouvons dégager une nouvelle règle de gestion.
 ### Exemple input
 
 Siren 005520242
+
+[Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/US_5_partiel.md#exemple-input)
 
 | origin  | siren     | code greffe | nom_greffe | numero_gestion | id_etablissement | file_timestamp | libelle_evt          | date_greffe | siège_pm | activité                                                                                                                                                                                                                                                                        | date_début_activité | origine_fonds | origine_fonds_info | type_exploitation    | csv_source                 |
 |---------|-----------|-------------|------------|----------------|------------------|----------------|----------------------|-------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|---------------|--------------------|----------------------|----------------------------|
@@ -84,8 +86,8 @@ Siren 005520242
 [PO : dans le cas de transformation de données, préciser les sorties :
 
 *   BDD cibles
-*   Tables
-*   Champs
+*   Tables:  Ets_stock_new_evt - > A modifier le nom des tables
+*   Champs: Nouveau champs: `statut`
 
 ]
 
@@ -93,7 +95,9 @@ Siren 005520242
 
 Siren 005520242
 
-| origin  | status | siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | file_timestamp          | libelle_evt          | date_greffe             | siege_pm | activite                                                                                                                                                                                                                                                                        | date_debut_activite | origine_fonds | origine_fonds_info | type_exploitation    | csv_source                 |
+[Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/US_5_partiel.md#exemple-output)
+
+| origin  | statut | siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | file_timestamp          | libelle_evt          | date_greffe             | siege_pm | activite                                                                                                                                                                                                                                                                        | date_debut_activite | origine_fonds | origine_fonds_info | type_exploitation    | csv_source                 |
 |---------|--------|-----------|-------------|------------|----------------|------------------|-------------------------|----------------------|-------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|---------------|--------------------|----------------------|----------------------------|
 | Initial | IGNORE | 005520242 | 8002        | Amiens     | 1955B70024     | 1                | 2016-06-23 00:00:00.000 | Etablissement ouvert | 2016-06-23 00:00:00.000 |          |                                                                                                                                                                                                                                                                                 |                     |               |                    |                      | 8002_S1_20170504_8_ets.csv |
 | Partiel |        | 005520242 | 8002        | Amiens     | 1955B70024     | 1                | 2019-05-06 00:00:00.000 | Etablissement ouvert | 2018-07-09 00:00:00.000 |          |                                                                                                                                                                                                                                                                                 |                     |               |                    |                      | 8002_S2_20190506_8_ets.csv |
@@ -125,6 +129,10 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 *   Nombre de lignes chargées pour chaque nouvelle table
 *   Poids de chaque nouvelle table
 *   Durée du traitement ajouté (+ durée avant et après)
+
+- Dans cette étape, on crée une colonne `statut`, qui indique si les lignes sont a ignorer (IGNORE) ou non (Vide). La logique c'est de prendre la date maximum des stocks partiels par quadruplet, si la date de transfert est inférieure a la date max, alors on ignore.
+
+La query est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/40)
 
 ## Exemple avec SIREN: 513913657
 
