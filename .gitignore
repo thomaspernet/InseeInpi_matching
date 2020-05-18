@@ -8,7 +8,7 @@ __pycache__/
 *.DS_Store
 documentation_pdf
 
-Documentation/Archive
+Documentation
 #RawData/
 *.gz
 *.csv
