@@ -1,24 +1,8 @@
-[
-
-Usage : copier-coller le texte ci-dessous (en "_mode markdown_") à la création de nouvelles US, et retenir les paragraphe applicables
-
-Grammaire des US :
-
-```
-Entant que {X} je souhaite {créer le status partiel} afin de {d'ignorer les observations précédentes pour une séquence}
-```
-
-*   Y est une fonctionnalité à valeur ajoutée <-- c'est **le TITRE de l'US**, afin de garder une cohérence, commencer par un **verbe à l'infinitif**
-*   Z est le bénéfice attendu de la fonctionnalité <-- à placer dans le champ consacré en bas d'US
-*   X est la personne (ou le rôle) qui va en bénéficier <-- à placer dans le champ consacré en bas d'US
-
-]
+En tant que {X} je souhaite {créer le statut partiel et remplir des événements} afin de {d'ignorer les observations précédentes pour une séquence et obtenir une séquence avec les informations a jour}
 
 # Contexte
 
-[PO :
-
-Nous savons déjà que tous les csv incluent dans le dossier stock pour une année strictement supérieure a 2017 est considéré comme un "événement" partiel. Un événement partiel va avoir la particularité de remettre a plat l'ensemble des fichiers précédements intégrés dans la base en corrigeant les erreurs du greffe. Autrement dit, la ligne partiel va devenir la nouvelle ligne de référence pour la séquence. Création et événements antérieurs seront a ignorer. C’est le cas en particulier lorsque il y a incohérence entre des identifiants qui auraient été livrés dans le stock initial et ceux livrés dans le flux (ex. fichiers des établissements, représentants, observations) pour un même dossier (siren/numéro de gestion/code greffe). C’est également le cas de dossiers qui auraient été absents du stock initial et qui seraient retransmis après un délai.
+Nous savons déjà que tous les csv incluent dans le dossier stock pour une année strictement supérieure a 2017 sont considérés comme des "événements" partiels. Un événement partiel va avoir la particularité de remettre a plat l'ensemble des fichiers précédemment intégrés dans la base en corrigeant les erreurs du greffe. Autrement dit, la ligne partiel va devenir la nouvelle ligne de référence pour la séquence. Création et événements antérieurs seront a ignorer. C’est le cas en particulier lorsque il y a incohérence entre des identifiants qui auraient été livrés dans le stock initial et ceux livrés dans le flux (ex. fichiers des établissements, représentants, observations) pour un même dossier (siren/numéro de gestion/code greffe). C’est également le cas de dossiers qui auraient été absents du stock initial et qui seraient retransmis après un délai.
 
 Dès lors, nous pouvons dégager une nouvelle règle de gestion.
 
@@ -41,9 +25,15 @@ Dès lors, nous pouvons dégager une nouvelle règle de gestion.
   - En cas de corrections majeures, la séquence annule et remplace la création et événements antérieurs. Dans ce cas, toutes les données qui ont pu être transmises antérieurement via le stock initial ou le flux doivent donc être ignorées (prendre en compte la date de transmission indiquée dans le nom des sous-répertoires du stock et des fichiers
 
 
-]
+Workflow US  (via stock)
 
 ![workflow](https://www.lucidchart.com/publicSegments/view/d9e4494d-bfaf-4d0e-9e0f-53011cda7eb9/image.png)
+
+Dans cet US, en plus de devoir gérer le statut partiel, il faut remplir les informations manquantes dans la table `inpi_etablissement_evenement` en utilisant les informations de la table `inpi_etablissement_consolide`. Lors de l'ingestion de la data quotidienne, cette recréation peut se faire avec la table `inpi_etablissement_historique`  puisque les informations auront été recréé au préalable.
+
+Workflow Global (via delta)
+
+![](https://app.lucidchart.com/publicSegments/view/9e73b3ff-1648-4cda-ab7c-204290721629/image.png)
 
 ]
 
@@ -63,14 +53,14 @@ Dès lors, nous pouvons dégager une nouvelle règle de gestion.
 
 *   Applications
 *   Schémas
-*   Tables: Ets_stock_new_evt - > A modifier le nom des tables
-*   Champs
+*   Tables: `inpi_etablissement_consolide` + `inpi_etablissement_evenement`
+*   Champs: Schema potentiel: cf [json Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/Schema_fields/US_2234/fields_2234.json) +  `statut`
 
 ]
 
-### Exemple input
+### Exemple input partiel
 
-Siren 005520242
+Siren **005520242**
 
 [Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/US_5_partiel.md#exemple-input)
 
@@ -81,17 +71,27 @@ Siren 005520242
 | Initial | 005520242 | 8002        | Amiens     | 1955B70024     | 2                | 2016-06-23     | Etablissement ouvert | 2016-06-23  |          | fabrication et la vente de tous produits chimiques, plus particulièrement de peintures industrielles, ménagères ou pour le bâtiment, de tous produits ou matières premières utilisées dans la fabrication des peintures et vernis négoce de peintures, revetements et matériaux | 1926-01-20          | Création      |                    | Exploitation directe | 8002_S1_20170504_8_ets.csv |
 | Partiel | 005520242 | 8002        | Amiens     | 1955B70024     | 2                | 2019-05-06     | Etablissement ouvert | 2018-07-09  |          | fabrication et la vente de tous produits chimiques, plus particulièrement de peintures industrielles, ménagères ou pour le bâtiment, de tous produits ou matières premières utilisées dans la fabrication des peintures et vernis négoce de peintures, revetements et matériaux | 1926-01-20          | Création      |                    | Exploitation directe | 8002_S2_20190506_8_ets.csv |
 
+### Exemple input remplissage évenement avec historique
+
+Siren **439497280**
+
+| siren     | code greffe | nom_greffe   | numero_gestion | id_etablissement | file_timestamp      | libelle_evt                                | date_greffe | siège_pm | activité                                                             | date_début_activité | origine_fonds | origine_fonds_info                                    | type_exploitation    | csv_source                                             | origin  |
+|-----------|-------------|--------------|----------------|------------------|---------------------|--------------------------------------------|-------------|----------|----------------------------------------------------------------------|---------------------|---------------|-------------------------------------------------------|----------------------|--------------------------------------------------------|---------|
+| 439497280 | 2202        | Saint-Brieuc | 2001B50181     | 1                | 2016-09-14          | Etablissement ouvert                       | 2016-09-14  |          | VENTE, LOCATION DE MATERIEL INFORMATIQUE, ELECTRONIQUE, BUREAUTIQUE. | 2001-09-01          | Achat         | - récédent propriétaire exploitan - TEC MULTIMEDI     | Exploitation directe | 2202_S1_20170504_8_ets.csv                             | Initial |
+| 439497280 | 2202        | Saint-Brieuc | 2001B50181     | 1                | 2019-08-20 09:00:57 | Modifications relatives à un établissement | 2019-08-19  |          | Vente, location de matériel informatique, électronique, bureautique. | 2001-09-01          | Achat         | - Précédent propriétaire exploitant - JTEC MULTIMEDIA | Exploitation directe | 2202_612_20190820_090057_9_ets_nouveau_modifie_EVT.csv | EVT     |
+| 439497280 | 2202        | Saint-Brieuc | 2001B50181     | 1                | 2019-11-16 09:10:58 | Etablissement supprimé                     | 2019-11-14  |          |                                                                      |                     |               |                                                       |                      | 2202_677_20191116_091058_10_ets_supprime_EVT.csv       | EVT     |
+
 ## Output
 
 [PO : dans le cas de transformation de données, préciser les sorties :
 
 *   BDD cibles
-*   Tables:  Ets_stock_new_evt - > A modifier le nom des tables
+*   Tables:  inpi_etablissement_historique
 *   Champs: Nouveau champs: `statut`
 
 ]
 
-### Exemple Output
+### Exemple input partiel
 
 Siren 005520242
 
@@ -104,6 +104,15 @@ Siren 005520242
 | Initial | IGNORE | 005520242 | 8002        | Amiens     | 1955B70024     | 2                | 2016-06-23 00:00:00.000 | Etablissement ouvert | 2016-06-23 00:00:00.000 |          | fabrication et la vente de tous produits chimiques, plus particulièrement de peintures industrielles, ménagères ou pour le bâtiment, de tous produits ou matières premières utilisées dans la fabrication des peintures et vernis négoce de peintures, revetements et matériaux | 1926-01-20          | Création      |                    | Exploitation directe | 8002_S1_20170504_8_ets.csv |
 | Partiel |        | 005520242 | 8002        | Amiens     | 1955B70024     | 2                | 2019-05-06 00:00:00.000 | Etablissement ouvert | 2018-07-09 00:00:00.000 |          | fabrication et la vente de tous produits chimiques, plus particulièrement de peintures industrielles, ménagères ou pour le bâtiment, de tous produits ou matières premières utilisées dans la fabrication des peintures et vernis négoce de peintures, revetements et matériaux | 1926-01-20          | Création      |                    | Exploitation directe | 8002_S2_20190506_8_ets.csv |
 
+### Exemple input remplissage évenement avec historique
+
+Siren **439497280**
+
+| siren     | code_greffe | nom_greffe   | numero_gestion | id_etablissement | file_timestamp          | libelle_evt                                | date_greffe             | siege_pm | activite                                                             | date_debut_activite | origine_fonds | origine_fonds_info                                    | type_exploitation    | csv_source                                             | origin  |
+|-----------|-------------|--------------|----------------|------------------|-------------------------|--------------------------------------------|-------------------------|----------|----------------------------------------------------------------------|---------------------|---------------|-------------------------------------------------------|----------------------|--------------------------------------------------------|---------|
+| 439497280 | 2202        | Saint-Brieuc | 2001B50181     | 1                | 2016-09-14 00:00:00.000 | Etablissement ouvert                       | 2016-09-14 00:00:00.000 |          | VENTE, LOCATION DE MATERIEL INFORMATIQUE, ELECTRONIQUE, BUREAUTIQUE. | 2001-09-01          | Achat         | - récédent propriétaire exploitan - TEC MULTIMEDI     | Exploitation directe | 2202_S1_20170504_8_ets.csv                             | Initial |
+| 439497280 | 2202        | Saint-Brieuc | 2001B50181     | 1                | 2019-08-19 00:00:00.000 | Modifications relatives à un établissement | 2019-08-20 09:00:57.000 |          | Vente, location de matériel informatique, électronique, bureautique. | 2001-09-01          | Achat         | - Précédent propriétaire exploitant - JTEC MULTIMEDIA | Exploitation directe | 2202_612_20190820_090057_9_ets_nouveau_modifie_EVT.csv | EVT     |
+| 439497280 | 2202        | Saint-Brieuc | 2001B50181     | 1                | 2019-11-14 00:00:00.000 | Etablissement supprimé                     | 2019-11-16 09:10:58.000 |          | Vente, location de matériel informatique, électronique, bureautique. | 2001-09-01          | Achat         | - Précédent propriétaire exploitant - JTEC MULTIMEDIA | Exploitation directe | 2202_677_20191116_091058_10_ets_supprime_EVT.csv       | EVT     |
 
 ## Règles de gestion applicables
 
@@ -111,9 +120,6 @@ Siren 005520242
 
 1/ Est-ce que les csv dans le dossier Stock pour une date supérieure à 2017 peuvent être labélisés comme « partiel » rendant ainsi caduque toutes les valeurs précédentes d’un établissement ?
 * OUI (Reponse Flament Lionel <lflament@inpi.fr>)
-
-2/ Pour identifier un établissement, il faut bien choisir la triplette siren + numero dossier (greffe) + ID établissement ?
-* → il faut choisir le quadruplet siren + code greffe + numero gestion + ID établissement  (Reponse Flament Lionel <lflament@inpi.fr>)
 
 - [NEW] Partiel
   - En cas de corrections majeures, la séquence annule et remplace la création et événements antérieurs. Dans ce cas, toutes les données qui ont pu être transmises antérieurement via le stock initial ou le flux doivent donc être ignorées (prendre en compte la date de transmission indiquée dans le nom des sous-répertoires du stock et des fichiers
@@ -132,16 +138,15 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 - Dans cette étape, on crée une colonne `statut`, qui indique si les lignes sont a ignorer (IGNORE) ou non (Vide). La logique c'est de prendre la date maximum des stocks partiels par quadruplet, si la date de transfert est inférieure a la date max, alors on ignore.
 
-La query est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/40)
+La query est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/40) pour la gestion des partiels et la query pour le remplissage des événements est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#step-5-remplissage-observations-manquantes)
 
 ## Exemple avec SIREN: 513913657
 
 On utilise dans un Excel un exemple avec les valeurs du siren 428689392 ayant des ID établissements identiques pour des adresses différentes. Est souligné en bleu les valeurs qui potentiellement amendent la ligne n-1 (ex ligne 10 amende la ligne 9) -> fait référence au point 1/
-Pour le point 2, il y a par exemple, l’ID établissement 10 qui appartient à la fois a Rennes, mais aussi Nanterre. De fait, il faut bien distinguer le greffe, car ce sont 2 établissements différents.
+Attention concernant une règle de gestion déjà formulée, il y a par exemple, l’ID établissement 10 qui appartient à la fois a Rennes, mais aussi Nanterre. De fait, il faut bien distinguer le greffe, car ce sont 2 établissements différents.
 
 * Exemple: [428689392](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/Data_example/%5CUS_2464/428689392.xlsx)
 
-]
 
 # Tests d'acceptance
 
