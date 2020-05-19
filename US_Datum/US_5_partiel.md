@@ -75,6 +75,8 @@ Siren **005520242**
 
 Siren **439497280**
 
+[Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/US_5_partiel.md#exemple-input-remplissage-%C3%A9venement-avec-historique)
+
 | siren     | code greffe | nom_greffe   | numero_gestion | id_etablissement | file_timestamp      | libelle_evt                                | date_greffe | siège_pm | activité                                                             | date_début_activité | origine_fonds | origine_fonds_info                                    | type_exploitation    | csv_source                                             | origin  |
 |-----------|-------------|--------------|----------------|------------------|---------------------|--------------------------------------------|-------------|----------|----------------------------------------------------------------------|---------------------|---------------|-------------------------------------------------------|----------------------|--------------------------------------------------------|---------|
 | 439497280 | 2202        | Saint-Brieuc | 2001B50181     | 1                | 2016-09-14          | Etablissement ouvert                       | 2016-09-14  |          | VENTE, LOCATION DE MATERIEL INFORMATIQUE, ELECTRONIQUE, BUREAUTIQUE. | 2001-09-01          | Achat         | - récédent propriétaire exploitan - TEC MULTIMEDI     | Exploitation directe | 2202_S1_20170504_8_ets.csv                             | Initial |
@@ -91,7 +93,7 @@ Siren **439497280**
 
 ]
 
-### Exemple input partiel
+### Exemple output partiel
 
 Siren 005520242
 
@@ -104,9 +106,11 @@ Siren 005520242
 | Initial | IGNORE | 005520242 | 8002        | Amiens     | 1955B70024     | 2                | 2016-06-23 00:00:00.000 | Etablissement ouvert | 2016-06-23 00:00:00.000 |          | fabrication et la vente de tous produits chimiques, plus particulièrement de peintures industrielles, ménagères ou pour le bâtiment, de tous produits ou matières premières utilisées dans la fabrication des peintures et vernis négoce de peintures, revetements et matériaux | 1926-01-20          | Création      |                    | Exploitation directe | 8002_S1_20170504_8_ets.csv |
 | Partiel |        | 005520242 | 8002        | Amiens     | 1955B70024     | 2                | 2019-05-06 00:00:00.000 | Etablissement ouvert | 2018-07-09 00:00:00.000 |          | fabrication et la vente de tous produits chimiques, plus particulièrement de peintures industrielles, ménagères ou pour le bâtiment, de tous produits ou matières premières utilisées dans la fabrication des peintures et vernis négoce de peintures, revetements et matériaux | 1926-01-20          | Création      |                    | Exploitation directe | 8002_S2_20190506_8_ets.csv |
 
-### Exemple input remplissage évenement avec historique
+### Exemple output remplissage évenement avec historique
 
 Siren **439497280**
+
+[Gitlab](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/US_Datum/US_5_partiel.md#exemple-input-remplissage-%C3%A9venement-avec-historique-1)
 
 | siren     | code_greffe | nom_greffe   | numero_gestion | id_etablissement | file_timestamp          | libelle_evt                                | date_greffe             | siege_pm | activite                                                             | date_debut_activite | origine_fonds | origine_fonds_info                                    | type_exploitation    | csv_source                                             | origin  |
 |-----------|-------------|--------------|----------------|------------------|-------------------------|--------------------------------------------|-------------------------|----------|----------------------------------------------------------------------|---------------------|---------------|-------------------------------------------------------|----------------------|--------------------------------------------------------|---------|
