@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -205,7 +205,7 @@ query_tb = \
 `Capital_Actuel`                string,
 `Devise`                        string,
 `Date_Cloture`                  string,
-`Date_Cloture_Except`          string,
+`Date_Cloture_Except`           string,
 `Economie_Sociale_Solidaire`    string,
 `Durée_PM`                      string,
 `Date_Greffe`                   string,
@@ -1131,6 +1131,10 @@ for x, val in enumerate(list_change):
 ```
 
 ```python
+print(query_)
+```
+
+```python
 output = athena.run_query(
     query=query_.format(table),
     database=dic_['global']['database'],
@@ -1164,30 +1168,15 @@ query = """SELECT
 "Code Greffe",
 "Nom_Greffe",
 "Numero_Gestion",
-"Siren",
-
+"Siren",    
 "status",
-"origin",
-
-
-
+"origin",    
 Coalesce(
          try(date_parse(file_timestamp, '%Y-%m-%d')),
          try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss.SSS')),
          try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss')),
          try(cast(file_timestamp as timestamp))
        )  as file_timestamp,
-
-Coalesce(
-         try(date_parse(date_greffe, '%Y-%m-%d')),
-         try(date_parse(date_greffe, '%Y/%m/%d')),
-         try(date_parse(date_greffe, '%d %M %Y')),
-         try(date_parse(date_greffe, '%d/%m/%Y')),
-         try(date_parse(date_greffe, '%d-%m-%Y'))
-  ) as date_greffe,
-  
-"Libelle_Evt",  
-
 "Type_Inscription",
 "Date_Immatriculation",
 "Date_1re_Immatriculation",
@@ -1210,6 +1199,15 @@ Coalesce(
 "Date_Cloture_Except",
 "Economie_Sociale_Solidaire",
 "Durée_PM",
+Coalesce(
+         try(date_parse(date_greffe, '%Y-%m-%d')),
+         try(date_parse(date_greffe, '%Y/%m/%d')),
+         try(date_parse(date_greffe, '%d %M %Y')),
+         try(date_parse(date_greffe, '%d/%m/%Y')),
+         try(date_parse(date_greffe, '%d-%m-%Y'))
+  )
+  as date_greffe,
+"Libelle_Evt",
 "csv_source"
 
 FROM {}
@@ -1251,17 +1249,10 @@ list_var = [
 "Code Greffe",
 "Nom_Greffe",
 "Numero_Gestion",
-"Siren",
-    
+"Siren",    
 "status",
-"origin",
-    
+"origin",    
 "file_timestamp",
-    
-"date_greffe",
-    
-"Libelle_Evt",  
-    
 "Type_Inscription",
 "Date_Immatriculation",
 "Date_1re_Immatriculation",
@@ -1284,6 +1275,8 @@ list_var = [
 "Date_Cloture_Except",
 "Economie_Sociale_Solidaire",
 "Durée_PM",
+"Date_Greffe",
+"Libelle_Evt",
 "csv_source"
     
 ]
