@@ -100,3 +100,7 @@ athena.run_query(query_tb.format(field),
                  s3_output='INSEE/sql_output'
                 )
 ```
+
+```python
+print(query_tb.format(field))
+```
