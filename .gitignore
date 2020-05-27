@@ -15,7 +15,7 @@ Documentation
 *.zip
 *.gz
 *.md5
-*.xlsx
+#*.xlsx
 *.db
 # Distribution / packaging
 .Python
