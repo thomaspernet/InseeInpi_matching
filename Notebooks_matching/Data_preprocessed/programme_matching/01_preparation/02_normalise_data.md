@@ -113,21 +113,19 @@ shutil.move("StockEtablissement_utf8.csv",
 etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
 '/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
 '/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv'
-```
-
-```python
-etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
-'/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv'
 
 commune = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
 '/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
 '/Parameters/communes_france.csv'
 
+voie = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
+'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+'/Parameters/voie.csv'
+
 param = {
     'communes_insee': commune,
     'upper_word':'data/input/Parameters/upper_stop.csv',
-     "voie": 'data/input/Parameters/voie.csv',
+     "voie": voie,
     'insee':  "data/RawData/INSEE/Stock/ETS/StockEtablissement_utf8.csv",
     'inpi_etb': etb_ex,
     'date_end':"2020-01-01"
@@ -156,6 +154,22 @@ df_inpi.head()
 ```python
 prep_data.clean_commune(df_inpi).head()[['siren','ville', 'ncc']]
 ```
+
+## Creation INSEE
+
+Le détail de la fonction pour créer la variable INSEE est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L325) 
+
+```python
+voie = pd.read_csv(param['voie'])
+voie.head()
+```
+
+```python
+
+```
+
+## Full pipeline
+
 
 Origin:
 
