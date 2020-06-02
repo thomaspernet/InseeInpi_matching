@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.0+dev
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -110,15 +110,51 @@ shutil.move("StockEtablissement_utf8.csv",
 ```
 
 ```python
+etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
+'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
+'/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv'
+```
+
+```python
+etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
+'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
+'/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv'
+
+commune = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
+'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+'/Parameters/communes_france.csv'
+
 param = {
-    'communes_insee': 'data/input/Parameters/communes_france.csv',
+    'communes_insee': commune,
     'upper_word':'data/input/Parameters/upper_stop.csv',
      "voie": 'data/input/Parameters/voie.csv',
     'insee':  "data/RawData/INSEE/Stock/ETS/StockEtablissement_utf8.csv",
-    'inpi_etb': "data/RawData/INPI/Stock/initial_partiel_evt_new_pp_status_final.csv",
+    'inpi_etb': etb_ex,
     'date_end':"2020-01-01"
 }
 prep_data = preparation_data.preparation(param)
+```
+
+# Step by step approach
+
+Le code est lent car le VPN ralentie le téléchargement de la donnée. Le fichier commune fait 7MO
+
+
+## Creation NCC
+
+Le détail de la fonction pour créer la variable ncc est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L131) 
+
+```python
+pd.set_option('display.max_columns', None)
+```
+
+```python
+df_inpi = pd.read_csv(param['inpi_etb'])
+df_inpi.head()
+```
+
+```python
+prep_data.clean_commune(df_inpi).head()[['siren','ville', 'ncc']]
 ```
 
 Origin:
