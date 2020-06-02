@@ -122,9 +122,13 @@ voie = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
 '/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
 '/Parameters/voie.csv'
 
+stopword ='https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
+'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+'/Parameters/upper_stop.csv'
+
 param = {
     'communes_insee': commune,
-    'upper_word':'data/input/Parameters/upper_stop.csv',
+    'upper_word':stopword,
      "voie": voie,
     'insee':  "data/RawData/INSEE/Stock/ETS/StockEtablissement_utf8.csv",
     'inpi_etb': etb_ex,
@@ -155,17 +159,30 @@ df_inpi.head()
 prep_data.clean_commune(df_inpi).head()[['siren','ville', 'ncc']]
 ```
 
-## Creation INSEE
+## Creation adresse_new_clean_reg, digit_inoi & INSEE
 
-Le détail de la fonction pour créer la variable INSEE est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L325) 
+- Le détail de la fonction pour créer la variable adresse_new_clean_reg est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L270) 
+- Le détail de la fonction pour créer la variable digit_inoi est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L315) 
+- Le détail de la fonction pour créer la variable INSEE est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L325) 
 
 ```python
-voie = pd.read_csv(param['voie'])
-voie.head()
+pd.read_csv(param['upper_word']).head()
 ```
 
 ```python
+pd.read_csv(param['voie']).head()
+```
 
+```python
+prep_data.prepare_adress(df_inpi).head()[['siren',
+                                          'adresse_ligne1',
+                                          'adresse_ligne2',
+                                          'adresse_ligne3',
+                                          'adress_new',
+                                          'adresse_new_clean_reg',
+                                          'digit_inpi',
+                                          'INSEE',
+                                          'possibilite']]
 ```
 
 ## Full pipeline
