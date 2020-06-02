@@ -32,7 +32,11 @@ import pandas as pd
 ```
 
 ```python Collapsed="false"
-path_commune = 
+path_commune = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
+'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+'/RawParameters/communes-01012019.csv'
+
+
 ```
 
 <!-- #region Collapsed="true" -->
@@ -42,7 +46,7 @@ Le fichier provient de l'[INSEE](https://www.insee.fr/fr/information/3720946)
 <!-- #endregion -->
 
 ```python Collapsed="false"
-communes = (pd.read_csv('data\input\communes-01012019.csv')
+communes = (pd.read_csv(path_commune)
             .set_index('ncc')
             .reindex(columns=['nccenr', 'libelle'])
             .assign(
@@ -104,7 +108,7 @@ communes.head()
 ```
 
 ```python Collapsed="false"
-communes.to_csv('data\input\communes_france.csv', index = False)
+#communes.to_csv('data\input\communes_france.csv', index = False)
 ```
 
 <!-- #region Collapsed="true" -->
@@ -114,8 +118,15 @@ communes.to_csv('data\input\communes_france.csv', index = False)
 CSV recréé via extraction des données depuis site https://www.sirene.fr/sirene/public/variable/libelleVoieEtablissement
 <!-- #endregion -->
 
+```python
+libelle = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
+'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+'/RawParameters/libelleVoieEtablissement.csv'
+
+```
+
 ```python Collapsed="false"
-voie = pd.read_csv('data\input\libelleVoieEtablissement.csv')
+voie = pd.read_csv(libelle)
 voie.head()
 ```
 
@@ -140,7 +151,7 @@ voie.head()
  .iloc[:,1:]
  .rename(columns = {0: 'possibilite'})
  .sort_values(by = 'INSEE')
- .to_csv(r'data\input\voie.csv', index = False)
+ #.to_csv(r'data\input\voie.csv', index = False)
 )
 ```
 
