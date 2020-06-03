@@ -1,12 +1,14 @@
 # Information US
 
-La redaction des US va se faire dans cette partie du repositorie. Ici, l'utilisateur peut trouver l'ensemble des informations relatives aux US, a savoir les liens vers Taiga, bases de données, snippet etc. L'objective étant de centraliser toutes les informations au meme endroit pour fluidifier le dévelopement.Workflow US (via stock)
+La redaction des US va se faire dans cette partie du repositorie. Ici, l'utilisateur peut trouver l'ensemble des informations relatives aux US, a savoir les liens vers Taiga, bases de données, snippet etc. L'objective étant de centraliser toutes les informations au meme endroit pour fluidifier le dévelopement.
 
 * A date, il y a 4 US
   * [2171](https://tree.taiga.io/project/olivierlubet-air/us/2171)
   * [2411](https://tree.taiga.io/project/olivierlubet-air/us/2411)
   * [2412](https://tree.taiga.io/project/olivierlubet-air/us/2412)
   * [2464](https://tree.taiga.io/project/olivierlubet-air/us/2464)
+
+##  Workflow US (via stock)
 
 Workflow création du stock jusqu'à fin 2019.
 
