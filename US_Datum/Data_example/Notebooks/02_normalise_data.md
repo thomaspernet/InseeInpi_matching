@@ -22,13 +22,13 @@ La préparation de la donnée se fait en deux étapes.
 
 L'étape 1 va mettre en conformité la data de l'INPI en vue d'une siretisation. L'étape 2 va utiliser les siren présents lors de l'étape 1 pour ne préparer que ce sous ensemble dans la donnée de l'INSEE.
 
-Pour la présentation de la création de la donnée, nous allons utiliser une donnée synthétique qui est un sous ensemble de la table finale (US [2264](https://tree.taiga.io/project/olivierlubet-air/us/2464). La donnée est disponible dans le Gitlab [initial_partiel_evt_new_pp_status_final_exemple.csv](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv)
+Pour la présentation de la création de la donnée, nous allons utiliser une donnée synthétique qui est un sous ensemble de la table finale (US [2264](https://tree.taiga.io/project/olivierlubet-air/us/2464)). La donnée est disponible dans le Gitlab [initial_partiel_evt_new_pp_status_final_exemple.csv](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv)
 
 # Introduction
 
 Avant de commencer, il faut rappeler pourquoi nous avons besoin de ses nouvelles variables. La finalité de la table inpi_etablissement_historique  est de pouvoir faire le rapprochement avec les établissements à l’INSEE. Ce rapprochement va permettre de récupérer le numéro SIRET de l’établissement qui figure à l’INSEE mais pas à l’INPI.
 
-L’étape de sirétisation repose sur un algorithme assez simple qui chercher a matcher des variables communes dans les deux bases puis vérifie la conformité du matching.
+L’étape de sirétisation repose sur un algorithme assez simple qui cherche a matcher des variables communes dans les deux bases puis vérifie la conformité du matching.
 
 L'algorithme de SIRETISATION fonctionne avec l'aide de trois fonctions:
 
