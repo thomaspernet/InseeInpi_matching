@@ -121,20 +121,19 @@ Le code est lent car le VPN ralentie le téléchargement de la donnée. Le fichi
 
 Le détail de la fonction pour créer la variable ncc est disponible [ici](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L131) 
 
-La variable ncc  correspond a la valeur normalisé du libellé de la commune. La même variable à l’INSEE s’appelle libelleCommuneEtablissement .
+La variable ncc  correspond a la valeur normalisée du libellé de la commune. La même variable à l’INSEE s’appelle libelleCommuneEtablissement .
 
 La création de cette variable s’opère en 2 étapes:
 1. Normalisation du fichier des communes de France
-  1. Input [CSV] & ville  [Champs]
+  1. Input [CSV] `communes-01012019.csv` & ville  [Champs]
     1. Fichier source: [Code officiel géographique au 1er janvier 2019 et au 1er avril 2019 | Insee](https://www.insee.fr/fr/information/3720946) → [communes-01012019.csv](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input/RawParameters/communes-01012019.csv) (Gitlab)
     2. Code normalisation: [possibilités communes](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/Source_intermediates.md#cr%C3%A9er-fichier-toutes-les-possibilit%C3%A9s-communes)
   2. Output [CSV]
     1.  [communes_france.csv](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input/Parameters/communes_france.csv) (Gitlab)
 2. Ajout ncc dans la table historique
-  1. input [Table] : inpi_etablissement_historique_ 
+  1. input [Table] : `inpi_etablissement_historique_` 
     1. A noter que dans notre exemple, la source est un csv , [initial_partiel_evt_new_pp_status_final_exemple.csv](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv)
     2. Code préparation: [Ligne 131](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/inpi_insee/preparation_data.py#L131)
-    3. Exemple notebook: [Creation NCC](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/02_normalise_data.md#creation-ncc)
   2. Output [Champs]
     1. ncc provenant de  [communes_france.csv](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input/Parameters/communes_france.csv) (Gitlab)
 
@@ -148,10 +147,10 @@ df_inpi.head()
 ```
 
 ```python
-prep_data.clean_commune(df_inpi).head()[['siren','ville', 'ncc']]
+prep_data.clean_commune(df_inpi).head(20)[['siren','ville', 'ncc']]
 ```
 
-## Creation adresse_new_clean_reg, digit_inoi & INSEE
+## Creation adresse_new_clean_reg, digit_inpi & INSEE
 
 ### Creation adresse_new_clean_reg
 
@@ -208,7 +207,7 @@ pd.read_csv(param['voie']).head()
 ```
 
 ```python
-prep_data.prepare_adress(df_inpi).head()[['siren',
+prep_data.prepare_adress(df_inpi).head(20)[['siren',
                                           'adresse_ligne1',
                                           'adresse_ligne2',
                                           'adresse_ligne3',
@@ -217,4 +216,9 @@ prep_data.prepare_adress(df_inpi).head()[['siren',
                                           'digit_inpi',  ## Target
                                           'INSEE', ## Target
                                           'possibilite']]
+```
+
+```python
+prep_data.prepare_adress(df_inpi).head(1)[
+                                          'adresse_new_clean_reg']
 ```
