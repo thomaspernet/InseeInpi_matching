@@ -11,7 +11,7 @@ documentation_pdf
 Documentation
 #RawData/
 *.gz
-*.csv
+#*.csv
 *.zip
 *.gz
 *.md5
@@ -138,3 +138,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Notebooks_matching/Data_preprocessed/programme_matching/data/forme_juridique_inpi.csv
+Notebooks_matching/Data_preprocessed/programme_matching/data/forme_juridique_inpi.xlsx
+Notebooks_matching/Data_preprocessed/programme_matching/data/forme_juridique_insee.csv
+Notebooks_matching/Data_preprocessed/programme_matching/data/forme_juridique_insee_cleaned.csv
+Notebooks_matching/Data_preprocessed/programme_matching/data/missing_forme_juridique.xlsx
+Notebooks_matching/Data_preprocessed/programme_matching/data/RawData/INSEE/Stock/ETS/StockEtablissement_utf8.csv
+Notebooks_matching/Data_preprocessed/programme_matching/data/RawData/INSEE/Stock/UL/StockUniteLegale_utf8.csv
