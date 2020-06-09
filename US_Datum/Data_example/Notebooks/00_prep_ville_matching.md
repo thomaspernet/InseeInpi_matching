@@ -157,13 +157,19 @@ inpi = pd.read_csv(param['inpi_ville'])
 inpi.shape
 ```
 
+### Regex nettoyage
+
+Le regex opère de manière séquentielle:
+
+
+
 ```python
 regex = r"[^\w\s]|\([^()]*\)|er Arrondissement|er arrondissement|" \
 "|e arrondissement|^SUR$|CEDEX|[0-9]+|\s+"
 test = (inpi
  .assign(
 ville_pas_accent =lambda x: x['ville']
-     .str.normalize('NFKD')
+     .str.normalize('NFKD') ### Supprimer accents
      .str.encode('ascii', errors='ignore')
      .str.decode('utf-8')
      .str.replace("^\d+\s|\s\d+\s|\s\d+$", '') #### digit
