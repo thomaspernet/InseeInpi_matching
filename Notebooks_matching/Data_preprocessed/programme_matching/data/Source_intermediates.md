@@ -45,8 +45,81 @@ path_commune = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw
 Le fichier provient de l'[INSEE](https://www.insee.fr/fr/information/3720946)
 <!-- #endregion -->
 
+```python
+df = pd.read_csv(path_commune)
+```
+
+```python
+df.head()
+```
+
+```python
+(df
+            .set_index('ncc')
+            .reindex(columns=['nccenr', 'libelle'])
+            .assign(
+    noaccent=lambda x: x['nccenr'].str.normalize('NFKD')
+    .str.encode('ascii', errors='ignore')
+    .str.decode('utf-8'),
+    nccenr_noponc=lambda x: x['nccenr'].str.replace('[^\w\s]', ' '),
+    libelle_noponc=lambda x: x['libelle'].str.replace('[^\w\s]', ' '),
+    noaccent_noponc=lambda x: x['noaccent'].str.replace('[^\w\s]', ' '),
+    uppercase=lambda x: x.index,
+    nccenr_uppercase=lambda x: x['nccenr'].str.upper(),
+    libelle_uppercase=lambda x: x['libelle'].str.upper(),
+    noaccent_uppercase=lambda x: x['noaccent'].str.upper(),
+    nccenr_noponc_uppercase=lambda x: x['nccenr_noponc'].str.upper(),
+    libelle_noponc_uppercase=lambda x: x['libelle_noponc'].str.upper(),
+    noaccent_noponc_uppercase=lambda x: x['noaccent_noponc'].str.upper(),
+    nccenr_lowercase=lambda x: x['nccenr'].str.lower(),
+    libelle_lowercase=lambda x: x['libelle'].str.lower(),
+    noaccent_lowercase=lambda x: x['noaccent'].str.lower(),
+    nccenr_noponc_lowercase=lambda x: x['nccenr_noponc'].str.lower(),
+    libelle_noponc_lowercase=lambda x: x['libelle_noponc'].str.lower(),
+    noaccent_noponc_lowercase=lambda x: x['noaccent_noponc'].str.lower(),
+    nccenr_noarrond1=lambda x: x['nccenr'].str.replace(
+        'er Arrondissement', ''),
+    uppercase_noarrond1=lambda x: x['uppercase'].str.replace(
+        'ER ARRONDISSEMENT', ''),
+    lowercase_noarrond1=lambda x: x['nccenr_lowercase'].str.replace(
+        'er arrondissement', ''),
+    nccenr_noarrond=lambda x: x['nccenr'].str.replace('e Arrondissement', ''),
+    uppercase_noarrond=lambda x: x['uppercase'].str.replace(
+        'E ARRONDISSEMENT', ''),
+    lowercase_noarrond=lambda x: x['nccenr_lowercase'].str.replace(
+        'e arrondissement', ''),
+)
+)
+
+for n in communes.columns:
+    var_ = '{}_ST'.format(n)
+    var_1 = '{}_st'.format(n)
+    var_2 = '{}_St'.format(n)
+    
+    communes[var_] = communes[n].str.replace('SAINT', 'ST')
+    communes[var_1] = communes[n].str.replace('Saint', 'st')
+    communes[var_2] = communes[n].str.replace('Saint', 'St')
+    
+    var_ = '{}_Sbar'.format(n)
+    var_1 = '{}_sbar'.format(n)
+    
+    communes[var_] = communes[n].str.replace('SUR', 'S/')
+    communes[var_1] = communes[n].str.replace('sur', 's/')
+    
+communes
+```
+
+```python
+ (communes
+            .stack()
+            .rename('possibilite')
+            .reset_index()
+            .drop(columns='level_1')
+            .drop_duplicates(subset=['possibilite']))
+```
+
 ```python Collapsed="false"
-communes = (pd.read_csv(path_commune)
+communes = (df
             .set_index('ncc')
             .reindex(columns=['nccenr', 'libelle'])
             .assign(
@@ -107,8 +180,12 @@ communes = (communes
 communes.head()
 ```
 
+```python
+communes.loc[lambda x: x['possibilite'].isin(['Soisy-sur-Seine'])]
+```
+
 ```python Collapsed="false"
-#communes.to_csv('data\input\communes_france.csv', index = False)
+df.loc[lambda x: x['ncc'].isin(['SOISY SUR SEINE'])]
 ```
 
 <!-- #region Collapsed="true" -->
