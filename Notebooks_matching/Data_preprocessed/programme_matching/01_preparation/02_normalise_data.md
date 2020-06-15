@@ -78,7 +78,7 @@ s3 = service_s3.connect_S3(client = client,
 Download INPI
 
 ```python
-s3.download_file(key= 'INPI/TC_1/02_preparation_donnee/PP/initial_partiel_evt_new_pp_status_final.csv')
+s3.download_file(key= 'INPI/TC_1/02_preparation_donnee/ETS/initial_partiel_evt_new_ets_status_final.csv')
 ```
 
 Download INSEE
@@ -88,12 +88,12 @@ s3.download_file(key= 'INSEE/Stock/ETS/StockEtablissement_utf8.csv')
 ```
 
 ```python
-os.mkdir("data/RawData/INPI/Stock/PP")
+os.mkdir("data/RawData/INPI/Stock/ETS")
 ```
 
 ```python
-shutil.move("initial_partiel_evt_new_pp_status_final.csv",
-            "data/RawData/INPI/Stock")
+#shutil.move("initial_partiel_evt_new_ets_status_final.csv",
+#            "data/RawData/INPI/Stock")
 ```
 
 ```python
