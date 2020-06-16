@@ -1,18 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.0
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
 # Preparation voie et numéro de voie 
 
 ```
@@ -100,7 +85,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 # Spécifications
 
 ### Origine information (si applicable) 
@@ -125,7 +109,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 ### Exemple Input 1
 
 L'exemple ci-dessous provient du csv que nous avons crée via les informations disponibles sur le site de l'[INSEE](https://www.sirene.fr/sirene/public/variable/typeVoieEtablissement). Ensuite, nous avons appliqué un code regex qui est indique à celui employé dans l'US 2690 pour nettoyé le champs `possibilité`. Ce champs contient le libellé du type de voie à l'INSEE. C'est un champs généraliste et permet de récuperer un bon nombre d'information dans l'adresse nettoyée de l'INPI
@@ -134,54 +117,28 @@ L'exemple ci-dessous provient du csv que nous avons crée via les informations d
 
 - [Snippet 1](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/snippets/64)
 
-```python
-import pandas as pd
-import numpy as np
-```
-
-```python
-type_voie = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
-'/RawParameters/typeVoieEtablissement.csv'
-df_voie = (pd.read_csv(type_voie)
-           .assign(voie_clean = lambda x: x['possibilite'].str.normalize(
-            'NFKD')
-        .str.encode('ascii', errors='ignore')
-        .str.decode('utf-8')
-        .str.replace('[^\w\s]', ' ')
-        .str.upper()
-            )
-          )
-```
-
-```python
-print(df_voie.head().to_markdown())
-```
+    |    | voie_matching   | possibilite   | voie_clean   |
+    |---:|:----------------|:--------------|:-------------|
+    |  0 | ALL             | Allée         | ALLEE        |
+    |  1 | AV              | Avenue        | AVENUE       |
+    |  2 | BD              | Boulevard     | BOULEVARD    |
+    |  3 | CAR             | Carrefour     | CARREFOUR    |
+    |  4 | CHE             | Chemin        | CHEMIN       |
+    
 
 ### Exemple Input 2
 
 Dans l'exemple d'input ci dessous, nous avons pris une image de ce que la table `inpi_etablissement_historique` doit ressemblée après avoir réalisé l'US 2690. 
 
 
-```python
-etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
-'/INPI/Stock/inpi_ets_exemple_1_2697.csv'
-
-
-```
-
-```python
-df_ets = pd.read_csv(etb_ex)
-print(df_ets[['siren',
-                           'adresse_ligne1',
-                           'adresse_ligne2',
-                           'adresse_ligne3',
-                           'adress_nettoyee',
-                           'adresse_regex'
-                          ]
-                         ].head().to_markdown())
-```
+    |    |     siren | adresse_ligne1                | adresse_ligne2                  | adresse_ligne3   | adress_nettoyee                 | adresse_regex                |
+    |---:|----------:|:------------------------------|:--------------------------------|:-----------------|:--------------------------------|:-----------------------------|
+    |  0 | 487622797 | nan                           | 7 Rue Caraman                   | BP 67131         | 7 RUE CARAMAN BP 67131          | CARAMAN$                     |
+    |  1 | 841846488 | 43 Rue du Professeur Bergonié | nan                             | nan              | 43 RUE DU PROFESSEUR BERGONIE   | PROFESSEUR$|BERGONIE$        |
+    |  2 | 324958198 | nan                           | 6 Zone Industrielle les Gabares | nan              | 6 ZONE INDUSTRIELLE LES GABARES | ZONE$|INDUSTRIELLE$|GABARES$ |
+    |  3 | 812461218 | 7 Rue de l'Ancienne Eglise    | nan                             | nan              | 7 RUE DE L ANCIENNE EGLISE      | ANCIENNE$|EGLISE$            |
+    |  4 | 850414509 | 2 Rue des Maronniers          | nan                             | nan              | 2 RUE DES MARONNIERS            | MARONNIERS$                  |
+    
 
 ## Output
 
@@ -198,19 +155,15 @@ Le tableau ci dessous explicite les deux variables attendues, a savoir `numero_v
 - La variable `numero_voie_matching` est le premier digit présent dans la variable `adress_nettoyee`.
 - La variable `voie_matching` est l'extraction du type de voie présent dans la variable `adress_nettoyee`, puis normalisé des valeurs possibles à l'INSEE.
 
-```python
-print((df_ets.assign(
-numero_voie_matching = lambda x: x['adress_nettoyee'].str.extract(r'(\d+)'),
-voie_clean = lambda x:
-        x['adress_nettoyee'].str.extract(r'(' + '|'.join(
-        df_voie['voie_clean'].to_list()) +')'),
-        )
- .merge(df_voie, how = 'left', left_on = 'voie_clean', right_on = 'voie_clean')
- .drop(columns = ['voie_clean', 'possibilite'])
-).head().to_markdown())
-```
+    |    |     siren | adresse_ligne1                | adresse_ligne2                  | adresse_ligne3   | adress_nettoyee                 | adresse_regex                |   numero_voie_matching | voie_matching   |
+    |---:|----------:|:------------------------------|:--------------------------------|:-----------------|:--------------------------------|:-----------------------------|-----------------------:|:----------------|
+    |  0 | 487622797 | nan                           | 7 Rue Caraman                   | BP 67131         | 7 RUE CARAMAN BP 67131          | CARAMAN$                     |                      7 | RUE             |
+    |  1 | 841846488 | 43 Rue du Professeur Bergonié | nan                             | nan              | 43 RUE DU PROFESSEUR BERGONIE   | PROFESSEUR$|BERGONIE$        |                     43 | RUE             |
+    |  2 | 324958198 | nan                           | 6 Zone Industrielle les Gabares | nan              | 6 ZONE INDUSTRIELLE LES GABARES | ZONE$|INDUSTRIELLE$|GABARES$ |                      6 | nan             |
+    |  3 | 812461218 | 7 Rue de l'Ancienne Eglise    | nan                             | nan              | 7 RUE DE L ANCIENNE EGLISE      | ANCIENNE$|EGLISE$            |                      7 | RUE             |
+    |  4 | 850414509 | 2 Rue des Maronniers          | nan                             | nan              | 2 RUE DES MARONNIERS            | MARONNIERS$                  |                      2 | RUE             |
+    
 
-<!-- #region -->
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
@@ -303,80 +256,5 @@ Contenu :
 *   Vidéo publiée
 
 ]
-<!-- #endregion -->
 
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```
