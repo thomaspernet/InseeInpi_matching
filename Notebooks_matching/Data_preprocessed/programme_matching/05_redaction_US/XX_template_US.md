@@ -22,11 +22,13 @@ Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la fai
 **Metadatab**
 
 - Taiga:
-    - Numero US
+    - Numero US: []()
 - Gitlab
-    - Notebook
-    - Markdown
-    - Data
+    - Notebook: []()
+    - Markdown: []()
+    - Data:
+        - []()
+        - 
 
 # Contexte
 
@@ -70,6 +72,9 @@ L'algorithme va utiliser séquentiellement les variables suivantes, en plus du s
   - Il est possible qu'un SIREN n'ai pas de siege/principal. Normalement, cela doit être corrigé par un partiel
 -  Etablissement sans création
   - Il arrive que des établissements soient supprimés (EVT) mais n'ont pas de ligne "création d'entreprise". Si cela, arrive, Infogreffe doit envoyer un partiel pour corriger. Il arrive que le greffe envoie seulement une ligne pour SEP, lorsque le Principal est fermé, le siège est toujours ouvert. Mais pas de nouvelle ligne dans la base. Le partiel devrait corriger cela.
+- La variable `ville` de l'INPI n'est pas normalisée. C'est une variable libre de la créativité du greffier, qui doit être formalisée du mieux possible afin de permettre la jointure avec l'INSEE. Plusieurs règles regex ont été recensé comme la soustraction des numéros, caractères spéciaux, parenthèses, etc. Il est possible d'améliorer les règles si nécessaire
+- Le code postal doit être formalisé correctement, a savoir deux longueurs possibles: zero (Null) ou cinq. Dans certains cas, le code postal se trouve dans la variable de la ville.
+- La variable pays doit être formalisée, a savoir correspondre au code pays de l'INSEE. Bien que la majeure partie des valeurs soit FRANCE ou France, il convient de normaliser la variable pour récuperer les informations des pays hors France.
 
 Workflow US (via stock)
 
@@ -150,6 +155,8 @@ XXX
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
+
+Si nouvelle règle, ajouter ici.
 
 # Charges de l'équipe
 
