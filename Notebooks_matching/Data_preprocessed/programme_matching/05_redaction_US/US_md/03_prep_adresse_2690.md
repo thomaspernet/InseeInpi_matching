@@ -1,19 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.0
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
-<!-- #region -->
 # Preparation regex adresse 
 
 ```
@@ -82,7 +66,6 @@ Dans cette US, le besoin est le suivant:
 - Création d'une variable combinant les 3 variables adresse de l'INPI contenant un pattern regex, qui va servir à la comparaison avec la variable adresse de l'INSEE
 
 
-<!-- #endregion -->
 
 # Spécifications
 
@@ -108,38 +91,32 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 ### Exemple Input 1
 
 L'exemple ci-dessous indique uniquement la donnée brute de la table `inpi_etablissement_historique` avec les 3 champs dont nous avons besoin: `adresse_ligne1`, `adresse_ligne2` et `adresse_ligne3`
 
 
-```python
-import pandas as pd
-import numpy as np
-```
-
-```python
-etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
-'/INPI/Stock/inpi_ets_exemple_1.csv'
-
-df_ets = pd.read_csv(etb_ex)
-print(df_ets[['siren', 'adresse_ligne1', 'adresse_ligne2',
-              'adresse_ligne3']].head().to_markdown())
-```
+    |    |     siren | adresse_ligne1                | adresse_ligne2                  | adresse_ligne3   |
+    |---:|----------:|:------------------------------|:--------------------------------|:-----------------|
+    |  0 | 487622797 | nan                           | 7 Rue Caraman                   | BP 67131         |
+    |  1 | 841846488 | 43 Rue du Professeur Bergonié | nan                             | nan              |
+    |  2 | 324958198 | nan                           | 6 Zone Industrielle les Gabares | nan              |
+    |  3 | 812461218 | 7 Rue de l'Ancienne Eglise    | nan                             | nan              |
+    |  4 | 850414509 | 2 Rue des Maronniers          | nan                             | nan              |
+    
 
 ### Exemple Input 2
 
 L'exemple ci-dessous indique une liste de candidat au stop word. Tous les mots contenus dans cette liste vont être enlever de l'adresse
 
-```python
-stop_word = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw/' \
-'master/Notebooks_matching/Data_preprocessed/programme_matching/data/input/' \
-'Parameters/upper_stop.csv'
-df_stop = pd.read_csv(stop_word, names=["stop"])
-print(df_stop.head().to_markdown())
-```
+    |    | stop   |
+    |---:|:-------|
+    |  0 | 0      |
+    |  1 | AU     |
+    |  2 | AUX    |
+    |  3 | AVEC   |
+    |  4 | CE     |
+    
 
 ## Output
 
@@ -156,113 +133,15 @@ Le tableau ci dessous explicite les deux variables attendues, a savoir `adress_n
 - La variable `adress_nettoyee` est la recombinaision des trois variables de l'adresse, nettoyée des accents, espace en debut de texte et mise en majuscule.
 - La variable `adresse_regex` est la création du pattern regex, ayant le signe `$` en fin de mot et séparer avec `|`.
 
-```python
-def create_split_adress(x):
-        """
-        Découpe l'adresse en une liste de mots. L'input de la fonction est
-        généralement une adresse au préalable normalisée. Exemple:
-        Adresse : "JONQUILLES JAUNES BORD MER" -> [JONQUILLES,JAUNES,BORD,MER]
+    |    |     siren | adresse_ligne1                | adresse_ligne2                  | adresse_ligne3   | adress_nettoyee                 | adresse_regex                |
+    |---:|----------:|:------------------------------|:--------------------------------|:-----------------|:--------------------------------|:-----------------------------|
+    |  0 | 487622797 | nan                           | 7 Rue Caraman                   | BP 67131         | 7 RUE CARAMAN BP 67131          | CARAMAN$                     |
+    |  1 | 841846488 | 43 Rue du Professeur Bergonié | nan                             | nan              | 43 RUE DU PROFESSEUR BERGONIE   | PROFESSEUR$|BERGONIE$        |
+    |  2 | 324958198 | nan                           | 6 Zone Industrielle les Gabares | nan              | 6 ZONE INDUSTRIELLE LES GABARES | ZONE$|INDUSTRIELLE$|GABARES$ |
+    |  3 | 812461218 | 7 Rue de l'Ancienne Eglise    | nan                             | nan              | 7 RUE DE L ANCIENNE EGLISE      | ANCIENNE$|EGLISE$            |
+    |  4 | 850414509 | 2 Rue des Maronniers          | nan                             | nan              | 2 RUE DES MARONNIERS            | MARONNIERS$                  |
+    
 
-        Args:
-        - x: Une serie contenant l'adresse. De préférence, une serie avec une
-        adresse normalisée
-
-        Return:
-        Une liste
-        """
-        split_ = x.str.split().to_list()
-        return  split_
-
-```
-
-```python
-def create_regex_adress(x):
-        """
-        Regroupe les mots de l'adresse ensemble avec comme séparateur "|" et
-        le signe $ en fin de mot pour indiquer qu'il ne faut parser que le mot
-        en question et pas ce qu'il y a après.
-
-        Args:
-        - x: column conntenant l'adresse dans un dataFrame pandas
-
-        Returns:
-        un String concatenés des mots de la colonne
-        """
-        try:
-            split_ = [i + "$" for i in x]
-            reg = '|'.join(split_)
-        except:
-            reg = np.nan
-        return  reg
-
-```
-
-```python
-def prepare_adress(df):
-        """
-        Créer deux colonnes nétoyées de l'adresse a partir d'un dataframe INPI.
-        La première variable va nétoyer l'adresse en enlevant les valeurs comme
-        route, avenue qui ne sont pas indiquées dans l'INSEE (variables de
-        matching)n netoie les accents, digits, etc. La deuxième variable va
-        concatener l'adresse en vue d'un parsing regex
-
-        Args:
-        - df: Pandas DataFrame
-
-        Returns:
-        DataFrame Pandas nétoyé avec les variables adresses nétoyées
-        """
-        temp_adresse = (df
-        .assign(
-
-        adress_nettoyee = lambda x:
-            x['adresse_ligne1'].fillna('') + ' '+\
-            x['adresse_ligne2'].fillna('') + ' '+\
-            x['adresse_ligne3'].fillna(''),
-        adresse_new_clean=lambda x: x['adress_nettoyee'].str.normalize(
-                'NFKD')
-            .str.encode('ascii', errors='ignore')
-            .str.decode('utf-8')
-            .str.replace('[^\w\s]|\d+', ' ')
-            .str.upper(),
-        )
-        .assign(
-        adresse_new_clean = lambda x: x['adresse_new_clean'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (df_stop['stop'].to_list())])),
-        adress_nettoyee = lambda x: x['adress_nettoyee'].str.normalize(
-            'NFKD')
-        .str.encode('ascii', errors='ignore')
-        .str.decode('utf-8')
-        .str.replace('[^\w\s]', ' ')
-        .str.upper(),
-        adresse_new_clean_split=lambda x:
-        create_split_adress(x['adresse_new_clean']
-        ),
-        adresse_regex = lambda x:
-        x['adresse_new_clean_split'].apply(lambda x:
-        create_regex_adress(x))
-        )
-                        .drop(columns = ['adresse_new_clean','adresse_new_clean_split'])
-                       )
-
-        return temp_adresse
-
-```
-
-```python
-print(prepare_adress(df =df_ets)[['siren',
-                           'adresse_ligne1',
-                           'adresse_ligne2',
-                           'adresse_ligne3',
-                           'adress_nettoyee',
-                           'adresse_regex'
-                          ]
-                         ].head().to_markdown())
-
-```
-
-<!-- #region -->
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
@@ -355,80 +234,10 @@ Contenu :
 *   Vidéo publiée
 
 ]
-<!-- #endregion -->
 
 # Creation markdown
 
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
+    jupyter nbconvert --no-input --to md 03_prep_adresse_2690.ipynb
+    Report Available at this adress:
+     C:\Users\PERNETTH\Documents\Projects\InseeInpi_matching\Notebooks_matching\Data_preprocessed\programme_matching\05_redaction_US\US_md\03_prep_adresse_2690.md
     
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```
