@@ -19,6 +19,8 @@ jupyter:
 Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la faire correspondre à l'INSEE}
 ```
 
+**Metadata**
+
 - Taiga:
     - Numero US: [2678](https://tree.taiga.io/project/olivierlubet-air/us/2678)
 - Gitlab
