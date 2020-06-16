@@ -262,6 +262,17 @@ print(prepare_adress(df =df_ets)[['siren',
 
 ```
 
+```python
+#prepare_adress(df =df_ets)[['siren',
+#                           'adresse_ligne1',
+#                           'adresse_ligne2',
+#                           'adresse_ligne3',
+#                           'adress_nettoyee',
+#                           'adresse_regex'
+#                          ]
+#                         ].to_csv('inpi_ets_exemple_1_2697.csv', index = False)
+```
+
 <!-- #region -->
 ## Règles de gestion applicables
 
