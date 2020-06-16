@@ -36,6 +36,34 @@ FROM initial_partiel_evt_new_ets_status_final
 ORDER BY len_code_postal
 ```
 
+## Règles de gestion
+
+*   Définition partiel
+
+    *   si csv dans le dossier Stock, année > 2017, alors partiel, c'est a dire, modification complète du dossier due a une anomalie.
+    *   la date d’ingestion est indiquée dans le path, ie comme les flux
+*   Une séquence est un classement chronologique pour le quadruplet suivant:
+
+    *   _siren_ + _code greffe_ + _numero gestion_ + _ID établissement_
+*  Une création d'une séquence peut avoir plusieurs transmission a des intervalles plus ou moins long
+    *   Si plusieurs transmissions avec le libellé “création établissement” ou “création" , alors il faut prendre la dernière date de transmission
+    *   Il y a certains cas ou les lignes de créations doublons sont de faux événements (mauvais envoie de la part du greffier)
+        *   Si le timestamp entre la première ligne et dernière ligne est supérieures a 31 jour (exclut), il faut:
+            *   Récupération de la dernière ligne, et créer une variable flag, comme pour le statut
+*   Evénement 1
+    *   Les événements doivent impérativement suivre l'ordre d'apparition dans le csv du FTP
+        *   Pour les événements, il est possible d'avoir plusieurs informations renseignées pour une même date de transmission pour une même séquence
+    *   Le remplissage doit se faire de la manière suivante pour la donnée brute
+        *   Pour une date de transmission donnée, c'est la dernière ligne de la séquence qui doit être utilisée, remplie des valeurs manquantes extraites des lignes précédentes. Si la dernière ligne de la séquence contient un champs non vide, il ne faut pas la remplacer par la ligne précédente.
+- Partiel
+  - En cas de corrections majeures, la séquence annule et remplace la création et événements antérieurs. Dans ce cas, toutes les données qui ont pu être transmises antérieurement via le stock initial ou le flux doivent donc être ignorées (prendre en compte la date de transmission indiquée dans le nom des sous-répertoires du stock et des fichiers
+-  Siren sans Siège ou Principal
+  - Il est possible qu'un SIREN n'ai pas de siege/principal. Normalement, cela doit être corrigé par un partiel
+-  Etablissement sans création
+  - Il arrive que des établissements soient supprimés (EVT) mais n'ont pas de ligne "création d'entreprise". Si cela, arrive, Infogreffe doit envoyer un partiel pour corriger. Il arrive que le greffe envoie seulement une ligne pour SEP, lorsque le Principal est fermé, le siège est toujours ouvert. Mais pas de nouvelle ligne dans la base. Le partiel devrait corriger cela.
+- La variable `ville` de l'INPI n'est pas normalisée. C'est une variable libre de la créativité du greffier, qui doit être formalisée du mieux possible afin de permettre la jointure avec l'INSEE. Plusieurs règles regex ont été recensé comme la soustraction des numéros, caractères spéciaux, parenthèses, etc. Il est possible d'améliorer les règles si nécessaire
+- [NEW] Le code postal doit être formalisé correctement, a savoir deux longueurs possibles: zero (Null) ou cinq. Dans certains cas, le code postal se trouve dans la variable de la ville. 
+
 Workflow US  (via stock)
 
 ![workflow](https://www.lucidchart.com/publicSegments/view/d9e4494d-bfaf-4d0e-9e0f-53011cda7eb9/image.png)
@@ -78,6 +106,8 @@ Le besoin attendu dans cette US est le suivant:
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
+
+- [NEW] Le code postal doit être formalisé correctement, a savoir deux longueurs possibles: zero (Null) ou cinq. Dans certains cas, le code postal se trouve dans la variable de la ville.
 
 # Charges de l'équipe
 
