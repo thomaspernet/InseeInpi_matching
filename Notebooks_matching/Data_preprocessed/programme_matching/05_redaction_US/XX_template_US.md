@@ -37,13 +37,13 @@ XXX
 L'algorithme va utiliser séquentiellement les variables suivantes, en plus du siren:
 
 ```
-{'ville_matching', 'Code_Postal', 'Code_Commune', 'INSEE', 'digit_inpi'},
- {'ville_matching', 'Code_Postal', 'Code_Commune', 'INSEE'},
- {'ville_matching', 'Code_Postal', 'Code_Commune', 'digit_inpi'},
- {'ville_matching', 'Code_Postal', 'Code_Commune'},   
- {'ville_matching', 'Code_Postal'},
+{'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE', 'digit_inpi'},
+ {'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE'},
+ {'ville_matching', 'code_postal_matching', 'Code_Commune', 'digit_inpi'},
+ {'ville_matching', 'code_postal_matching', 'Code_Commune'},   
+ {'ville_matching', 'code_postal_matching'},
  {'ville_matching'},
- {'Code_Postal'},
+ {'code_postal_matching'},
  {'Code_Commune'}
 ```
 
@@ -110,7 +110,7 @@ Dans cette US, le besoin est le suivant:
 
 *   Applications
 *   Schémas
-*   Tables: 
+*   Tables: `inpi_etablissement_historique`
 *   CSV: 
 *   Champs: 
 
@@ -144,7 +144,7 @@ XXX
 [PO : dans le cas de transformation de données, préciser les sorties :
 
 *   BDD cibles
-*   Tables: 
+*   Tables: `inpi_etablissement_historique`
 *   Champs: 
 
 ]
@@ -250,7 +250,7 @@ def create_report(extension = "html"):
     3. Move the newly created report
     
     Args:
-    extension: string. Can be "html", "pdf", "md"
+    extension: string. Can be "html", "pdf", "markdown"
     
     
     """
@@ -273,8 +273,8 @@ def create_report(extension = "html"):
             pass  
     
     sep = '.'
-    #path = os.getcwd()
-    #parent_path = str(Path(path).parent)
+    path = os.getcwd()
+    parent_path = str(Path(path).parent)
     
     ### Path report
     #path_report = "{}/Reports".format(parent_path)
@@ -282,7 +282,12 @@ def create_report(extension = "html"):
     
     ### Path destination
     name_no_extension = notebookname.split(sep, 1)[0]
-    source_to_move = name_no_extension +'.{}'.format(extension)
+    if extension == 'markdown':
+        #extension = 'md'
+        os.remove(name_no_extension +'.{}'.format('md'))
+        source_to_move = name_no_extension +'.{}'.format('md')
+    else:
+        source_to_move = name_no_extension +'.{}'.format(extension)
     dest = os.path.join(path,'US_md', source_to_move)
     
     print('jupyter nbconvert --no-input --to {} {}'.format(
