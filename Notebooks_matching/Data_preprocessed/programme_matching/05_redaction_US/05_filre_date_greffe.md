@@ -39,7 +39,7 @@ Maintenant, il y a de nombreux cas ou la date de greffe reste la même, mais con
 
 Pour une même date de greffe a plusieurs transmissions, nous devons prendre la dernière ligne que nous avons enrichi
 
-Par ailleurs, Lesransmissions pour une même date de greffe ont plusieurs mois de décalage, L'INPI ne peut pas expliquer la raison car l'INPI diffuse ce qu’infogreffe envoit
+Par ailleurs, Les transmissions pour une même date de greffe peuvent avoir plusieurs mois de décalage, L'INPI ne peut pas expliquer la raison car l'INPI diffuse ce qu’infogreffe envoie
 
 
 
@@ -124,7 +124,7 @@ import numpy as np
 
 ]
 
-Une table avec les valeurs filtrées des dates de transmission inférieures au maximum timestamp. Exemple de query
+Une table avec le compte de transmission par séquence et date de greffe. 
 
 ```
 SELECT * 
@@ -193,7 +193,7 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 [PO : comment contrôler que la réalisation est conforme]
 
-1.  Compter le nombre de cas impacter par la règle
+1.  Compter le nombre de cas impacté par la règle
 
 ```
 SELECT distinct(COUNT(count_seq_date)) as count_possibility, count_seq_date
