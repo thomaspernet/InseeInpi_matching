@@ -309,5 +309,5 @@ def create_report(extension = "html"):
 ```
 
 ```python
-create_report(extension = "md")
+create_report(extension = "markdown")
 ```
