@@ -1,3 +1,19 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,md
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.2'
+      jupytext_version: 1.4.0
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+<!-- #region -->
 # filtrer date greffe plusieurs transmissions  
 
 ```
@@ -70,6 +86,7 @@ Dans cette US, le besoin est le suivant:
 - Filtrer les lignes ayant des dates inférieures au timestamp maximum pour une séquence et date de greffe donnée.
 
 
+<!-- #endregion -->
 
 # Spécifications
 
@@ -91,6 +108,11 @@ Dans cette US, le besoin est le suivant:
 *   Champs: Tous
 
 
+
+```python
+import pandas as pd
+import numpy as np
+```
 
 ## Output
 
@@ -142,6 +164,7 @@ LIMIT 15
 | 847550324 | 8701        | 2019D00018     | 1                | 2019-01-21 00:00:00.000 | 3              | 847550324 | 8701        | Limoges         | 2019D00018     | 1                |        | NEW    | 2019-01-29 09:11:50.000 | 2019-01-21 00:00:00.000 | Etablissement ouvert | SEP  |          |              |                           | 208 route de la Chassagne      |                | 87480       | Saint-Priest-Taurion | 87178        | FRANCE |                    |                      |                       |                           |                             |                |          | non                | non                  | non                     | 18/01/2019          | Acquisition et gestion d'immeubles edification refection construction et   amenagement d'immeubles                                                                                                                                                                                                                                                                                | CrÃ©ation                                         |                    | Exploitation directe     | 8701_439_20190129_091150_8_ets.csv |
 | 847550324 | 8701        | 2019D00018     | 1                | 2019-01-21 00:00:00.000 | 3              | 847550324 | 8701        | Limoges         | 2019D00018     | 1                |        | NEW    | 2019-01-24 09:21:45.000 | 2019-01-21 00:00:00.000 | Etablissement ouvert | SEP  |          |              |                           | 208 route de la Chassagne      |                | 87480       | Saint-Priest-Taurion | 87178        | FRANCE |                    |                      |                       |                           |                             |                |          | non                | non                  | non                     | 18/01/2019          | Acquisition et gestion d'immeubles edification refection construction et   amenagement d'immeubles                                                                                                                                                                                                                                                                                | CrÃ©ation                                         |                    | Exploitation directe     | 8701_436_20190124_092145_8_ets.csv |
 
+<!-- #region -->
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
@@ -233,6 +256,9 @@ Lors de nos tests, nous avons eu les résultats suivants:
 - Verifier si le champs `status` n'est pas égal a `IGNORE` pour le timestamp maximum de la séquence _siren_ + _code greffe_ + _numero gestion_ + _ID établissement_  + Date de greffe
     - Exemple de siren: 005580683
     - Trouver un siren avec un enchainement de partiel pour une meme date de greffe, et vérifier que les avant dernieres lignes pour le champs status sont égales a `IGNORE` et que la dernière ligne, a savoir celle qui va etre utilisée, n'est pas égale a `IGNORE`
+- Verifier que la taille de l'output soit supérieure à la taille de l'input
+       - Compter le nombre de lignes a filtrer, compter le nombre de lignes filtré et vérifier que la taille de la table filtrée a bien le bon nombre 
+       - C'est a dire, que le nombre de lignes de l'output doit être égal a la somme de la colonne `count_possibility ` dans notre exemple ci dessus
 
 **Code reproduction**
 
@@ -287,25 +313,80 @@ Contenu :
 *   Vidéo publiée
 
 ]
+<!-- #endregion -->
 
 # Creation markdown
 
+```python
+import os, time, shutil, urllib, ipykernel, json
+from pathlib import Path
+from notebook import notebookapp
+```
 
-    ---------------------------------------------------------------------------
-
-    FileNotFoundError                         Traceback (most recent call last)
-
-    <ipython-input-6-005a3f3444dd> in <module>
-    ----> 1 create_report(extension = "markdown")
+```python
+def create_report(extension = "html"):
+    """
+    Create a report from the current notebook and save it in the 
+    Report folder (Parent-> child directory)
     
-
-    <ipython-input-3-a965648bf859> in create_report(extension)
-         43     if extension == 'markdown':
-         44         #extension = 'md'
-    ---> 45         os.remove(name_no_extension +'.{}'.format('md'))
-         46         source_to_move = name_no_extension +'.{}'.format('md')
-         47     else:
+    1. Exctract the current notbook name
+    2. Convert the Notebook 
+    3. Move the newly created report
     
+    Args:
+    extension: string. Can be "html", "pdf", "markdown"
+    
+    
+    """
+    
+    ### Get notebook name
+    connection_file = os.path.basename(ipykernel.get_connection_file())
+    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
 
-    FileNotFoundError: [WinError 2] Le fichier spécifié est introuvable: '05_filre_date_greffe.md'
+    for srv in notebookapp.list_running_servers():
+        try:
+            if srv['token']=='' and not srv['password']:  
+                req = urllib.request.urlopen(srv['url']+'api/sessions')
+            else:
+                req = urllib.request.urlopen(srv['url']+ \
+                                             'api/sessions?token=' + \
+                                             srv['token'])
+            sessions = json.load(req)
+            notebookname = sessions[0]['name']
+        except:
+            pass  
+    
+    sep = '.'
+    path = os.getcwd()
+    parent_path = str(Path(path).parent)
+    
+    ### Path report
+    #path_report = "{}/Reports".format(parent_path)
+    #path_report = "{}/Reports".format(path)
+    
+    ### Path destination
+    name_no_extension = notebookname.split(sep, 1)[0]
+    if extension == 'markdown':
+        #extension = 'md'
+        os.remove(name_no_extension +'.{}'.format('md'))
+        source_to_move = name_no_extension +'.{}'.format('md')
+    else:
+        source_to_move = name_no_extension +'.{}'.format(extension)
+    dest = os.path.join(path,'US_md', source_to_move)
+    
+    print('jupyter nbconvert --no-input --to {} {}'.format(
+    extension,notebookname))
+    
+    ### Generate notebook
+    os.system('jupyter nbconvert --no-input --to {} {}'.format(
+    extension,notebookname))
+    
+    ### Move notebook to report folder
+    #time.sleep(5)
+    shutil.move(source_to_move, dest)
+    print("Report Available at this adress:\n {}".format(dest))
+```
 
+```python
+create_report(extension = "markdown")
+```
