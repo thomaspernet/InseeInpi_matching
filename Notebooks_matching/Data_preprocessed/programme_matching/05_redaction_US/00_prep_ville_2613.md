@@ -237,3 +237,127 @@ Sauvegarde des non matchées dans un fichier Excel, appellé, "ville_non_matchee
  .to_excel('ville_non_matchees.xlsx')
 )
 ```
+
+## Test Distance based metrics
+
+Nous allons tester 3 algorithmes différents:
+
+- Edit distance: similarity
+- Jaccards: Dissimilarity
+- Tokenization: Cleaning + Jaccards
+
+```python
+import nltk
+```
+
+```python
+test.head()
+```
+
+```python
+insee.head()
+```
+
+```python
+def edit_distance(city_inpi, cities_insee):
+    """
+    Compute and sort the lowest distance (edit distance based metrics)
+    
+    Args:
+    city_inpi: str. A city from INPI dataframe
+    cities_insee: list of string: Cities from INSEE dataframe
+    
+    return 
+    """
+    i = 0
+    length  = len(cities_insee)
+    list_distance = []
+    while i < length:
+        d = nltk.edit_distance(
+                city_inpi,
+                cities_insee[i]
+            )
+        if d == 0:
+            #distance = (
+            #    city_inpi,
+            #    cities_insee[i]
+            #)
+            break
+            #return distance
+        elif d == 1:
+            distance = (
+                city_inpi,
+                cities_insee[i],
+                d
+            )
+            list_distance.append(distance)
+        i += 1 
+    
+    if d ==0:
+        return cities_insee[i]
+    else:
+        #return sorted(
+        return list_distance
+        #,key=lambda x: x[-1]
+    #)
+
+```
+
+```python
+edit_distance(city_inpi = test['ville_matching'].iloc[0],
+              cities_insee = insee['ncc'].to_list())
+```
+
+```python
+cities_insee = (insee
+ .assign(ncc = lambda x:
+         x['ncc'].str.replace(r'\s+', '').str.replace(regex, '')
+        )
+ ['ncc'].to_list()
+)
+```
+
+```python
+test.iloc[:10, 1].apply(lambda x: 
+                       edit_distance(city_inpi = x,
+              cities_insee = cities_insee
+                                    )
+                       )
+```
+
+```python
+non_match = (test_merge
+ .loc[lambda x: x['_merge'].isin(['right_only'])]
+ .drop_duplicates(subset = ["ville_matching"])[['ville', 'ville_matching']]
+ .sort_values(by = 'ville')
+)
+```
+
+```python
+edit_distance(city_inpi = non_match['ville_matching'].iloc[3],
+              cities_insee = cities_insee)
+```
+
+```python
+non_match#.iloc[:10, 1]
+```
+
+```python
+non_match = non_match.assign(
+    test_dist = lambda x: 
+    x['ville_matching'].apply(
+        lambda x: 
+                       edit_distance(city_inpi = x,
+              cities_insee = cities_insee
+                                    )
+                       )
+)
+```
+
+```python
+non_match.iloc[:10, 1].apply(lambda x: 
+                       edit_distance(city_inpi = x,
+              cities_insee = cities_insee
+                                    )
+                       )
+```
