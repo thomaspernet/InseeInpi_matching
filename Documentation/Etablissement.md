@@ -1,3 +1,51 @@
+# Etablissement
+
+Dans les deux premières fiches, nous avons vu les deux grandes catégories juridiques donnant lieu a un siren, a savoir les Personnes Physiques et les Personnes Morales. Les établissements sont en un certain sens des satellites rattachés à un SIREN, avec pour numéro d’identification, le SIRET.
+
+Dans cette fiche, nous allons définir les notions de SIREN, SIRET et bien sur d”établissement.
+
+## Numéro SIREN
+
+* Chaque entreprise est identifiée par un numéro Siren (Système d'identification du Répertoire des entreprises), utilisé par tous les organismes publics et les administrations en relation avec l'entreprise.
+* Attribué par l'Insee lors de l'inscription de l'entreprise au Répertoire Sirene, il comporte 9 chiffres.
+* Ce numéro est unique et invariable
+* Il se décompose en trois groupes de trois chiffres attribués d'une manière non significative en fonction de l'ordre d'inscription de l'entreprise.
+* Ex. : 231 654 987
+
+
+## Numéro SIRET
+
+* Le numéro Siret (Système d'identification du Répertoire des établissements) identifie les établissements de l'entreprise.
+* Il se compose de 14 chiffres correspondant :
+  *  au numéro Siren,
+  *  et, au numéro NIC (numéro interne de classement), comportant 5 chiffres : les quatre premiers correspondent au numéro d'identification de l'établissement ; le cinquième chiffre est une clé
+* Ex. : (numéro Siren ) 231 654 987   (numéro NIC) 12315
+* Le numéro NIC identifie chaque établissement de l'entreprise
+* Une entreprise est constituée d’autant d’établissements qu’il y a de lieux différents où elle exerce son activité. L’établissement est fermé quand l’activité cesse dans l’établissement concerné ou lorsque l’établissement change d’adresse.
+Pour rechercher des informations sur une entreprise, il est possible de se rendre dans l’un des sites suivants:   
+
+*  Insee
+  *  http://avis-situation-sirene.insee.fr/IdentificationListeSiret.action
+*  INPI/TC
+  * https://data.inpi.fr/
+*  Infogreffe
+  *  https://www.infogreffe.fr/
+
+## La différence entre entreprise et établissement
+
+Le terme « entreprise » désigne une structure ou organisation dont le but est d’exercer une activité économique en mettant en œuvre des moyens humains, financiers et matériels adaptés.
+
+La notion d’entreprise n’est pas corrélée à un statut juridique particulier et vaut aussi bien pour une entité unipersonnelle que pour une société (actionnaires multiples). Elle ne tient pas non plus compte de la valeur financière ou du volume d’activité.
+
+La création d’une entreprise résulte de l’initiative d’une ou de plusieurs personnes qui mettent des moyens en commun pour produire des biens et/ou des services. D’une idée naît une entreprise dont l’organisation a pour objectif d’assurer sa pérennité.
+
+Pour mieux s’organiser et répondre à la demande, une entreprise peut créer un ou plusieurs établissements.
+
+Un établissement est par définition rattaché à une entreprise.
+
+Plus l’entreprise est grande, plus elle comporte d’établissements, dépendants financièrement et juridiquement d’elle.
+
+
 # La donnée de l'INPI
 
 Dans cette partie, nous regroupons l'ensemble des règles de gestion détecté ou défini à date.
@@ -19,7 +67,7 @@ La description des fichiers de stocks (stocks initiaux et partiels) est similair
 * Le nombre de fichiers transmis pour chaque greffe est au nombre de 7,
 * Ces fichiers contiennent toutes les informations relatives à l’identité de la personne morale ou physique, aux représentants, aux **établissements**, aux observations, aux actes et comptes annuels déposés, telles que générées à la date du 4 mai 2017 pour les tribunaux de commerce (personnes actives),
 * La nomenclature des fichiers de stock reprend la nomenclature des fichiers de flux, avec, en guise de numéro de transmission, le numéro du stock ex. S1 (1 à n fichiers de stocks par greffe selon la volumétrie et selon la date de constitution). La numérotation est incrémentale.
-* 
+*
 Les stocks partiels ont une tout autre fonction, que nous décrirons plus tart. Toutefois, le stock partiel a pour objectif de corriger les erreurs ou ommissions des greffiers relatif à la création ou modification de dossier transmit précédement.
 
 ![](https://drive.google.com/uc?export=view&id=13Olhfr6CXRowaONUp8-6DJCSBdjv-MNm)
@@ -107,7 +155,7 @@ En plus des champs d’entête, de la date d’enregistrement au greffe (champ �
 
 -Mises à jour s’appuyant sur le renvoi systématique d’un ensemble de données (si elles existent) :
     - Modifications relatives au domiciliataire : Nom, Siren, Greffe, Complément
-- Pour tous les autres types de mise à jour, la mise à jour ne porte que sur l’envoi des seules données à modifier : ex. Activité, Nom commercial, Enseigne, Exploitation, Date de début d’activité. Dans ce 2ème cas, pour distinguer les cas de suppression d’une donnée sans modification, on utilise la valeur (supprimé). 
+- Pour tous les autres types de mise à jour, la mise à jour ne porte que sur l’envoi des seules données à modifier : ex. Activité, Nom commercial, Enseigne, Exploitation, Date de début d’activité. Dans ce 2ème cas, pour distinguer les cas de suppression d’une donnée sans modification, on utilise la valeur (supprimé).
 
 Ci dessous, le tableau récapitulatif de chaque état dans la donnée de l'INPI relatif aux établissements.
 
@@ -118,7 +166,7 @@ Ci dessous, le tableau récapitulatif de chaque état dans la donnée de l'INPI 
 | Modification   | Flux    | Modifications relatives à un établissement | 9            | <code_greffe>_<num_transmission>_<AA><MM><JJ>_<HH><MM><SS>_9_ets_nouveau_modifie_EVT.csv | AAMMJJ_HHMMSS -> timestamp, 9 -> Modification ets |
 | Suppression    | Flux    | Etablissement supprimé                     | 10           | <code_greffe>_<num_transmission>_<AA><MM><JJ>_<HH><MM><SS>_10_ets_supprime_EVT.csv       | AAMMJJ_HHMMSS -> timestamp, 10 -> Suppression ets |
 
-Il est bon de noter que la branche **stock** ne contient pas de libellé evenement modification ou suppression 
+Il est bon de noter que la branche **stock** ne contient pas de libellé evenement modification ou suppression
 
 - **timestamp**: Une date avec l'année + mois + jour + heure + minute + seconde
 
@@ -310,7 +358,7 @@ Par ailleurs, comment se fait-il que des transmissions pour une même date de gr
 ### EXEMPLE
 
 - Siren: 961504768
-- 
+-
 ## Creation flag pas de création
 
 - Il arrive que l'INPI envoie des séquences sans libellé evenement égal à "Etablissement ouvert". Lorsque cela  ce produit, l'INPI va faire la demande de partiel pour corriger le dossier.
@@ -393,7 +441,7 @@ En ce qui concerne votre exemple, il est ancien et je vois que nous l’avions d
 Pour l’adresse incomplète, il s’agit d’un bug, il sera corrigé prochainement.
 ```
 
-### EXEMPLE 
+### EXEMPLE
 
 - Siren: 054800016
 
@@ -841,7 +889,7 @@ WITH table_ets AS (
 SELECT COUNT(*) as nb_etb, siren
 FROM(
 SELECT siren,"Nom_Greffe", "code_greffe",
-      numero_gestion, id_etablissement, 
+      numero_gestion, id_etablissement,
     COUNT(*) AS CNT
 FROM "inpi"."ets_test_filtered"
 GROUP BY siren,"Nom_Greffe", "code_greffe",
