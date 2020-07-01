@@ -2,7 +2,7 @@
 
 Dans cette partie, nous regroupons l'ensemble des règles de gestion détecté ou défini à date.
 
-Il faut savoir que la donnée brute provient du FTP de l'INPI qui est décomposé en deux branches. Une première branche contenant toutes les informations sur les créations ou modifications datant d'avant mai 2017. Une deuxième branche, quant a elle, regroupe les immatriculations et modifications qui se sont produites après mai 2017.
+Il faut savoir que la donnée brute provient du FTP de l'INPI qui est décomposée en deux branches. Une première branche contenant toutes les informations sur les créations ou modifications datant d'avant mai 2017. Une deuxième branche, quant a elle, regroupe les immatriculations et modifications qui se sont produites après mai 2017.
 
 La première branche est appelée **stock** alors que la deuxième branche s'appelle **flux**.
 
@@ -12,16 +12,15 @@ A l’intérieur du répertoire public > IMR_Données_Saisies > tc > stock, les 
 
 Attention : Le stock initial des données TC étant constitué à la date du 4 mai 2017, il est impératif d’intégrer de manière incrémentale toutes les données de flux mises à disposition sur serveur dès l’ouverture de la licence IMR (1ères transmissions à compter du 18 mai 2017 contenant les informations des inscriptions enregistrées à partir du 5 mai 2017).
 
-* Des stocks partiels constitués des dossiers complets relivrés à la demande de l’INPI après détection d’anomalies ?
-*  Les fichiers des données contenues dans les nouvelles inscriptions (immatriculations, modifications et radiations) du Registre national du commerce et des sociétés ainsi que les informations relatives aux dépôts des actes et comptes annuels, telles que transmises par les greffes à compter du 5 mai 2017 (données de flux).
-
 ## Stocks initiaux & partiels
 
-La description des fichiers de stocks (stocks initiaux et partiels) est similaire à celle des fichiers de flux cf. ci-après, avec quelques particularités :
+La description des fichiers de stocks (stocks initiaux et partiels) est similaire à celle des fichiers de flux, décrit ci-après, avec quelques particularités :
 
 * Le nombre de fichiers transmis pour chaque greffe est au nombre de 7,
-* Ces fichiers contiennent toutes les informations relatives à l’identité de la personne morale ou physique, aux représentants, aux établissements, aux observations, aux actes et comptes annuels déposés, telles que générées à la date du 4 mai 2017 pour les tribunaux de commerce (personnes actives),
+* Ces fichiers contiennent toutes les informations relatives à l’identité de la personne morale ou physique, aux représentants, aux **établissements**, aux observations, aux actes et comptes annuels déposés, telles que générées à la date du 4 mai 2017 pour les tribunaux de commerce (personnes actives),
 * La nomenclature des fichiers de stock reprend la nomenclature des fichiers de flux, avec, en guise de numéro de transmission, le numéro du stock ex. S1 (1 à n fichiers de stocks par greffe selon la volumétrie et selon la date de constitution). La numérotation est incrémentale.
+* 
+Les stocks partiels ont une tout autre fonction, que nous décrirons plus tart. Toutefois, le stock partiel a pour objectif de corriger les erreurs ou ommissions des greffiers relatif à la création ou modification de dossier transmit précédement.
 
 ![](https://drive.google.com/uc?export=view&id=13Olhfr6CXRowaONUp8-6DJCSBdjv-MNm)
 
@@ -130,7 +129,7 @@ Il est bon de noter que la branche **stock** ne contient pas de libellé eveneme
 *  Les événements doivent impérativement suivre l'ordre d'apparition dans le csv du FTP et de la numérotation des fichiers: 8, 9 et 10 pour les établissements
   *   Pour les événements, il est possible d'avoir plusieurs informations renseignées pour une même date de transmission pour une même séquence
 
-Par exemple, il peut arriver qu'un établissement fasse l'object d'une modification (numérotation 9) et d'une suppression (numérotation 10) lors de la même transmission (timestamp). Dans ces cas la, il faut privilégier la suppression car est apparue après la modification (10 > 9).
+Par exemple, il peut arriver qu'un établissement fasse l'object d'une modification (numérotation 9) et d'une suppression (numérotation 10) lors de la même transmission (timestamp). Dans ce cas la, il faut privilégier la suppression car elle est apparue après la modification (10 > 9).
 
 ### PREUVE - 31/03/2020
 
@@ -185,7 +184,7 @@ Qu'elle est la règle a appliqué lorsqu'un événement est effectué le même j
 ### EXEMPLE
 
 - Siren: 539450601
-- 
+
 ## Remplissage champs manquants par séquence et date de transmission
 
 *   Le remplissage doit se faire de la manière suivante pour la donnée brute
@@ -210,14 +209,14 @@ Au final, la ligne 3 va avoir les informations de la ligne 1 & 2, et donc c’es
 
 ## Remplissage champs manquants par séquence et historique
 
-- Pour remplir les champs manaquants des événements qui n'ont pas fait l'object d'une modification lors de la transmission, il faut remplir les champs selon les valeurs historiques. Plus précisément, selon la valeurs t-1 pour une séquence donnée
+- Pour remplir les champs manquants des événements qui n'ont pas fait l'object d'une modification lors de la transmission, il faut remplir les champs selon les valeurs historiques. Plus précisément, selon la valeurs t-1 pour une séquence donnée
 
 ### EXEMPLE
 
 ## Plusieurs créations pour une même séquence
 
-*  Une création d'une séquence peut avoir plusieurs transmission a des intervalles plus ou moins long
-    *   Si plusieurs transmissions avec le libellé “création établissement” ou “création", alors il faut prendre la dernière date de transmission
+*  Une création d'une séquence peut avoir plusieurs transmissions a des intervalles plus ou moins long
+    *   Si plusieurs transmissions avec le libellé “Etablissement ouvert”, alors il faut prendre la dernière date de transmission
 
 ### PREUVE - 02/06/2020
 
@@ -238,7 +237,7 @@ Je n’ai pas encore vérifié si les doublons avaient des lignes identiques. Je
 
 *   Il y a certains cas ou les lignes de créations doublons sont de faux événements (mauvais envoie de la part du greffier)
     *   Si le timestamp entre la première ligne et dernière ligne est supérieures a 31 jour (exclut), il faut:
-            *   Récupération de la dernière ligne, et créer une variable flag, comme pour le statut
+            *   Récupérer la dernière ligne, et créer une variable flag, comme pour le statut
 
 ### PREUVE - 03/06/2020
 
@@ -273,7 +272,7 @@ Comme ca, la dernière ligne est toujours celle a retourner, mais on peut rempli
 
 Est-ce que vous confirmez ?
 -> Pouvez-vous m’appeler ?
-- Regle refusée lors de l'appel
+- Regle refusée lors de l'appel, et l'INPI préconise de ne prendre que la dernière ligne
 ```
 
 ### EXEMPLE
@@ -306,14 +305,15 @@ Par ailleurs, comment se fait-il que des transmissions pour une même date de gr
 
 ## Creation flag pas siege ou principal
 
--  Siren sans Siège ou Principal
-  - Il est possible qu'un SIREN n'ai pas de siege/principal. Normalement, cela doit être corrigé par un partiel
+- Il est possible qu'un SIREN n'ai pas de siege/principal. Normalement, cela doit être corrigé par un partiel
 
 ### EXEMPLE
 
 - Siren: 961504768
 - 
 ## Creation flag pas de création
+
+- Il arrive que l'INPI envoie des séquences sans libellé evenement égal à "Etablissement ouvert". Lorsque cela  ce produit, l'INPI va faire la demande de partiel pour corriger le dossier.
 
 ### PREUVE
 
