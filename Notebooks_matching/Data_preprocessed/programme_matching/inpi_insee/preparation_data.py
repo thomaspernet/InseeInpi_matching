@@ -373,7 +373,7 @@ class preparation:
                 'code_greffe': 'object',
         'type': 'object',
         'code_commune': 'object',
-        'code_postal': 'object',
+        'code_postal_matching': 'object',
         'adresse_ligne1': 'object',
         'adresse_ligne2': 'object',
         'adresse_ligne3': 'object',
@@ -394,7 +394,7 @@ class preparation:
             'file_timestamp': 'object',
         'date_greffe': 'object',
             'date_debut_activite':'object'}
-                
+
             reindex = ["siren",
 "code_greffe",
 "nom_greffe",
@@ -402,7 +402,7 @@ class preparation:
 "origin",
 "file_timestamp",
 "date_greffe",
-"libelle_evt",  
+"libelle_evt",
 "type",
 "type_inscription",
  "date_immatriculation",
@@ -431,11 +431,11 @@ class preparation:
  "digit_inpi",
  "list_digit_inpi",
  "len_digit_address_inpi",
- "code_postal",
+ "code_postal_matching",
  "ville",
                 "ncc",
  "code_commune",
-                'count_initial_inpi',  
+                'count_initial_inpi',
  "pays",
  "activite_forain",
  "eirl",
@@ -457,14 +457,14 @@ class preparation:
  "conjoint_collab_prenoms",
  "conjoint_collab_date_fin",
  "max_partiel",
- "csv_source"]    
-            
-        else:    
+ "csv_source"]
+
+        else:
             dtype={
         'siren': 'object',
         'type': 'object',
         'code_commune': 'object',
-        'code_postal': 'object',
+        'code_postal_matching': 'object',
         'code_greffe': 'object',
         'adresse_ligne1': 'object',
         'adresse_ligne2': 'object',
@@ -487,12 +487,12 @@ class preparation:
 "code_greffe",
 "nom_greffe",
 "numero_gestion",
-"id_etablissement", 
+"id_etablissement",
 "status",
 "origin",
 "file_timestamp",
 "date_greffe",
-"libelle_evt",  
+"libelle_evt",
 "type",
 "siege_pm",
 "rcs_registre",
@@ -505,15 +505,15 @@ class preparation:
 "INSEE",
 "digit_inpi",
 "list_digit_inpi",
-"len_digit_address_inpi",    
-"code_postal",
+"len_digit_address_inpi",
+"code_postal_matching",
 "ville",
-"ncc",            
+"ncc",
 "code_commune",
 "pays",
 "domiciliataire_nom",
 "domiciliataire_siren",
-'count_initial_inpi',            
+'count_initial_inpi',
 "domiciliataire_greffe",
 "domiciliataire_complement",
 "Siege_domicile_representant",
@@ -544,7 +544,7 @@ class preparation:
                       (dd_df_inpi['adresse_ligne1'].isin([np.nan]))
                      & (dd_df_inpi['adresse_ligne2'].isin([np.nan]))
                      & (dd_df_inpi['adresse_ligne3'].isin([np.nan]))
-                     & (dd_df_inpi['code_postal'].isin([np.nan]))
+                     & (dd_df_inpi['code_postal_matching'].isin([np.nan]))
                      & (dd_df_inpi['ville'].isin([np.nan]))
                      & (dd_df_inpi['code_commune'].isin([np.nan]))
                      ]['siren']
@@ -572,43 +572,43 @@ class preparation:
         if save_gz:
             size_ = subset_inpi.shape[0]
             print('Saving {} observations'.format(size_))
-            
+
             ### Creer un nouveau dossier pour accueillir csv: input/INPI
             directory = "".join(origin)
             parent_dir = 'data/input/INPI/'
-            path = os.path.join(parent_dir, directory) 
-            os.mkdir(path) 
-            
+            path = os.path.join(parent_dir, directory)
+            os.mkdir(path)
+
             name = "inpi_{0}_{1}_{2}.csv".format(
             self.filename,
             directory,
             0
             )
-            location = os.path.join(path, name) 
-            
+            location = os.path.join(path, name)
+
             subset_inpi_cleaned.to_csv(location,index = False)
-                
+
             ### Creer un nouveau dossier pour accueillir csv: input/SIREN_INPI
             size_ = len(siren_inpi)
             print('Saving {} observations'.format(size_))
             parent_dir = 'data/input/SIREN_INPI/'
-            path = os.path.join(parent_dir, directory) 
-            os.mkdir(path) 
-            
+            path = os.path.join(parent_dir, directory)
+            os.mkdir(path)
+
             name = "inpi_SIREN_{0}_{1}.csv".format(
             self.filename,
             directory
             )
-            
-            location = os.path.join(path, name) 
+
+            location = os.path.join(path, name)
             print("""
             Copier/coller le path\n
             {}\n
             pour la fonction INSEE
             """.format(location))
-            
+
             siren_inpi.to_csv(location, index = False)
-                
+
 
     def normalize_insee(self, siren_inpi_gz, save_gz= True, save_sql = False):
         """
@@ -739,27 +739,26 @@ class preparation:
         if save_gz:
             size_ = subset_insee.shape[0]
             print('Saving {} observations'.format(size_))
-            
+
             regex = r"[^_]+$"
-            
+
             parent_dir = 'data/input/INSEE/'
             matches = re.search(regex, siren_inpi_gz)
             directory = os.path.splitext(matches.group())[0]
-            
-            path = os.path.join(parent_dir, directory) 
-            os.mkdir(path) 
-            
+
+            path = os.path.join(parent_dir, directory)
+            os.mkdir(path)
+
             name = "insee_{0}_{1}.csv".format(
             size_,
             directory
             )
-            
+
             location = os.path.join(path, name)
-            
+
             (subset_insee
             .assign(index = lambda x:
             x.index)
             .to_csv(location,
                     index = False)
             )
-
