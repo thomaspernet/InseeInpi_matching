@@ -88,16 +88,16 @@ s3.download_file(key= 'INSEE/Stock/ETS/StockEtablissement_utf8.csv')
 ```
 
 ```python
-os.mkdir("data/RawData/INPI/Stock/ETS")
+#os.mkdir("data/RawData/INPI/Stock/ETS")
 ```
 
 ```python
-#shutil.move("initial_partiel_evt_new_ets_status_final.csv",
-#            "data/RawData/INPI/Stock")
+shutil.move("initial_partiel_evt_new_ets_status_final.csv",
+            "data/RawData/INPI/Stock/ETS")
 ```
 
 ```python
-os.mkdir("data/RawData/INSEE/Stock")
+#os.mkdir("data/RawData/INSEE/Stock")
 ```
 
 ```python
@@ -110,9 +110,11 @@ shutil.move("StockEtablissement_utf8.csv",
 ```
 
 ```python
-etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
-'/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv'
+#etb_ex = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw'\
+#'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/RawData' \
+#'/INPI/Stock/initial_partiel_evt_new_pp_status_final_exemple.csv'
+
+etb_ex = "data/RawData/INPI/Stock/ETS/initial_partiel_evt_new_ets_status_final.csv"
 
 commune = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
 '/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
@@ -261,7 +263,7 @@ prep_data.normalize_inpi(
 ```python
 %%time
 path = 'data/input/SIREN_INPI/InitialPartielEVTNEW/' \
-'inpi_SIREN_initial_partiel_evt_new_pp_status_final_InitialPartielEVTNEW.csv'
+'inpi_SIREN_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW.csv'
 
 prep_data.normalize_insee(
    path,
