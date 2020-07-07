@@ -14,7 +14,7 @@ jupyter:
 ---
 
 <!-- #region -->
-# Preparation INPI-PM
+# Preparation INPI-PP
 
 Dans ce notebook, on prepare la donnée PM afin d'être concatenée, puis envoyée dans le S3.
 - https://docs.aws.amazon.com/athena/latest/ug/csv.html
@@ -1629,17 +1629,20 @@ athena.run_query(
 1. Filtrer les dates de greffes avec plusieurs transmissions, c’est a dire, ne garder que la dernière date connue et remplie
 
 ```python
-query = """CREATE TABLE inpi.pp_test_filtere
+query = """CREATE TABLE inpi.pp_test_filtered
 WITH (
   format='PARQUET'
 ) AS
-select *
+select *,CASE
+WHEN code_postal = '' THEN REGEXP_EXTRACT(ville, '\d{5}')
+WHEN LENGTH(code_postal) = 5 THEN code_postal
+ELSE NULL END AS code_postal_matching
 from (select *,
              row_number() over(PARTITION BY siren,"code_greffe", numero_gestion , date_greffe 
  ORDER BY siren,'code_greffe', numero_gestion,file_timestamp ) as rn
       from initial_partiel_evt_new_pp_status_final ) as T
 where rn = 1 
-""""
+"""
 
 output = athena.run_query(
     query=query,
@@ -1648,7 +1651,9 @@ output = athena.run_query(
 )
 ```
 
+```python
 ### Create csv
+```
 
 ```python
 query = """SELECT 
@@ -1694,6 +1699,7 @@ Coalesce(
  "adresse_ligne2",
  "adresse_ligne3",
  "code_postal",
+ "code_postal_matching",
  "ville",
  "code_commune",
  "pays",
@@ -1726,8 +1732,8 @@ ORDER BY siren,"nom_greffe", "code_greffe",
 ```
 
 ```python
-table = 'initial_partiel_evt_new_pp_status_final'
-print(query.format(table))
+table = 'pp_test_filtered'
+#print(query.format(table))
 ```
 
 ```python
@@ -1746,11 +1752,12 @@ dic_['global']['table_final_id']['PP']
 - Output: [02_preparation_donnee/PP](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/02_preparation_donnee/PP/)
 
 ```python
+table_s3 = 'initial_partiel_evt_new_pp_status_final'
 source_key = "{}/{}.csv".format(dic_['global']['output'],
                                dic_['global']['table_final_id']['PP']['combined']
                                )
 destination_key = "{}/{}.csv".format("INPI/TC_1/02_preparation_donnee/PP",
-                                     table
+                                     table_s3
                                          )
 destination_key
 ```
@@ -1760,5 +1767,4 @@ results = s3.copy_object_s3(source_key = source_key,
              destination_key = destination_key,
              remove = False
                       )
-```
 ```
