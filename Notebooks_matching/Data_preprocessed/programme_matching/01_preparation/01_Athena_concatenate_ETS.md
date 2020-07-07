@@ -312,7 +312,7 @@ On prédéfini les requêtes qui seront à éxecuter dans Athena. Les paramètre
 
 query_tb = \
     """CREATE EXTERNAL TABLE IF NOT EXISTS {0}.{1} (
-`Code Greffe`                     string,
+`Code_Greffe`                     string,
 `Nom_Greffe`                      string,
 `Numero_Gestion`                  string,
 `Siren`                            string,
@@ -362,7 +362,7 @@ query_tb = \
 query_table_concat = \
     """CREATE EXTERNAL TABLE IF NOT EXISTS {0}.{1} (
 `siren` string, 
-`code greffe` int, 
+`code_greffe` int, 
 `Nom_Greffe` string, 
 `numero_gestion` string, 
 `id_etablissement` string,  
@@ -410,7 +410,7 @@ query_drop = """ DROP TABLE `{}`;"""
 
 query_select = """SELECT 
 "siren",
-"code greffe",
+"code_greffe",
 "Nom_Greffe",
 "numero_gestion",
 "id_etablissement", 
@@ -544,7 +544,7 @@ top = """WITH createID AS (
     ROW_NUMBER() OVER (
       PARTITION BY 
       siren,
-      "code greffe",
+      "code_greffe",
       "Nom_Greffe",
       numero_gestion,
       id_etablissement, 
@@ -553,7 +553,7 @@ top = """WITH createID AS (
     DENSE_RANK () OVER (
       ORDER BY 
         siren, 
-        "code greffe",
+        "code_greffe",
         "Nom_Greffe",
         numero_gestion, 
         id_etablissement, 
@@ -572,7 +572,7 @@ FROM
         row_ID, 
         siren, 
         "Nom_Greffe",
-        "code greffe", 
+        "code_greffe", 
         numero_gestion, 
         id_etablissement, 
         file_timestamp, 
@@ -603,7 +603,7 @@ bottom = """
         row_ID
     ) 
     SELECT "siren",
-"code greffe",
+"code_greffe",
 "Nom_Greffe",
 "numero_gestion",
 "id_etablissement", 
@@ -652,7 +652,7 @@ ELSE NULL END as origin
       ) AS T 
     WHERE 
       max_value = 1
-  )ORDER BY siren,"Nom_Greffe", "code greffe",
+  )ORDER BY siren,"Nom_Greffe", "code_greffe",
       numero_gestion, id_etablissement, 
       file_timestamp
 """
@@ -708,7 +708,7 @@ Pour le point 2, il y a par exemple, l’ID établissement 10 qui appartient à 
 query_partiel = """WITH to_date AS (
   SELECT 
 "siren",
-"code greffe",
+"code_greffe",
 "Nom_Greffe",
 "numero_gestion",
 "id_etablissement", 
@@ -747,15 +747,15 @@ WHERE siren !='' AND file_timestamp !=''
 SELECT *
 FROM (
   WITH max_date_partiel AS(
-SELECT siren, "code greffe", nom_greffe, numero_gestion, id_etablissement,
+SELECT siren, "code_greffe", nom_greffe, numero_gestion, id_etablissement,
 MAX(file_timestamp) as max_partiel
 FROM to_date
 WHERE origin = 'Partiel'
-GROUP BY  siren, "code greffe", nom_greffe, numero_gestion, id_etablissement
+GROUP BY  siren, "code_greffe", nom_greffe, numero_gestion, id_etablissement
     )
   SELECT 
   to_date."siren",
-to_date."code greffe",
+to_date."code_greffe",
 to_date."Nom_Greffe",
 to_date."numero_gestion",
 to_date."id_etablissement", 
@@ -795,18 +795,18 @@ to_date."csv_source"
   FROM to_date
   LEFT JOIN max_date_partiel on
   to_date.siren =max_date_partiel.siren AND
-  to_date."code greffe" =max_date_partiel."code greffe" AND
+  to_date."code_greffe" =max_date_partiel."code_greffe" AND
   to_date.nom_greffe =max_date_partiel.nom_greffe AND
   to_date.numero_gestion =max_date_partiel.numero_gestion AND
   to_date.id_etablissement =max_date_partiel.id_etablissement
-  ORDER BY siren, "code greffe", nom_greffe, numero_gestion,
+  ORDER BY siren, "code_greffe", nom_greffe, numero_gestion,
   id_etablissement, file_timestamp
   )"""
 
 query_table_all = """
 CREATE EXTERNAL TABLE IF NOT EXISTS {0}.{1} (
 `siren` string,
-`code greffe` int,
+`code_greffe` int,
 `Nom_Greffe` string,
 `numero_gestion` string,
 `id_etablissement` string ,
@@ -881,7 +881,7 @@ bottom_1 = """
         row_ID
     ) 
     SELECT "siren",
-"code greffe",
+"code_greffe",
 "Nom_Greffe",
 "numero_gestion",
 "id_etablissement", 
@@ -918,7 +918,7 @@ ELSE NULL END as origin,
 "Type_Exploitation",
 "csv_source"
     FROM filled
-  )ORDER BY siren,"Nom_Greffe", "code greffe",
+  )ORDER BY siren,"Nom_Greffe", "code_greffe",
       numero_gestion, id_etablissement, 
       file_timestamp
   )
@@ -929,7 +929,7 @@ ELSE NULL END as origin,
 ```python
 query_evt_2 = """WITH convert AS (
   SELECT siren,
-"code greffe","Nom_Greffe", numero_gestion, id_etablissement, origin, "status",
+"code_greffe","Nom_Greffe", numero_gestion, id_etablissement, origin, "status",
 Coalesce(
          try(date_parse(file_timestamp, '%Y-%m-%d')),
          try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss.SSS')),
@@ -958,7 +958,7 @@ Coalesce(
   FROM (
     WITH temp AS (
                  SELECT siren,
-                 "code greffe",
+                 "code_greffe",
                  "Nom_Greffe",
                  numero_gestion,
                  id_etablissement,
@@ -1003,7 +1003,9 @@ A noter que la query `query_csv` ne prend pas toutes les variables (celles cré�
 # Drop previous tables
 for i in ['ets_initial', 'ets_partiel_2018', 'ets_partiel_2019',
           'ets_new_2017', 'ets_new_2018', 'ets_new_2019', 'ets_evt_2017',
-         'ets_evt_2018', 'ets_evt_2019']:
+         'ets_evt_2018', 'ets_evt_2019', "initial_partiel_evt_new_etb",
+          'initial_partiel_evt_new_ets_status', 'initial_partiel_evt_new_ets_status_final'
+         ]:
     query = "DROP TABLE `{}`".format(i)
     output = athena.run_query(
                         query=query,
@@ -1275,15 +1277,15 @@ list_change = [
 
 for x, value in enumerate(list_change):
     query = """CASE WHEN origin = 'EVT' AND status != 'IGNORE' AND "{0}" = '' THEN 
-LAG ("{0}", 1) OVER (  PARTITION BY siren,"code greffe", numero_gestion, id_etablissement 
- ORDER BY siren,'code greffe', numero_gestion, id_etablissement,file_timestamp ) ELSE "{0}" END AS "{0}" 
+LAG ("{0}", 1) OVER (  PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement 
+ ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,file_timestamp ) ELSE "{0}" END AS "{0}" 
 """.format(value)
     if  x != len(list_change)-1:
         query_evt_2 +=query +","
     else:
         query_evt_2 +=query
         end = """FROM convert
-ORDER BY siren,'code greffe', numero_gestion, id_etablissement,file_timestamp)
+ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,file_timestamp)
 SELECT *
 FROM (
   WITH createID AS (
@@ -1291,7 +1293,7 @@ FROM (
     ROW_NUMBER() OVER (
       PARTITION BY 
       siren,
-      "code greffe",
+      "code_greffe",
       "Nom_Greffe",
       numero_gestion,
       id_etablissement, 
@@ -1300,7 +1302,7 @@ FROM (
     DENSE_RANK () OVER (
       ORDER BY 
         siren, 
-        "code greffe",
+        "code_greffe",
         "Nom_Greffe",
         numero_gestion, 
         id_etablissement, 
@@ -1319,7 +1321,7 @@ FROM
         row_ID, 
         siren, 
         "Nom_Greffe",
-        "code greffe", 
+        "code_greffe", 
         numero_gestion, 
         id_etablissement, 
         "status",
@@ -1343,6 +1345,12 @@ for x, val in enumerate(list_change):
     else:
         query_evt_2+=middle_2.format(val)
         query_evt_2+=bottom_1
+
+```
+
+```python
+#print(query_evt_2.format(table))
+#dic_['global']['output']
 ```
 
 ```python
@@ -1377,19 +1385,12 @@ results = s3.copy_object_s3(source_key = source_key,
 table = 'initial_partiel_evt_new_ets_status'
 query = """SELECT 
 "siren",
-"code greffe",
+"code_greffe",
 "Nom_Greffe",
 "numero_gestion",
 "id_etablissement", 
 "status",
 "origin",
-Coalesce(
-         try(date_parse(file_timestamp, '%Y-%m-%d')),
-         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss.SSS')),
-         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss')),
-         try(cast(file_timestamp as timestamp))
-       )  as file_timestamp,
-
 Coalesce(
          try(date_parse(date_greffe, '%Y-%m-%d')),
          try(date_parse(date_greffe, '%Y/%m/%d')),
@@ -1397,6 +1398,12 @@ Coalesce(
          try(date_parse(date_greffe, '%d/%m/%Y')),
          try(date_parse(date_greffe, '%d-%m-%Y'))
   ) as date_greffe,
+Coalesce(
+         try(date_parse(file_timestamp, '%Y-%m-%d')),
+         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss.SSS')),
+         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss')),
+         try(cast(file_timestamp as timestamp))
+       )  as file_timestamp,
 "Libelle_Evt",  
 "Type",
 "Siège_PM",
@@ -1461,14 +1468,14 @@ La dernière étape du programme consiste a récupérer tous les csv du [dossier
 table = 'initial_partiel_evt_new_ets_status_final'
 list_var = [
 "siren",
-"code greffe",
+"code_greffe",
 "Nom_Greffe",
 "numero_gestion",
 "id_etablissement", 
 "status",
 "origin",
-"file_timestamp",
 "date_greffe",
+"file_timestamp",
 "Libelle_Evt",  
 "Type",
 "Siège_PM",
@@ -1526,12 +1533,49 @@ athena.run_query(
 )
 ```
 
+## Filtrer les dates de greffe
+
+1. Filtrer les dates de greffes avec plusieurs transmissions, c’est a dire, ne garder que la dernière date connue et remplie
+
+```python
+query = """/*add filter and code postal mat*/
+CREATE TABLE inpi.ets_test_filtered
+WITH (
+  format='PARQUET'
+) AS
+select *,CASE
+WHEN code_postal = '' THEN REGEXP_EXTRACT(ville, '\d{5}')
+WHEN LENGTH(code_postal) = 5 THEN code_postal
+ELSE NULL END AS code_postal_matching
+from (select *,
+             row_number() over(PARTITION BY siren,"code_greffe", numero_gestion ,id_etablissement, date_greffe 
+ ORDER BY siren,'code_greffe', numero_gestion,id_etablissement, file_timestamp ) as rn
+      from initial_partiel_evt_new_ets_status_final ) as T
+where rn = 1 
+"""
+
+
+```
+
+```python
+output = athena.run_query(
+    query=query,
+    database=dic_['global']['database'],
+    s3_output=dic_['global']['output']
+)
+```
+
+```python
+dic_['global']['table_final_id']['ETS']['filtered'] =  output['QueryExecutionId']
+dic_['global']['table_final_id']['ETS']
+```
+
 ### Create csv
 
 ```python
 query = """SELECT 
 "siren",
-"code greffe",
+"code_greffe",
 "Nom_Greffe",
 "numero_gestion",
 "id_etablissement", 
@@ -1558,6 +1602,7 @@ Coalesce(
 "Adresse_Ligne2",
 "Adresse_Ligne3",
 "Code_Postal",
+code_postal_matching,
 "Ville",
 "Code_Commune",
 "Pays",
@@ -1578,15 +1623,15 @@ Coalesce(
 "Type_Exploitation",
 "csv_source"
 FROM {}
-ORDER BY siren,"Nom_Greffe", "code greffe",
+ORDER BY siren,"Nom_Greffe", "code_greffe",
       numero_gestion, id_etablissement, 
       file_timestamp
 """
 ```
 
 ```python
-table = 'initial_partiel_evt_new_ets_status_final'
-print(query.format(table))
+table = 'ets_test_filtered'
+#print(query.format(table))
 ```
 
 ```python
@@ -1603,11 +1648,12 @@ dic_['global']['table_final_id']['ETS']
 ```
 
 ```python
+name_s3 = 'initial_partiel_evt_new_ets_status_final'
 source_key = "{}/{}.csv".format(dic_['global']['output'],
                                dic_['global']['table_final_id']['ETS']['combined']
                                )
 destination_key = "{}/{}.csv".format("INPI/TC_1/02_preparation_donnee/ETS",
-                                     table
+                                     name_s3
                                          )
 destination_key
 ```
