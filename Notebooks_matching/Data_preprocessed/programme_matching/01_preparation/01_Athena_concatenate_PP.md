@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -1374,8 +1374,8 @@ FROM
         numero_gestion, 
         /*id_etablissement, */
         "status",
-        date_greffe,
         file_timestamp,
+        date_greffe,
         libelle_evt,
         /*,Enseigne_partition, */
 """
@@ -1439,13 +1439,6 @@ siren,
 "status",
 origin,
 Coalesce(
-         try(date_parse(file_timestamp, '%Y-%m-%d')),
-         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss.SSS')),
-         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss')),
-         try(cast(file_timestamp as timestamp))
-       )  as file_timestamp,
-
-Coalesce(
          try(date_parse(date_greffe, '%Y-%m-%d')),
          try(date_parse(date_greffe, '%Y/%m/%d')),
          try(date_parse(date_greffe, '%d %M %Y')),
@@ -1453,6 +1446,12 @@ Coalesce(
          try(date_parse(date_greffe, '%d-%m-%Y'))
   )
   as date_greffe,
+Coalesce(
+         try(date_parse(file_timestamp, '%Y-%m-%d')),
+         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss.SSS')),
+         try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss')),
+         try(cast(file_timestamp as timestamp))
+       )  as file_timestamp,
 "Libelle_Evt",  
 "Type",
 "Type_Inscription",
@@ -1512,6 +1511,10 @@ output = athena.run_query(
 ```
 
 ```python
+print(query.format(table))
+```
+
+```python
 dic_['global']['table_final_id']['PP']['Not_EVT'] =  output['QueryExecutionId']
 dic_['global']['table_final_id']['PP']
 ```
@@ -1542,8 +1545,8 @@ list_var = [
 "numero_gestion",
 "status",
 "origin",
-"file_timestamp",
 "date_greffe",
+"file_timestamp",
 "libelle_evt",  
 "type",
 "type_inscription",
@@ -1616,6 +1619,30 @@ for x, value in enumerate(list_var):
         query_+=end
 athena.run_query(
     query=query_,
+    database=dic_['global']['database'],
+    s3_output=dic_['global']['output']
+)
+```
+
+## Filtrer les dates de greffe
+
+1. Filtrer les dates de greffes avec plusieurs transmissions, c’est a dire, ne garder que la dernière date connue et remplie
+
+```python
+query = """CREATE TABLE inpi.pp_test_filtere
+WITH (
+  format='PARQUET'
+) AS
+select *
+from (select *,
+             row_number() over(PARTITION BY siren,"code_greffe", numero_gestion , date_greffe 
+ ORDER BY siren,'code_greffe', numero_gestion,file_timestamp ) as rn
+      from initial_partiel_evt_new_pp_status_final ) as T
+where rn = 1 
+""""
+
+output = athena.run_query(
+    query=query,
     database=dic_['global']['database'],
     s3_output=dic_['global']['output']
 )
@@ -1733,4 +1760,5 @@ results = s3.copy_object_s3(source_key = source_key,
              destination_key = destination_key,
              remove = False
                       )
+```
 ```
