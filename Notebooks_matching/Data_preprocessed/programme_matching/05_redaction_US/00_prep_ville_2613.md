@@ -63,6 +63,7 @@ Chacune des variables ci dessus proviennent de l’INPI, et sont disponibles a l
 | INSEE   | normalisation | ville_matching                 |                             | ville_matching     |                                 |
 
 
+
 ```python
 import os, shutil
 os.chdir('../')
@@ -173,6 +174,18 @@ test.loc[lambda x: x['ville_matching'].isin(['MARSEILLE'])][
     ['ville','ville_matching']]
 ```
 
+```python
+#FRÉJUS/ST AYGULF
+```
+
+```python
+test.loc[lambda x: x['ville_matching'].isin(['FREJUSSAINTAYGULF'])]
+```
+
+```python
+
+```
+
 ### Test acceptance
 
 Pour vérifier si le nettoyage est plus ou moins correcte, nous pouvons faire les tests suivants:
@@ -217,10 +230,22 @@ pd.concat([
 
 ```
 
+```python
+test_merge.loc[lambda x: x['ville_matching'].isin(['FREJUSSAINTAYGULF'])]
+```
+
+```python
+
+```
+
 Exemple avec la ville `Soisy-sur-Seine`
 
 ```python
 insee.loc[lambda x: x['nccenr'].isin(['Soisy-sur-Seine'])]
+```
+
+```python
+insee.loc[lambda x: x['nccenr'].isin(['Fréjus'])]
 ```
 
 ```python
