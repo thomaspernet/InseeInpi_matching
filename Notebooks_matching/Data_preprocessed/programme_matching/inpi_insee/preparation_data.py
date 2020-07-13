@@ -394,7 +394,7 @@ class preparation:
        'sans_activite': 'object',
             'file_timestamp': 'object',
         'date_greffe': 'object',
-            'date_debut_activite':'object'}
+            'date_début_activité':'object'}
 
             reindex = ["siren",
 "code_greffe",
@@ -411,7 +411,7 @@ class preparation:
  "date_radiation",
  "date_transfert",
  "sans_activite",
- "date_debut_activite",
+ "date_début_activité",
  "date_debut_1re_activite",
  "date_cessation_activite",
  "nom_patronymique",
@@ -476,13 +476,13 @@ class preparation:
         'domiciliataire_greffe': 'object',
         'domiciliataire_nom': 'object',
         'domiciliataire_siren': 'object',
-        'date_debut_activite':'object',
+        'date_début_activité':'object',
         'siege_domicile_representant': 'object',
         'domiciliataire_complement': 'object',
         'id_etablissement': 'object', ### problème avec certains fichiers
         'file_timestamp': 'object',
         'date_greffe': 'object',
-            'date_debut_activite':'object'
+            'date_début_activité':'object'
                          }
             reindex =[
 "siren",
@@ -524,7 +524,7 @@ class preparation:
 "activite_ambulante",
 "activite_saisonniere",
 "activite_Non_Sedentaire",
-"date_debut_activite",
+"date_début_activité",
 "activite",
 "origine_fonds",
 "origine_fonds_info",
