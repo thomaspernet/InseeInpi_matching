@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.0
+      jupytext_version: 1.5.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -92,8 +92,8 @@ s3.download_file(key= 'INSEE/Stock/ETS/StockEtablissement_utf8.csv')
 ```
 
 ```python
-shutil.move("initial_partiel_evt_new_ets_status_final.csv",
-            "data/RawData/INPI/Stock/ETS")
+#shutil.move("initial_partiel_evt_new_ets_status_final.csv",
+#            "data/RawData/INPI/Stock/ETS")
 ```
 
 ```python
@@ -101,12 +101,12 @@ shutil.move("initial_partiel_evt_new_ets_status_final.csv",
 ```
 
 ```python
-os.mkdir("data/RawData/INSEE/Stock/ETS")
+#os.mkdir("data/RawData/INSEE/Stock/ETS")
 ```
 
 ```python
-shutil.move("StockEtablissement_utf8.csv",
-            "data/RawData/INSEE/Stock/ETS")
+#shutil.move("StockEtablissement_utf8.csv",
+#            "data/RawData/INSEE/Stock/ETS")
 ```
 
 ```python
@@ -116,16 +116,13 @@ shutil.move("StockEtablissement_utf8.csv",
 
 etb_ex = "data/RawData/INPI/Stock/ETS/initial_partiel_evt_new_ets_status_final.csv"
 
-commune = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+commune = 'data/input' \
 '/Parameters/communes_france.csv'
 
-voie = 'https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+voie = 'data/input' \
 '/Parameters/voie.csv'
 
-stopword ='https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/raw' \
-'/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input' \
+stopword ='data/input' \
 '/Parameters/upper_stop.csv'
 
 param = {
@@ -208,7 +205,10 @@ import glob
 files = glob.glob('data/input/INPI/InitialPartielEVTNEW/*')
 for f in files:
     os.remove(f)
-os.rmdir('data/input/INPI/InitialPartielEVTNEW')
+try:
+    os.rmdir('data/input/INPI/InitialPartielEVTNEW')
+except:
+    pass
 ```
 
 ```python
@@ -268,4 +268,93 @@ path = 'data/input/SIREN_INPI/InitialPartielEVTNEW/' \
 prep_data.normalize_insee(
    path,
     save_gz = True)
+```
+
+### Verification preparation
+
+siren: 10648546
+
+```
+Notebooks_matching/Data_preprocessed/programme_matching/data/input/INPI/InitialPartielEVTNEW/inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW_0.csv
+``` 
+
+```python
+from awsPy.aws_athena import service_athena
+athena = service_athena.connect_athena(
+    client = client,
+    bucket = bucket)
+```
+
+```python
+name = 'data/input/INPI/InitialPartielEVTNEW' \
+'/inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW_0.csv'
+
+s3.upload_file(file_to_upload = name,
+               destination_in_s3 = 'INPI/TC_1/02_preparation_donnee/Preparation_ETS_python')
+```
+
+```python
+var_name = ['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+       'id_etablissement', 'status', 'origin', 'file_timestamp', 'date_greffe',
+       'libelle_evt', 'type', 'siege_pm', 'rcs_registre', 'adresse_ligne1',
+       'adresse_ligne2', 'adresse_ligne3', 'adress_new',
+       'adresse_new_clean_reg', 'possibilite', 'INSEE', 'digit_inpi',
+       'list_digit_inpi', 'len_digit_address_inpi', 'code_postal_matching',
+       'ville', 'ncc', 'code_commune', 'pays', 'domiciliataire_nom',
+       'domiciliataire_siren', 'count_initial_inpi', 'domiciliataire_greffe',
+       'domiciliataire_complement', 'Siege_domicile_representant',
+       'nom_commercial', 'enseigne', 'activite_ambulante',
+       'activite_saisonniere', 'activite_Non_Sedentaire',
+       'date_début_activité', 'activite', 'origine_fonds',
+       'origine_fonds_info', 'type_exploitation', 'csv_source', 'index']
+#pd.read_csv(name).columns
+```
+
+```python
+database ='inpi'
+table = 'ets_preparation_python'
+s3_ouput = 'INPI/sql_output'
+col_type = """CREATE EXTERNAL TABLE IF NOT EXISTS {}.{}(\n""".format(database,
+                                                                     table)
+for v, name in enumerate(var_name):
+    type_ = 'string'
+    if v != len(var_name) -1:
+        text = "`{}` {},\n".format(name, type_)
+    else:
+        text = "`{}` {}\n)".format(name, type_)
+    col_type += text
+```
+
+```python
+bottom = """\n
+     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+    'serialization.null.format'='',
+   'separatorChar' = ',',
+   'quoteChar' = '"',
+   'escapeChar' = '\\\\'
+   )
+     LOCATION '{}'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1');
+"""
+create_table = col_type +  bottom.format("s3://calfdata/INPI/TC_1/02_preparation_donnee/Preparation_ETS_python/")
+```
+
+```python
+athena.run_query(
+    query = "DROP TABLE `ets_preparation_python`;",
+    database = database,
+    s3_output = s3_ouput
+                   )
+```
+
+```python
+#Athena database and table definition
+
+output= athena.run_query(
+    query = create_table,
+    database = database,
+    s3_output = s3_ouput
+                   )
 ```
