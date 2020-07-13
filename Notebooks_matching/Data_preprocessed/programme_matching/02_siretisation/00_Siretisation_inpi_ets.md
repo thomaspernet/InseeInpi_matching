@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.0+dev
+      jupytext_version: 1.4.2
   kernelspec:
     display_name: Python 3
     language: python
@@ -36,6 +36,8 @@ Output:
     - contient les non matches
 - `data/logs/`+ `ORIGIN`
     - contient les logs
+    
+       
 
 ```python
 import os
@@ -47,8 +49,8 @@ from inpi_insee import siretisation
 %autoreload 2
 
 param = {
-    'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_1557220_InitialPartielEVTNEW.csv' ### PP
-    #'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_9428972_InitialPartielEVTNEW.csv'  ### ETS
+    #'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_1557220_InitialPartielEVTNEW.csv' ### PP
+    'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_9368683_InitialPartielEVTNEW.csv'  ### ETS
     #'insee': 'data/input/INSEE/NEW/insee_1745311_NEW.csv' ### ETS
 }
 # 4824158 SIREN a trouver!
@@ -70,19 +72,19 @@ al_siret = siretisation.siretisation_inpi(param)
 ```
 
 ```python
-list_inpi = ['ncc','code_postal','code_commune','INSEE','digit_inpi']
+list_inpi = ['ncc','code_postal_matching','code_commune','INSEE','digit_inpi']
 list_insee = ['libelleCommuneEtablissement',
             'codePostalEtablissement', 'codeCommuneEtablissement',
             'typeVoieEtablissement','numeroVoieEtablissement']
 
 sort_list = [
- {'ncc', 'code_postal', 'code_commune', 'INSEE', 'digit_inpi'},
- {'ncc', 'code_postal', 'code_commune', 'INSEE'},
- {'ncc', 'code_postal', 'code_commune', 'digit_inpi'},
- {'ncc', 'code_postal', 'code_commune'},   
- {'ncc', 'code_postal'},
+ {'ncc', 'code_postal_matching', 'code_commune', 'INSEE', 'digit_inpi'},
+ {'ncc', 'code_postal_matching', 'code_commune', 'INSEE'},
+ {'ncc', 'code_postal_matching', 'code_commune', 'digit_inpi'},
+ {'ncc', 'code_postal_matching', 'code_commune'},   
+ {'ncc', 'code_postal_matching'},
  {'ncc'},
- {'code_postal'},
+ {'code_postal_matching'},
  {'code_commune'}
 ]
 len(sort_list)
@@ -160,8 +162,8 @@ for f in files:
 
 ```python
 origin = "InitialPartielEVTNEW"
-#filename = "inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW" ####ETS
-filename = "inpi_initial_partiel_evt_new_pp_status_final_InitialPartielEVTNEW"
+filename = "inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW" ####ETS
+#filename = "inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW"
 #origin = "NEW"
 #filename = "inpi_initial_partiel_evt_new_ets_status_final_NEW"
 #### make dir
@@ -183,7 +185,7 @@ import json
 inpi_col = ['siren',
             'index',
             'type',
-            'code_postal',
+            'code_postal_matching',
             'ville',
             'code_commune',
             'pays',
@@ -202,7 +204,7 @@ inpi_dtype = {
     'siren': 'object',
     'index': 'int',
     'type': 'object',
-    'code_postal': 'object',
+    'code_postal_matching': 'object',
     'ville': 'object',
     'code_commune': 'object',
     'pays': 'object',
@@ -240,9 +242,15 @@ for key, values in enumerate(list_possibilities):
         filename),
                       compression='gzip', index= False)
     # Step 2: duplication
-    df_not_duplicate, sp = al_siret.step_two_duplication(df_duplication,
+    try:
+        df_not_duplicate, sp = al_siret.step_two_duplication(df_duplication,
                                                         var_group = 
                                                          values['match']['inpi'])
+    except: 
+        ### it's empty
+        df_not_duplicate = df_duplication
+        sp = df_duplication
+    
     
     (df_not_duplicate
         .to_csv('data/output/{0}/{1}_{2}_not_duplicate.gz'.format(
@@ -343,6 +351,25 @@ for key, values in enumerate(list_possibilities):
 
     with open('data/logs/{0}/{1}_{2}_logs.json'.format(origin, key,filename), 'w') as f:
         json.dump(dic_, f)
+```
+
+```python
+#al_siret.step_two_assess_test(df=df_no_duplication,
+#                                               var_group=values['match']['inpi'])
+df_duplication
+```
+
+```python
+inpi.compute().dtypes.apply(lambda x: x.name).to_dict()
+```
+
+```python
+df_no_duplication.dtypes.apply(lambda x: x.name).to_dict()
+```
+
+```python
+#df_duplication.shape
+df_duplication["siren"].nunique()
 ```
 
 # Special Treatment
