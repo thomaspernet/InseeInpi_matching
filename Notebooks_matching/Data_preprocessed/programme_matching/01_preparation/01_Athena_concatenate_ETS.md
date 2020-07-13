@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.0
+      jupytext_version: 1.5.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -1576,10 +1576,10 @@ dic_['global']['table_final_id']['ETS']
 query = """SELECT 
 "siren",
 "code_greffe",
-"Nom_Greffe",
+"nom_greffe",
 "numero_gestion",
 "id_etablissement", 
-'status',
+"status",
 "origin",
 Coalesce(
          try(date_parse(file_timestamp, '%Y-%m-%d')),
@@ -1594,36 +1594,26 @@ Coalesce(
          try(date_parse(date_greffe, '%Y-%m-%d %hh:%mm:%ss')),
          try(cast(date_greffe as timestamp))
   ) as date_greffe,
-"Libelle_Evt",  
-"Type",
-"Siège_PM",
-"RCS_Registre",
-"Adresse_Ligne1",
-"Adresse_Ligne2",
-"Adresse_Ligne3",
-"Code_Postal",
+"libelle_evt",  
+"type",
+"siège_pm",
+"rcs_registre",
+"adresse_ligne1",
+"adresse_ligne2",
+"adresse_ligne3",
+"code_postal",
 code_postal_matching,
-"Ville",
-"Code_Commune",
-"Pays",
-"Domiciliataire_Nom",
-"Domiciliataire_Siren",
-"Domiciliataire_Greffe",
-"Domiciliataire_Complément",
-"Siege_Domicile_Représentant",
-"Nom_Commercial",
-"Enseigne",
-"Activité_Ambulante",
-"Activité_Saisonnière",
-"Activité_Non_Sédentaire",
-"Date_Début_Activité",
-"Activité",
-"Origine_Fonds",
-"Origine_Fonds_Info",
-"Type_Exploitation",
+"ville",
+"code_commune",
+"pays",
+"nom_commercial",
+"enseigne",
+"date_début_activité",
+"activité",
 "csv_source"
-FROM {}
-ORDER BY siren,"Nom_Greffe", "code_greffe",
+FROM {} 
+WHERE status != 'IGNORE'
+ORDER BY siren,"nom_greffe", "code_greffe",
       numero_gestion, id_etablissement, 
       file_timestamp
 """
