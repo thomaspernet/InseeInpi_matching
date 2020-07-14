@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.5.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -396,6 +396,10 @@ temp = inpi.merge(insee,
 temp = temp.compute()
 ```
 
+```python
+insee.
+```
+
 Il est assez simple de voir que le merge a abouti a la création de doublon 
 
 ```python
@@ -418,6 +422,11 @@ to_check = (temp[temp['_merge']
             )
                  )
 to_check.dtypes
+```
+
+```python
+### Nombre de duplicate
+to_check.shape[0] -to_check['index'].nunique()
 ```
 
 ## Etape 2: Separation des doublons
@@ -450,6 +459,36 @@ Il y a environ 98% des lignes de siren sur d'avoir le bon siret. Toutefois, nous
 
 ```python
 test_1['not_duplication'].shape[0] / to_check['index'].nunique()
+```
+
+### Conformité données
+
+
+
+```python
+import numpy as np
+```
+
+```python
+test_1['not_duplication']['test_siege']  = np.where(
+        np.logical_and(
+        ~test_1['not_duplication']['type'].isin(['SEP', 'SIE']),
+        test_1['not_duplication']['etablissementSiege'].isin(['true'])
+        ),
+        True, False
+        )
+```
+
+```python
+test_1['not_duplication']['test_siege'].value_counts()
+```
+
+```python
+test_1['not_duplication'].loc[lambda x: x['test_siege'].isin([True])].head()
+```
+
+```python
+test_1['not_duplication'].loc[lambda x: x['test_siege'].isin([True])]['type'].value_counts()
 ```
 
 ### Etape 3: Test sur les doublons, via la date
