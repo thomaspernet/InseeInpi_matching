@@ -361,23 +361,89 @@ insee_dtype = {
          }
 ```
 
-# Pas a pas
+```python
+## Calcul nb siren/siret
+upper_word = pd.read_csv('data/input/Parameters/upper_stop.csv'
+        ).iloc[:,0].to_list()
+```
 
-Dans l'ensemble, le processus de siretisation fonctionne de la manière suivante:
+```python
+voie = (pd.read_csv('data/input/Parameters/voie.csv').assign(upper = lambda x: 
+             x['possibilite'].str.isupper()).loc[lambda x: 
+                                                 x['upper'].isin([True])])
+```
 
-1. Merge INSEE-INPI
-2. Differenciation entre les doublons et non doublons
-    - Recupération non doublons -> matched
-    - Recupération doublons -> tests à réaliser
-3. Batterie de tests via des regles de gestions sur la date
-4. Batterie de tests via des regles de gestions sur l'adresse et type d'établissement
-5. Selection des meilleurs candidats via les règles de gestion
+```python
+import nltk
+import dask.dataframe as dd
+import numpy as np
+import sidetable
+def jackard_distance(inpi, insee):
+    """
+    
+    """
+    
+    w1 = set(inpi)
+    w2 = set(insee)
+    
+    try:
+        return nltk.jaccard_distance(w1, w2)
+    except:
+        pass
+```
 
+```python
+def count_conformite_test(df):
+    """
+    """
+    
+    dic_ = {
+        'test_siege_principale':
+    df['test_siege_principal'].value_counts(),
+        
+        'test_siege_secondaire':
+    df['test_siege_secondaire'].value_counts(),
+        
+        'divergence_siege':
+    df['divergence_siege'].value_counts(),
+        
+        'test_etb_ferme':
+    df['test_status_ets_ferme'].value_counts(),
+        
+        'test_etb_ouvert':
+    df['test_status_ets_ouvert'].value_counts(),
+        
+        'divergence_etatadmin':
+    df['divergence_etatadmin'].value_counts(),
+        
+        'test_join_address':
+    df['test_join_address'].value_counts(),
+        
+        'test_address_libelle':
+    df['test_address_libelle'].value_counts(),
+        
+        'test_address_complement':
+    df['test_address_complement'].value_counts(),
+        
+        
+        'test_debut_activite_egal':
+    (df.loc[lambda x: 
+      ~x['date_début_activité'].isin([np.datetime64('NaT')])
+     ]['test_date_egal']
+ .value_counts()
+),
+        
+  'test_debut_activite_sup':      
+    (df.loc[lambda x: 
+      ~x['date_début_activité'].isin([np.datetime64('NaT')])
+     ]['test_date_sup']
+ .value_counts()
+)
+    }
+    return dic_
+```
 
-
-
-
-## Etape 1: Merge INSEE-INPI
+# Règle de gestion
 
 Dans la première étape, nous allons merger les données de l'INSEE avec les données de l'INPI. Dans le cadre de ce notebook, nous allons utiliser uniquement les variables de matching suivantes:
 
@@ -391,6 +457,46 @@ Dans la première étape, nous allons merger les données de l'INSEE avec les do
 ``` 
 'siren', 'digit_inpi', 'code_postal_matching', 'INSEE', 'code_commune', 'ncc' 
 ``` 
+
+Des lors que la table a été matché et soustrait des index qui n'ont pas de correspondance a l'INSEE, nous pouvons effectuer les tests suivants:
+
+## Test Adresse
+
+- `test_address_libelle` :
+    - Si un des mots contenus dans la variable `adresse_new_clean_reg` est présente dans la variable `libelleVoieEtablissement` alors True
+- `test_address_complement`:
+    - Si un des mots contenus dans la variable `adresse_new_clean_reg` est présente dans la variable `libelleVoieEtablissement` alors True
+- `test_join_address`:
+    - Si `test_address_libelle` et `test_address_complement` sont égales a True, alors True
+- `jacquard`:
+    - Calcul de la distance entre `adresse_inpi_clean` et `adress_insee_reconstitue`
+
+## Test Siege
+
+- `test_siege_principal`:
+    - Si `type` contient `SIE` ou `SEP` ou `PRI` et `etablissementSiege` est égal a True, alors True
+- `test_siege_secondaire`:
+    - Si `type` contient `SEC` et `etablissementSiege` est égal a False, alors True
+- `divergence_siege`:
+    - Si `test_siege_principal` est égale à False et `test_siege_secondaire` est égal à False, alors True
+
+## Test Etat 
+
+- `test_status_ets_ferme`:
+    - Si `last_libele_evt` est égale à `Etablissement supprimé` et `etatAdministratifEtablissement` est égal à `F` alors True
+- `test_status_ets_ouvert`:
+    - Si `last_libele_evt` est égale à `Etablissement ouvert` et `etatAdministratifEtablissement` est égal à `A` alors True
+- `divergence_etatadmin`: Si `test_status_ets_ferme` est égal à False et `test_status_ets_ouvert` est égal à False, alors True
+
+## Test Date
+
+- `test_date_egal`:
+    -  `date_début_activité` est égale à `dateCreationEtablissement` alors True 
+- `test_date_sup`:
+    - `date_début_activité` est supérieure à `dateCreationEtablissement` alors True 
+- `divergence_etatadmin`:
+    - Si `test_date_egal` est égal à False et `test_date_sup` est égal à False, alors True
+
 
 ```python
 list_possibilities[0]['match']['inpi']
@@ -439,250 +545,12 @@ temp['_merge'].value_counts()
 to_check = (temp[temp['_merge']
                  .isin(['both'])]
             .drop(columns= '_merge')
+            .merge(voie, left_on = 'typeVoieEtablissement', right_on ='INSEE', how = 'left')
+            #### création addresse
             .assign(
             date_début_activité = lambda x: pd.to_datetime(
-            x['date_début_activité'], errors = 'coerce')
-            )
-                 )
-to_check.dtypes
-```
-
-```python
-### Nombre de duplicate
-to_check.shape[0] -to_check['index'].nunique()
-```
-
-## Etape 2: Separation des doublons
-
-Comme nous venons de le voir, sur les lignes matchées, il y a à peu près 85k lignes de doublons. De fait, nous devons écarter les lignes avec des doublons de ceux qui ne le sont pas. Nous avons créer une fonction, appelée `split_duplication` qui va compter le nombre de lignes ayant le même index (la variable). 
-
-La fonction retourne un dictionnaire, avec un dataframe contenant uniquement les lignes sans doublon, un dataframe avec les doublons et enfin, un rapport sur le nombre d'index avec des doublons
-
-```python
-test_1 = split_duplication(df = to_check)
-```
-
-Ci dessous, un tableau avec le nombre de doublons
-
-```python
-test_1['report_dup']
-```
-
-Le dictionnaire est composé d'un DataFrame avec les valeurs sans doublons.
-
-```python
-# Test 1: doublon -> non
-test_1['not_duplication'] = test_1['not_duplication'].assign(
-        origin_test = 'test_1_no_duplication'
-        )
-test_1['not_duplication'].shape
-```
-
-Il y a environ 98% des lignes de siren sur d'avoir le bon siret. Toutefois, nous devons quand même effectuer des tests pour etre certains du résultat
-
-```python
-test_1['not_duplication'].shape[0] / to_check['index'].nunique()
-```
-
-### Conformité données
-
-1. test sur le siège:
-    - Si `type` différent de `SEC` mais `etablissementSiege` est True, alors Flag, mais pas correct. Un Siège ou principal ne peut pas être un secondaire
-2. 
-
-```python
-import numpy as np
-```
-
-```python
-test_1['not_duplication']['type'].value_counts()
-```
-
-```python
-test_1['not_duplication']['etatAdministratifEtablissement'].value_counts()
-```
-
-```python
-def test_conformite(df):
-    """
-    """
-    
-    df['test_siege_principal']  = np.where(
-        np.logical_and(
-        df['type'].isin(['SIE', 'SEP', 'PRI']),
-        df['etablissementSiege'].isin(['false'])
-        ),
-        True, False
-        )
-    
-    df['test_siege_secondaire']  = np.where(
-        np.logical_and(
-        df['type'].isin(['SEC']),
-        df['etablissementSiege'].isin(['true'])
-        ),
-        True, False
-        )
-    
-    df['test_status_ets_ferme']  = np.where(
-        np.logical_and(
-        df['last_libele_evt'].isin(['Etablissement supprimé']),
-        df['etatAdministratifEtablissement'].isin(['A'])
-        ),
-        True, False
-        )
-    
-    df['test_status_ets_ouvert']  = np.where(
-        np.logical_and(
-        df['last_libele_evt'].isin(['Etablissement ouvert']),
-        df['etatAdministratifEtablissement'].isin(['F'])
-        ),
-        True, False
-        )
-    
-    df['test_date_egal'] = np.where(
-        df['date_début_activité'] ==
-                     df['dateCreationEtablissement']
-        ,
-        True, False
-        )
-    
-    df['test_date_sup'] = np.where(
-        df['date_début_activité'] <=
-                     df['dateCreationEtablissement']
-        ,
-        True, False
-        )
-    
-    return df
-```
-
-```python
-def count_conformite_test(df):
-    """
-    """
-    
-    dic_ = {
-        'test_siege_principale':
-    df['test_siege_principal'].value_counts(),
-        'test_siege_secondaire':
-    df['test_siege_secondaire'].value_counts(),
-        
-        'test_etb_ferme':
-    df['test_status_ets_ferme'].value_counts(),
-        'test_etb_ouvert':
-    df['test_status_ets_ouvert'].value_counts(),
-        
-        'test_debut_activite_egal':
-    (df.loc[lambda x: 
-      ~x['date_début_activité'].isin([np.datetime64('NaT')])
-     ]['test_date_egal']
- .value_counts()
-),
-        
-  'test_debut_activite_sup':      
-    (df.loc[lambda x: 
-      ~x['date_début_activité'].isin([np.datetime64('NaT')])
-     ]['test_date_sup']
- .value_counts()
-)
-    }
-    return dic_
-```
-
-```python
-import sidetable
-```
-
-```python
-test_1['not_duplication'] = test_conformite(df = test_1['not_duplication'])
-```
-
-```python
-count_conformite_test(df = test_1['not_duplication'])
-```
-
-```python
-(test_1['not_duplication']
- .loc[lambda x:x['test_siege_principal'].isin([True])]
- .stb.freq(['test_siege_principal', 'type'])
-)
-```
-
-```python
-(test_1['not_duplication']
- .loc[lambda x: 
-      (x['test_siege_principal'].isin([True]))
-      &
-      (x['type'].isin(['SEP']))
-     ].tail()
-)
-```
-
-```python
-(test_1['not_duplication']
- .loc[lambda x: 
-      (x['test_status_ets'].isin([True]))
-     ].tail())
-```
-
-```python
-(test_1['not_duplication']
- .loc[lambda x: 
-      
- (~x['date_début_activité'].isin([np.datetime64('NaT')])) 
-      &
-(x['test_date_sup'].isin([False]))
-     ]
- .tail()
-)
-```
-
-### Etape 3: Test sur les doublons, via la date
-
-Dans cette étape la, nous allons procéder a des tests sur la date afin d'écarter les établissements enregistrés avant la date de création de l'activité. En effet, la variable `date_début_activité` indique la date de création de l'entreprise (ou activité si personne physique), alors que la variable `dateCreationEtablissement` informe sur la date de création de l'établissement. Il n'est donc pas possible que la création de l'établissement se fasse avant la date de création de l'entreprise. 
-
-Pour chaque règle, nous appliquons la fonction `split_duplication` pour être sur que nous avons bien écarté les doublons.
-
-Tout d'abord, nous ne gardons que les lignes ou la date de début d'activité est identique à la date de création de l'établissement.
-
-
-On a deux dataframes. Le `df_no_duplication` contient des siren/siret correctement matchés, alors que le dataframe `df_duplication` a besoin de davatantage de traitement.
-
-
-test
-
-```python
-test = test_conformite(df = test_1['duplication'])
-```
-
-```python
-count_conformite_test(df = test)
-```
-
-### Etape 4: Test sur les doublons, via l'adresse et autre regles specifiques
-
-Dans cette dernière étape, nous allons effectuer un dernière ensemble de tests avant de faire le trie sur les éléments que nous gardons. 
-
-Tout d'abord, nous allons compter le nombre de siren qu'il y a selon les variables utilisées lors du matching. Ensuite, nous appliquons le regex sur les variables de l'adresse à l'INPI. Puis on réalise les tests sur le siège, la date.
-
-```python
-## Calcul nb siren/siret
-upper_word = pd.read_csv('data/input/Parameters/upper_stop.csv'
-        ).iloc[:,0].to_list()
-df_ = (test
-        .merge(
-        (test
-        .groupby(list_possibilities[0]['match']['inpi'])['siren']
-             .count()
-             .rename('count_siren_siret')
-             .reset_index()
-             ),how = 'left'
-             )
-       .sort_values(by = ['siren', 'code_greffe',
-                          'nom_greffe', 'numero_gestion',
-                          'id_etablissement'])
-       .assign(
-        numeroVoieEtablissement_ = lambda x: x['numeroVoieEtablissement'].fillna(''),   
+            x['date_début_activité'], errors = 'coerce'),
+                numeroVoieEtablissement_ = lambda x: x['numeroVoieEtablissement'].fillna(''),   
         adresse_insee_clean=lambda x: x['libelleVoieEtablissement'].str.normalize(
                 'NFKD')
             .str.encode('ascii', errors='ignore')
@@ -691,83 +559,87 @@ df_ = (test
             .str.upper(),
     adress_insee_reconstitue = lambda x: 
             x['numeroVoieEtablissement_'] + ' '+ \
-            #x['typeVoieEtablissement'] + ' ' + \
+            x['possibilite'] + ' ' + \
             x['libelleVoieEtablissement']   
         )
-        .assign(
+            .assign(
             
         adresse_insee_clean = lambda x: x['adresse_insee_clean'].apply(
         lambda x:' '.join([word for word in str(x).split() if word not in
         (upper_word)])),
             
-        adresse_inpi_clean = lambda x: x['adress_new'].apply(
+        adresse_inpi_reconstitue = lambda x: x['adress_new'].apply(
         lambda x:' '.join([word for word in str(x).split() if word not in
         (upper_word)])),   
             
         adress_insee_reconstitue = lambda x: x['adress_insee_reconstitue'].apply(
         lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)])),
-            
-        )   
-             )
-df_.shape
-```
-
-```python
-df_.loc[lambda x: x['siren'].isin(['829840859'])]
-```
-
-Prepare adresse INSEE
-
-```python
-df_['index'].nunique()
-```
-
-```python
-(df_
- .groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement'])
- ['siren']
- .nunique()
-).sum()
-```
-
-```python
-import nltk
-```
-
-```python
-def jackard_distance(inpi, insee):
-    """
-    
-    """
-    
-    w1 = set(inpi)
-    w2 = set(insee)
-    
-    try:
-        return nltk.jaccard_distance(w1, w2)
-    except:
-        pass
-```
-
-```python
-#df_.apply(lambda x: jackard_distance(
-#    x['adress_insee_reconstitue'],
-#    x['adresse_inpi_clean']
-#)
-#)
-```
-
-### Regex sur l'adresse
-
-```python
-import dask.dataframe as dd
-import numpy as np
+        (upper_word)])), 
+        )
+            #### création tests
+            .assign(   
+                test_siege_principal = lambda x: np.where(
+        np.logical_and(
+        x['type'].isin(['SIE', 'SEP', 'PRI']),
+        x['etablissementSiege'].isin(['true'])
+        ),
+        True, False
+        ),
+                test_siege_secondaire = lambda x:np.where(
+        np.logical_and(
+        x['type'].isin(['SEC']),
+        x['etablissementSiege'].isin(['false'])
+        ),
+        True, False
+        ),
+                test_status_ets_ferme = lambda x: np.where(
+        np.logical_and(
+        x['last_libele_evt'].isin(['Etablissement supprimé']),
+        x['etatAdministratifEtablissement'].isin(['F'])
+        ),
+        True, False
+        ),
+                test_status_ets_ouvert = lambda x: np.where(
+        np.logical_and(
+        x['last_libele_evt'].isin(['Etablissement ouvert']),
+        x['etatAdministratifEtablissement'].isin(['A'])
+        ),
+        True, False
+        ),
+                test_date_egal = lambda x:np.where(
+        x['date_début_activité'] ==
+                     x['dateCreationEtablissement']
+        ,
+        True, False
+        ),
+                test_date_sup = lambda x: np.where(
+        x['date_début_activité'] <=
+                     x['dateCreationEtablissement']
+        ,
+        True, False
+        ),
+                divergence_siege = lambda x: np.where(
+        np.logical_and(
+        x['test_siege_principal'].isin([False]),
+        x['test_siege_secondaire'].isin([False])
+        ),
+        True, False
+        ),
+        divergence_etatadmin = lambda x: np.where(
+        np.logical_and(
+        x['test_status_ets_ferme'].isin([False]),
+        x['test_status_ets_ouvert'].isin([False])
+        ),
+        True, False
+        )
+            )
+            )
+to_check.dtypes
 ```
 
 ```python
 ## Test 1: address
-df_2 = dd.from_pandas(df_, npartitions=10)
+df_2 = dd.from_pandas(to_check, npartitions=10)
 df_2['test_address_libelle'] = df_2.map_partitions(
             lambda df:
                 df.apply(lambda x:
@@ -788,8 +660,8 @@ df_2['jacquard'] = df_2.map_partitions(
             lambda df:
                 df.apply(lambda x:
                     jackard_distance(
-                     x['adress_insee_reconstitue'],
-                     x['adresse_inpi_clean']), axis=1)
+                     x['adresse_inpi_reconstitue'],
+                     x['adress_insee_reconstitue']), axis=1)
                      ).compute()
 
 df_2 = df_2.compute()
@@ -810,37 +682,27 @@ df_2 = df_2.assign(
 ```
 
 ```python
-df_2.head(10)
-```
-
-### Test sur la date
-
-En plus de la date, on filtre les lignes qui ont seulement un établissement par siren
-
-
-### Verification
-
-```python
-## Final test: count unique index
-df_2 = df_2.merge(
-        (df_2
-        .groupby('index')['index']
-        .count()
-        .rename('count_duplicates_final')
-        .reset_index()
-        )
-        )
+df_2['jacquard'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    jackard_distance(
+                     x['adresse_inpi_reconstitue'],
+                     x['adress_insee_reconstitue']), axis=1)
+                     ).compute()
 ```
 
 ```python
-#df_2['count_duplicates_final'].value_counts()
+df_2.head()
 ```
 
 ```python
-for i in ['test_join_address',
-          'test_address_libelle',
-          'test_address_complement']:
-    print(df_2[i].value_counts())
+### Nombre de duplicate
+df_2.shape[0] -df_2['index'].nunique()
+```
+
+```python
+#df_2[['adress_insee_reconstitue', 'adresse_inpi_reconstitue', 'jacquard',
+#      'test_address_libelle', 'min_jacquard']].head(22)
 ```
 
 ## Etape 5: Selection meilleurs candidats
@@ -848,115 +710,5 @@ for i in ['test_join_address',
 Dans cette dernière étape, on ne garde que les valeurs ont les tests ont été concluant sur le regex de l'adresse
 
 ```python
-df_not_duplicate = pd.DataFrame()
-copy_duplicate = df_2.copy()
-duplicates_ = df_2.copy()
-```
-
-```python
-for i in ['test_join_address','test_address_libelle',
-         'test_address_complement']:
-         ### split duplication
-            test_1 = split_duplication(
-            copy_duplicate[
-            copy_duplicate[i].isin([True])]
-    )
-
-            ### append unique
-            df_not_duplicate = (
-            df_not_duplicate
-            .append(test_1['not_duplication']
-            .assign(test = i)
-            )
-            )
-
-            copy_duplicate = (copy_duplicate
-                   .loc[~copy_duplicate['index'].isin(
-                       pd.concat([
-                           test_1['duplication'],
-                           test_1['not_duplication']
-                       ], axis = 0)['index']
-                       .drop_duplicates())])
-
-            # Special treatment
-            sp = (df_2[
-            ~df_2['index']
-            .isin(df_not_duplicate['index'])])
-```
-
-```python
-df_not_duplicate.shape
-```
-
-```python
-df_not_duplicate = split_duplication(df = df_not_duplicate)
-```
-
-```python
-df_not_duplicate['not_duplication'].shape
-```
-
-```python
-df_not_duplicate['not_duplication']['siren'].nunique()
-```
-
-```python
-count_conformite_test(df = df_not_duplicate['not_duplication'])
-```
-
-# test autre regle
-
-- Le test sur la distance de Jacquard
-- Les tests sur pri/secondaire/ferme/ouvert
-
-```python
-test_jacquard = split_duplication(sp.loc[lambda x: 
-       x['jacquard'] == x['min_jacquard']]
-                 )['not_duplication']
-```
-
-```python
-test_full_test = split_duplication(
-(sp.loc[lambda x: 
-        (~x['index'].isin(test_jacquard['index']))
-       & 
-       (x['test_siege_principal'].isin([False]))
- & 
-        (x['test_siege_secondaire'].isin([False]))
-&
-        (x['test_status_ets_ferme'].isin([False]))
-        &
-         (x['test_status_ets_ouvert'].isin([False]))
-       ]
- 
-)
-)['not_duplication']
-```
-
-```python
-split_duplication(
-(sp.loc[lambda x: 
-        (~x['index'].isin(test_jacquard['index']))
-        & 
-        (~x['index'].isin(test_full_test['index']))
-        &
- (x['test_siege_secondaire'].isin([False]))
- &
- (x['test_status_ets_ferme'].isin([False]))
- ]
-        )
-)['not_duplication']
-```
-
-## Filtre matché
-
-On sauvegarde pour le prochain loop
-
-```python
-# Input -> Save for the next loop 
-inpi.loc[
-        (~inpi['index'].isin(df_no_duplication['index'].unique()))
-        & (~inpi['index'].isin(df_not_duplicate['index'].unique()))
-        & (~inpi['index'].isin(sp['index'].unique()))
-    ].compute().shape
+count_conformite_test(df = df_2)
 ```
