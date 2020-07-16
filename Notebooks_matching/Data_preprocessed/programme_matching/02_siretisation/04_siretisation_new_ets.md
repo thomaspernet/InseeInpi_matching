@@ -77,20 +77,26 @@ pd.set_option('display.max_columns', None)
 ```
 
 ```python
-list_inpi = ['ncc','code_postal_matching','code_commune','voie_matching','numero_voie_matching']
+list_inpi = ['ncc','code_postal_matching','code_commune','voie_matching','numero_voie_matching',
+             'date_début_activité', 'status_admin', 'status_ets']
+
 list_insee = ['libelleCommuneEtablissement',
             'codePostalEtablissement', 'codeCommuneEtablissement',
-            'typeVoieEtablissement','numeroVoieEtablissement']
+            'typeVoieEtablissement','numeroVoieEtablissement',
+             'dateCreationEtablissement', 'etatAdministratifEtablissement', 'etablissementSiege']
 
 sort_list = [
- {'ncc', 'code_postal_matching', 'code_commune', 'voie_matching', 'numero_voie_matching'},
- {'ncc', 'code_postal_matching', 'code_commune', 'voie_matching'},
- {'ncc', 'code_postal_matching', 'code_commune', 'numero_voie_matching'},
- {'ncc', 'code_postal_matching', 'code_commune'},   
- {'ncc', 'code_postal_matching'},
- {'ncc'},
- {'code_postal_matching'},
- {'code_commune'}
+ {'ncc', 'code_postal_matching', 'code_commune', 'voie_matching', 'numero_voie_matching',
+  'date_début_activité', 'status_admin', 'status_ets'},
+ {'ncc', 'code_postal_matching', 'code_commune', 'voie_matching',
+  'date_début_activité', 'status_admin', 'status_ets'},
+ {'ncc', 'code_postal_matching', 'code_commune', 'numero_voie_matching',
+ 'date_début_activité', 'status_admin', 'status_ets'},
+ {'ncc', 'code_postal_matching', 'code_commune','date_début_activité', 'status_admin', 'status_ets'},   
+ {'ncc', 'code_postal_matching','date_début_activité', 'status_admin', 'status_ets'},
+ {'ncc', 'date_début_activité', 'status_admin', 'status_ets'},
+ {'code_postal_matching', 'date_début_activité', 'status_admin', 'status_ets'},
+ {'code_commune', 'date_début_activité', 'status_admin', 'status_ets'},
 ]
 len(sort_list)
 ```
@@ -119,10 +125,16 @@ list_possibilities
 Indiquer le fichiers a siretiser. Si pas en local, le télécharger depuis le S3
 
 ```python
+
+```
+
+```python
 from awsPy.aws_authorization import aws_connector
+from awsPy.aws_athena import service_athena
 from awsPy.aws_s3 import service_s3
 from pathlib import Path
 import pandas as pd
+import os
 bucket = 'calfdata'
 path = os.getcwd()
 parent_path = str(Path(path).parent)
@@ -132,27 +144,67 @@ con = aws_connector.aws_instantiate(credential = path_cred,
 client= con.client_boto()
 s3 = service_s3.connect_S3(client = client,
                       bucket = 'calfdata') 
-#s3.download_file(
-#    key= 'INPI/TC_1/02_preparation_donnee/ETS_TEMP/ets_preparation_python_1.csv')
+athena = service_athena.connect_athena(client = client,
+                      bucket = 'calfdata') 
 ```
 
 ```python
-#df_ets = 'data/input/INPI/{}_1.csv'.format(filename)
-#df_ets
-#'data/input/INPI/{}_{}.csv'.format(filename, 0)
+query = """
+SELECT * 
+FROM ets_preparation_python_lib1   
+"""
+```
+
+```python
+output = athena.run_query(
+    query=query,
+    database='inpi',
+    s3_output='INPI/sql_output'
+)
+```
+
+```python
+table = 'ets_preparation_python_lib1_1'
+source_key = "{}/{}.csv".format(
+                        'INPI/sql_output',
+                        output['QueryExecutionId']
+                               )
+
+destination_key = "{}/{}.csv".format(
+                        'INPI/TC_1/02_preparation_donnee/ETS_TEMP',
+                        table
+                    )
+
+```
+
+```python
+results = s3.copy_object_s3(
+                        source_key = source_key,
+                        destination_key = destination_key,
+                        remove = False
+                    )
+```
+
+```python
+
+```
+
+```python
+#s3.download_file(
+#    key= destination_key)
 ```
 
 ```python
 import shutil
-try:
-    os.remove("data/input/INPI/{}_0.gz".format(filename))
-except:
-    pass
-os.getcwd()
+#try:
+#    os.remove("data/input/INPI/InitialPartielEVTNEW/ets_preparation_python_1.csv")
+#except:
+#    pass
+#os.getcwd()
 ```
 
 ```python
-#filename = 'ets_preparation_python_1'
+#filename = 'ets_preparation_python_lib1_1'
 #shutil.move("{}.csv".format(filename),
 #            "data/input/INPI/InitialPartielEVTNEW")
 ```
@@ -168,7 +220,7 @@ for f in files:
 
 ```python
 origin = "InitialPartielEVTNEW"
-filename = "ets_preparation_python" ####ETS
+filename = "ets_preparation_python_lib1" ####ETS
 #filename = "inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW"
 #origin = "NEW"
 #filename = "inpi_initial_partiel_evt_new_ets_status_final_NEW"
@@ -267,6 +319,7 @@ inpi_col = ['siren',
             'last_libele_evt',
             'index',
             'type',
+            'status_admin', 'status_ets',
             'code_postal_matching',
             #'ville',
             'code_commune',
@@ -297,8 +350,10 @@ inpi_dtype = {
             'enseigne': 'object',
             'libelle_evt': 'object',
     'id_etablissement': 'object',
-    'index': 'int',
+    'index': 'object',
     'type': 'object',
+    'status_admin': 'object',
+    'status_ets': 'object',
     'code_postal_matching': 'object',
     'ville': 'object',
     'code_commune': 'object',
@@ -334,14 +389,17 @@ insee_col = ['siren',
          'libellePaysEtrangerEtablissement',
          'count_initial_insee',
              'len_digit_address_insee',
-             'list_digit_insee']
+             'list_digit_insee',
+            "enseigne1Etablissement",
+            "enseigne2Etablissement",
+            "enseigne3Etablissement"]
 
 insee_dtype = {
              'siren': 'object',
              'siret': 'object',
              "etablissementSiege": "object",
              "etatAdministratifEtablissement": "object",
-             #'dateCreationEtablissement': 'object',
+             'dateCreationEtablissement': 'object',
              'complementAdresseEtablissement': 'object',
              'numeroVoieEtablissement': 'object',
              'indiceRepetitionEtablissement': 'object',
@@ -357,7 +415,10 @@ insee_dtype = {
              'codePaysEtrangerEtablissement': 'object',
              'libellePaysEtrangerEtablissement': 'object',
              'count_initial_insee': 'int',
-             'len_digit_address_insee':'object'
+             'len_digit_address_insee':'object',
+            "enseigne1Etablissement":'object',
+            "enseigne2Etablissement":'object',
+            "enseigne3Etablissement":'object'
          }
 ```
 
@@ -383,10 +444,11 @@ def jackard_distance(inpi, insee):
     
     """
     
-    w1 = set(inpi)
-    w2 = set(insee)
+    
     
     try:
+        w1 = set(inpi)
+        w2 = set(insee)
         return nltk.jaccard_distance(w1, w2)
     except:
         pass
@@ -410,23 +472,23 @@ def count_conformite_test(df):
     """
     
     dic_ = {
-        'test_siege_principale':
-    df['test_siege_principal'].value_counts(),
+       # 'test_siege_siege':
+    #df['test_siege_siege'].value_counts(),
         
-        'test_siege_secondaire':
-    df['test_siege_secondaire'].value_counts(),
+    #    'test_siege_pri_sec':
+    #df['test_siege_pri_sec'].value_counts(),
         
-        'divergence_siege':
-    df['divergence_siege'].value_counts(),
+    #    'divergence_siege':
+    #df['divergence_siege'].value_counts(),
         
-        'test_etb_ferme':
-    df['test_status_ets_ferme'].value_counts(),
+    #    'test_etb_ferme':
+    #df['test_status_ets_ferme'].value_counts(),
         
-        'test_etb_ouvert':
-    df['test_status_ets_ouvert'].value_counts(),
+    #    'test_etb_ouvert':
+    #df['test_status_ets_ouvert'].value_counts(),
         
-        'divergence_etatadmin':
-    df['divergence_etatadmin'].value_counts(),
+    #    'divergence_etatadmin':
+    #df['divergence_etatadmin'].value_counts(),
         
         'test_join_address':
     df['test_join_address'].value_counts(),
@@ -438,19 +500,19 @@ def count_conformite_test(df):
     df['test_address_complement'].value_counts(),
         
         
-        'test_debut_activite_egal':
-    (df.loc[lambda x: 
-      ~x['date_début_activité'].isin([np.datetime64('NaT')])
-     ]['test_date_egal']
- .value_counts()
-),
+    #    'test_debut_activite_egal':
+    #(df.loc[lambda x: 
+    #  ~x['date_début_activité'].isin([np.datetime64('NaT')])
+    # ]['test_date_egal']
+ #.value_counts()
+#),
         
-  'test_debut_activite_sup':      
-    (df.loc[lambda x: 
-      ~x['date_début_activité'].isin([np.datetime64('NaT')])
-     ]['test_date_sup']
- .value_counts()
-),
+ # 'test_debut_activite_sup':      
+ #   (df.loc[lambda x: 
+ #     ~x['date_début_activité'].isin([np.datetime64('NaT')])
+ #    ]['test_date_sup']
+ #.value_counts()
+#),
         'jacquard':      
     (df['jacquard'].describe()
 ),
@@ -491,9 +553,9 @@ Des lors que la table a été matché et soustrait des index qui n'ont pas de co
 ## Test Siege
 
 - `test_siege_principal`:
-    - Si `type` contient `SIE` ou `SEP` ou `PRI` et `etablissementSiege` est égal a True, alors True
+    - Si `type` contient `SIE` ou `SEP`  et `etablissementSiege` est égal a True, alors True
 - `test_siege_secondaire`:
-    - Si `type` contient `SEC` et `etablissementSiege` est égal a False, alors True
+    - Si `type` contient `SEC` ou `PRI` et `etablissementSiege` est égal a False, alors True
 - `divergence_siege`:
     - Si `test_siege_principal` est égale à False et `test_siege_secondaire` est égal à False, alors True
 
@@ -517,6 +579,10 @@ Des lors que la table a été matché et soustrait des index qui n'ont pas de co
 list_possibilities[0]['match']['inpi']
 ```
 
+```python
+list_possibilities[0]['match']['insee']
+```
+
 Dans un premier temps, on import et on merge les dataframes Insee et INPI. Pour rappel, il y a 10,648,546 d'observations à siretiser. Pour le vérifier, il suffit de regarder la variable index, qui est le numéro de la ligne dans la base initiale de l'INPI.
 
 A noté que nous convertissons la variable `date_début_activité` en format date, car nous avons besoin de comparer cette variable avec `dateCreationEtablissement` lors de nos tests
@@ -533,7 +599,8 @@ insee = al_siret.import_dask(
         file=al_siret.insee,
         usecols=insee_col,
         dtype=insee_dtype,
-        parse_dates = ['dateCreationEtablissement'])
+        #parse_dates = ['dateCreationEtablissement']
+)
 
 temp = inpi.merge(insee,
                           how='left',
@@ -593,73 +660,8 @@ to_check = (temp[temp['_merge']
         adress_insee_reconstitue = lambda x: x['adress_insee_reconstitue'].apply(
         lambda x:' '.join([word for word in str(x).split() if word not in
         (upper_word)])), 
+                enseigne = lambda x: x['enseigne'].str.upper()
         )
-            #### création tests
-            .assign(   
-                test_siege_siege = lambda x: np.where(
-        np.logical_and(
-        x['type'].isin(['SIE', 'SEP', #'PRI'
-                       ]),
-        x['etablissementSiege'].isin(['true'])
-        ),
-        True, False
-        ),
-                test_siege_principal = lambda x: np.where(
-        np.logical_and(
-        x['type'].isin(['PRI'
-                       ]),
-        x['etablissementSiege'].isin(['false'])
-        ),
-        True, False
-        ),
-                test_siege_secondaire = lambda x:np.where(
-        np.logical_and(
-        x['type'].isin(['SEC']),
-        x['etablissementSiege'].isin(['false'])
-        ),
-        True, False
-        ),
-                test_status_ets_ferme = lambda x: np.where(
-        np.logical_and(
-        x['last_libele_evt'].isin(['Etablissement supprimé']),
-        x['etatAdministratifEtablissement'].isin(['F'])
-        ),
-        True, False
-        ),
-                test_status_ets_ouvert = lambda x: np.where(
-        np.logical_and(
-        x['last_libele_evt'].isin(['Etablissement ouvert']),
-        x['etatAdministratifEtablissement'].isin(['A'])
-        ),
-        True, False
-        ),
-                test_date_egal = lambda x:np.where(
-        x['date_début_activité'] ==
-                     x['dateCreationEtablissement']
-        ,
-        True, False
-        ),
-                test_date_sup = lambda x: np.where(
-        x['date_début_activité'] <=
-                     x['dateCreationEtablissement']
-        ,
-        True, False
-        ),
-                divergence_siege = lambda x: np.where(
-        np.logical_and(
-        x['test_siege_principal'].isin([False]),
-        x['test_siege_secondaire'].isin([False])
-        ),
-        True, False
-        ),
-        divergence_etatadmin = lambda x: np.where(
-        np.logical_and(
-        x['test_status_ets_ferme'].isin([False]),
-        x['test_status_ets_ouvert'].isin([False])
-        ),
-        True, False
-        )
-            )
             )
 
 ## Test 1: address
@@ -696,6 +698,50 @@ df_2['edit'] = df_2.map_partitions(
                      x['adress_insee_reconstitue']), axis=1)
                      ).compute()
 
+df_2['jacquard_enseigne1'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    jackard_distance(
+                     x['enseigne'],
+                     x['enseigne1Etablissement']), axis=1)
+                     ).compute()
+df_2['jacquard_enseigne2'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    jackard_distance(
+                     x['enseigne'],
+                     x['enseigne2Etablissement']), axis=1)
+                     ).compute()
+df_2['jacquard_enseigne3'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    jackard_distance(
+                     x['enseigne'],
+                     x['enseigne3Etablissement']), axis=1)
+                     ).compute()
+
+df_2['edit_enseigne1'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    edit_distance(
+                     x['enseigne'],
+                     x['enseigne1Etablissement']), axis=1)
+                     ).compute()
+df_2['edit_enseigne2'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    edit_distance(
+                     x['enseigne'],
+                     x['enseigne2Etablissement']), axis=1)
+                     ).compute()
+df_2['edit_enseigne3'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    edit_distance(
+                     x['enseigne'],
+                     x['enseigne3Etablissement']), axis=1)
+                     ).compute()
+
 df_2 = df_2.compute()
 ## test join Adress
 df_2.loc[
@@ -710,14 +756,106 @@ df_2.loc[
 df_2 = df_2.assign(
     min_jacquard = lambda x:
     x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['jacquard'].transform('min'))
+               'id_etablissement'])['jacquard'].transform('min'),
+    min_edit = lambda x:
+    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+               'id_etablissement'])['edit'].transform('min'))
+
+## test join Adress
+df_2.loc[
+        (df_2['test_address_libelle'] == False)
+        &(df_2['test_address_complement'] == False)
+        &(df_2['test_join_address'] == False),
+        'test_regex_adress'] = False
+
+df_2.loc[
+        (df_2['test_regex_adress'] != False),
+        'test_regex_adress'] = True
 ```
 
 ```python
 df_2 = df_2.assign(
-    min_edit = lambda x:
+    
+    test_distance_diff = lambda x:
+    np.where(
+        np.logical_or(
+            x['jacquard'] != x['min_jacquard'],
+            x['edit'] != x['min_edit']    
+        ),
+        True, False
+    
+    ),
+    
+    min_jacquard_enseigne1 = lambda x:
     x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['edit'].transform('min'))
+               'id_etablissement'])['jacquard_enseigne1'].transform('min'),
+    
+    min_jacquard_enseigne2 = lambda x:
+    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+               'id_etablissement'])['jacquard_enseigne2'].transform('min'),
+    
+    min_jacquard_enseigne3 = lambda x:
+    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+               'id_etablissement'])['jacquard_enseigne3'].transform('min'),
+    
+    min_edit_enseigne1 = lambda x:
+    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+               'id_etablissement'])['edit_enseigne1'].transform('min'),
+    
+    min_edit_enseigne2 = lambda x:
+    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+               'id_etablissement'])['edit_enseigne2'].transform('min'),
+    
+    min_edit_enseigne3 = lambda x:
+    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+               'id_etablissement'])['edit_enseigne3'].transform('min')
+)
+```
+
+```python
+#df_2 = df_2.drop(columns =  ['test_enseigne_insee','test_enseigne_edit',
+#                                               'test_enseigne_jacquard'])
+
+df_2.loc[
+    (df_2['enseigne1Etablissement'].isin([np.nan]))
+    &(df_2['enseigne2Etablissement'].isin([np.nan]))
+    &(df_2['enseigne3Etablissement'].isin([np.nan])),
+    'test_enseigne_insee'
+] = True
+
+df_2.loc[
+        (df_2['test_enseigne_insee'] != True),
+        'test_enseigne_insee'] = False
+
+df_2.loc[
+    (df_2['enseigne'].isin([np.nan]))
+    |(df_2['test_enseigne_insee'].isin([True]))
+    |(df_2['jacquard_enseigne1'] == 0)
+    |(df_2['jacquard_enseigne2'] == 0)
+    |(df_2['jacquard_enseigne3'] == 0),
+    'test_enseigne_jacquard'
+] = True
+
+df_2.loc[
+    (df_2['enseigne'].isin([np.nan]))
+    |(df_2['test_enseigne_insee'].isin([True]))
+    |(df_2['edit_enseigne1'] == 0)
+    |(df_2['edit_enseigne2'] == 0)
+    |(df_2['edit_enseigne3'] == 0),
+    'test_enseigne_edit'
+] = True
+
+df_2.loc[
+        (df_2['test_enseigne_edit'] != True),
+        'test_enseigne_edit'] = False
+
+df_2.loc[
+        (df_2['test_enseigne_jacquard'] != True),
+        'test_enseigne_jacquard'] = False
+```
+
+```python
+df_2.loc[lambda x: x['siren'].isin(['400534020'])]
 ```
 
 ```python
@@ -734,7 +872,7 @@ df_2.shape[0] -df_2['index'].nunique()
 Dans cette dernière étape, on ne garde que les valeurs ont les tests ont été concluant sur le regex de l'adresse
 
 ```python
-count_conformite_test(df = df_2)
+#count_conformite_test(df = df_2)
 ```
 
 ```python
@@ -746,11 +884,11 @@ test['not_duplication'].shape
 ```
 
 ```python
-count_conformite_test(df = test['not_duplication'])
+test['duplication'].shape
 ```
 
 ```python
-test['not_duplication'].loc[lambda x: x['edit'] > 100]
+test['duplication'].head(10)
 ```
 
 ## Recupération
@@ -768,21 +906,12 @@ df_filre.shape#.head()
 ```python
 for i in ['test_join_address', 'test_address_libelle',
           'test_address_complement', 'jacquard', 'edit']:
-    for j in ['test_date_egal', 'test_date_sup']:
         
         if i in ['jacquard']:
             
             index_to_keep = split_duplication(
-                (df_filre.loc[lambda x: 
-                                             #(~x['index'].isin([index_found]))
-                                             #&                         
+                (df_filre.loc[lambda x:                     
                                              (x[i] == x['min_jacquard'])
-                                             & 
-                                             (x['divergence_siege'].isin([False]))
-                                             &
-                                             (x['divergence_etatadmin'].isin([False]))
-                                             &
-                                             (x[j].isin([True]))
                                               ]
                                              )
                                              )['not_duplication']#['index']
@@ -790,16 +919,8 @@ for i in ['test_join_address', 'test_address_libelle',
         elif i in ['edit']:
             
             index_to_keep = split_duplication(
-                (df_filre.loc[lambda x: 
-                                             #(~x['index'].isin([index_found]))
-                                             #&                         
+                (df_filre.loc[lambda x:             
                                              (x[i] == x['min_edit'])
-                                             & 
-                                             (x['divergence_siege'].isin([False]))
-                                             &
-                                             (x['divergence_etatadmin'].isin([False]))
-                                             &
-                                             (x[j].isin([True]))
                                               ]
                                              )
                                              )['not_duplication']#['index']
@@ -808,23 +929,13 @@ for i in ['test_join_address', 'test_address_libelle',
             
             index_to_keep = split_duplication(
                 (df_filre.loc[lambda x: 
-                                             #(~x['index'].isin([index_found]))
-                                             #&
                                              (x[i].isin([True]))
-                                             & 
-                                             (x['divergence_siege'].isin([False]))
-                                             &
-                                             (x['divergence_etatadmin'].isin([False]))
-                                             &
-                                             (x[j].isin([True]))
                                             ]
                                              )
                                              )['not_duplication']#['index']
                 
-        #index_found.extend(index_to_remove.values)
         index_found = index_found.append(index_to_keep)
         df_filre = df_filre.loc[lambda x: (~x['index'].isin(index_to_keep['index'].values))]
-        
 ```
 
 ```python
@@ -839,122 +950,204 @@ index_found.shape
 index_found['index'].nunique() + df_filre['index'].nunique() == test['duplication']['index'].nunique()
 ```
 
+## Règles de conformité
+
+- Test 1: - > ?
+    - Plusieurs SIRET/sequence
+- Test 2:
+    - Ensemble des regex faux
+        - `test_regex_adress`
+- Test 3
+    - Test sur l'enseigne
+        - Si `test_enseigne_edit` = True (-> Enseigne INSEE & INPI, match parfait)
+        - Si `test_enseigne_jacquard` = True
+- Test 4:
+    - Test sur la distance:
+        - Si `test_distance_diff` =  True & `min_jacquard` < .2 
+        - Si `test_distance_diff` =  True & `min_edit` < 20 
+
 ```python
-count_conformite_test(df = index_found)
+import sidetable
 ```
 
 ```python
-df_filre.loc[lambda x: x['siren'].isin(['840056105'])]
+df_conformite = (pd.concat(
+[test['not_duplication'],
+ index_found
+]#, axis = 1
+))
 ```
 
 ```python
-index_found.loc[lambda x: x['siren'].isin(['840056105'])]
+df_conformite.shape
 ```
 
 ```python
-index_found.loc[lambda x:
-               (x['test_address_libelle'].isin([False]))
-               &
-                (x['test_address_complement'].isin([False]))
-               &
-               (x['test_join_address'].isin([False]))
-               ]
-```
-
-# Test Sans la date
-
-```python
-df_filre_1 = df_filre.copy()
-index_found_1 = pd.DataFrame()
-df_filre_1.shape#.head()
+sequence = ['siren', 'code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement']
+df_conformite = df_conformite.assign(
+    total_siret = lambda x: x.groupby(sequence)['siret'].transform('nunique')
+)
+df_conformite.loc[lambda x: x['total_siret'].isin([2])].to_excel('plusieurs_siret.xlsx')
 ```
 
 ```python
-for i in ['test_join_address', 'test_address_libelle',
-          'test_address_complement', 'jacquard', 'edit']:
-    #for j in ['test_date_egal', 'test_date_sup']:
+#df_conformite.dtypes.to_frame().T#.unstack()
+```
+
+```python
+#df_conformite.loc[lambda x: x['siren'].isin(['451041172'])]
+```
+
+```python
+#df_conformite.loc[lambda x: x['test_enseigne_jacquard'].isin([False])]
+```
+
+```python
+df_conformite.stb.freq(['test_regex_adress'])
+```
+
+```python
+df_conformite.stb.freq(['test_distance_diff'])
+```
+
+```python
+df_conformite.stb.freq(['test_enseigne_jacquard'])
+```
+
+```python
+df_conformite.stb.freq(['test_enseigne_edit'])
+```
+
+### Filtrage
+
+```python
+df_conformite.shape
+```
+
+```python
+test_1 = (df_conformite.loc[
+    
+    lambda x: 
+    (x['test_regex_adress'].isin([True]))
+    &
+    (x['test_enseigne_edit'].isin([True]))
+    |
+    (x['test_enseigne_jacquard'].isin([True]))
+    |
+    (x['count_initial_insee'].isin([1]))
+    & 
+    (x['total_siret'].isin([1]))
+    #&
+    #(x['test_distance_diff'].isin([False])) 
+    #& ((x['min_jacquard'] < .2) 
+    # | (x['min_edit'] < 20))
+]#['index']
+)
+```
+
+Besoin de compter le nombre de ligne à l'INSEE pour les variables utilisées pour matcher
+
+```python
+#df_conformite.loc[lambda x: (x['siren'].isin(['998823504'])) 
+#           & (x['id_etablissement'].isin(['185']))
+#                      ].sort_values(by = ['id_etablissement'])
+```
+
+```python
+df_conformite.shape[0] - len(test_1)
+```
+
+```python
+test_1[sequence].drop_duplicates() 
+```
+
+Recupération de l'historique
+
+```python
+df_to_match = inpi.compute().loc[lambda x: 
+                                 ~x['index'].isin(df_conformite['index'])
+                                ]
+df_to_match.shape
+```
+
+```python
+df_to_match.head()
+```
+
+```python
+seq = ['siren','code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement']
+sequence = ['siren', 'siret','code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement', 'total_siret']
+
+columns_to_keep = ['siren', 'siret', 'code_greffe', 'nom_greffe', 'numero_gestion',
+       'id_etablissement', 'total_siret', 'origin', 'file_timestamp',
+       'date_greffe', 'libelle_evt', 'last_libele_evt', 'type', 'adress_new',
+       'adresse_new_clean_reg', 'voie_matching', 'numero_voie_matching',
+       'code_postal_matching', 'ncc', 'code_commune', 'enseigne',
+       'date_début_activité', 'index', 'status_admin', 'status_ets', '_merge']
+
+df_match_2 = (
+    (test_1[sequence]
+ .drop_duplicates()  
+    )
+ .merge(df_to_match, right_on = seq, left_on = seq, how = 'left', indicator = True)
+)
+```
+
+```python
+df_match_2.stb.freq(['_merge'])
+```
+
+```python
+df_match_2.head()
+```
+
+```python
+#df_match_2.loc[lambda x: x['_merge'].isin(['both'])].dtypes
+```
+
+```python
+df_final = (pd.concat(
+    [
+        df_match_2.loc[lambda x: x['_merge'].isin(['both'])],
+        df_conformite.reindex(columns  = columns_to_keep)
         
-    if i in ['jacquard']:
-            
-        index_to_keep = split_duplication(
-                (df_filre_1.loc[lambda x: 
-                                             #(~x['index'].isin([index_found]))
-                                             #&                         
-                                             (x[i] == x['min_jacquard'])
-                                             & 
-                                             (x['divergence_siege'].isin([False]))
-                                             &
-                                             (x['divergence_etatadmin'].isin([False]))
-                                             #&
-                                             #(x[j].isin([True]))
-                                              ]
-                                             )
-                                             )['not_duplication']#['index']
-            
-    elif i in ['edit']:
-            
-        index_to_keep = split_duplication(
-                (df_filre_1.loc[lambda x: 
-                                             #(~x['index'].isin([index_found]))
-                                             #&                         
-                                             (x[i] == x['min_edit'])
-                                             & 
-                                             (x['divergence_siege'].isin([False]))
-                                             &
-                                             (x['divergence_etatadmin'].isin([False]))
-                                             #&
-                                             #(x[j].isin([True]))
-                                              ]
-                                             )
-                                             )['not_duplication']#['index']
-     
-    else:
-            
-        index_to_keep = split_duplication(
-                (df_filre_1.loc[lambda x: 
-                                             #(~x['index'].isin([index_found]))
-                                             #&
-                                             (x[i].isin([True]))
-                                             & 
-                                             (x['divergence_siege'].isin([False]))
-                                             &
-                                             (x['divergence_etatadmin'].isin([False]))
-                                             #&
-                                             #(x[j].isin([True]))
-                                            ]
-                                             )
-                                             )['not_duplication']#['index']
-                
-    #index_found.extend(index_to_remove.values)
-    index_found_1 = index_found_1.append(index_to_keep)
-    df_filre_1 = df_filre_1.loc[lambda x: (~x['index'].isin(index_to_keep['index'].values))]
-        
+    ])
+ .sort_values(by = [
+     'siren','code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement', 'date_greffe'
+ ])
+)
 ```
 
 ```python
-index_found_1.shape
+df_final.groupby("index")['index'].count().sort_values().loc[lambda x: x>1]
 ```
 
 ```python
-index_found['index'].nunique() \
-+ index_found_1['index'].nunique() + df_filre_1['index'].nunique()== \
-test['duplication']['index'].nunique()
+df_conformite.loc[lambda x: x['index'].isin(['000735785'])]
 ```
 
 ```python
-count_conformite_test(df = index_found_1)
+#df_conformite.loc[lambda x: x['siren'].isin(['814217535'])]
 ```
 
 ```python
-index_found.head()
+test_1.loc[lambda x: x['siren'].isin(['814217535'])]
 ```
 
 ```python
-index_found.loc[lambda x:
-               (x['test_address_libelle'].isin([False]))
-               &
-                (x['test_address_complement'].isin([False]))
-               &
-               (x['test_join_address'].isin([False]))
-               ]
+split_duplication(
+                df_final)['not_duplication'].shape
+```
+
+```python
+split_duplication(
+                df_final)['duplication'].shape
+```
+
+```python
+
+```
+
+```python
+
 ```
