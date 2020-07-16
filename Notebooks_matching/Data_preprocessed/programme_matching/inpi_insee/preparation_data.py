@@ -657,7 +657,10 @@ class preparation:
               "libelleCommuneEtrangerEtablissement",
               "codePaysEtrangerEtablissement",
                "libellePaysEtrangerEtablissement",
-               "dateCreationEtablissement"
+               "dateCreationEtablissement",
+            "enseigne1Etablissement",
+            "enseigne2Etablissement",
+            "enseigne3Etablissement"
                                    ]
 
         dtype={
@@ -679,7 +682,10 @@ class preparation:
             "libelleCommuneEtrangerEtablissement": 'object',
             "codePaysEtrangerEtablissement": 'object',
             "libellePaysEtrangerEtablissement": 'object',
-            "dateCreationEtablissement":'object'
+            "dateCreationEtablissement":'object',
+            "enseigne1Etablissement":'object',
+            "enseigne2Etablissement":'object',
+            "enseigne3Etablissement":'object'
                                  }
 
         reindex = [
@@ -692,7 +698,9 @@ class preparation:
     'distributionSpecialeEtablissement','codeCommuneEtablissement',
     'codeCedexEtablissement','libelleCedexEtablissement',
     'codePaysEtrangerEtablissement','libellePaysEtrangerEtablissement',
-    'etatAdministratifEtablissement',
+    'etatAdministratifEtablissement',"enseigne1Etablissement", "enseigne2Etablissement",
+            "enseigne3Etablissement"
+            
  ]
 
         dd_df_insee = self.import_dask(file = self.insee,
