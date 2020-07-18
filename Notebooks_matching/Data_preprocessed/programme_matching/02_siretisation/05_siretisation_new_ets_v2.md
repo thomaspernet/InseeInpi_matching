@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.5.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -23,17 +23,22 @@ Comme la taille de la donnée est trop élevée, il faut prendre un sous échant
 
 Input:
 - INSEE:
-    - NEW: `data/input/INSEE/NEW/insee_1745311_NEW.csv`
-    - Initial, Partiel, EVT: `data/input/INSEE/InitialPartielEVT/insee_8272605_InitialPartielEVT.csv`
+    - NEW: `data/input/INSEE/InitialPartielEVTNEW/insee_9368683_InitialPartielEVTNEW.csv`
 - INPI:
-    - NEW: `data/input/SIREN_INPI/NEW/inpi_initial_partiel_evt_new_ets_status_final_NEW_0.csv`
-    - Initial, Partiel, EVT: `data/input/SIREN_INPI/InitialPartielEVT/inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVT_0`
+    - NEW: `data/input/INPI/InitialPartielEVTNEW/ets_preparation_python_1.csv`
 
 Output:
 
+- ets_siretise
+    * Table siretisée: [INPI/TC_1/04_table_siretisee](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/04_table_siretisee/?region=eu-west-3) 
 
-    
-       
+- ets_non_siretise
+    * Table non siretisée: [INPI/TC_1/05_table_non_siretisee](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/05_table_non_siretisee/?region=eu-west-3)
+
+- ets_rules
+    * Table règles: [INPI/TC_1/06_table_regles/ETS](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/06_table_regles/ETS/?region=eu-west-3&tab=overview)
+
+- logs ETS: [INPI/TC_1/04_table_siretisee/ETS_logs](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/04_table_siretisee/ETS_logs/?region=eu-west-3&tab=overview)
 
 ```python
 import os, re
@@ -543,11 +548,60 @@ Les variables ci dessous sont des nouvelles variables résultant du merge entre 
     - Si l'enseigne à l'INSEE ou à l'INPI est renseignée et que la distance de jaccard est égale à 0, alors True
 - test_enseigne_edit:
     - Si l'enseigne à l'INSEE ou à l'INPI est renseignée et que la distance de Levensthein est égale à 0, alors True
-<!-- #endregion -->
+    
+# Processus
 
-```python
-df_3_bis['not_duplication'].head()
-```
+## Etape 1: Merge
+
+Dans un premier temps, nous allons merger la table de l'INSEE et de l'INPI sur un ensemble de variable très contraignante: 
+
+- `siren`
+- `status_ets`: Etablissement ouvert/fermé
+- `numero_voie_matching`: Numéro de voie
+- `voie_matching`:  Type de voie
+- `ncc`: ville
+- `code_commune`:  Code commune
+- `status_admin`: Type d'entreprise
+- `date_début_activité`: Date de création de l'établissement
+- `code_postal_matching`: Code postal
+
+L'idée principale est de trouver le siret d'une séquence avec le plus d'exactitude pour ensuite appliquer le siret à la séquence. Cette technique permet d'être plus sur sur l'historique. En effet, l'INSEE donne le dernier état connu, il peut donc avoir des différences avec les valeurs historisées de l'INPI, surtout sur le type ou l'enseigne.
+
+## Etape 2: Création variables tests
+
+Dans cette étape, nous allons créer toutes les variables de test, comme évoqué précédement, a savoir sur l'adresse et l'enseigne.
+
+## Etape 3: Dedoublonnage
+
+Cette étape permet de dédoublonner les lignes matchées via la variable `index`. En effet, il est possible d'avoir des doublons lorsque l'entreprise à plusieurs établissements dans la même adresse. C'est le cas pour les sièges et principals.
+
+On va appliquer le filtre sur l'ensemble de la table matchée, puis compter le nombre de siret par séquence. Si le nombre de siret est égal à 1, c'est un bon match, sinon, il y a encore des doublons même après le filtre. Nous allons appliquer un deuxième filtre sur les doublons puis concatener avec les séquences ayant 1 siret. Dès lors, on applique la fonction `split_duplication` pour séparer les doublons des valeurs uniques. Si il y a encore des doublons, il n'y a pas suffisamment d'information pour distinguer le bon siret. Il faudra prendre plus de précaution avec des séquences
+
+Les règles sons les suivantes:
+
+### Filtre 1
+
+- Si `test_regex_adress` est égal a True, ET `test_jacquard_adress` est égal à True, ET `test_edit_adress` est égal à True, ET `test_enseigne_edit` est égal a True OU `test_enseigne_jacquard` est égal a True OU `count_initial_insee` est égal à 1
+
+### Filtre 2
+
+Le filtre deux ne s'applique que sur les lignes dont la séquence a plus de deux sirets. Le filtre est le suivant 
+
+- Si `jacquard` est egal 0 et `edit` est egal a 0, alors on garde. Autrement dit, on ne garde que les lignes dont l'adresse est correcte dans les deux cas. On pourrait potentiellement lever la contrainte.
+
+
+## Etape 4: Récupération sequence dans table INPI
+
+Dans cette étape, nous allons utiliser les siret que nous venons de récupérer et les matcher avec la table de l'INPI. Cela évite de refaire tous les tests sur des séquences dont on a déjà récupérer le siret.
+
+Tout d'abord, nous devons récupérer les siret sur la séquence `siren`, `code_greffe`, `nom_greffe`, `numero_gestion`, et `id_etablissement`. Attention, il faut enlever les doublons du aux valeurs historiques, puis on merge avec la table de l'INSEE. 
+
+## Etape 5: Concatenation des sequences
+
+Maintenant que nous avons réussi a récuperer les siret dans la table INPI depuis les valeurs connues lors de nos tests, nous pouvons concatener les deux tables et ne prendre que les colonnes d'origines.
+
+Il faut tout de même refaire la fonction `split_duplication` pour enlever les siret multiples
+<!-- #endregion -->
 
 ```python
 list_possibilities[0]['match']['inpi']
@@ -574,7 +628,71 @@ Dans un premier temps, nous allons merger la table de l'INSEE et de l'INPI sur u
 L'idée principale est de trouver le siret d'une séquence avec le plus d'exactitude pour ensuite appliquer le siret à la séquence. Cette technique permet d'être plus sur sur l'historique. En effet, l'INSEE donne le dernier état connu, il peut donc avoir des différences avec les valeurs historisées de l'INPI, surtout sur le type ou l'enseigne.
 
 ```python
-df_ets = 'data/input/INPI/{0}/{1}_{2}.csv'.format(origin, filename, 1)
+for key, values in enumerate(list_possibilities[:1]):
+    df_ets = 'data/input/INPI/{0}/{1}_{2}.csv'.format(origin, filename, key + 1)
+    print(df_ets)
+    
+    ## Etape 1
+    inpi = (al_siret.import_dask(file=df_ets,
+                                usecols=inpi_col,
+                                dtype=inpi_dtype,
+                                parse_dates=False)
+       )
+    insee = al_siret.import_dask(
+        file=al_siret.insee,
+        usecols=insee_col,
+        dtype=insee_dtype,
+        #parse_dates = ['dateCreationEtablissement']
+)
+    
+    temp = (inpi
+            .merge(insee,
+                          how='inner',
+                          left_on=list_possibilities[0]['match']['inpi'],
+                          right_on= list_possibilities[0]['match']['insee'],
+                          #indicator=True,
+                          #suffixes=['_insee', '_inpi']
+                  )
+            .merge(voie, left_on = 'typeVoieEtablissement', right_on ='INSEE', how = 'left')
+            #### création addresse
+            .assign(
+                numeroVoieEtablissement_ = lambda x: x['numeroVoieEtablissement'].fillna(''),
+                possibilite = lambda x: x['possibilite'].fillna('')
+                   )
+            .assign(
+            date_début_activité = lambda x: pd.to_datetime(
+            x['date_début_activité'], errors = 'coerce'),   
+        adresse_insee_clean=lambda x: x['libelleVoieEtablissement'].str.normalize(
+                'NFKD')
+            .str.encode('ascii', errors='ignore')
+            .str.decode('utf-8')
+            .str.replace('[^\w\s]|\d+', ' ')
+            .str.upper(),
+                adress_insee_reconstitue = lambda x: 
+            x['numeroVoieEtablissement_'] + ' '+ \
+            x['possibilite'] + ' ' + \
+            x['libelleVoieEtablissement']   
+        )
+            .assign(
+            
+        adresse_insee_clean = lambda x: x['adresse_insee_clean'].apply(
+        lambda x:' '.join([word for word in str(x).split() if word not in
+        (upper_word)])),
+            
+        adresse_inpi_reconstitue = lambda x: x['adress_new'].apply(
+        lambda x:' '.join([word for word in str(x).split() if word not in
+        (upper_word)])),   
+            
+        adress_insee_reconstitue = lambda x: x['adress_insee_reconstitue'].apply(
+        lambda x:' '.join([word for word in str(x).split() if word not in
+        (upper_word)])), 
+                enseigne = lambda x: x['enseigne'].str.upper()
+        )
+            )
+```
+
+```python
+
 
 inpi = (al_siret.import_dask(file=df_ets,
                                 usecols=inpi_col,
