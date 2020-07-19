@@ -27,10 +27,10 @@ The global steps to construct the dataset are the following:
 
  *  Préparer les variables suivantes dans la table de l’INPI:
     * enseigne 
-    * ville_matching 
-    * adress_nettoyee 
-    * adress_regex 
-    * adresse_inpi_reconstitue 
+    * ville_matching
+    * adress_reconstituee_inpi
+    * adress_distance_inpi 
+    * adress_regex_inpi 
     * numero_voie_matching 
     * voie_matching 
     * last_libelle_evt 
@@ -126,12 +126,12 @@ La query met environ 5 minutes pour s'éxecuter. Il est possible d'améliorer le
     - Mise en majuscule
 * `ville_matching`:
     - Nettoyage regex de la ville et suppression des espaces
-* `adress_nettoyee`: 
-    - Concatenation des champs de l'adresse, nettoyage regex et suppression des types de voie et numéro
-* `adress_regex`: 
-    - Création pattern regex
-* `adresse_inpi_reconstitue`: 
-    - Concatenation des champs de l'adresse, nettoyage regex
+* `adress_reconstituee_inpi`
+    - Concatenation des champs de l'adresse et suppression des espaces
+* `adress_distance_inpi`: 
+    - Concatenation des champs de l'adresse, suppression des espaces et des articles
+* `adress_regex_inpi`: 
+    - Concatenation des champs de l'adresse, suppression des espaces, des articles et des numéros et ajout de `(?:^|(?<= ))(` et `)(?:(?= )|$)`
 * `numero_voie_matching`: 
     - Extraction du premier numéro de voie dans l'adresse
 * `voie_matching`: 
@@ -153,8 +153,7 @@ WITH (
   format='PARQUET'
 ) AS
 WITH create_regex AS ( 
-  SELECT 
-    siren, 
+SELECT siren, 
     code_greffe, 
     nom_greffe, 
     numero_gestion, 
@@ -169,32 +168,61 @@ WITH create_regex AS (
     rcs_registre, 
     adresse_ligne1, 
     adresse_ligne2, 
-    adresse_ligne3, 
-    REGEXP_REPLACE(
-      REGEXP_REPLACE(
-        REGEXP_REPLACE(
-          REGEXP_REPLACE(
-            NORMALIZE(
-              UPPER(
-                CONCAT(
-                  adresse_ligne1, ' ', adresse_ligne2, 
-                  ' ', adresse_ligne3
-                )
+    adresse_ligne3,
+  REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  NORMALIZE(
+                    UPPER(
+                      CONCAT(
+                        adresse_ligne1, ' ', adresse_ligne2, 
+                        ' ', adresse_ligne3
+                      )
+                    ), 
+                    NFD
+                  ), 
+                  '\pM', 
+                  ''
+                ), 
+                '[^\w\s]| +', 
+                ' '
               ), 
-              NFD
-            ), 
-            '\pM', 
-            ''
+            '\s\s+', 
+            ' '
           ), 
-          '[^\w\s]', 
-          ' '
-        ), 
-        '\s\s+', 
-        ' '
-      ), 
-      '^\s+|\s+$', 
-      ''
-    ) AS adress_nettoyee, 
+          '^\s+|\s+$', 
+          ''
+      ) AS adress_reconstituee_inpi,
+            REGEXP_REPLACE(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  NORMALIZE(
+                    UPPER(
+                      CONCAT(
+                        adresse_ligne1, ' ', adresse_ligne2, 
+                        ' ', adresse_ligne3
+                      )
+                    ), 
+                    NFD
+                  ), 
+                  '\pM', 
+                  ''
+                ), 
+                '[^\w\s]| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          ''
+      ) AS adress_distance_inpi,
     CONCAT(
       '(?:^|(?<= ))(', 
       -- debut regex
@@ -219,7 +247,7 @@ WITH create_regex AS (
                 '[^\w\s]|\d+| +', 
                 ' '
               ), 
-              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE|RN|BP|CEDEX|BIS)(?:(?= )|$)', 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
               ''
             ), 
             '\s\s+', 
@@ -233,41 +261,8 @@ WITH create_regex AS (
       ), 
       -- milieu regex
       ')(?:(?= )|$)' -- fin regex
-      ) AS adress_regex, 
-    REGEXP_REPLACE(
-      REGEXP_REPLACE(
-        REGEXP_REPLACE(
-          REGEXP_REPLACE(
-            REGEXP_REPLACE(
-              REGEXP_REPLACE(
-                NORMALIZE(
-                  UPPER(
-                    CONCAT(
-                      adresse_ligne1, ' ', adresse_ligne2, 
-                      ' ', adresse_ligne3
-                    )
-                  ), 
-                  NFD
-                ), 
-                '\pM', 
-                ''
-              ), 
-              '[^\w\s]| +', 
-              ' '
-            ), 
-            '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE|RN|BP|CEDEX|BIS)(?:(?= )|$)', 
-            ''
-          ), 
-          '\s\s+', 
-          ' '
-        ), 
-        '^\s+|\s+$', 
-        ''
-      ), 
-      '\s', 
-      ' '
-    ) AS adresse_inpi_reconstitue, 
-    code_postal, 
+      ) AS adress_regex_inpi,
+      code_postal, 
     code_postal_matching, 
     ville, 
     REGEXP_REPLACE(
@@ -331,10 +326,7 @@ WITH create_regex AS (
     type_exploitation, 
     csv_source, 
     rn -- AS adress_nettoyee
-  FROM 
-    ets_test_filtered --WHERE (adresse_ligne1 IS NOT NULL and adresse_ligne2 IS NOT NULL)
-    --WHERE siren = '841344229'
-  --LIMIT 15
+FROM ets_test_filtered
 ) 
 SELECT 
   * 
@@ -358,9 +350,11 @@ FROM
         adresse_ligne1, 
         adresse_ligne2, 
         adresse_ligne3, 
-        adress_nettoyee, 
-        adresse_inpi_reconstitue, 
-        adress_regex, 
+        adress_reconstituee_inpi,
+        -- adress_nettoyee, 
+        -- adresse_inpi_reconstitue, 
+        adress_regex_inpi,
+        adress_distance_inpi, 
         numero_voie_matching, 
         numero_voie_type_voie.voie_clean, 
         voie_matching, 
@@ -406,13 +400,15 @@ FROM
             rcs_registre, 
             adresse_ligne1, 
             adresse_ligne2, 
-            adresse_ligne3, 
-            adress_nettoyee, 
-            adresse_inpi_reconstitue, 
-            adress_regex, 
-            regexp_extract(adress_nettoyee, '\d+') as numero_voie_matching, 
+            adresse_ligne3,
+            adress_reconstituee_inpi,
+            adress_regex_inpi,
+            adress_distance_inpi,
+            -- adress_nettoyee,  
+            -- adress_regex, 
+            regexp_extract(adress_reconstituee_inpi, '\d+') as numero_voie_matching, 
             regexp_extract(
-              adress_nettoyee, '(?:^|(?<= ))(ALLEE|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CHAUSSEE|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTE   SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE)(?:(?= )|$)'
+              adress_reconstituee_inpi, '(?:^|(?<= ))(ALLEE|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CHAUSSEE|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTE   SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE)(?:(?= )|$)'
             ) as voie_clean, 
             code_postal, 
             code_postal_matching, 
@@ -495,9 +491,11 @@ FROM
           adresse_ligne1, 
           adresse_ligne2, 
           adresse_ligne3, 
-          adress_nettoyee, 
-          adresse_inpi_reconstitue, 
-          adress_regex, 
+          adress_reconstituee_inpi,
+        -- adress_nettoyee, 
+        -- adresse_inpi_reconstitue, 
+          adress_regex_inpi,
+          adress_distance_inpi,
           numero_voie_matching, 
           voie_clean, 
           voie_matching,
@@ -659,10 +657,56 @@ FROM initial_partiel_evt_new_ets_status_final
 """
 ```
 
-<!-- #region -->
-## Etape 2: Preparation `adress_nettoyee` & `adress_regex` & `adresse_inpi_reconstitue`
+## Etape 2: Preparation `adress_reconsitituee_inpi` & `adresse_distance_inpi` & `adress_regex_inpi` 
 
-### `adress_nettoyee`
+
+
+
+### `adress_reconsitituee_inpi`
+
+* Code pour construire adresse_inpi_reconstitue 
+    - [Etape 1: Merge](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/02_siretisation/05_siretisation_new_ets_v2.md#etape-1-merge-1)
+    
+``` 
+adresse_inpi_reconstitue = lambda x: x['adress_new'].apply(
+        lambda x:' '.join([word for word in str(x).split() if word not in
+        (upper_word)]))
+``` 
+
+Dans le code ci dessus, `adress_new` fait référence a la concatenation des champs de l'adresse et du cleaning regex. Dans notre cas, on n'effectue plus de nettoyage regex, mise a part les espaces.
+
+
+```python
+query = """
+REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  NORMALIZE(
+                    UPPER(
+                      CONCAT(
+                        adresse_ligne1, ' ', adresse_ligne2, 
+                        ' ', adresse_ligne3
+                      )
+                    ), 
+                    NFD
+                  ), 
+                  '\pM', 
+                  ''
+                ), 
+                '[^\w\s]| +', 
+                ' '
+              ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          ''
+      ) AS adress_reconstituee_inpi
+"""
+```
+
+## `adresse_distance_inpi`
 
 Cette étape fait référence à l'US [03_prep_adresse_2690.md](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/03_prep_adresse_2690.md) 
 
@@ -671,36 +715,52 @@ Cette étape fait référence à l'US [03_prep_adresse_2690.md](https://github.c
         - CSV dans S3: [Parameters/upper_stop.csv](https://s3.console.aws.amazon.com/s3/object/calfdata/Parameters/STOP_WORD/upper_stop.csv?region=eu-west-3&tab=overview)
         - A créer en table
    - Athena: stop_word
+   
+Dans notre nouvelle version, on décide de tout garder car on va reconstituer l'adresse à l'INSEE. On supprime seulement  les articles   
 
+```python
+s3.download_file(
+'Parameters/STOP_WORD/upper_stop.csv')
 
-Ici, il faut faire attention à supprimer les espaces en début, et fin de ligne. Il faut ausso faire attention à bien enlever les multiples espaces
-<!-- #endregion -->
+#split = [i + "$" for i in pd.read_csv('upper_stop.csv', usecols = ['stop_word'])['stop_word'].to_list()]
+'|'.join(pd.read_csv('upper_stop.csv', usecols = ['stop_word'])['stop_word'].to_list())
+```
 
 ```python
 query = """
-SELECT 
-siren, adresse_ligne1, adresse_ligne2, adresse_ligne3,
 REGEXP_REPLACE(
-  REGEXP_REPLACE(
-   REGEXP_REPLACE(
-    REGEXP_REPLACE(
-      NORMALIZE(
-        UPPER(CONCAT(adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3)),
-        NFD),
-      '\pM', ''),
-    '[^\w\s]', ' '),
-    '\s\s+',
-    ' '),
-  '^\s+|\s+$',''
-  ) AS adress_nettoyee
-  
-FROM initial_partiel_evt_new_ets_status_final  
--- WHERE (adresse_ligne1 IS NOT NULL and adresse_ligne2 IS NOT NULL)
--- WHERE siren = '841344229'
-""""
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  NORMALIZE(
+                    UPPER(
+                      CONCAT(
+                        adresse_ligne1, ' ', adresse_ligne2, 
+                        ' ', adresse_ligne3
+                      )
+                    ), 
+                    NFD
+                  ), 
+                  '\pM', 
+                  ''
+                ), 
+                '[^\w\s]| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES(?:(?= )|$)', 
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          ''
+      ) AS adress_distance_inpi
+"""
 ```
 
-### `adress_regex`
+### `adress_regex_inpi`
 
 <!-- #region -->
 Pour créer le pattern regex, on utilise une liste de stop word disponible dans le Gitlab, que nous avons ensuite modifié manuellement. 
@@ -711,54 +771,52 @@ Pattern regex:
 
 
 ```
-'(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE|RN|BP|CEDEX|BIS)(?:(?= )|$)'
+(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)
 ```
 
 <!-- #endregion -->
 
 ```python
-s3.download_file(
-'Parameters/STOP_WORD/upper_stop.csv')
-```
-
-```python
-#split = [i + "$" for i in pd.read_csv('upper_stop.csv', usecols = ['stop_word'])['stop_word'].to_list()]
-'|'.join(pd.read_csv('upper_stop.csv', usecols = ['stop_word'])['stop_word'].to_list())
-```
-
-```python
 query = """
-SELECT 
-siren, adresse_ligne1, adresse_ligne2, adresse_ligne3,
 CONCAT(
- '(?:^|(?<= ))(', -- debut regex
- REGEXP_REPLACE(
-  REGEXP_REPLACE(  
-   REGEXP_REPLACE(
-    REGEXP_REPLACE(
-     REGEXP_REPLACE(
+      '(?:^|(?<= ))(', 
+      -- debut regex
       REGEXP_REPLACE(
-        NORMALIZE(
-          UPPER(CONCAT(adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3)),
-        NFD),
-      '\pM', ''),
-  '[^\w\s]|\d+| +', ' '
-  ), '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE|RN|BP|CEDEX|BIS)(?:(?= )|$)',
-  ''),
-    '\s\s+',
-    ' '),
-  '^\s+|\s+$',''),
-  '\s', '|'), -- milieu regex
-  ')(?:(?= )|$)' -- fin regex
-  
-  ) AS adress_regex
-   
-  -- AS adress_nettoyee
-  
-FROM initial_partiel_evt_new_ets_status_final  
---WHERE (adresse_ligne1 IS NOT NULL and adresse_ligne2 IS NOT NULL)
---WHERE siren = '841344229'
-LIMIT 15
+        REGEXP_REPLACE(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  NORMALIZE(
+                    UPPER(
+                      CONCAT(
+                        adresse_ligne1, ' ', adresse_ligne2, 
+                        ' ', adresse_ligne3
+                      )
+                    ), 
+                    NFD
+                  ), 
+                  '\pM', 
+                  ''
+                ), 
+                '[^\w\s]|\d+| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          ''
+        ), 
+        '\s', 
+        '|'
+      ), 
+      -- milieu regex
+      ')(?:(?= )|$)' -- fin regex
+      ) AS adress_regex_inpi
 """
 ```
 
@@ -814,44 +872,6 @@ regexp_like(adress_nettoyee,adress_regex)
 FROM create_regex   
 ```
 
-
-### `adresse_inpi_reconstitue`
-
-* Code pour construire adresse_inpi_reconstitue 
-    - [Etape 1: Merge](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/02_siretisation/05_siretisation_new_ets_v2.md#etape-1-merge-1)
-    
-``` 
-adresse_inpi_reconstitue = lambda x: x['adress_new'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)]))
-``` 
-
-Dans le code ci dessus, `adress_new` fait reférence ) `adress_nettoyee` dans notre code SQL
-
-```python
-query = """
-
-REGEXP_REPLACE(
-  REGEXP_REPLACE(  
-   REGEXP_REPLACE(
-    REGEXP_REPLACE(
-     REGEXP_REPLACE(
-      REGEXP_REPLACE(
-        NORMALIZE(
-          UPPER(CONCAT(adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3)),
-        NFD),
-      '\pM', ''),
-  '[^\w\s]| +', ' '
-  ), '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE|RN|BP|CEDEX|BIS)(?:(?= )|$)',
-  ''),
-    '\s\s+',
-    ' '),
-  '^\s+|\s+$',''),
-  '\s', ' '
-  ) AS adresse_inpi_reconstitue
-
-"""
-```
 
 ## Etape 3: Préparation `numero_voie_matching` & `voie_matching`
 
