@@ -23,9 +23,9 @@ Comme la taille de la donnée est trop élevée, il faut prendre un sous échant
 
 Input:
 - INSEE:
-    - NEW: `data/input/INSEE/InitialPartielEVTNEW/insee_9368683_InitialPartielEVTNEW.csv`
+    - Athena: `insee_final_sql` 
 - INPI:
-    - NEW: `data/input/INPI/InitialPartielEVTNEW/ets_preparation_python_1.csv`
+    - Athena: `ets_final_sql` 
 
 Output:
 
@@ -41,26 +41,34 @@ Output:
 - logs ETS: [INPI/TC_1/04_table_siretisee/ETS_logs](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/04_table_siretisee/ETS_logs/?region=eu-west-3&tab=overview)
 
 ```python
-import os, re
-os.chdir('../')
-current_dir = os.getcwd()
-from inpi_insee import siretisation
-import pandas as pd
-
-%load_ext autoreload
-%autoreload 2
-
-param = {
-    #'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_1557220_InitialPartielEVTNEW.csv' ### PP
-    'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_9368683_InitialPartielEVTNEW.csv'  ### ETS
-    #'insee': 'data/input/INSEE/NEW/insee_1745311_NEW.csv' ### ETS
-}
-# 4824158 SIREN a trouver!
-al_siret = siretisation.siretisation_inpi(param)
+import os 
+os.getcwd()
 ```
 
 ```python
+#import os, re
+#os.chdir('../')
+#from inpi_insee import siretisation
+import json, os, re
+from dask.diagnostics import ProgressBar
+from dask.multiprocessing import get
+import dask.dataframe as dd
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+pbar = ProgressBar()
+pbar.register()
+current_dir = os.getcwd()
+%load_ext autoreload
+%autoreload 2
 pd.set_option('display.max_columns', None)
+#param = {
+    #'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_1557220_InitialPartielEVTNEW.csv' ### PP
+#    'insee': 'data/input/INSEE/InitialPartielEVTNEW/insee_9368683_InitialPartielEVTNEW.csv'  ### ETS
+    #'insee': 'data/input/INSEE/NEW/insee_1745311_NEW.csv' ### ETS
+#}
+# 4824158 SIREN a trouver!
+#al_siret = siretisation.siretisation_inpi(param)
 ```
 
 ```python
@@ -78,28 +86,28 @@ pd.set_option('display.max_columns', None)
 ```
 
 ```python
-list_inpi = ['ncc','code_postal_matching','code_commune','voie_matching','numero_voie_matching',
+list_inpi = ['ville_matching','code_postal_matching','code_commune','voie_matching','numero_voie_matching',
              'date_début_activité', 'status_admin', 'status_ets']
 
-list_insee = ['libelleCommuneEtablissement',
-            'codePostalEtablissement', 'codeCommuneEtablissement',
-            'typeVoieEtablissement','numeroVoieEtablissement',
-             'dateCreationEtablissement', 'etatAdministratifEtablissement', 'etablissementSiege']
+list_insee = ['ville_matching',
+            'codepostaletablissement', 'codecommuneetablissement',
+            'typevoieetablissement','numerovoieetablissement',
+             'datecreationetablissement', 'etatadministratifetablissement', 'etablissementsiege']
 
 sort_list = [
- {'ncc', 'code_postal_matching', 'code_commune', 'voie_matching', 'numero_voie_matching',
+ {'ville_matching', 'code_postal_matching', 'code_commune', 'voie_matching', 'numero_voie_matching',
   'date_début_activité', 'status_admin', 'status_ets'},
     
- {'ncc', 'code_postal_matching', 'code_commune', 'voie_matching',
+ {'ville_matching', 'code_postal_matching', 'code_commune', 'voie_matching',
   'date_début_activité', 'status_admin', 'status_ets'},
     
- {'ncc', 'code_postal_matching', 'code_commune', 'numero_voie_matching',
+ {'ville_matching', 'code_postal_matching', 'code_commune', 'numero_voie_matching',
  'date_début_activité', 'status_admin', 'status_ets'},
     
- {'ncc', 'code_postal_matching', 'code_commune','date_début_activité', 'status_admin', 'status_ets'},   
- {'ncc', 'code_postal_matching','date_début_activité', 'status_admin', 'status_ets'},
+ {'ville_matching', 'code_postal_matching', 'code_commune','date_début_activité', 'status_admin', 'status_ets'},   
+ {'ville_matching', 'code_postal_matching','date_début_activité', 'status_admin', 'status_ets'},
     
- {'ncc', 'date_début_activité', 'status_admin', 'status_ets'},
+ {'ville_matching', 'date_début_activité', 'status_admin', 'status_ets'},
     
  {'code_postal_matching', 'date_début_activité', 'status_admin', 'status_ets'},
     
@@ -137,11 +145,11 @@ from awsPy.aws_athena import service_athena
 from awsPy.aws_s3 import service_s3
 from pathlib import Path
 import pandas as pd
-import os
+import os, shutil
 bucket = 'calfdata'
 path = os.getcwd()
 parent_path = str(Path(path).parent)
-path_cred = r"{}/programme_matching/credential_AWS.json".format(parent_path)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
 con = aws_connector.aws_instantiate(credential = path_cred,
                                        region = 'eu-west-3')
 client= con.client_boto()
@@ -151,61 +159,147 @@ athena = service_athena.connect_athena(client = client,
                       bucket = 'calfdata') 
 ```
 
+## Recuperation ETS INPI
+
 ```python
-query = """
-SELECT * 
-FROM ets_preparation_python_lib1   
+csv_a_cree = False
+if csv_cree:
+    query = """
+  SELECT 
+  index_id, 
+  siren, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  status, 
+  origin, 
+  date_greffe, 
+  file_timestamp, 
+  libelle_evt, 
+  last_libele_evt, 
+  status_admin, 
+  type, 
+  status_ets, 
+  adress_reconstituee_inpi, 
+  adress_regex_inpi, 
+  adress_distance_inpi, 
+  numero_voie_matching, 
+  voie_clean, 
+  voie_matching, 
+  code_postal_matching, 
+  ville_matching , 
+  code_commune, 
+  enseigne, 
+  "date_début_activité", 
+  csv_source 
+FROM 
+  ets_final_sql 
+WHERE 
+  status != 'IGNORE'
 """
+    
+    output = athena.run_query(
+        query=query,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
 ```
 
 ```python
-output = athena.run_query(
-    query=query,
-    database='inpi',
-    s3_output='INPI/sql_output'
-)
+if csv_cree:
+    table = 'ets_final_sql'
+    source_key = "{}/{}.csv".format(
+                            'INPI/sql_output',
+                            output['QueryExecutionId']
+                                   )
+
+    destination_key = "{}/{}.csv".format(
+                            'INPI/TC_1/02_preparation_donnee/ETS_SQL',
+                            table
+                        )
+    results = s3.copy_object_s3(
+                            source_key = source_key,
+                            destination_key = destination_key,
+                            remove = False
+                        )
+    
+    s3.download_file(
+    key= destination_key)
 ```
 
 ```python
-table = 'ets_preparation_python_lib1_1'
-source_key = "{}/{}.csv".format(
-                        'INPI/sql_output',
-                        output['QueryExecutionId']
-                               )
+filename = 'ets_final_sql'
+shutil.move("{}.csv".format(filename),
+            "data/input/INPI")
+```
 
-destination_key = "{}/{}.csv".format(
-                        'INPI/TC_1/02_preparation_donnee/ETS_TEMP',
-                        table
-                    )
+## Recuperation ETS INSEE
 
+```python
+csv_cree = True
+if csv_cree:
+    query = """SELECT 
+  count_initial_insee, 
+  insee_final_sql.siren, 
+  siret, 
+  datecreationetablissement, 
+  etablissementsiege, 
+  etatadministratifetablissement, 
+  codepostaletablissement, 
+  codecommuneetablissement, 
+  libellecommuneetablissement, 
+  ville_matching, 
+  libellevoieetablissement, 
+  complementadresseetablissement, 
+  numerovoieetablissement, 
+  indicerepetitionetablissement, 
+  typevoieetablissement, 
+  adress_reconstituee_insee, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement
+FROM 
+  insee_final_sql 
+  INNER JOIN (
+    select 
+      distinct(siren) 
+    FROM 
+      ets_final_sql
+  ) as ets ON insee_final_sql.siren = ets.siren
+"""
+    output = athena.run_query(
+        query=query,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
 ```
 
 ```python
-results = s3.copy_object_s3(
-                        source_key = source_key,
-                        destination_key = destination_key,
-                        remove = False
-                    )
+if csv_cree:
+    table = 'insee_final_sql'
+    source_key = "{}/{}.csv".format(
+                            'INPI/sql_output',
+                            output['QueryExecutionId']
+                                   )
+
+    destination_key = "{}/{}.csv".format(
+                            'INPI/TC_1/02_preparation_donnee/INSEE_SQL',
+                            table
+                        )
+    results = s3.copy_object_s3(
+                            source_key = source_key,
+                            destination_key = destination_key,
+                            remove = False
+                        )
+    
+    s3.download_file(
+    key= destination_key)
 ```
 
 ```python
-#s3.download_file(
-#    key= destination_key)
-```
-
-```python
-import shutil
-#try:
-#    os.remove("data/input/INPI/InitialPartielEVTNEW/ets_preparation_python_1.csv")
-#except:
-#    pass
-#os.getcwd()
-```
-
-```python
-#filename = 'ets_preparation_python_lib1_1'
-#shutil.move("{}.csv".format(filename),
-#            "data/input/INPI/InitialPartielEVTNEW")
+shutil.move("insee_final_sql.csv",
+            "../data/input/INSEE")
 ```
 
 Il faut prendre l'`origin` et `filename` que l'on souhaite sitetiser
@@ -218,22 +312,22 @@ for f in files:
 ```
 
 ```python
-origin = "InitialPartielEVTNEW"
-filename = "ets_preparation_python_lib1" ####ETS
+##origin = "InitialPartielEVTNEW"
+##filename = "ets_preparation_python_lib1" ####ETS
 #filename = "inpi_initial_partiel_evt_new_ets_status_final_InitialPartielEVTNEW"
 #origin = "NEW"
 #filename = "inpi_initial_partiel_evt_new_ets_status_final_NEW"
 #### make dir
-parent_dir = 'data/output/'
-parent_dir_1 = 'data/input/INPI/special_treatment/'
-parent_dir_2 = 'data/logs/'
+#parent_dir = 'data/output/'
+#parent_dir_1 = 'data/input/INPI/special_treatment/'
+#parent_dir_2 = 'data/logs/'
 
-for d in [parent_dir,parent_dir_1,parent_dir_2]:
-    path = os.path.join(d, origin) 
-    try:
-        os.mkdir(path) 
-    except:
-        pass
+#for d in [parent_dir,parent_dir_1,parent_dir_2]:
+#    path = os.path.join(d, origin) 
+#    try:
+#        os.mkdir(path) 
+#    except:
+#        pass
 ```
 
 # Parametres et fonctions
@@ -249,6 +343,33 @@ import nltk
 import dask.dataframe as dd
 import numpy as np
 import sidetable
+```
+
+```python
+def import_dask(file, usecols = None, dtype=None, parse_dates = False):
+        """
+        Import un fichier gzip ou csv en format Dask
+
+        Deja dans preparation data
+
+        Args:Merge
+        - file: String, Path pour localiser le fichier, incluant le nom et
+        l'extension
+        - usecols: List: les noms des colonnes a importer. Par defaut, None
+        - dtype: Dictionary: La clé indique le nom de la variable, la valeur
+        indique le type de la variable
+        - parse_dates: bool or list of int or names or list of lists or dict,
+         default False
+        """
+        #extension = os.path.splitext(file)[1]
+        if usecols == None:
+            low_memory = False
+        else:
+            low_memory = True
+        dd_df = dd.read_csv(file, usecols = usecols, dtype = dtype,
+        blocksize=None, low_memory = low_memory,parse_dates = parse_dates)
+
+        return dd_df
 ```
 
 ```python
@@ -273,7 +394,7 @@ def split_duplication(df):
 
         df = df.merge(
             (df
-                .groupby('index')['index']
+                .groupby('index_id')['index_id']
                 .count()
                 .rename('count_duplicates_')
                 .reset_index()
@@ -315,7 +436,6 @@ def find_regex(regex, test_str):
 ```
 
 ```python
-
 def jackard_distance(inpi, insee):
     """
     
@@ -344,161 +464,212 @@ def edit_distance(inpi, insee):
 ```
 
 ```python
-inpi_col = ['siren',
-            'code_greffe',
-            'nom_greffe',
-            'numero_gestion',
-            'id_etablissement',
-            'origin',
-            'file_timestamp',
-            'date_greffe',
-            #'nom_commercial',
-            'enseigne',
-            'libelle_evt',
-            'last_libele_evt',
-            'index',
-            'type',
-            'status_admin', 'status_ets',
-            'code_postal_matching',
-            #'ville',
-            'code_commune',
-            #'pays',
-            #'count_initial_inpi',
-            'ncc',
-            'adresse_new_clean_reg',
-            'adress_new',
-            'voie_matching',
-            'date_début_activité',
-            'numero_voie_matching',
-            #'len_digit_address_inpi',
-            #'list_digit_inpi'
+inpi_col = ["index_id",
+            "siren",
+            "code_greffe",
+            "nom_greffe",
+            "numero_gestion",
+            "id_etablissement",
+            "status",
+            "origin",
+            "date_greffe",
+            "file_timestamp",
+            "libelle_evt",
+            "last_libele_evt", 
+            "status_admin",
+            "type",
+            "status_ets",
+            "adress_reconstituee_inpi",
+            "adress_regex_inpi",
+            "adress_distance_inpi",
+            "numero_voie_matching",
+            "voie_clean",
+            "voie_matching",
+            "code_postal_matching",
+            "ville_matching",
+            "code_commune",
+            "enseigne",
+            "date_début_activité",
+            "csv_source"
             ]
 
 #['count_initial_inpi', 'list_digit_inpi', 'pays', 'len_digit_address_inpi', 'nom_commercial', 'ville']
 
 inpi_dtype = {
-    'siren': 'object',
-    'code_greffe': 'object',
-            'nom_greffe': 'object',
-            'numero_gestion': 'object',
-            'id_etablissement': 'object',
-            'origin': 'object',
-            'file_timestamp': 'object',
-            'date_greffe': 'object',
-    #'nom_commercial': 'object',
-            'enseigne': 'object',
-            'libelle_evt': 'object',
-    'id_etablissement': 'object',
-    'index': 'object',
-    'type': 'object',
-    'status_admin': 'object',
-    'status_ets': 'object',
-    'code_postal_matching': 'object',
-    'ville': 'object',
-    'code_commune': 'object',
-    'pays': 'object',
-    #'count_initial_inpi': 'int',
-    'ncc': 'object',
-    'adresse_new_clean_reg': 'object',
-    'adress_new':'object',
-    'voie_matching': 'object',
-    'date_début_activité': 'object',
-    'numero_voie_matching': 'object',
-    #'len_digit_address_inpi':'object'
+    "index_id":"object",
+"siren":"object",
+"code_greffe":"object",
+"nom_greffe":"object",
+"numero_gestion":"object",
+"id_etablissement":"object",
+"status":"object",
+"origin":"object",
+"date_greffe":"object",
+"file_timestamp":"object",
+"libelle_evt":"object",
+"last_libele_evt":"object", 
+"status_admin":"object",
+"type":"object",
+"status_ets":"object",
+"adress_reconstituee_inpi":"object",
+"adress_regex_inpi":"object",
+"adress_distance_inpi":"object",
+"numero_voie_matching":"object",
+"voie_clean":"object",
+"voie_matching":"object",
+"code_postal_matching":"object",
+"ville_matching":"object",
+"code_commune":"object",
+"enseigne":"object",
+"date_début_activité":"object",
+"csv_source":"object"
 }
 
-insee_col = ['siren',
-         'siret',
-         'dateCreationEtablissement',
-         "etablissementSiege",
-         "etatAdministratifEtablissement",
-         'complementAdresseEtablissement',
-         'numeroVoieEtablissement',
-         'indiceRepetitionEtablissement',
-         'typeVoieEtablissement',
-         'libelleVoieEtablissement',
-         'codePostalEtablissement',
-         'libelleCommuneEtablissement',
-         'libelleCommuneEtrangerEtablissement',
-         'distributionSpecialeEtablissement',
-         'codeCommuneEtablissement',
-         'codeCedexEtablissement',
-         'libelleCedexEtablissement',
-         'codePaysEtrangerEtablissement',
-         'libellePaysEtrangerEtablissement',
-         'count_initial_insee',
-             'len_digit_address_insee',
-             'list_digit_insee',
-            "enseigne1Etablissement",
-            "enseigne2Etablissement",
-            "enseigne3Etablissement"]
+insee_col = [
+    "count_initial_insee",
+    "siren",
+    "siret",
+    "datecreationetablissement",
+    "etablissementsiege",
+    "etatadministratifetablissement",
+    "codepostaletablissement",
+    "codecommuneetablissement",
+    "libellecommuneetablissement",
+    "ville_matching",
+    "libellevoieetablissement",
+    "complementadresseetablissement",
+    "numerovoieetablissement",
+    "indicerepetitionetablissement",
+    "typevoieetablissement",
+    "adress_reconstituee_insee",
+    "enseigne1etablissement",
+    "enseigne2etablissement",
+    "enseigne3etablissement" 
+    
+]
 
 insee_dtype = {
-             'siren': 'object',
-             'siret': 'object',
-             "etablissementSiege": "object",
-             "etatAdministratifEtablissement": "object",
-             'dateCreationEtablissement': 'object',
-             'complementAdresseEtablissement': 'object',
-             'numeroVoieEtablissement': 'object',
-             'indiceRepetitionEtablissement': 'object',
-             'typeVoieEtablissement': 'object',
-             'libelleVoieEtablissement': 'object',
-             'codePostalEtablissement': 'object',
-             'libelleCommuneEtablissement': 'object',
-             'libelleCommuneEtrangerEtablissement': 'object',
-             'distributionSpecialeEtablissement': 'object',
-             'codeCommuneEtablissement': 'object',
-             'codeCedexEtablissement': 'object',
-             'libelleCedexEtablissement': 'object',
-             'codePaysEtrangerEtablissement': 'object',
-             'libellePaysEtrangerEtablissement': 'object',
-             'count_initial_insee': 'int',
-             'len_digit_address_insee':'object',
-            "enseigne1Etablissement":'object',
-            "enseigne2Etablissement":'object',
-            "enseigne3Etablissement":'object'
+             "count_initial_insee":"object",
+"siren":"object",
+"siret":"object",
+"datecreationetablissement":"object",
+"etablissementsiege":"object",
+"etatadministratifetablissement":"object",
+"codepostaletablissement":"object",
+"codecommuneetablissement":"object",
+"libellecommuneetablissement":"object",
+"ville_matching":"object",
+"libellevoieetablissement":"object",
+"complementadresseetablissement":"object",
+"numerovoieetablissement":"object",
+"indicerepetitionetablissement":"object",
+"typevoieetablissement":"object",
+"adress_reconstituee_insee":"object",
+"enseigne1etablissement":"object",
+"enseigne2etablissement":"object",
+"enseigne3etablissement" :"object"
          }
+```
 
-## Calcul nb siren/siret
-upper_word = pd.read_csv('data/input/Parameters/upper_stop.csv'
-        ).iloc[:,0].to_list()
-
-voie = (pd.read_csv('data/input/Parameters/voie.csv').assign(upper = lambda x: 
-             x['possibilite'].str.isupper()).loc[lambda x: 
-                                                 x['upper'].isin([True])])
+```python
+reindex = ['index_id',
+ 'siren',
+ 'siret',
+ 'count_initial_insee',
+ 'date_début_activité',
+ 'datecreationetablissement',
+ 'code_greffe',
+ 'nom_greffe',
+ 'numero_gestion',
+ 'id_etablissement',
+ 'status',
+ 'origin',
+ 'date_greffe',
+ 'file_timestamp',
+ 'libelle_evt',
+ 'last_libele_evt',
+ 'status_admin',
+ 'etatadministratifetablissement',
+ 'type',
+ 'status_ets',
+ 'etablissementsiege',
+ 'numero_voie_matching',
+ 'numerovoieetablissement',
+ 'voie_clean',
+ 'voie_matching',
+ 'typevoieetablissement',
+ 'libellevoieetablissement',
+ 'complementadresseetablissement',
+ 'adress_reconstituee_inpi',
+ 'adress_reconstituee_insee',
+ 'adress_regex_inpi',
+ 'adress_distance_inpi',
+ 'test_address_regex',
+ 'jacquard',
+ 'edit',
+ 'min_jacquard',
+ 'min_edit',
+ 'test_jacquard_adress',
+ 'test_edit_adress',
+ 'test_distance_diff',
+ 'code_postal_matching',
+ 'codepostaletablissement',
+ 'ville_matching',
+ 'libellecommuneetablissement',
+ 'code_commune',
+ 'codecommuneetablissement',
+ 'enseigne',
+ 'enseigne1etablissement',
+ 'enseigne2etablissement',
+ 'enseigne3etablissement',
+ 'jacquard_enseigne1',
+ 'jacquard_enseigne2',
+ 'jacquard_enseigne3',
+ 'edit_enseigne1',
+ 'edit_enseigne2',
+ 'edit_enseigne3',
+ 'min_jacquard_enseigne1',
+ 'min_jacquard_enseigne2',
+ 'min_jacquard_enseigne3',
+ 'min_edit_enseigne1',
+ 'min_edit_enseigne2',
+ 'min_edit_enseigne3',
+ 'test_enseigne_insee',
+ 'test_enseigne_jacquard',
+ 'test_enseigne_edit',
+ 'csv_source',
+ 'indicerepetitionetablissement'
+ ]
 ```
 
 <!-- #region -->
 # Processus de siretisation
 
-## Création variables supplémentaire
+## Variables utilisées pour les tests
 
 Lors du processus de siretisation, nous avons besoin de créer de nouvelles variables, qui seront, faites lors de la préparation de la donnée. 
 
 Les nouvelles variables sont les suivantes:
 
-- `status_admin`: Si last_libele_evt = 'Etablissement ouvert' THEN 'A' ELSE 'F
-- `status_ets`: Si type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false'
-- `numeroVoieEtablissement_`: Remplace les na par des blancs. Cela évite d'avoir des problèmes lors du calcul de la distance
-- `possibilite`: Conversion des abbrévations des types de voie de l'INSEE 
-- `adresse_insee_clean`: Nettoyage de l'adresse de l'INSEE (`libelleVoieEtablissement`) de la même manière que l'INPI
-- `adress_insee_reconstitue`: Reconstitution de l'adresse à l'INSEE en utilisant le numéro de voie `numeroVoieEtablissement_`, le type de voie non abbrégé `possibilite` et l'adresse `libelleVoieEtablissement`
-- `enseigne`: Mise en majuscule de l'adresse
+- `adress_regex_inpi`: Concatenation des champs de l'adresse, suppression des espaces, des articles et des numéros et ajout de `(?:^|(?<= ))(` et `)(?:(?= )|$)`
+- `adress_distance_inpi`: Concatenation des champs de l'adresse, suppression des espaces et des articles
+- `adress_reconstituee_insee`: Reconstitution de l'adresse à l'INSEE en utilisant le numéro de voie `numeroVoieEtablissement`, le type de voie non abbrégé, `voie_clean`, l'adresse `libelleVoieEtablissement` et le `complementAdresseEtablissement` et suppression des articles
+- `enseigne`
+- `enseigne1etablissement`
+- `enseigne2etablissement`
+- `enseigne3etablissement`
 
 
 ### variables nécéssaires aux tests
 
 Les variables ci dessous sont des nouvelles variables résultant du merge entre les deux tables
 
-- `test_address_libelle`: 
-    - Si un des mots contenus dans la variable `adresse_new_clean_reg` est présente dans la variable `libelleVoieEtablissement` alors True
-- `test_address_complement`:
-    - Si un des mots contenus dans la variable `adresse_new_clean_reg` est présente dans la variable `libelleVoieEtablissement` alors True
+- `test_address_regex`: 
+    - Si un des mots contenus dans la variable `adress_regex_inpi` est présente dans la variable `adress_reconstituee_insee` alors True
 - `jacquard`:
-    - Calcul de la distance (dissimilarité) entre `adresse_inpi_clean` et `adress_insee_reconstitue`
+    - Calcul de la distance (dissimilarité) entre `adress_distance_inpi` et `adress_reconstituee_insee`
 - `edit`:
-    - Calcul de la distance (Levhenstein) entre `adresse_inpi_clean` et `adress_insee_reconstitue`
+    - Calcul de la distance (Levhenstein) entre `adress_distance_inpi` et `adress_reconstituee_insee`
 - `jacquard_enseigne1`:
     - Jaccard distance entre `enseigne` et `enseigne1Etablissement1`
 - `jacquard_enseigne2`:
@@ -531,10 +702,6 @@ Les variables ci dessous sont des nouvelles variables résultant du merge entre 
 
 ### Variables Tests 
 
-- test_join_address:
-    - Si `test_address_libelle` et `test_address_complement` sont égales a True, alors True
-- test_regex_adress:
-    - Si `test_address_libelle`, `test_address_complement` et `test_join_address` sont égales a False, Alors False
 - test_jacquard_adress:
     - Si `jacquard` est égale à `min_jacquard` alors, True
 - test_edit_adress:
@@ -581,7 +748,7 @@ Les règles sons les suivantes:
 
 ### Filtre 1
 
-- Si `test_regex_adress` est égal a True, ET `test_jacquard_adress` est égal à True, ET `test_edit_adress` est égal à True, ET `test_enseigne_edit` est égal a True OU `test_enseigne_jacquard` est égal a True OU `count_initial_insee` est égal à 1
+- Si `test_address_regex` est égal a True, ET `test_jacquard_adress` est égal à True, ET `test_edit_adress` est égal à True, ET `test_enseigne_edit` est égal a True OU `test_enseigne_jacquard` est égal a True OU `count_initial_insee` est égal à 1
 
 ### Filtre 2
 
@@ -611,121 +778,227 @@ list_possibilities[0]['match']['inpi']
 list_possibilities[0]['match']['insee']
 ```
 
-## Etape 1: Merge
+# Siretisation
 
-Dans un premier temps, nous allons merger la table de l'INSEE et de l'INPI sur un ensemble de variable très contraignante: 
-
-- `siren`
-- `status_ets`: Etablissement ouvert/fermé
-- `numero_voie_matching`: Numéro de voie
-- `voie_matching`:  Type de voie
-- `ncc`: ville
-- `code_commune`:  Code commune
-- `status_admin`: Type d'entreprise
-- `date_début_activité`: Date de création de l'établissement
-- `code_postal_matching`: Code postal
-
-L'idée principale est de trouver le siret d'une séquence avec le plus d'exactitude pour ensuite appliquer le siret à la séquence. Cette technique permet d'être plus sur sur l'historique. En effet, l'INSEE donne le dernier état connu, il peut donc avoir des différences avec les valeurs historisées de l'INPI, surtout sur le type ou l'enseigne.
+```python
+os.chdir('../')
+#os.getcwd()
+```
 
 ```python
 for key, values in enumerate(list_possibilities[:1]):
-    df_ets = 'data/input/INPI/{0}/{1}_{2}.csv'.format(origin, filename, key + 1)
-    print(df_ets)
+    df_ets = 'data/input/INPI/ets_final_sql_{0}.csv'.format(key)
+    #print(df_ets)
     
     ## Etape 1
-    inpi = (al_siret.import_dask(file=df_ets,
+    inpi = import_dask(file=df_ets,
                                 usecols=inpi_col,
                                 dtype=inpi_dtype,
                                 parse_dates=False)
-       )
-    insee = al_siret.import_dask(
-        file=al_siret.insee,
+       
+    insee = import_dask(
+        file= 'data/input/INSEE/insee_final_sql.csv',
         usecols=insee_col,
-        dtype=insee_dtype,
-        #parse_dates = ['dateCreationEtablissement']
+        dtype=insee_dtype
 )
     
     temp = (inpi
             .merge(insee,
                           how='inner',
-                          left_on=list_possibilities[0]['match']['inpi'],
-                          right_on= list_possibilities[0]['match']['insee'],
-                          #indicator=True,
-                          #suffixes=['_insee', '_inpi']
+                   left_on = ['siren','code_postal_matching'],
+                   right_on = ['siren','codepostaletablissement']
+                   
+                          #left_on=list_possibilities[0]['match']['inpi'],
+                          #right_on= list_possibilities[0]['match']['insee']
                   )
-            .merge(voie, left_on = 'typeVoieEtablissement', right_on ='INSEE', how = 'left')
-            #### création addresse
-            .assign(
-                numeroVoieEtablissement_ = lambda x: x['numeroVoieEtablissement'].fillna(''),
-                possibilite = lambda x: x['possibilite'].fillna('')
-                   )
-            .assign(
-            date_début_activité = lambda x: pd.to_datetime(
-            x['date_début_activité'], errors = 'coerce'),   
-        adresse_insee_clean=lambda x: x['libelleVoieEtablissement'].str.normalize(
-                'NFKD')
-            .str.encode('ascii', errors='ignore')
-            .str.decode('utf-8')
-            .str.replace('[^\w\s]|\d+', ' ')
-            .str.upper(),
-                adress_insee_reconstitue = lambda x: 
-            x['numeroVoieEtablissement_'] + ' '+ \
-            x['possibilite'] + ' ' + \
-            x['libelleVoieEtablissement']   
-        )
-            .assign(
-            
-        adresse_insee_clean = lambda x: x['adresse_insee_clean'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)])),
-            
-        adresse_inpi_reconstitue = lambda x: x['adress_new'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)])),   
-            
-        adress_insee_reconstitue = lambda x: x['adress_insee_reconstitue'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)])), 
-                enseigne = lambda x: x['enseigne'].str.upper()
-        )
-            )
+           ).compute()
+    
+    ### Etape 2
+    ## Test 1: address
+    df_2 = dd.from_pandas(temp, npartitions=10)
+    df_2['test_address_regex'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        find_regex(
+                         x['adress_regex_inpi'],
+                         x['adress_reconstituee_insee']), axis=1)
+                         ).compute()
+
+    df_2['jacquard'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        jackard_distance(
+                         x['adress_distance_inpi'],
+                         x['adress_reconstituee_insee']), axis=1)
+                         ).compute()
+
+    df_2['edit'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        edit_distance(
+                         x['adress_distance_inpi'],
+                         x['adress_reconstituee_insee']), axis=1)
+                         ).compute()
+    
+    df_2['jacquard_enseigne1'] = df_2.map_partitions(
+            lambda df:
+                df.apply(lambda x:
+                    jackard_distance(
+                     x['enseigne'],
+                     x['enseigne1etablissement']), axis=1)
+                     ).compute()
+    df_2['jacquard_enseigne2'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        jackard_distance(
+                         x['enseigne'],
+                         x['enseigne2etablissement']), axis=1)
+                         ).compute()
+    df_2['jacquard_enseigne3'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        jackard_distance(
+                         x['enseigne'],
+                         x['enseigne3etablissement']), axis=1)
+                         ).compute()
+
+    df_2['edit_enseigne1'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        edit_distance(
+                         x['enseigne'],
+                         x['enseigne1etablissement']), axis=1)
+                         ).compute()
+    df_2['edit_enseigne2'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        edit_distance(
+                         x['enseigne'],
+                         x['enseigne2etablissement']), axis=1)
+                         ).compute()
+    df_2['edit_enseigne3'] = df_2.map_partitions(
+                lambda df:
+                    df.apply(lambda x:
+                        edit_distance(
+                         x['enseigne'],
+                         x['enseigne3etablissement']), axis=1)
+                         ).compute()
+
+    df_2 = df_2.compute()
+
+    df_2 = df_2.assign(
+        min_jacquard = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['jacquard'].transform('min'),
+        min_edit = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['edit'].transform('min'))
+
+    df_2 = df_2.assign(
+        test_jacquard_adress = lambda x: np.where(
+            x['jacquard'] == x['min_jacquard'],
+            True, False
+        ),
+        test_edit_adress = lambda x: np.where(
+            x['edit'] == x['min_edit'],
+            True, False
+        ),
+        test_distance_diff = lambda x:
+        np.where(
+            np.logical_or(
+                np.logical_and(
+                x['jacquard'] == x['min_jacquard'],
+                x['edit'] != x['min_edit']
+                ),
+                np.logical_and(
+                x['jacquard'] != x['min_jacquard'],
+                x['edit'] == x['min_edit']
+                )
+            ),
+            True, False
+
+        ),
+
+        min_jacquard_enseigne1 = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['jacquard_enseigne1'].transform('min'),
+
+        min_jacquard_enseigne2 = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['jacquard_enseigne2'].transform('min'),
+
+        min_jacquard_enseigne3 = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['jacquard_enseigne3'].transform('min'),
+
+        min_edit_enseigne1 = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['edit_enseigne1'].transform('min'),
+
+        min_edit_enseigne2 = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['edit_enseigne2'].transform('min'),
+
+        min_edit_enseigne3 = lambda x:
+        x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
+                   'id_etablissement'])['edit_enseigne3'].transform('min')
+    )
+
+    #df_2 = df_2.drop(columns =  ['test_enseigne_insee','test_enseigne_edit',
+    #                                               'test_enseigne_jacquard'])
+
+    df_2.loc[
+        (df_2['enseigne1etablissement'].isin([np.nan]))
+        &(df_2['enseigne2etablissement'].isin([np.nan]))
+        &(df_2['enseigne3etablissement'].isin([np.nan])),
+        'test_enseigne_insee'
+    ] = True
+
+    df_2.loc[
+            (df_2['test_enseigne_insee'] != True),
+            'test_enseigne_insee'] = False
+
+    df_2.loc[
+        (df_2['enseigne'].isin([np.nan]))
+        |(df_2['test_enseigne_insee'].isin([True]))
+        |(df_2['jacquard_enseigne1'] == 0)
+        |(df_2['jacquard_enseigne2'] == 0)
+        |(df_2['jacquard_enseigne3'] == 0),
+        'test_enseigne_jacquard'
+    ] = True
+
+    df_2.loc[
+        (df_2['enseigne'].isin([np.nan]))
+        |(df_2['test_enseigne_insee'].isin([True]))
+        |(df_2['edit_enseigne1'] == 0)
+        |(df_2['edit_enseigne2'] == 0)
+        |(df_2['edit_enseigne3'] == 0),
+        'test_enseigne_edit'
+    ] = True
+
+    df_2.loc[
+            (df_2['test_enseigne_edit'] != True),
+            'test_enseigne_edit'] = False
+
+    df_2.loc[
+            (df_2['test_enseigne_jacquard'] != True),
+            'test_enseigne_jacquard'] = False
+    
+    df_2 = df_2.reindex(columns = reindex)
+
+    
 ```
 
 ```python
-
-
-inpi = (al_siret.import_dask(file=df_ets,
-                                usecols=inpi_col,
-                                dtype=inpi_dtype,
-                                parse_dates=False)
-       )
-insee = al_siret.import_dask(
-        file=al_siret.insee,
-        usecols=insee_col,
-        dtype=insee_dtype,
-        #parse_dates = ['dateCreationEtablissement']
-)
+df_2.head(20)
 ```
 
 ```python
-temp = inpi.merge(insee,
-                          how='left',
-                          left_on=list_possibilities[0]['match']['inpi'],
-                          right_on= list_possibilities[0]['match']['insee'],
-                          indicator=True,
-                          suffixes=['_insee', '_inpi'])
-temp = temp.compute()
+df_2.loc[lambda x: x['test_address_regex'].isin([False])].head(10)
 ```
 
 Il est assez simple de voir que le merge a abouti a la création de doublon 
 
-```python
-temp.shape[0] - temp['index'].max() + 1
-```
-
-```python
-temp['_merge'].value_counts()
-```
 
 Nous allons appliquer des règles de gestion sur les combinaisons matchées (les `both`)
 
@@ -733,246 +1006,6 @@ Nous allons appliquer des règles de gestion sur les combinaisons matchées (les
 ## Etape 2: Création variables tests
 
 Dans cette étape, nous allons créer toutes les variables de test, comme évoqué précédement, a savoir sur l'adresse et l'enseigne.
-
-```python
-to_check = (temp[temp['_merge']
-                 .isin(['both'])]
-            .drop(columns= '_merge')
-            .merge(voie, left_on = 'typeVoieEtablissement', right_on ='INSEE', how = 'left')
-            #### création addresse
-            .assign(
-                numeroVoieEtablissement_ = lambda x: x['numeroVoieEtablissement'].fillna(''),
-                possibilite = lambda x: x['possibilite'].fillna('')
-                   )
-            .assign(
-            date_début_activité = lambda x: pd.to_datetime(
-            x['date_début_activité'], errors = 'coerce'),   
-        adresse_insee_clean=lambda x: x['libelleVoieEtablissement'].str.normalize(
-                'NFKD')
-            .str.encode('ascii', errors='ignore')
-            .str.decode('utf-8')
-            .str.replace('[^\w\s]|\d+', ' ')
-            .str.upper(),
-                adress_insee_reconstitue = lambda x: 
-            x['numeroVoieEtablissement_'] + ' '+ \
-            x['possibilite'] + ' ' + \
-            x['libelleVoieEtablissement']   
-        )
-            .assign(
-            
-        adresse_insee_clean = lambda x: x['adresse_insee_clean'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)])),
-            
-        adresse_inpi_reconstitue = lambda x: x['adress_new'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)])),   
-            
-        adress_insee_reconstitue = lambda x: x['adress_insee_reconstitue'].apply(
-        lambda x:' '.join([word for word in str(x).split() if word not in
-        (upper_word)])), 
-                enseigne = lambda x: x['enseigne'].str.upper()
-        )
-            )
-
-## Test 1: address
-df_2 = dd.from_pandas(to_check, npartitions=10)
-df_2['test_address_libelle'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    find_regex(
-                     x['adresse_new_clean_reg'],
-                     x['libelleVoieEtablissement']), axis=1)
-                     ).compute()
-
-df_2['test_address_complement'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    find_regex(
-                     x['adresse_new_clean_reg'],
-                     x['complementAdresseEtablissement']), axis=1)
-                     ).compute()
-
-df_2['jacquard'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    jackard_distance(
-                     x['adresse_inpi_reconstitue'],
-                     x['adress_insee_reconstitue']), axis=1)
-                     ).compute()
-
-df_2['edit'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    edit_distance(
-                     x['adresse_inpi_reconstitue'],
-                     x['adress_insee_reconstitue']), axis=1)
-                     ).compute()
-
-df_2['jacquard_enseigne1'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    jackard_distance(
-                     x['enseigne'],
-                     x['enseigne1Etablissement']), axis=1)
-                     ).compute()
-df_2['jacquard_enseigne2'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    jackard_distance(
-                     x['enseigne'],
-                     x['enseigne2Etablissement']), axis=1)
-                     ).compute()
-df_2['jacquard_enseigne3'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    jackard_distance(
-                     x['enseigne'],
-                     x['enseigne3Etablissement']), axis=1)
-                     ).compute()
-
-df_2['edit_enseigne1'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    edit_distance(
-                     x['enseigne'],
-                     x['enseigne1Etablissement']), axis=1)
-                     ).compute()
-df_2['edit_enseigne2'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    edit_distance(
-                     x['enseigne'],
-                     x['enseigne2Etablissement']), axis=1)
-                     ).compute()
-df_2['edit_enseigne3'] = df_2.map_partitions(
-            lambda df:
-                df.apply(lambda x:
-                    edit_distance(
-                     x['enseigne'],
-                     x['enseigne3Etablissement']), axis=1)
-                     ).compute()
-
-df_2 = df_2.compute()
-## test join Adress
-df_2.loc[
-        (df_2['test_address_libelle'] == True)
-        &(df_2['test_address_complement'] == True),
-        'test_join_address'] = True
-
-df_2.loc[
-        (df_2['test_join_address'] != True),
-        'test_join_address'] = False
-
-df_2 = df_2.assign(
-    min_jacquard = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['jacquard'].transform('min'),
-    min_edit = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['edit'].transform('min'))
-
-## test join Adress
-df_2.loc[
-        (df_2['test_address_libelle'] == False)
-        &(df_2['test_address_complement'] == False)
-        &(df_2['test_join_address'] == False),
-        'test_regex_adress'] = False
-
-df_2.loc[
-        (df_2['test_regex_adress'] != False),
-        'test_regex_adress'] = True
-
-df_2 = df_2.assign(
-    test_jacquard_adress = lambda x: np.where(
-        x['jacquard'] == x['min_jacquard'],
-        True, False
-    ),
-    test_edit_adress = lambda x: np.where(
-        x['edit'] == x['min_edit'],
-        True, False
-    ),
-    test_distance_diff = lambda x:
-    np.where(
-        np.logical_or(
-            np.logical_and(
-            x['jacquard'] == x['min_jacquard'],
-            x['edit'] != x['min_edit']
-            ),
-            np.logical_and(
-            x['jacquard'] != x['min_jacquard'],
-            x['edit'] == x['min_edit']
-            )
-        ),
-        True, False
-    
-    ),
-    
-    min_jacquard_enseigne1 = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['jacquard_enseigne1'].transform('min'),
-    
-    min_jacquard_enseigne2 = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['jacquard_enseigne2'].transform('min'),
-    
-    min_jacquard_enseigne3 = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['jacquard_enseigne3'].transform('min'),
-    
-    min_edit_enseigne1 = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['edit_enseigne1'].transform('min'),
-    
-    min_edit_enseigne2 = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['edit_enseigne2'].transform('min'),
-    
-    min_edit_enseigne3 = lambda x:
-    x.groupby(['siren', 'code_greffe', 'nom_greffe', 'numero_gestion',
-               'id_etablissement'])['edit_enseigne3'].transform('min')
-)
-
-#df_2 = df_2.drop(columns =  ['test_enseigne_insee','test_enseigne_edit',
-#                                               'test_enseigne_jacquard'])
-
-df_2.loc[
-    (df_2['enseigne1Etablissement'].isin([np.nan]))
-    &(df_2['enseigne2Etablissement'].isin([np.nan]))
-    &(df_2['enseigne3Etablissement'].isin([np.nan])),
-    'test_enseigne_insee'
-] = True
-
-df_2.loc[
-        (df_2['test_enseigne_insee'] != True),
-        'test_enseigne_insee'] = False
-
-df_2.loc[
-    (df_2['enseigne'].isin([np.nan]))
-    |(df_2['test_enseigne_insee'].isin([True]))
-    |(df_2['jacquard_enseigne1'] == 0)
-    |(df_2['jacquard_enseigne2'] == 0)
-    |(df_2['jacquard_enseigne3'] == 0),
-    'test_enseigne_jacquard'
-] = True
-
-df_2.loc[
-    (df_2['enseigne'].isin([np.nan]))
-    |(df_2['test_enseigne_insee'].isin([True]))
-    |(df_2['edit_enseigne1'] == 0)
-    |(df_2['edit_enseigne2'] == 0)
-    |(df_2['edit_enseigne3'] == 0),
-    'test_enseigne_edit'
-] = True
-
-df_2.loc[
-        (df_2['test_enseigne_edit'] != True),
-        'test_enseigne_edit'] = False
-
-df_2.loc[
-        (df_2['test_enseigne_jacquard'] != True),
-        'test_enseigne_jacquard'] = False
-```
 
 ```python
 df_2.to_csv('temp.csv', index= False)#.loc[lambda x: x['siren'].isin(['400534020'])]
@@ -984,19 +1017,30 @@ df_2.head()
 
 ```python
 ### Nombre de duplicate
-df_2.shape[0] -df_2['index'].nunique()
+df_2.shape[0] -df_2['index_id'].nunique()
 ```
 
 ```python
-df_2.stb.freq(['test_regex_adress'])
-
+df_2.stb.freq(['test_address_regex'])
 ```
 
 ```python
 df_2.stb.freq(['test_jacquard_adress'])
+```
+
+```python
 df_2.stb.freq(['test_edit_adress'])
+```
+
+```python
 df_2.stb.freq(['test_distance_diff'])
+```
+
+```python
 df_2.stb.freq(['test_enseigne_jacquard'])
+```
+
+```python
 df_2.stb.freq(['test_enseigne_edit'])
 ```
 
@@ -1020,148 +1064,7 @@ Le filtre deux ne s'applique que sur les lignes dont la séquence a plus de deux
 
 
 ```python
-df_2.head()
-```
-
-```python
-df_2 = pd.read_csv('temp.csv', dtype = {'siren': 'O',
- 'code_greffe': 'O',
- 'nom_greffe': 'O',
- 'numero_gestion': 'O',
- 'id_etablissement': 'O',
- 'origin': 'O',
- 'file_timestamp': 'O',
- 'date_greffe': 'O',
- 'libelle_evt': 'O',
- 'last_libele_evt': 'O',
- 'type': 'O',
- 'adress_new': 'O',
- 'adresse_new_clean_reg': 'O',
- 'voie_matching': 'O',
- 'numero_voie_matching': 'O',
- 'code_postal_matching': 'O',
- 'ncc': 'O',
- 'code_commune': 'O',
- 'enseigne': 'O',
- 'date_début_activité': 'O',
- 'index': 'O',
- 'status_admin': 'O',
- 'status_ets': 'bool',
- 'siret': 'O',
- 'dateCreationEtablissement': 'O',
- 'count_initial_insee': 'float64',
- 'etablissementSiege': 'bool',
- 'complementAdresseEtablissement': 'O',
- 'numeroVoieEtablissement': 'O',
- 'indiceRepetitionEtablissement': 'O',
- 'typeVoieEtablissement': 'O',
- 'libelleVoieEtablissement': 'O',
- 'len_digit_address_insee': 'float64',
- 'list_digit_insee': 'O',
- 'codePostalEtablissement': 'O',
- 'libelleCommuneEtablissement': 'O',
- 'libelleCommuneEtrangerEtablissement': 'O',
- 'distributionSpecialeEtablissement': 'O',
- 'codeCommuneEtablissement': 'O',
- 'codeCedexEtablissement': 'O',
- 'libelleCedexEtablissement': 'O',
- 'codePaysEtrangerEtablissement': 'O',
- 'libellePaysEtrangerEtablissement': 'O',
- 'etatAdministratifEtablissement': 'O',
- 'enseigne1Etablissement': 'O',
- 'enseigne2Etablissement': 'O',
- 'enseigne3Etablissement': 'O',
- 'INSEE': 'O',
- 'possibilite': 'O',
- 'upper': 'O',
- 'numeroVoieEtablissement_': 'O',
- 'adresse_insee_clean': 'O',
- 'adress_insee_reconstitue': 'O',
- 'adresse_inpi_reconstitue': 'O',
- 'test_address_libelle': 'bool',
- 'test_address_complement': 'bool',
- 'jacquard': 'float64',
- 'edit': 'int64',
- 'jacquard_enseigne1': 'float64',
- 'jacquard_enseigne2': 'float64',
- 'jacquard_enseigne3': 'float64',
- 'edit_enseigne1': 'float64',
- 'edit_enseigne2': 'float64',
- 'edit_enseigne3': 'float64',
- 'test_join_address': 'bool',
- 'min_jacquard': 'float64',
- 'min_edit': 'int64',
- 'test_regex_adress': 'bool',
- 'test_distance_diff': 'bool',
- 'min_jacquard_enseigne1': 'float64',
- 'min_jacquard_enseigne2': 'float64',
- 'min_jacquard_enseigne3': 'float64',
- 'min_edit_enseigne1': 'float64',
- 'min_edit_enseigne2': 'float64',
- 'min_edit_enseigne3': 'float64',
- 'test_enseigne_insee': 'bool',
- 'test_enseigne_jacquard': 'bool',
- 'test_enseigne_edit': 'bool'}
-                  )
-```
-
-```python
-reindex = ['index','total_siret','count_duplicates_','siren','siret', 'code_greffe', 'nom_greffe', 'numero_gestion',
-       'id_etablissement', 'origin', 'file_timestamp', 'date_greffe',
-       'libelle_evt', 'last_libele_evt','status_admin','etatAdministratifEtablissement',
-        'type', 'etablissementSiege', 'status_ets',
-       'adress_new','libelleVoieEtablissement','complementAdresseEtablissement',
-       'voie_matching','typeVoieEtablissement', 'INSEE','possibilite', 'upper',
-           'numero_voie_matching','numeroVoieEtablissement','numeroVoieEtablissement_',
-       'code_postal_matching','codePostalEtablissement',
-        'ncc','libelleCommuneEtablissement',
-        'code_commune', 'codeCommuneEtablissement',
-       'date_début_activité', 
-       'dateCreationEtablissement',
-       'count_initial_insee',
-       'indiceRepetitionEtablissement',
-       'len_digit_address_insee', 'list_digit_insee',
-       'libelleCommuneEtrangerEtablissement',
-       'distributionSpecialeEtablissement', 
-       'codeCedexEtablissement', 'libelleCedexEtablissement',
-       'codePaysEtrangerEtablissement', 'libellePaysEtrangerEtablissement', 
-       'adresse_insee_clean',
-       'adress_insee_reconstitue',
-       'adresse_inpi_reconstitue',
-       'adresse_new_clean_reg',
-       'jacquard',
-       'edit',
-       'test_address_libelle',
-       'test_address_complement',
-       'test_join_address',
-        'test_regex_adress',
-       'min_jacquard',
-           'test_jacquard_adress',
-       'min_edit',
-       'test_edit_adress',
-       'test_distance_diff',
-        'enseigne',
-       'enseigne1Etablissement',
-        'jacquard_enseigne1',
-        'min_jacquard_enseigne1',
-        'edit_enseigne1',
-        'min_edit_enseigne1',
-           
-        'enseigne2Etablissement',
-       'jacquard_enseigne2',
-       'min_jacquard_enseigne2',
-        'edit_enseigne2',
-       'min_edit_enseigne2',   
-           
-           'enseigne3Etablissement',
-       'jacquard_enseigne3',
-       'min_jacquard_enseigne3',
-        'test_enseigne_jacquard',
-       'edit_enseigne3',
-       'min_edit_enseigne3',
-       'test_enseigne_edit', 
-        'test_enseigne_insee']
-len(reindex)
+#df_2 = pd.read_csv('temp.csv', dtype = {'siren': 'O',
 ```
 
 ```python
@@ -1169,7 +1072,7 @@ sequence = ['siren', 'code_greffe', 'nom_greffe', 'numero_gestion', 'id_etabliss
 df_3 = (df_2.loc[
     
     lambda x: 
-    (x['test_regex_adress'].isin([True]))
+    (x['test_address_regex'].isin([True]))
     &
     (x['test_jacquard_adress'].isin([True]))
     &
@@ -1185,7 +1088,7 @@ df_3 = (df_2.loc[
     total_siret = lambda x: 
     x.groupby(sequence)['siret'].transform('nunique')
 )
-          .reindex(columns = reindex)
+          #.reindex(columns = reindex)
 )
 ```
 
@@ -1198,21 +1101,6 @@ Maintenant, nous allons faire une dédoublonnage sur les séquences avec plusieu
 ```python
 df_3.loc[lambda x: 
          (x['total_siret'] > 1)].shape
-```
-
-```python
-df_3.loc[lambda x: 
-         (x['total_siret'] > 1)
-        &
-         (
-         (x['jacquard'] == 0) 
-         |
-         (x['edit'] == 0) 
-         )].shape
-```
-
-```python
-3117/11047
 ```
 
 ```python
@@ -1251,23 +1139,11 @@ df_3_bis['not_duplication'].head()
 df_3_bis['duplication'].head()
 ```
 
-```python
-df_3_bis['not_duplication'].loc[lambda x: x['siret'].isin(['05480654204949'])]
-```
-
-```python
-df_2.loc[lambda x: x['siret'].isin(['05480654204949'])]
-```
-
 ## Etape 4: Récupération sequence dans table INPI
 
 Dans cette étape, nous allons utiliser les siret que nous venons de récupérer et les matcher avec la table de l'INPI. Cela évite de refaire tous les tests sur des séquences dont on a déjà récupérer le siret.
 
 Tout d'abord, nous devons récupérer les siret sur la séquence `siren`, `code_greffe`, `nom_greffe`, `numero_gestion`, et `id_etablissement`. Attention, il faut enlever les doublons du aux valeurs historiques, puis on merge avec la table de l'INSEE. 
-
-```python
-import sidetable
-```
 
 ```python
 seq_siret = ['siren', 'siret', 'code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement']
@@ -1278,19 +1154,19 @@ df_3_bis['not_duplication'][seq_siret].drop_duplicates()
 
 ```python
 #seq = ['siren','code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement']
-columns_to_keep = ['siren', 'siret', 'code_greffe', 'nom_greffe', 'numero_gestion',
-       'id_etablissement', 'total_siret', 'origin', 'file_timestamp',
-       'date_greffe', 'libelle_evt', 'last_libele_evt', 'type', 'adress_new',
-       'adresse_new_clean_reg', 'voie_matching', 'numero_voie_matching',
-       'code_postal_matching', 'ncc', 'code_commune', 'enseigne',
-       'date_début_activité', 'index', 'status_admin', 'status_ets', '_merge']
+#columns_to_keep = ['siren', 'siret', 'code_greffe', 'nom_greffe', 'numero_gestion',
+#       'id_etablissement', 'total_siret', 'origin', 'file_timestamp',
+#       'date_greffe', 'libelle_evt', 'last_libele_evt', 'type', 'adress_new',
+#       'adresse_new_clean_reg', 'voie_matching', 'numero_voie_matching',
+#       'code_postal_matching', 'ncc', 'code_commune', 'enseigne',
+#       'date_début_activité', 'index_id', 'status_admin', 'status_ets', '_merge']
 
 df_match_2 = (
     (df_3_bis['not_duplication'][seq_siret + ['total_siret']]
  .drop_duplicates()  
     )
  .merge(inpi.compute().loc[lambda x: 
-                                 ~x['index'].isin(df_3_bis['not_duplication']['index'])],
+                                 ~x['index_id'].isin(df_3_bis['not_duplication']['index_id'])],
                            on = sequence, how = 'left', indicator = True)
 )
 ```
@@ -1313,7 +1189,7 @@ Il faut tout de même refaire la fonction `split_duplication` pour enlever les s
 df_final = (pd.concat(
     [
         df_match_2.loc[lambda x: x['_merge'].isin(['both'])],
-        df_3_bis['not_duplication'].reindex(columns  = columns_to_keep)
+        df_3_bis['not_duplication']#.reindex(columns  = columns_to_keep)
         
     ])
  .sort_values(by = [
@@ -1349,7 +1225,7 @@ La dernière étape consiste a enlever les index des séquences siretisées de l
 On sauvegarde aussi un table de log
 
 ```python
-df_a_trouver = inpi.compute().loc[lambda x: ~x['index'].isin(df_final['index'].values)]
+df_a_trouver = inpi.compute().loc[lambda x: ~x['index_id'].isin(df_final['index_id'].values)]
 ```
 
 ```python
