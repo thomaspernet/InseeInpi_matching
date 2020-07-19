@@ -1,0 +1,43 @@
+voie_matching,possibilite,voie_clean
+ALL, Allée,ALLEE
+AV, Avenue,AVENUE
+BD, Boulevard,BOULEVARD
+CAR, Carrefour,CARREFOUR
+CHE, Chemin,CHEMIN
+CHS, Chaussée,CHAUSSEE
+CITE, Cité,CITE
+COR, Corniche,CORNICHE
+CRS, Cours,COURS
+DOM, Domaine,DOMAINE
+DSC, Descente,DESCENTE
+ECA, Ecart,ECART
+ESP, Esplanade,ESPLANADE
+FG, Faubourg,FAUBOURG
+GR, Grande Rue,GRANDE RUE
+HAM, Hameau,HAMEAU
+HLE, Halle,HALLE
+IMP, Impasse,IMPASSE
+LD, Lieu dit,LIEU DIT
+LOT, Lotissement,LOTISSEMENT
+MAR, Marché,MARCHE
+MTE, Montée,MONTEE
+PAS, Passage,PASSAGE
+PL, Place,PLACE
+PLN, Plaine,PLAINE
+PLT, Plateau,PLATEAU
+PRO, Promenade,PROMENADE
+PRV, Parvis,PARVIS
+QUA, Quartier,QUARTIER
+QUAI, Quai,QUAI
+RES, Résidence,RESIDENCE
+RLE, Ruelle,RUELLE
+ROC, Rocade,ROCADE
+RPT, Rond Point,ROND POINT
+RTE, Route,ROUTE
+RUE, Rue,RUE
+SEN, Sente - Sentier,SENTE   SENTIER
+SQ, Square,SQUARE
+TPL, Terre-plein,TERRE PLEIN
+TRA, Traverse,TRAVERSE
+VLA, Villa,VILLA
+VLGE, Village,VILLAGE
