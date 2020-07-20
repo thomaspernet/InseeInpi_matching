@@ -16,7 +16,7 @@ jupyter:
 # Ajouter le dernier type d’événement connu 
 
 ```
-Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la faire correspondre à l'INSEE}
+En tant que {X} je souhaite {récupérer le dernier événement connu de l'INPI} afin de {pouvoir rattacher cette événement aux valeurs historisées d'une séquence}
 ```
 
 **Metadatab**
@@ -31,21 +31,6 @@ Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la fai
         - 
 
 # Contexte
-
-XXX
-
-L'algorithme va utiliser séquentiellement les variables suivantes, en plus du siren:
-
-```
-{'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE', 'digit_inpi'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune', 'digit_inpi'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune'},   
- {'ville_matching', 'code_postal_matching'},
- {'ville_matching'},
- {'code_postal_matching'},
- {'Code_Commune'}
-```
 
 ## Règles de gestion
 
@@ -93,11 +78,8 @@ Workflow US (via stock)
 
 Dans cette US, le besoin est le suivant:
 
-- XX
-- YY
-- ZZ
-
-
+- Création de la variables `last_libelle_evt`:
+    - Extraction du dernier libellé de l'événement connu pour une séquence, et appliquer cette information à l'ensemble de la séquence
 
 
 # Spécifications
@@ -118,30 +100,25 @@ Dans cette US, le besoin est le suivant:
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
 *   Champs: 
+        - `siren`
+        - `code_greffe`
+        - `nom_greffe`
+        - `numero_gestion`
+        - `id_etablissement`
+        - `date_greffe`
+        - `libelle_evt`
 
 
 
 
 ### Exemple Input 1
 
-XXX
+Dans l'exemple ci dessous, nous avons une entreprise avec une création et suppression.
 
-**Snippet**
-
-- [Snippet 1]()
-
-```python
-import pandas as pd
-import numpy as np
-```
-
-### Exemple Input 2
-
-XXX
-
-**Snippet**
-
-- [Snippet 2]()
+| siren     | code_greffe | nom_greffe      | numero_gestion | id_etablissement | date_greffe             | libelle_evt             |
+|-----------|-------------|-----------------|----------------|------------------|-------------------------|-------------------------|
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2017-02-22 00:00:00.000 | Etablissement ouvert    |
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2019-01-09 00:00:00.000 | Etablissement supprimÃ© |
 
 
 ## Output
@@ -150,11 +127,16 @@ XXX
 
 *   BDD cibles
 *   Tables: `inpi_etablissement_historique`
-*   Champs: 
+*   Champs: `last_libele_evt`
 
 ]
 
-XXX
+Après avoir récupérer le dernier événement connu, nous avons pu remplir l'information pour l'ensemble de la séquence
+
+| siren     | code_greffe | nom_greffe      | numero_gestion | id_etablissement | date_greffe             | libelle_evt             | last_libele_evt         |
+|-----------|-------------|-----------------|----------------|------------------|-------------------------|-------------------------|-------------------------|
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2017-02-22 00:00:00.000 | Etablissement ouvert    | Etablissement supprimÃ© |
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2019-01-09 00:00:00.000 | Etablissement supprimÃ© | Etablissement supprimÃ© |
 
 <!-- #region -->
 ## Règles de gestion applicables
@@ -162,6 +144,8 @@ XXX
 [PO : Formules applicables]
 
 Si nouvelle règle, ajouter ici.
+
+L'INSEE nous informe sur le dernier status connu, a savoir Actif ou Fermé, indépendament des événements passés. Toutefois, la table de l'INPI a des informations sur l'ensemble des événements. Il faut donc informer l'ensemble de la séquence historique sur son status le plus récent.
 
 # Charges de l'équipe
 
@@ -177,9 +161,140 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
+Il faut procéder de la manière suivante:
+
+- récupérer la date greffe maximum sur une séquence avec le libellé évément
+- Matcher avec la table sur la séquence + date greffe max ppur remplir le dernier événement
+
+Code SQL utilisé lors de nos tests:
+
+```
+SELECT 
+          ROW_NUMBER() OVER () as index_id,
+          voie_type_voie.siren, 
+          voie_type_voie.code_greffe, 
+          voie_type_voie.nom_greffe, 
+          voie_type_voie.numero_gestion, 
+          voie_type_voie.id_etablissement, 
+          status, 
+          origin, 
+          date_greffe, 
+          file_timestamp, 
+          libelle_evt, 
+          last_libele_evt, 
+          CASE WHEN last_libele_evt = 'Etablissement ouvert' THEN 'A' ELSE 'F' END AS status_admin,
+          type, 
+          CASE WHEN type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets,
+          "siège_pm", 
+          rcs_registre, 
+          adresse_ligne1, 
+          adresse_ligne2, 
+          adresse_ligne3, 
+          adress_reconstituee_inpi,
+        -- adress_nettoyee, 
+        -- adresse_inpi_reconstitue, 
+          adress_regex_inpi,
+          adress_distance_inpi,
+          numero_voie_matching, 
+          voie_clean, 
+          voie_matching,
+          code_postal, 
+          code_postal_matching, 
+          ville, 
+          ville_matching, 
+          code_commune, 
+          pays, 
+          domiciliataire_nom, 
+          domiciliataire_siren, 
+          domiciliataire_greffe, 
+          "domiciliataire_complément", 
+          "siege_domicile_représentant", 
+          nom_commercial, 
+          enseigne, 
+          "activité_ambulante", 
+          "activité_saisonnière", 
+          "activité_non_sédentaire", 
+          "date_début_activité", 
+          "activité", 
+          origine_fonds, 
+          origine_fonds_info, 
+          type_exploitation, 
+          csv_source, 
+          rn 
+        FROM 
+          voie_type_voie 
+          INNER JOIN (
+            SELECT 
+              convert_date.siren, 
+              convert_date.code_greffe, 
+              convert_date.nom_greffe, 
+              convert_date.numero_gestion, 
+              convert_date.id_etablissement, 
+              convert_date.libelle_evt as last_libele_evt, 
+              max_date_greffe 
+            FROM 
+              convert_date 
+              INNER JOIN (
+                SELECT 
+                  siren, 
+                  code_greffe, 
+                  nom_greffe, 
+                  numero_gestion, 
+                  id_etablissement, 
+                  MAX(
+                    Coalesce(
+                      try(
+                        date_parse(date_greffe, '%Y-%m-%d')
+                      ), 
+                      try(
+                        date_parse(
+                          date_greffe, '%Y-%m-%d %hh:%mm:%ss.SSS'
+                        )
+                      ), 
+                      try(
+                        date_parse(
+                          date_greffe, '%Y-%m-%d %hh:%mm:%ss'
+                        )
+                      ), 
+                      try(
+                        cast(date_greffe as timestamp)
+                      )
+                    )
+                  ) as max_date_greffe 
+                FROM 
+                  voie_type_voie 
+                GROUP BY 
+                  siren, 
+                  code_greffe, 
+                  nom_greffe, 
+                  numero_gestion, 
+                  id_etablissement
+              ) AS temp ON temp.siren = convert_date.siren 
+              AND temp.code_greffe = convert_date.code_greffe 
+              AND temp.nom_greffe = convert_date.nom_greffe 
+              AND temp.numero_gestion = convert_date.numero_gestion 
+              AND temp.id_etablissement = convert_date.id_etablissement 
+              AND temp.max_date_greffe = convert_date.date_greffe
+          ) as latest_libele ON voie_type_voie.siren = latest_libele.siren 
+          AND voie_type_voie.code_greffe = latest_libele.code_greffe 
+          AND voie_type_voie.nom_greffe = latest_libele.nom_greffe 
+          AND voie_type_voie.numero_gestion = latest_libele.numero_gestion 
+          AND voie_type_voie.id_etablissement = latest_libele.id_etablissement
+      )
+    ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe
+```
+
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
+
+- Trouver une séquence avec:
+
+    - Ouverture + fermeture
+    - Ouverture + événement + fermeture
+    - Compter le nombre distinct d'établissement ouvert/fermé 
+        - Le nombre d'établissement ouvert et ou fermé
+- Pour chaque séquence trouvée, vérifier le status dans le moteur de recherche de l'[INPI](https://data.inpi.fr/)
 
 **Code reproduction**
 

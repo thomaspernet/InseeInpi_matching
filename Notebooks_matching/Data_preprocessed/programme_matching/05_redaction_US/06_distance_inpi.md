@@ -16,13 +16,13 @@ jupyter:
 # Créer adresse distance 
 
 ```
-Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la faire correspondre à l'INSEE}
+Entant que {X} je souhaite {créer la variable distance a partir des variables de l'adresse} afin de {pouvoir calculer la distance de Levhenstein et Jaccard}
 ```
 
 **Metadatab**
 
 - Taiga:
-    - Numero US: []()
+    - Numero US: [2949](https://tree.taiga.io/project/olivierlubet-air/us/2949)
 - Gitlab
     - Notebook: []()
     - Markdown: []()
@@ -31,21 +31,6 @@ Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la fai
         - 
 
 # Contexte
-
-XXX
-
-L'algorithme va utiliser séquentiellement les variables suivantes, en plus du siren:
-
-```
-{'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE', 'digit_inpi'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune', 'digit_inpi'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune'},   
- {'ville_matching', 'code_postal_matching'},
- {'ville_matching'},
- {'code_postal_matching'},
- {'Code_Commune'}
-```
 
 ## Règles de gestion
 
@@ -93,11 +78,8 @@ Workflow US (via stock)
 
 Dans cette US, le besoin est le suivant:
 
-- XX
-- YY
-- ZZ
-
-
+- Création de la variable `adress_distance_inpi`: 
+    - Concatenation des champs de l'adresse, suppression des espaces et des articles
 
 
 # Spécifications
@@ -117,31 +99,26 @@ Dans cette US, le besoin est le suivant:
 *   Schémas
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
-*   Champs: 
-
+*   Champs: `adresse_ligne1`, `adresse_ligne2`, `adresse_ligne3`
 
 
 
 ### Exemple Input 1
 
-XXX
+Exemple dans la table `inpi_etablissement_historique`, nous avons les variables suivantes en entrée:
 
-**Snippet**
-
-- [Snippet 1]()
-
-```python
-import pandas as pd
-import numpy as np
-```
-
-### Exemple Input 2
-
-XXX
-
-**Snippet**
-
-- [Snippet 2]()
+| siren     | adresse_ligne1          | adresse_ligne2           | adresse_ligne3 |
+|-----------|-------------------------|--------------------------|----------------|
+| 797405776 |                         | 44 Rue du Vercors        |                |
+| 797405776 |                         | 44 Rue du Vercors        |                |
+| 797405784 |                         | 3 Place André Audinot    |                |
+| 797405784 |                         | 3 Place André Audinot    |                |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                |
+| 797405826 | 8 Rue Général Foy       |                          |                |
+| 797405826 | 8 Rue Général Foy       |                          |                |
+| 797405834 |                         | 54 route de Tré Drano    |                |
+| 797405842 |                         | 52 Lotissement le Verger |                |
 
 
 ## Output
@@ -150,18 +127,38 @@ XXX
 
 *   BDD cibles
 *   Tables: `inpi_etablissement_historique`
-*   Champs: 
+*   Champs: `adress_distance_inpi`
 
 ]
 
-XXX
+La concatenation, le nettoyage et la mise en majuscule donne lieu a un la nouvelle variable ci dessous:
+
+| siren     | adresse_ligne1          | adresse_ligne2           | adresse_ligne3 | adress_distance_inpi  |
+|-----------|-------------------------|--------------------------|----------------|-----------------------|
+| 797405776 |                         | 44 Rue du Vercors        |                | 44 RUE VERCORS        |
+| 797405776 |                         | 44 Rue du Vercors        |                | 44 RUE VERCORS        |
+| 797405784 |                         | 3 Place André Audinot    |                | 3 PLACE ANDRE AUDINOT |
+| 797405784 |                         | 3 Place André Audinot    |                | 3 PLACE ANDRE AUDINOT |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                | 12 RUE HONORE BALZAC  |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                | 12 RUE HONORE BALZAC  |
+| 797405826 | 8 Rue Général Foy       |                          |                | 8 RUE GENERAL FOY     |
+| 797405826 | 8 Rue Général Foy       |                          |                | 8 RUE GENERAL FOY     |
+| 797405834 |                         | 54 route de Tré Drano    |                | 54 ROUTE TRE DRANO    |
+| 797405842 |                         | 52 Lotissement le Verger |                | 52 LOTISSEMENT VERGER |
 
 <!-- #region -->
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
 
-Si nouvelle règle, ajouter ici.
+Voici un tableau récapitulatif des règles appliquer sur les variables de l'adresse:
+
+| Table | Variable | article | digit | debut/fin espace | espace | accent | Upper |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| INPI | adresse_regex_inpi | X | X | X | X | X | X |
+|  | adress_distance_inpi | X |  | X | X | X | X |
+|  | adresse_reconstituee_inpi |  |  | X | X | X | X |
+| INSEE | adress_reconstituee_insee | X |  |  |  | |  |
 
 # Charges de l'équipe
 
@@ -177,9 +174,57 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
+Le pattern regex pour supprimer les articles est le suivant:
+
+`(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES(?:(?= )|$)`.
+
+Il doit correspondre au pattern utilisé dans les US [2690](https://tree.taiga.io/project/olivierlubet-air/us/2690)  et [2954](https://tree.taiga.io/project/olivierlubet-air/us/2954).
+
+Le code SQL utilisé lors de nos tests:
+
+```
+query = """
+REGEXP_REPLACE(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  NORMALIZE(
+                    UPPER(
+                      CONCAT(
+                        adresse_ligne1, ' ', adresse_ligne2, 
+                        ' ', adresse_ligne3
+                      )
+                    ), 
+                    NFD
+                  ), 
+                  '\pM', 
+                  ''
+                ), 
+                '[^\w\s]| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES(?:(?= )|$)', 
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          ''
+      ) AS adress_distance_inpi
+"""
+```
+
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
+
+- Imprimer aléatoirement 10 adresses
+- Imprimer des patterns ou il y a 1 champs adresses non vide
+- Imprimer des patterns ou il y a 2 champs adresses non vides
+- Imprimer des patterns ou il y a 3 champs adresses non vides
+- Vérifier que la variable `adress_regex_inpi` n'a pas de " " (espace) en début ou fin de string.
 
 **Code reproduction**
 

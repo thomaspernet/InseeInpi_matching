@@ -1,29 +1,13 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.0
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
-<!-- #region -->
-# Mettre en majuscule enseigne et ajouter numéro de ligne 
+# Ajouter le dernier type d’événement connu 
 
 ```
-Entant que {X} je souhaite {récupérer le numéro de ligne} afin de {pouvoir de pouvoir distinguer les lignes doublonnées lors du matching}
+En tant que {X} je souhaite {récupérer le dernier événement connu de l'INPI} afin de {pouvoir rattacher cette événement aux valeurs historisées d'une séquence}
 ```
 
 **Metadatab**
 
 - Taiga:
-    - Numero US: [2952](https://tree.taiga.io/project/olivierlubet-air/us/2952)
+    - Numero US: []()
 - Gitlab
     - Notebook: []()
     - Markdown: []()
@@ -32,7 +16,6 @@ Entant que {X} je souhaite {récupérer le numéro de ligne} afin de {pouvoir de
         - 
 
 # Contexte
-
 
 ## Règles de gestion
 
@@ -80,12 +63,8 @@ Workflow US (via stock)
 
 Dans cette US, le besoin est le suivant:
 
-- enseigne:
-    - Mise en majuscule
-- index_id:
-    - Création du numéro de ligne
-
-<!-- #endregion -->
+- Création de la variables `last_libelle_evt`:
+    - Extraction du dernier libellé de l'événement connu pour une séquence, et appliquer cette information à l'ensemble de la séquence
 
 # Spécifications
 
@@ -104,28 +83,25 @@ Dans cette US, le besoin est le suivant:
 *   Schémas
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
-*   Champs: `enseigne`
-
+*   Champs: 
+        - `siren`
+        - `code_greffe`
+        - `nom_greffe`
+        - `numero_gestion`
+        - `id_etablissement`
+        - `date_greffe`
+        - `libelle_evt`
 
 
 
 ### Exemple Input 1
 
-Voici un apperçu de la table 
+Dans l'exemple ci dessous, nous avons une entreprise avec une création et suppression.
 
-| siren     | code_greffe | nom_greffe     | numero_gestion | id_etablissement | enseigne          |
-|-----------|-------------|----------------|----------------|------------------|-------------------|
-| 797405776 | 3801        | Grenoble       | 2013B01520     | 1                |                   |
-| 797405776 | 3801        | Grenoble       | 2013B01520     | 2                |                   |
-| 797405784 | 8002        | Amiens         | 2013B00639     | 1                |                   |
-| 797405784 | 8002        | Amiens         | 2013B00639     | 2                | cafe de l'univers |
-| 797405792 | 7802        | Pontoise       | 2013D00811     | 1                |                   |
-| 797405792 | 7802        | Pontoise       | 2013D00811     | 2                |                   |
-| 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 1                |                   |
-| 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | aforcom           |
-| 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
-| 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
-
+| siren     | code_greffe | nom_greffe      | numero_gestion | id_etablissement | date_greffe             | libelle_evt             |
+|-----------|-------------|-----------------|----------------|------------------|-------------------------|-------------------------|
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2017-02-22 00:00:00.000 | Etablissement ouvert    |
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2019-01-09 00:00:00.000 | Etablissement supprimÃ© |
 
 ## Output
 
@@ -133,27 +109,16 @@ Voici un apperçu de la table
 
 *   BDD cibles
 *   Tables: `inpi_etablissement_historique`
-*   Champs: 
-    - `index_id`
-    - `enseigne`
+*   Champs: `last_libele_evt`
 
 ]
 
-Dans la table ci-dessous, nous avons mis en majuscule l'enseigne et créer un index correspondant au numéro de ligne
+Après avoir récupérer le dernier événement connu, nous avons pu remplir l'information pour l'ensemble de la séquence
 
-| index_id | siren     | code_greffe | nom_greffe     | numero_gestion | id_etablissement | enseigne          |
-|----------|-----------|-------------|----------------|----------------|------------------|-------------------|
-| 1        | 797405776 | 3801        | Grenoble       | 2013B01520     | 1                |                   |
-| 2        | 797405776 | 3801        | Grenoble       | 2013B01520     | 2                |                   |
-| 3        | 797405784 | 8002        | Amiens         | 2013B00639     | 1                |                   |
-| 4        | 797405784 | 8002        | Amiens         | 2013B00639     | 2                | CAFE DE L'UNIVERS |
-| 5        | 797405792 | 7802        | Pontoise       | 2013D00811     | 1                |                   |
-| 6        | 797405792 | 7802        | Pontoise       | 2013D00811     | 2                |                   |
-| 7        | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 1                |                   |
-| 8        | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | AFORCOM           |
-| 9        | 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
-| 10       | 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
-
+| siren     | code_greffe | nom_greffe      | numero_gestion | id_etablissement | date_greffe             | libelle_evt             | last_libele_evt         |
+|-----------|-------------|-----------------|----------------|------------------|-------------------------|-------------------------|-------------------------|
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2017-02-22 00:00:00.000 | Etablissement ouvert    | Etablissement supprimÃ© |
+| 797407582 | 1301        | Aix-en-Provence | 2013B01887     | 1                | 2019-01-09 00:00:00.000 | Etablissement supprimÃ© | Etablissement supprimÃ© |
 
 ## Règles de gestion applicables
 
@@ -161,7 +126,7 @@ Dans la table ci-dessous, nous avons mis en majuscule l'enseigne et créer un in
 
 Si nouvelle règle, ajouter ici.
 
-Lorsque nous allons procéder au matching avec l'INSEE, certaines lignes vont être doublonnées. Une des techniques faciles pour distinguer lequelles sont impactées, nous pouvons utiliser la variable `index_id` qui doit toujours etre unique (ie ne pas avoir un count > 1)
+L'INSEE nous informe sur le dernier status connu, a savoir Actif ou Fermé, indépendament des événements passés. Toutefois, la table de l'INPI a des informations sur l'ensemble des événements. Il faut donc informer l'ensemble de la séquence historique sur son status le plus récent.
 
 # Charges de l'équipe
 
@@ -177,27 +142,146 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
-* Création numéro de ligne, sans prendre en compte l’ordre afin d’éviter le consommer toutes les ressources du serveur
-  * https://stackoverflow.com/questions/51090433/select-rows-by-index-in-amazon-athena
+Il faut procéder de la manière suivante:
 
-Lors de nos tests, nous avons utilisé la query suivante:
+- récupérer la date greffe maximum sur une séquence avec le libellé évément
+- Matcher avec la table sur la séquence + date greffe max ppur remplir le dernier événement
+
+Code SQL utilisé lors de nos tests:
 
 ```
 SELECT 
-          ROW_NUMBER() OVER () as index_id,UPPER(enseigne) as enseigne
+          ROW_NUMBER() OVER () as index_id,
+          voie_type_voie.siren, 
+          voie_type_voie.code_greffe, 
+          voie_type_voie.nom_greffe, 
+          voie_type_voie.numero_gestion, 
+          voie_type_voie.id_etablissement, 
+          status, 
+          origin, 
+          date_greffe, 
+          file_timestamp, 
+          libelle_evt, 
+          last_libele_evt, 
+          CASE WHEN last_libele_evt = 'Etablissement ouvert' THEN 'A' ELSE 'F' END AS status_admin,
+          type, 
+          CASE WHEN type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets,
+          "siège_pm", 
+          rcs_registre, 
+          adresse_ligne1, 
+          adresse_ligne2, 
+          adresse_ligne3, 
+          adress_reconstituee_inpi,
+        -- adress_nettoyee, 
+        -- adresse_inpi_reconstitue, 
+          adress_regex_inpi,
+          adress_distance_inpi,
+          numero_voie_matching, 
+          voie_clean, 
+          voie_matching,
+          code_postal, 
+          code_postal_matching, 
+          ville, 
+          ville_matching, 
+          code_commune, 
+          pays, 
+          domiciliataire_nom, 
+          domiciliataire_siren, 
+          domiciliataire_greffe, 
+          "domiciliataire_complément", 
+          "siege_domicile_représentant", 
+          nom_commercial, 
+          enseigne, 
+          "activité_ambulante", 
+          "activité_saisonnière", 
+          "activité_non_sédentaire", 
+          "date_début_activité", 
+          "activité", 
+          origine_fonds, 
+          origine_fonds_info, 
+          type_exploitation, 
+          csv_source, 
+          rn 
+        FROM 
+          voie_type_voie 
+          INNER JOIN (
+            SELECT 
+              convert_date.siren, 
+              convert_date.code_greffe, 
+              convert_date.nom_greffe, 
+              convert_date.numero_gestion, 
+              convert_date.id_etablissement, 
+              convert_date.libelle_evt as last_libele_evt, 
+              max_date_greffe 
+            FROM 
+              convert_date 
+              INNER JOIN (
+                SELECT 
+                  siren, 
+                  code_greffe, 
+                  nom_greffe, 
+                  numero_gestion, 
+                  id_etablissement, 
+                  MAX(
+                    Coalesce(
+                      try(
+                        date_parse(date_greffe, '%Y-%m-%d')
+                      ), 
+                      try(
+                        date_parse(
+                          date_greffe, '%Y-%m-%d %hh:%mm:%ss.SSS'
+                        )
+                      ), 
+                      try(
+                        date_parse(
+                          date_greffe, '%Y-%m-%d %hh:%mm:%ss'
+                        )
+                      ), 
+                      try(
+                        cast(date_greffe as timestamp)
+                      )
+                    )
+                  ) as max_date_greffe 
+                FROM 
+                  voie_type_voie 
+                GROUP BY 
+                  siren, 
+                  code_greffe, 
+                  nom_greffe, 
+                  numero_gestion, 
+                  id_etablissement
+              ) AS temp ON temp.siren = convert_date.siren 
+              AND temp.code_greffe = convert_date.code_greffe 
+              AND temp.nom_greffe = convert_date.nom_greffe 
+              AND temp.numero_gestion = convert_date.numero_gestion 
+              AND temp.id_etablissement = convert_date.id_etablissement 
+              AND temp.max_date_greffe = convert_date.date_greffe
+          ) as latest_libele ON voie_type_voie.siren = latest_libele.siren 
+          AND voie_type_voie.code_greffe = latest_libele.code_greffe 
+          AND voie_type_voie.nom_greffe = latest_libele.nom_greffe 
+          AND voie_type_voie.numero_gestion = latest_libele.numero_gestion 
+          AND voie_type_voie.id_etablissement = latest_libele.id_etablissement
+      )
+    ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe
 ```
 
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
 
+- Trouver une séquence avec:
+
+    - Ouverture + fermeture
+    - Ouverture + événement + fermeture
+    - Compter le nombre distinct d'établissement ouvert/fermé 
+        - Le nombre d'établissement ouvert et ou fermé
+- Pour chaque séquence trouvée, vérifier le status dans le moteur de recherche de l'[INPI](https://data.inpi.fr/)
+
 **Code reproduction**
 
 ```
 ```
 
-- Compter le nombre de champs vide dans l'enseigne
-- Compter le nombre de ligne et vérifier que cela correspond au maximum de la variable `index_id`
 
 # CONCEPTION
 
@@ -247,79 +331,4 @@ Contenu :
 
 ]
 
-
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```

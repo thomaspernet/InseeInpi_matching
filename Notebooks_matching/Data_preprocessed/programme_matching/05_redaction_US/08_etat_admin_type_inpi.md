@@ -13,10 +13,11 @@ jupyter:
     name: python3
 ---
 
+<!-- #region -->
 # Ajouter les variables état administratif et type d’entreprise  
 
 ```
-Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la faire correspondre à l'INSEE}
+Entant que {X} je souhaite {créer une variable indiquant le status administratif et le type d'établissement} afin de {connaitre le status a date de l'établissement car l'INSEE n'informe que le dernier status connu}
 ```
 
 **Metadatab**
@@ -32,20 +33,6 @@ Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la fai
 
 # Contexte
 
-XXX
-
-L'algorithme va utiliser séquentiellement les variables suivantes, en plus du siren:
-
-```
-{'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE', 'digit_inpi'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune', 'INSEE'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune', 'digit_inpi'},
- {'ville_matching', 'code_postal_matching', 'Code_Commune'},   
- {'ville_matching', 'code_postal_matching'},
- {'ville_matching'},
- {'code_postal_matching'},
- {'Code_Commune'}
-```
 
 ## Règles de gestion
 
@@ -93,12 +80,13 @@ Workflow US (via stock)
 
 Dans cette US, le besoin est le suivant:
 
-- XX
-- YY
-- ZZ
+- `status_admin`:
+    - Informe du status ouvert/fermé concernant une séquence
+- `status_ets`:
+    - Informe du type d'établissement (SIE/PRI.SEC) concernant une séquence
 
 
-
+<!-- #endregion -->
 
 # Spécifications
 
@@ -118,31 +106,41 @@ Dans cette US, le besoin est le suivant:
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
 *   Champs: 
+    - `last_libele_evt`
+    - `type `
 
 
 
 
-### Exemple Input 1
+### Exemple Input 1: status administratif
 
-XXX
+Dans l'exemple ci dessous, nous avons une séquence avec:
 
-**Snippet**
+- Une ouverture + un événement
+- Une ouverture + une fermeture
 
-- [Snippet 1]()
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | libelle_evt                                | last_libele_evt                            |
+|-----------|-------------|------------|----------------|------------------|-------------------------|--------------------------------------------|--------------------------------------------|
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Modifications relatives à un établissement |
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2018-04-30 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Etablissement supprimé                     |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2018-04-30 00:00:00.000 | Etablissement supprimé                     | Etablissement supprimé                     |
+| 342109071 | 7501        | Paris      | 1987D01764     | 4                | 2018-05-03 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement |
 
-```python
-import pandas as pd
-import numpy as np
-```
+<!-- #region -->
+### Exemple Input 2: status etablissement
 
-### Exemple Input 2
+Dans l'exemple ci dessous, nous avons deux séquences pour la même entreprise:
 
-XXX
+- Un siège
+- Un principal
 
-**Snippet**
 
-- [Snippet 2]()
-
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | type |
+|-----------|-------------|------------|----------------|------------------|-------------------------|------|
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 1                | 2013-09-26 00:00:00.000 | SIE  |
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 2                | 2013-09-26 00:00:00.000 | PRI  |
+<!-- #endregion -->
 
 ## Output
 
@@ -151,17 +149,39 @@ XXX
 *   BDD cibles
 *   Tables: `inpi_etablissement_historique`
 *   Champs: 
+    - `status_admin`
+    - `status_ets`
 
 ]
 
-XXX
+### Exemple 1: `status_admin`
 
-<!-- #region -->
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | libelle_evt                                | last_libele_evt                            | status_admin |
+|-----------|-------------|------------|----------------|------------------|-------------------------|--------------------------------------------|--------------------------------------------|--------------|
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Modifications relatives à un établissement | A            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2018-04-30 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement | A            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Etablissement supprimé                     | F            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2018-04-30 00:00:00.000 | Etablissement supprimé                     | Etablissement supprimé                     | F            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 4                | 2018-05-03 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement | A            |
+
+
+### Exemple 2: `status_ets`
+
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | type | status_ets |
+|-----------|-------------|------------|----------------|------------------|-------------------------|------|------------|
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 1                | 2013-09-26 00:00:00.000 | SIE  | true       |
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 2                | 2013-09-26 00:00:00.000 | PRI  | false      |
+
+
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
 
 Si nouvelle règle, ajouter ici.
+
+A l'INSEE, la variable faisant référence au `status_admin` s 'appelle `etatadministratifetablissement` et est composée de deux valeurs possible, `A`, pour actif et `F` pour fermé.
+
+L'équivalent de la variable `status_ets` à l'INSEE s'appelle `etablissementsiege` et elle est composée de deux valeurs, `true` si l'établissement est un siège, sinon `false`
 
 # Charges de l'équipe
 
@@ -177,6 +197,13 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
+Lors de nos tests, nous avons utilisé cette query:
+
+```
+CASE WHEN last_libele_evt != 'Etablissement supprimé' THEN 'A' ELSE 'F' END AS status_admin
+CASE WHEN type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets,
+```
+
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
@@ -186,6 +213,10 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 ```
 ```
 
+- Trouver un siren avec le changement de status établissement au fil du temps. Par exemple, un principal devenu secondaire, ou bien un principal devenu siege.
+- Compter le nombre de séquence distinct ayant un siège
+- Compter le nombre de fois ou la variable `manque_sie_ou_pri_flag` est égale à `True` et `status_ets` est égale à `True`
+    - Imprimer des exemples
 
 # CONCEPTION
 
@@ -234,7 +265,7 @@ Contenu :
 *   Vidéo publiée
 
 ]
-<!-- #endregion -->
+
 
 # Creation markdown
 

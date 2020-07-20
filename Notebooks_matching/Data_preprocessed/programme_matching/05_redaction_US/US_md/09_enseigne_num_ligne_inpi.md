@@ -1,19 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.0
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
-<!-- #region -->
 # Mettre en majuscule enseigne et ajouter numéro de ligne 
 
 ```
@@ -85,7 +69,6 @@ Dans cette US, le besoin est le suivant:
 - index_id:
     - Création du numéro de ligne
 
-<!-- #endregion -->
 
 # Spécifications
 
@@ -108,7 +91,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 ### Exemple Input 1
 
 Voici un apperçu de la table 
@@ -125,7 +107,6 @@ Voici un apperçu de la table
 | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | aforcom           |
 | 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
 | 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
-
 
 ## Output
 
@@ -153,7 +134,6 @@ Dans la table ci-dessous, nous avons mis en majuscule l'enseigne et créer un in
 | 8        | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | AFORCOM           |
 | 9        | 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
 | 10       | 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
-
 
 ## Règles de gestion applicables
 
@@ -197,7 +177,7 @@ SELECT
 ```
 
 - Compter le nombre de champs vide dans l'enseigne
-- Compter le nombre de ligne et vérifier que cela correspond au maximum de la variable `index_id`
+- Compter le nombre de ligne et 
 
 # CONCEPTION
 
@@ -247,79 +227,4 @@ Contenu :
 
 ]
 
-
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```

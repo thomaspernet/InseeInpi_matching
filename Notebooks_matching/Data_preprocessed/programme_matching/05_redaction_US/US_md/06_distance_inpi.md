@@ -1,29 +1,13 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.0
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
-<!-- #region -->
-# Mettre en majuscule enseigne et ajouter numéro de ligne 
+# Créer adresse distance 
 
 ```
-Entant que {X} je souhaite {récupérer le numéro de ligne} afin de {pouvoir de pouvoir distinguer les lignes doublonnées lors du matching}
+Entant que {X} je souhaite {créer la variable distance a partir des variables de l'adresse} afin de {pouvoir calculer la distance de Levhenstein et Jaccard}
 ```
 
 **Metadatab**
 
 - Taiga:
-    - Numero US: [2952](https://tree.taiga.io/project/olivierlubet-air/us/2952)
+    - Numero US: [2949](https://tree.taiga.io/project/olivierlubet-air/us/2949)
 - Gitlab
     - Notebook: []()
     - Markdown: []()
@@ -32,7 +16,6 @@ Entant que {X} je souhaite {récupérer le numéro de ligne} afin de {pouvoir de
         - 
 
 # Contexte
-
 
 ## Règles de gestion
 
@@ -80,12 +63,8 @@ Workflow US (via stock)
 
 Dans cette US, le besoin est le suivant:
 
-- enseigne:
-    - Mise en majuscule
-- index_id:
-    - Création du numéro de ligne
-
-<!-- #endregion -->
+- Création de la variable `adress_distance_inpi`: 
+    - Concatenation des champs de l'adresse, suppression des espaces et des articles
 
 # Spécifications
 
@@ -104,28 +83,25 @@ Dans cette US, le besoin est le suivant:
 *   Schémas
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
-*   Champs: `enseigne`
-
-
+*   Champs: `adresse_ligne1`, `adresse_ligne2`, `adresse_ligne3`
 
 
 ### Exemple Input 1
 
-Voici un apperçu de la table 
+Exemple dans la table `inpi_etablissement_historique`, nous avons les variables suivantes en entrée:
 
-| siren     | code_greffe | nom_greffe     | numero_gestion | id_etablissement | enseigne          |
-|-----------|-------------|----------------|----------------|------------------|-------------------|
-| 797405776 | 3801        | Grenoble       | 2013B01520     | 1                |                   |
-| 797405776 | 3801        | Grenoble       | 2013B01520     | 2                |                   |
-| 797405784 | 8002        | Amiens         | 2013B00639     | 1                |                   |
-| 797405784 | 8002        | Amiens         | 2013B00639     | 2                | cafe de l'univers |
-| 797405792 | 7802        | Pontoise       | 2013D00811     | 1                |                   |
-| 797405792 | 7802        | Pontoise       | 2013D00811     | 2                |                   |
-| 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 1                |                   |
-| 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | aforcom           |
-| 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
-| 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
-
+| siren     | adresse_ligne1          | adresse_ligne2           | adresse_ligne3 |
+|-----------|-------------------------|--------------------------|----------------|
+| 797405776 |                         | 44 Rue du Vercors        |                |
+| 797405776 |                         | 44 Rue du Vercors        |                |
+| 797405784 |                         | 3 Place André Audinot    |                |
+| 797405784 |                         | 3 Place André Audinot    |                |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                |
+| 797405826 | 8 Rue Général Foy       |                          |                |
+| 797405826 | 8 Rue Général Foy       |                          |                |
+| 797405834 |                         | 54 route de Tré Drano    |                |
+| 797405842 |                         | 52 Lotissement le Verger |                |
 
 ## Output
 
@@ -133,35 +109,37 @@ Voici un apperçu de la table
 
 *   BDD cibles
 *   Tables: `inpi_etablissement_historique`
-*   Champs: 
-    - `index_id`
-    - `enseigne`
+*   Champs: `adress_distance_inpi`
 
 ]
 
-Dans la table ci-dessous, nous avons mis en majuscule l'enseigne et créer un index correspondant au numéro de ligne
+La concatenation, le nettoyage et la mise en majuscule donne lieu a un la nouvelle variable ci dessous:
 
-| index_id | siren     | code_greffe | nom_greffe     | numero_gestion | id_etablissement | enseigne          |
-|----------|-----------|-------------|----------------|----------------|------------------|-------------------|
-| 1        | 797405776 | 3801        | Grenoble       | 2013B01520     | 1                |                   |
-| 2        | 797405776 | 3801        | Grenoble       | 2013B01520     | 2                |                   |
-| 3        | 797405784 | 8002        | Amiens         | 2013B00639     | 1                |                   |
-| 4        | 797405784 | 8002        | Amiens         | 2013B00639     | 2                | CAFE DE L'UNIVERS |
-| 5        | 797405792 | 7802        | Pontoise       | 2013D00811     | 1                |                   |
-| 6        | 797405792 | 7802        | Pontoise       | 2013D00811     | 2                |                   |
-| 7        | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 1                |                   |
-| 8        | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | AFORCOM           |
-| 9        | 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
-| 10       | 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
-
+| siren     | adresse_ligne1          | adresse_ligne2           | adresse_ligne3 | adress_distance_inpi  |
+|-----------|-------------------------|--------------------------|----------------|-----------------------|
+| 797405776 |                         | 44 Rue du Vercors        |                | 44 RUE VERCORS        |
+| 797405776 |                         | 44 Rue du Vercors        |                | 44 RUE VERCORS        |
+| 797405784 |                         | 3 Place André Audinot    |                | 3 PLACE ANDRE AUDINOT |
+| 797405784 |                         | 3 Place André Audinot    |                | 3 PLACE ANDRE AUDINOT |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                | 12 RUE HONORE BALZAC  |
+| 797405792 | 12 Rue HONORE DE BALZAC |                          |                | 12 RUE HONORE BALZAC  |
+| 797405826 | 8 Rue Général Foy       |                          |                | 8 RUE GENERAL FOY     |
+| 797405826 | 8 Rue Général Foy       |                          |                | 8 RUE GENERAL FOY     |
+| 797405834 |                         | 54 route de Tré Drano    |                | 54 ROUTE TRE DRANO    |
+| 797405842 |                         | 52 Lotissement le Verger |                | 52 LOTISSEMENT VERGER |
 
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
 
-Si nouvelle règle, ajouter ici.
+Voici un tableau récapitulatif des règles appliquer sur les variables de l'adresse:
 
-Lorsque nous allons procéder au matching avec l'INSEE, certaines lignes vont être doublonnées. Une des techniques faciles pour distinguer lequelles sont impactées, nous pouvons utiliser la variable `index_id` qui doit toujours etre unique (ie ne pas avoir un count > 1)
+| Table | Variable | article | digit | debut/fin espace | espace | accent | Upper |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| INPI | adresse_regex_inpi | X | X | X | X | X | X |
+|  | adress_distance_inpi | X |  | X | X | X | X |
+|  | adresse_reconstituee_inpi |  |  | X | X | X | X |
+| INSEE | adress_reconstituee_insee | X |  |  |  | |  |
 
 # Charges de l'équipe
 
@@ -177,27 +155,63 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
-* Création numéro de ligne, sans prendre en compte l’ordre afin d’éviter le consommer toutes les ressources du serveur
-  * https://stackoverflow.com/questions/51090433/select-rows-by-index-in-amazon-athena
+Le pattern regex pour supprimer les articles est le suivant:
 
-Lors de nos tests, nous avons utilisé la query suivante:
+`(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES(?:(?= )|$)`.
+
+Il doit correspondre au pattern utilisé dans les US [2690](https://tree.taiga.io/project/olivierlubet-air/us/2690)  et [2954](https://tree.taiga.io/project/olivierlubet-air/us/2954).
+
+Le code SQL utilisé lors de nos tests:
 
 ```
-SELECT 
-          ROW_NUMBER() OVER () as index_id,UPPER(enseigne) as enseigne
+query = """
+REGEXP_REPLACE(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  NORMALIZE(
+                    UPPER(
+                      CONCAT(
+                        adresse_ligne1, ' ', adresse_ligne2, 
+                        ' ', adresse_ligne3
+                      )
+                    ), 
+                    NFD
+                  ), 
+                  '\pM', 
+                  ''
+                ), 
+                '[^\w\s]| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES(?:(?= )|$)', 
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          ''
+      ) AS adress_distance_inpi
+"""
 ```
 
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
 
+- Imprimer aléatoirement 10 adresses
+- Imprimer des patterns ou il y a 1 champs adresses non vide
+- Imprimer des patterns ou il y a 2 champs adresses non vides
+- Imprimer des patterns ou il y a 3 champs adresses non vides
+- Vérifier que la variable `adress_regex_inpi` n'a pas de " " (espace) en début ou fin de string.
+
 **Code reproduction**
 
 ```
 ```
 
-- Compter le nombre de champs vide dans l'enseigne
-- Compter le nombre de ligne et vérifier que cela correspond au maximum de la variable `index_id`
 
 # CONCEPTION
 
@@ -247,79 +261,4 @@ Contenu :
 
 ]
 
-
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```

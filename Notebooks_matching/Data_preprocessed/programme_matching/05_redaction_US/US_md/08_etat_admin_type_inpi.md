@@ -1,29 +1,13 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.0
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
-<!-- #region -->
-# Mettre en majuscule enseigne et ajouter numéro de ligne 
+# Ajouter les variables état administratif et type d’entreprise  
 
 ```
-Entant que {X} je souhaite {récupérer le numéro de ligne} afin de {pouvoir de pouvoir distinguer les lignes doublonnées lors du matching}
+Entant que {X} je souhaite {créer une variable indiquant le status administratif et le type d'établissement} afin de {connaitre le status a date de l'établissement car l'INSEE n'informe que le dernier status connu}
 ```
 
 **Metadatab**
 
 - Taiga:
-    - Numero US: [2952](https://tree.taiga.io/project/olivierlubet-air/us/2952)
+    - Numero US: []()
 - Gitlab
     - Notebook: []()
     - Markdown: []()
@@ -80,12 +64,12 @@ Workflow US (via stock)
 
 Dans cette US, le besoin est le suivant:
 
-- enseigne:
-    - Mise en majuscule
-- index_id:
-    - Création du numéro de ligne
+- `status_admin`:
+    - Informe du status ouvert/fermé concernant une séquence
+- `status_ets`:
+    - Informe du type d'établissement (SIE/PRI.SEC) concernant une séquence
 
-<!-- #endregion -->
+
 
 # Spécifications
 
@@ -104,28 +88,39 @@ Dans cette US, le besoin est le suivant:
 *   Schémas
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
-*   Champs: `enseigne`
+*   Champs: 
+    - `last_libele_evt`
+    - `type `
 
 
 
+### Exemple Input 1: status administratif
 
-### Exemple Input 1
+Dans l'exemple ci dessous, nous avons une séquence avec:
 
-Voici un apperçu de la table 
+- Une ouverture + un événement
+- Une ouverture + une fermeture
 
-| siren     | code_greffe | nom_greffe     | numero_gestion | id_etablissement | enseigne          |
-|-----------|-------------|----------------|----------------|------------------|-------------------|
-| 797405776 | 3801        | Grenoble       | 2013B01520     | 1                |                   |
-| 797405776 | 3801        | Grenoble       | 2013B01520     | 2                |                   |
-| 797405784 | 8002        | Amiens         | 2013B00639     | 1                |                   |
-| 797405784 | 8002        | Amiens         | 2013B00639     | 2                | cafe de l'univers |
-| 797405792 | 7802        | Pontoise       | 2013D00811     | 1                |                   |
-| 797405792 | 7802        | Pontoise       | 2013D00811     | 2                |                   |
-| 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 1                |                   |
-| 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | aforcom           |
-| 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
-| 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | libelle_evt                                | last_libele_evt                            |
+|-----------|-------------|------------|----------------|------------------|-------------------------|--------------------------------------------|--------------------------------------------|
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Modifications relatives à un établissement |
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2018-04-30 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Etablissement supprimé                     |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2018-04-30 00:00:00.000 | Etablissement supprimé                     | Etablissement supprimé                     |
+| 342109071 | 7501        | Paris      | 1987D01764     | 4                | 2018-05-03 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement |
 
+### Exemple Input 2: status etablissement
+
+Dans l'exemple ci dessous, nous avons deux séquences pour la même entreprise:
+
+- Un siège
+- Un principal
+
+
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | type |
+|-----------|-------------|------------|----------------|------------------|-------------------------|------|
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 1                | 2013-09-26 00:00:00.000 | SIE  |
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 2                | 2013-09-26 00:00:00.000 | PRI  |
 
 ## Output
 
@@ -134,26 +129,27 @@ Voici un apperçu de la table
 *   BDD cibles
 *   Tables: `inpi_etablissement_historique`
 *   Champs: 
-    - `index_id`
-    - `enseigne`
+    - `status_admin`
+    - `status_ets`
 
 ]
 
-Dans la table ci-dessous, nous avons mis en majuscule l'enseigne et créer un index correspondant au numéro de ligne
+### Exemple 1: `status_admin`
 
-| index_id | siren     | code_greffe | nom_greffe     | numero_gestion | id_etablissement | enseigne          |
-|----------|-----------|-------------|----------------|----------------|------------------|-------------------|
-| 1        | 797405776 | 3801        | Grenoble       | 2013B01520     | 1                |                   |
-| 2        | 797405776 | 3801        | Grenoble       | 2013B01520     | 2                |                   |
-| 3        | 797405784 | 8002        | Amiens         | 2013B00639     | 1                |                   |
-| 4        | 797405784 | 8002        | Amiens         | 2013B00639     | 2                | CAFE DE L'UNIVERS |
-| 5        | 797405792 | 7802        | Pontoise       | 2013D00811     | 1                |                   |
-| 6        | 797405792 | 7802        | Pontoise       | 2013D00811     | 2                |                   |
-| 7        | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 1                |                   |
-| 8        | 797405826 | 4202        | Saint-√Čtienne | 2013B01146     | 2                | AFORCOM           |
-| 9        | 797405834 | 5602        | Vannes         | 2013D00352     | 1                |                   |
-| 10       | 797405842 | 6901        | Lyon           | 2017D00469     | 1                |                   |
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | libelle_evt                                | last_libele_evt                            | status_admin |
+|-----------|-------------|------------|----------------|------------------|-------------------------|--------------------------------------------|--------------------------------------------|--------------|
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Modifications relatives à un établissement | A            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 1                | 2018-04-30 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement | A            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2014-01-28 00:00:00.000 | Etablissement ouvert                       | Etablissement supprimé                     | F            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 3                | 2018-04-30 00:00:00.000 | Etablissement supprimé                     | Etablissement supprimé                     | F            |
+| 342109071 | 7501        | Paris      | 1987D01764     | 4                | 2018-05-03 00:00:00.000 | Modifications relatives à un établissement | Modifications relatives à un établissement | A            |
 
+### Exemple 2: `status_ets`
+
+| siren     | code_greffe | nom_greffe | numero_gestion | id_etablissement | date_greffe             | type | status_ets |
+|-----------|-------------|------------|----------------|------------------|-------------------------|------|------------|
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 1                | 2013-09-26 00:00:00.000 | SIE  | true       |
+| 797409612 | 9201        | Nanterre   | 2013D01713     | 2                | 2013-09-26 00:00:00.000 | PRI  | false      |
 
 ## Règles de gestion applicables
 
@@ -161,7 +157,9 @@ Dans la table ci-dessous, nous avons mis en majuscule l'enseigne et créer un in
 
 Si nouvelle règle, ajouter ici.
 
-Lorsque nous allons procéder au matching avec l'INSEE, certaines lignes vont être doublonnées. Une des techniques faciles pour distinguer lequelles sont impactées, nous pouvons utiliser la variable `index_id` qui doit toujours etre unique (ie ne pas avoir un count > 1)
+A l'INSEE, la variable faisant référence au `status_admin` s 'appelle `etatadministratifetablissement` et est composée de deux valeurs possible, `A`, pour actif et `F` pour fermé.
+
+L'équivalent de la variable `status_ets` à l'INSEE s'appelle `etablissementsiege` et elle est composée de deux valeurs, `true` si l'établissement est un siège, sinon `false`
 
 # Charges de l'équipe
 
@@ -177,14 +175,11 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
-* Création numéro de ligne, sans prendre en compte l’ordre afin d’éviter le consommer toutes les ressources du serveur
-  * https://stackoverflow.com/questions/51090433/select-rows-by-index-in-amazon-athena
-
-Lors de nos tests, nous avons utilisé la query suivante:
+Lors de nos tests, nous avons utilisé cette query:
 
 ```
-SELECT 
-          ROW_NUMBER() OVER () as index_id,UPPER(enseigne) as enseigne
+CASE WHEN last_libele_evt != 'Etablissement supprimé' THEN 'A' ELSE 'F' END AS status_admin
+CASE WHEN type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets,
 ```
 
 # Tests d'acceptance
@@ -196,8 +191,10 @@ SELECT
 ```
 ```
 
-- Compter le nombre de champs vide dans l'enseigne
-- Compter le nombre de ligne et vérifier que cela correspond au maximum de la variable `index_id`
+- Trouver un siren avec le changement de status établissement au fil du temps. Par exemple, un principal devenu secondaire, ou bien un principal devenu siege.
+- Compter le nombre de séquence distinct ayant un siège
+- Compter le nombre de fois ou la variable `manque_sie_ou_pri_flag` est égale à `True` et `status_ets` est égale à `True`
+    - Donner des 
 
 # CONCEPTION
 
@@ -247,79 +244,4 @@ Contenu :
 
 ]
 
-
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```
