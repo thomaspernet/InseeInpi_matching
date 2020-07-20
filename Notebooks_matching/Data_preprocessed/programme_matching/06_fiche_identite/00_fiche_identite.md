@@ -93,11 +93,9 @@ Workflow US (via stock)
 
 Dans cette US, le besoin est le suivant:
 
-- XX
-- YY
-- ZZ
+- créer une table contenant les informations sur les PP/PM et établissements a l'INPI et les informations sur les UL et etablissments à l'INSEE
 
-
+![](https://app.lucidchart.com/publicSegments/view/2a1a8c67-097c-4022-931e-6ee13d24371b/image.png)
 
 
 # Spécifications
