@@ -119,7 +119,6 @@ La query met environ 5 minutes pour s'éxecuter. Il est possible d'améliorer le
 
 ```python
 query = """
-/*Table préparée avec nouvelles */
 CREATE TABLE inpi.insee_final_sql
 WITH (
   format='PARQUET'
@@ -151,6 +150,8 @@ dateCreationEtablissement,
          enseigne2Etablissement,
          enseigne3Etablissement
 FROM insee_rawdata 
+-- WHERE siren = '797406154'  
+-- WHERE siren = '797406188'
  )
   
 SELECT *
@@ -171,28 +172,25 @@ dateCreationEtablissement,
          voie_clean,
          libelleVoieEtablissement,
          complementAdresseEtablissement,
-         indiceRepetitionEtablissement,
-         
+         indiceRepetitionEtablissement, 
          REGEXP_REPLACE(
             REGEXP_REPLACE(
               REGEXP_REPLACE(
-                -- REGEXP_REPLACE(
-                  -- NORMALIZE(
-                    -- UPPER(
+                 REGEXP_REPLACE(
                       CONCAT(
-                        numeroVoieEtablissement, ' ', voie_clean, 
-                        ' ', libelleVoieEtablissement, ' ',
-                        complementAdresseEtablissement
-                      ),
-                    -- ), 
-                    -- NFD
-                  -- ), 
-                  -- '\pM', 
-                  -- ''
-                -- ), 
+                        COALESCE(numeroVoieEtablissement,''),
+                        COALESCE(indiceRepetitionEtablissement,''),
+                        ' ',
+                        COALESCE(voie_clean,''), ' ',  -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement,''), ' ',
+                        COALESCE(complementAdresseEtablissement,'')
+                      ), 
                 '[^\w\s]| +', 
                 ' '
               ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)',  
+              ''
+            ), 
             '\s\s+', 
             ' '
           ), 
@@ -274,6 +272,7 @@ dateCreationEtablissement,
          numeroVoieEtablissement,
          indiceRepetitionEtablissement,
          typeVoieEtablissement,
+  voie_clean,
   adress_reconstituee_insee,
          enseigne1Etablissement,
          enseigne2Etablissement,
