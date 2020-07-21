@@ -101,6 +101,163 @@ athena = service_athena.connect_athena(client = client,
                       bucket = 'calfdata') 
 ```
 
+```python
+query = """
+WITH remove_empty_siret AS (
+  SELECT 
+  siren, nic, siret,regexp_like(siret, '\d+') as test_siret, statutdiffusionetablissement, datecreationetablissement, trancheeffectifsetablissement, anneeeffectifsetablissement, activiteprincipaleregistremetiersetablissement, datederniertraitementetablissement, etablissementsiege, nombreperiodesetablissement, complementadresseetablissement, numerovoieetablissement, indicerepetitionetablissement, typevoieetablissement, libellevoieetablissement, codepostaletablissement, libellecommuneetablissement, libellecommuneetrangeretablissement, distributionspecialeetablissement, codecommuneetablissement, codecedexetablissement, libellecedexetablissement, codepaysetrangeretablissement, libellepaysetrangeretablissement, complementadresse2etablissement, numerovoie2etablissement, indicerepetition2etablissement, typevoie2etablissement, libellevoie2etablissement, codepostal2etablissement, libellecommune2etablissement, libellecommuneetranger2etablissement, distributionspeciale2etablissement, codecommune2etablissement, codecedex2etablissement, libellecedex2etablissement, codepaysetranger2etablissement, libellepaysetranger2etablissement, datedebut, etatadministratifetablissement, enseigne1etablissement, enseigne2etablissement, enseigne3etablissement, denominationusuelleetablissement, activiteprincipaleetablissement, nomenclatureactiviteprincipaleetablissement, caractereemployeuretablissement
+  FROM 
+  insee_rawdata -- WHERE siren = '797406154'  
+    -- WHERE siren = '797406188'
+    ) 
+SELECT *
+FROM 
+  (
+    WITH concat_adress AS(
+      SELECT 
+      siren, nic, siret, statutdiffusionetablissement, datecreationetablissement, trancheeffectifsetablissement, anneeeffectifsetablissement, activiteprincipaleregistremetiersetablissement, datederniertraitementetablissement, etablissementsiege, nombreperiodesetablissement, complementadresseetablissement, numerovoieetablissement, indicerepetitionetablissement, typevoieetablissement, libellevoieetablissement, codepostaletablissement, libellecommuneetablissement, libellecommuneetrangeretablissement, distributionspecialeetablissement, codecommuneetablissement, codecedexetablissement, libellecedexetablissement, codepaysetrangeretablissement, libellepaysetrangeretablissement, complementadresse2etablissement, numerovoie2etablissement, indicerepetition2etablissement, typevoie2etablissement, libellevoie2etablissement, codepostal2etablissement, libellecommune2etablissement, libellecommuneetranger2etablissement, distributionspeciale2etablissement, codecommune2etablissement, codecedex2etablissement, libellecedex2etablissement, codepaysetranger2etablissement, libellepaysetranger2etablissement, datedebut, etatadministratifetablissement, enseigne1etablissement, enseigne2etablissement, enseigne3etablissement, denominationusuelleetablissement, activiteprincipaleetablissement, nomenclatureactiviteprincipaleetablissement, caractereemployeuretablissement,
+        REGEXP_REPLACE(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                CONCAT(
+                  COALESCE(numeroVoieEtablissement, ''), 
+                  COALESCE(
+                    indiceRepetitionEtablissement, ''
+                  ), 
+                  ' ', 
+                  COALESCE(voie_clean, ''), 
+                  ' ', 
+                  -- besoin sinon exclu
+                  COALESCE(libelleVoieEtablissement, ''), 
+                  ' ', 
+                  COALESCE(
+                    complementAdresseEtablissement, 
+                    ''
+                  )
+                ), 
+                '[^\w\s]| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          ''
+        ) AS adress_reconstituee_insee, ville_matching,voie_clean
+      FROM 
+        (
+          SELECT 
+          siren, nic, siret, statutdiffusionetablissement, datecreationetablissement, trancheeffectifsetablissement, anneeeffectifsetablissement, activiteprincipaleregistremetiersetablissement, datederniertraitementetablissement, etablissementsiege, nombreperiodesetablissement, complementadresseetablissement, numerovoieetablissement, indicerepetitionetablissement, typevoieetablissement, libellevoieetablissement, codepostaletablissement, libellecommuneetablissement, libellecommuneetrangeretablissement, distributionspecialeetablissement, codecommuneetablissement, codecedexetablissement, libellecedexetablissement, codepaysetrangeretablissement, libellepaysetrangeretablissement, complementadresse2etablissement, numerovoie2etablissement, indicerepetition2etablissement, typevoie2etablissement, libellevoie2etablissement, codepostal2etablissement, libellecommune2etablissement, libellecommuneetranger2etablissement, distributionspeciale2etablissement, codecommune2etablissement, codecedex2etablissement, libellecedex2etablissement, codepaysetranger2etablissement, libellepaysetranger2etablissement, datedebut, etatadministratifetablissement, enseigne1etablissement, enseigne2etablissement, enseigne3etablissement, denominationusuelleetablissement, activiteprincipaleetablissement, nomenclatureactiviteprincipaleetablissement, caractereemployeuretablissement,
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                      REGEXP_REPLACE(
+                        REGEXP_REPLACE(
+                          libelleCommuneEtablissement, 
+                          '^\d+\s|\s\d+\s|\s\d+$', 
+                          -- digit
+                          ''
+                        ), 
+                        '^LA\s+|^LES\s+|^LE\s+|\\(.*\\)|^L(ES|A|E) | L(ES|A|E) | L(ES|A|E)$|CEDEX | CEDEX | CEDEX|^E[R*] | E[R*] | E[R*]$', 
+                        ''
+                      ), 
+                      '^STE | STE | STE$|^STES | STES | STES', 
+                      'SAINTE'
+                    ), 
+                    '^ST | ST | ST$', 
+                    'SAINT'
+                  ), 
+                  'S/|^S | S | S$', 
+                  'SUR'
+                ), 
+                '/S', 
+                'SOUS'
+              ), 
+              '[^\w\s]|\([^()]*\)|ER ARRONDISSEMENT|E ARRONDISSEMENT|" \
+"|^SUR$|CEDEX|[0-9]+|\s+', 
+              ''
+            ) as ville_matching, test_siret 
+          FROM 
+            remove_empty_siret
+        ) 
+        LEFT JOIN type_voie ON typevoieetablissement = type_voie.voie_matching 
+      WHERE 
+        test_siret = true
+    ) 
+    SELECT 
+    count_initial_insee,
+    concat_adress.siren, 
+    statutdiffusionetablissement, 
+    dateCreationEtablissement, 
+    trancheeffectifsetablissement, 
+    anneeeffectifsetablissement, 
+    activiteprincipaleregistremetiersetablissement, 
+    datederniertraitementetablissement, 
+    nombreperiodesetablissement, 
+    etatAdministratifEtablissement,
+    etablissementSiege, 
+    codePostalEtablissement, 
+    codeCommuneEtablissement, 
+    libelleCommuneEtablissement, 
+    ville_matching, 
+    numeroVoieEtablissement, 
+    typeVoieEtablissement, 
+    voie_clean, 
+    libelleVoieEtablissement, 
+    complementAdresseEtablissement, 
+    adress_reconstituee_insee
+    indiceRepetitionEtablissement, 
+    enseigne1Etablissement, 
+    enseigne2Etablissement, 
+    enseigne3Etablissement, 
+    distributionspecialeetablissement, 
+    codecedexetablissement, 
+    libellecedexetablissement, 
+    codepaysetrangeretablissement, 
+    libellepaysetrangeretablissement, 
+    complementadresse2etablissement, 
+    numerovoie2etablissement, 
+    indicerepetition2etablissement, 
+    typevoie2etablissement, 
+    libellevoie2etablissement, 
+    codepostal2etablissement, 
+    libellecommune2etablissement, 
+    libellecommuneetranger2etablissement, 
+    distributionspeciale2etablissement, 
+    codecommune2etablissement, 
+    codecedex2etablissement, 
+    libellecedex2etablissement, 
+    codepaysetranger2etablissement, 
+    libellepaysetranger2etablissement, 
+    datedebut, 
+    denominationusuelleetablissement, 
+    activiteprincipaleetablissement, 
+    nomenclatureactiviteprincipaleetablissement, 
+    caractereemployeuretablissement 
+    FROM 
+      concat_adress 
+      LEFT JOIN (
+        SELECT 
+          siren, 
+          COUNT(siren) as count_initial_insee 
+        FROM 
+          concat_adress 
+        GROUP BY 
+          siren
+      ) as count_siren ON concat_adress.siren = count_siren.siren
+  ) as temp 
+ LEFT JOIN insee_ul 
+ ON insee_ul.siren = temp.siren
+ limit 10 
+"""
+```
+
 ### Exemple Input 2
 
 XXX
