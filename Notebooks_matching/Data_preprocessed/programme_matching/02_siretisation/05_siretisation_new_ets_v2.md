@@ -805,11 +805,10 @@ for key, values in enumerate(list_possibilities[:1]):
     temp = (inpi
             .merge(insee,
                           how='inner',
-                   left_on = ['siren','code_postal_matching'],
-                   right_on = ['siren','codepostaletablissement']
-                   
-                          #left_on=list_possibilities[0]['match']['inpi'],
-                          #right_on= list_possibilities[0]['match']['insee']
+                   #left_on = ['siren','code_postal_matching'],
+                   #right_on = ['siren','codepostaletablissement']
+                          left_on=list_possibilities[0]['match']['inpi'],
+                          right_on= list_possibilities[0]['match']['insee']
                   )
            ).compute()
     
@@ -987,6 +986,7 @@ for key, values in enumerate(list_possibilities[:1]):
     df_2 = df_2.reindex(columns = reindex)
 
     
+    
 ```
 
 ```python
@@ -1139,6 +1139,10 @@ df_3_bis['not_duplication'].head()
 df_3_bis['duplication'].head()
 ```
 
+```python
+#df_3_bis['not_duplication'].columns
+```
+
 ## Etape 4: Récupération sequence dans table INPI
 
 Dans cette étape, nous allons utiliser les siret que nous venons de récupérer et les matcher avec la table de l'INPI. Cela évite de refaire tous les tests sur des séquences dont on a déjà récupérer le siret.
@@ -1216,6 +1220,179 @@ df_final_duplicate = split_duplication(
 
 ```python
 df_final_duplicate.shape
+```
+
+## Creation CSV pour CACD2
+
+Temporairement, on sauvergarde la table sequence + siret + index_id pour donner la table a CACD2
+
+```python
+df_final_no_duplicate.head()
+```
+
+```python
+df_temp = (df_final_no_duplicate.reindex(columns = [
+     'index_id','siren','siret','code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement', 'date_greffe'
+ ])
+           .sort_values(by = 
+['siren','siret','code_greffe', 'nom_greffe', 'numero_gestion', 'id_etablissement', 'date_greffe']
+)
+ .drop_duplicates(keep = 'last', subset = ['siren','siret','code_greffe', 'nom_greffe', 'numero_gestion',
+                                           'id_etablissement'])
+          )
+```
+
+```python
+df_temp.dtypes
+```
+
+```python
+#df_temp.loc[lambda x: x['siret'].isin(['82517574800011'])]
+```
+
+```python
+df_temp.to_csv('temp.csv', index = False)
+```
+
+```python
+s3.upload_file('temp.csv',
+               'INPI/TC_1/03_siretisation/ETS_SIRET_TEMP')
+```
+
+```python
+query_create = """
+CREATE EXTERNAL TABLE IF NOT EXISTS {0}.{1} (
+index_id string,
+siren string, 
+siret string,
+code_greffe string,
+nom_greffe string, 
+numero_gestion string,
+id_etablissement string, 
+date_greffe string
+ )
+     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+   'separatorChar' = ',',
+   'quoteChar' = '"'
+   )
+     LOCATION '{2}'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1');""".format(
+    'inpi',
+    'ets_sequence_siret',
+    's3://calfdata/INPI/TC_1/03_siretisation/ETS_SIRET_TEMP'
+)
+
+output = athena.run_query(
+                            query=query_create,
+                            database='inpi',
+                            s3_output='INPI/sql_output'
+                        )
+```
+
+Créer la table et on l'envoie dans le S3
+
+```python
+query = """
+SELECT 
+  seq.siren, 
+  siret, 
+  seq.code_greffe, 
+  seq.nom_greffe, 
+  seq.numero_gestion, 
+  seq.id_etablissement, 
+  seq.date_greffe, 
+  file_timestamp, 
+  libelle_evt, 
+  "siège_pm", 
+  rcs_registre, 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  adress_reconstituee_inpi, 
+  code_postal_matching, 
+  ville, 
+  code_commune, 
+  pays, 
+  domiciliataire_nom, 
+  domiciliataire_siren, 
+  domiciliataire_greffe, 
+  "domiciliataire_complément", 
+  "siege_domicile_représentant", 
+  nom_commercial, 
+  enseigne, 
+  "activité_ambulante", 
+  "activité_saisonnière", 
+  "activité_non_sédentaire", 
+  "date_début_activité", 
+  "activité", 
+  origine_fonds, 
+  origine_fonds_info, 
+  type_exploitation 
+FROM 
+  ets_sequence_siret 
+  INNER JOIN (
+    SELECT 
+      CAST(index_id AS varchar) as index_id, 
+      siren, 
+      code_greffe, 
+      nom_greffe, 
+      numero_gestion, 
+      id_etablissement, 
+      date_greffe, 
+      file_timestamp, 
+      libelle_evt, 
+      "siège_pm", 
+      rcs_registre, 
+      adresse_ligne1, 
+      adresse_ligne2, 
+      adresse_ligne3, 
+      adress_reconstituee_inpi, 
+      code_postal_matching, 
+      ville, 
+      code_commune, 
+      pays, 
+      domiciliataire_nom, 
+      domiciliataire_siren, 
+      domiciliataire_greffe, 
+      "domiciliataire_complément", 
+      "siege_domicile_représentant", 
+      nom_commercial, 
+      enseigne, 
+      "activité_ambulante", 
+      "activité_saisonnière", 
+      "activité_non_sédentaire", 
+      "date_début_activité", 
+      "activité", 
+      origine_fonds, 
+      origine_fonds_info, 
+      type_exploitation 
+    FROM 
+      "inpi"."ets_final_sql"
+  ) as seq ON ets_sequence_siret.index_id = seq.index_id 
+  AND ets_sequence_siret.siren = seq.siren
+"""
+output = athena.run_query(
+                            query=query,
+                            database='inpi',
+                            s3_output='INPI/sql_output'
+                        )
+```
+
+```python
+name_s3 = 'ETS_SIRET_INPI'
+source_key = "{}/{}.csv".format('INPI/sql_output',
+                               output['QueryExecutionId']
+                               )
+destination_key = "{}/{}.csv".format("INPI/TC_1/03_siretisation/ETS_SIRET_TEMP_CAC2D",
+                                     name_s3
+                                         )
+
+results = s3.copy_object_s3(source_key = source_key,
+             destination_key = destination_key,
+             remove = False
+                      )
 ```
 
 ## Etape 6: Ecarte les séquences trouvées de la table INPI
