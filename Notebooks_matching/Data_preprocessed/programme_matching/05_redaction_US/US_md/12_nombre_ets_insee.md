@@ -1,18 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.2
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
 # Compter le nombre de siret par siren [INSEE] 
 
 ```
@@ -53,7 +38,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 # Spécifications
 
 ### Origine information (si applicable) 
@@ -76,7 +60,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 ### Exemple Input 1
 
 Exemple d'entreprises avec plusieurs siret (établissements)
@@ -93,7 +76,6 @@ Exemple d'entreprises avec plusieurs siret (établissements)
 | 001807254 | 00180725400014 |
 | 005420021 | 00542002100015 |
 | 005420021 | 00542002100049 |
-
 
 ## Output
 
@@ -119,7 +101,6 @@ Exemple du compte d'entreprises avec plusieurs établissements. L'entreprise `00
 | 001807254 | 00180725400014 | 2                   |
 | 005420021 | 00542002100015 | 5                   |
 | 005420021 | 00542002100049 | 5                   |
-
 
 ## Règles de gestion applicables
 
@@ -798,79 +779,9 @@ Contenu :
 
 ]
 
-
 # Creation markdown
 
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
+    jupyter nbconvert --no-input --to markdown 12_nombre_ets_insee.ipynb
+    Report Available at this adress:
+     /Users/thomas/Google Drive/Projects/GitHub/Repositories/InseeInpi_matching/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/US_md/12_nombre_ets_insee.md
 
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```

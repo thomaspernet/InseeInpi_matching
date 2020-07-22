@@ -1,18 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.2
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
 # Enlever les SIRET vide et ajouter le nom complet du type de voie [INSEE] 
 
 ```
@@ -58,7 +43,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 # Spécifications
 
 ### Origine information (si applicable) 
@@ -82,7 +66,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 ### Exemple Input 1
 
 La table ci-dessous est un extrait de la table de l'INSEE, ou nous avons filtré les siren n'ayant pas de siret
@@ -100,7 +83,6 @@ La table ci-dessous est un extrait de la table de l'INSEE, ou nous avons filtré
 | 828908046 | O   |       |
 | 828908053 | O   |       |
 
-
 ### Exemple Input 2
 
 La table ci-dessous contient des exemples du type de voie abrégé à l'INSEE. Par exemple, `AV` est l'abréviation de `AVENUE`.
@@ -117,7 +99,6 @@ La table ci-dessous contient des exemples du type de voie abrégé à l'INSEE. P
 | 315497495 | 00020 | 31549749500020 | RUE                   |
 | 315497503 | 00013 | 31549750300013 | RUE                   |
 | 315497511 | 00016 | 31549751100016 | RUE                   |
-
 
 ## Output
 
@@ -144,7 +125,6 @@ Ci dessous, un apperçu de la table INSEE après avoir supprimé les siret non v
 | 390426575 | 39042657500010 | PL                    | PLACE      |
 | 390428779 | 39042877900024 | AV                    | AVENUE     |
 
-<!-- #region -->
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
@@ -371,80 +351,5 @@ Contenu :
 *   Vidéo publiée
 
 ]
-<!-- #endregion -->
 
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```

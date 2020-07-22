@@ -1,18 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.2
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
 # Nettoyer la ville et adresse [INSEE]  
 
 ```
@@ -63,7 +48,6 @@ Dans cette US, le besoin est le suivant:
 
 
 
-
 # Spécifications
 
 ### Origine information (si applicable) 
@@ -89,7 +73,6 @@ Dans cette US, le besoin est le suivant:
     - `libelleVoieEtablissement`
     - `complementAdresseEtablissement`
 
-
 ### Exemple Input 1
 
 Exemple de normalisation d'origine de la ville à l'INSEE
@@ -107,7 +90,6 @@ Exemple de normalisation d'origine de la ville à l'INSEE
 | 827538406 | BANDOL                      |
 | 827538489 | MANDELIEU-LA-NAPOULE        |
 
-<!-- #region -->
 ### Exemple Input 2
 
 - Exemple 1: du découpage de l'adresse à l'INSEE. `indiceRepetitionEtablissement` vide
@@ -140,7 +122,6 @@ Exemple de normalisation d'origine de la ville à l'INSEE
 | 827618901 | 89                      | B                             | AVENUE     | DU SERS                  |                                |
 | 827639345 | 1                       | B                             | ALLEE      | DES TOURMOTTES           |                                |
 | 827668989 | 36                      | B                             | AVENUE     | PIERRE SEMARD            |                                |
-<!-- #endregion -->
 
 ## Output
 
@@ -197,7 +178,6 @@ Exemple de normalisation d'origine de la ville à l'INSEE
 | 844426759 | 250                     | B                             | BOULEVARD  | SAINT GERMAIN            |                                | 2501 BIS BOULEVARD SAINT GERMAIN |
 | 844434704 | 37                      | B                             | BOULEVARD  | SUCHET                   |                                | 371 BIS BOULEVARD SUCHET         |
 
-<!-- #region -->
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
@@ -321,80 +301,5 @@ Contenu :
 *   Vidéo publiée
 
 ]
-<!-- #endregion -->
 
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```
