@@ -1,18 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.4.2
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
 # Création ID séquence INPI 
 
 ```
@@ -81,7 +66,6 @@ Dans cette US, le besoin est le suivant:
 - Créer un ID unique pour la séquence suivante:  siren + code greffe + nom greffe + numero gestion +ID établissement 
 
 
-
 # Spécifications
 
 ### Origine information (si applicable) 
@@ -106,7 +90,6 @@ Dans cette US, le besoin est le suivant:
     - `numero gestion`
     - `ID établissement` 
 
-
 ### Exemple Input 1
 
 Exemple d'input avec plusieurs séquences ayant un (SIREN 000199968) ou plusieurs événements (SIREN 000325175)
@@ -123,7 +106,6 @@ Exemple d'input avec plusieurs séquences ayant un (SIREN 000199968) ou plusieur
 | 2197848  | 005411483 | 8002        | Amiens     | 1954A70148     | 1                |
 | 2197849  | 005411954 | 8002        | Amiens     | 1954A70195     | 1                |
 | 2197850  | 005420021 | 8002        | Amiens     | 1954B70002     | 1                |
-
 
 ## Output
 
@@ -151,7 +133,6 @@ La table ci-dessous montre le résultat attendu après avoir créer l'ID unique.
 | 164185   | 005411954 | 8002        | Amiens     | 1954A70195     | 1                | 8           |
 | 164186   | 005420021 | 8002        | Amiens     | 1954B70002     | 1                | 9           |
 
-<!-- #region -->
 ## Règles de gestion applicables
 
 [PO : Formules applicables]
@@ -245,80 +226,5 @@ Contenu :
 *   Vidéo publiée
 
 ]
-<!-- #endregion -->
 
 # Creation markdown
-
-```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
-```
-
-```python
-def create_report(extension = "html"):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "markdown"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    if extension == 'markdown':
-        #extension = 'md'
-        os.remove(name_no_extension +'.{}'.format('md'))
-        source_to_move = name_no_extension +'.{}'.format('md')
-    else:
-        source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'US_md', source_to_move)
-    
-    print('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Generate notebook
-    os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
-```
-
-```python
-create_report(extension = "markdown")
-```
