@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.0
+      jupytext_version: 1.4.2
   kernelspec:
     display_name: Python 3
     language: python
@@ -1578,6 +1578,60 @@ output = athena.run_query(
 ```python
 dic_['global']['table_final_id']['ETS']['filtered'] =  output['QueryExecutionId']
 dic_['global']['table_final_id']['ETS']
+```
+
+## Create ID and ID sequence
+
+- Ajout de la ligne de code dans le notebook actuel pour ajouter la variable appelée sequence_id 
+- Une sequence est caractérisée par  siren + code greffe + nom greffe + numero gestion +ID établissement
+
+```python
+query = """
+CREATE TABLE default.ets_test_filtered_id_seq
+WITH (
+  format='PARQUET'
+) AS
+WITH cte AS (
+SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, sequence_id, 
+  ROW_NUMBER() OVER (
+            PARTITION BY sequence_id
+            ORDER BY sequence_id) as rownum
+  FROM (
+    SELECT
+    siren, code_greffe, nom_greffe, numero_gestion, id_etablissement,
+    DENSE_RANK () OVER(
+  ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement) AS sequence_id
+  FROM ets_test_filtered 
+    )
+  )
+  SELECT 
+  ROW_NUMBER() OVER () as index_id,
+  sequence_id,
+ets_test_filtered.siren, 
+ets_test_filtered.code_greffe, 
+ets_test_filtered.nom_greffe, 
+ets_test_filtered.numero_gestion, 
+ets_test_filtered.id_etablissement, status, origin, date_greffe, file_timestamp, max_timestamp, libelle_evt, type, "siège_pm", rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, code_postal, code_postal_matching, ville, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, "domiciliataire_complément", "siege_domicile_représentant", nom_commercial, enseigne, "activité_ambulante", "activité_saisonnière", "activité_non_sédentaire", "date_début_activité", "activité", origine_fonds, origine_fonds_info, type_exploitation, csv_source
+  FROM ets_test_filtered
+  INNER JOIN (
+    SELECT *
+    FROM cte
+    WHERE rownum = 1
+    ) as no_dup_cte
+    ON ets_test_filtered.siren = no_dup_cte.siren
+    AND ets_test_filtered.code_greffe = no_dup_cte.code_greffe
+    AND ets_test_filtered.nom_greffe = no_dup_cte.nom_greffe
+    AND ets_test_filtered.numero_gestion = no_dup_cte.numero_gestion
+    AND ets_test_filtered.id_etablissement = no_dup_cte.id_etablissement
+"""
+```
+
+```python
+output = athena.run_query(
+    query=query,
+    database=dic_['global']['database'],
+    s3_output=dic_['global']['output']
+)
 ```
 
 ### Create csv
