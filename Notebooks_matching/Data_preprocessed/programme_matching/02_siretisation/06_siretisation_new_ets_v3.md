@@ -23,44 +23,60 @@ US potentielles
 Creation table rapprochement INSEE/INPI
 
 1. US 1 match sur siren + ville + code postal
+
   1. US: US 01 rapprochement INSEE INPI
   2. US taiga:
   
 Création règles de gestion
 
 1. US 2 Création Levenshtein 
+
   1. US US 02 Variables regles de gestion
   2. US taiga:
+  
 2. US 3 Création Jaccard
+
   1. US US 02 Variables regles de gestion
   2. US taiga:
+  
 3. US 4 Creation Regex
+
   1.  US US 02 Variables regles de gestion
   2. US taiga:
+  
 4. US 5 Récupération minimum Levenshtein + Jaccard
+
   1. US XX
   2. US taiga:
+  
 5. US 6 Tests de logique
+
   1. US XX
   2. US taiga:
   
 Dedoublonnage
 
 1. US 6 Filtre selon règles de séparation
+
   1. US XX
   2.  US taiga:
+  
 2. US 7 Création indicateur de doublons
+
   1. Meme séquence, plusieurs siret → adresse différente au cours d’une séquence (ici, l’index est différent)
   2. Meme index, plusieurs siret → adresse très similaire entre deux siret (ici, l’index est identique)
   3. US XX
-  4.  US taiga:
+  4. US taiga:
+  
 3. US 8 Récupération index unique et siret unique
+
   1. US XX
-  2.  US taiga:
+  2. US taiga:
   
 Deduction siret sur séquence
 
 1. US 9 Attribution du siret sur une séquence
+
   1. US XX
   2. US taiga:
   
