@@ -144,10 +144,7 @@ athena = service_athena.connect_athena(client = client,
    * code_postal_matching  → codepostaletablissement 
 * La première query consiste à rapprocher les deux tables INPI & INSEE [NEW]
    
-### test Acceptance 
 
-1. Compter nombre de lignes après match
-  1. 11957437
 
 ```python
 query = """
@@ -161,6 +158,7 @@ WITH (
   sequence_id, 
   count_initial_insee,
   ets_final_sql.siren, 
+  siret, 
   code_greffe, 
   nom_greffe, 
   numero_gestion, 
@@ -227,5 +225,28 @@ AND ets_final_sql.code_postal_matching = insee.codepostaletablissement
 WHERE 
   status != 'IGNORE'
 -- LIMIT 10
+"""
+```
+
+### test Acceptance 
+
+* Description of the rule(s) to validate the US
+
+  1.  Compter le nombre d’observations à l’INPI matché à l’INSEE
+  2. Compter le nombre de doublons (via index_id )
+
+```python
+query = """
+SELECT COUNT(*) FROM "inpi"."ets_insee_inpi"
+"""
+```
+
+```python
+
+```
+
+```python
+query = """
+https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/5c11d8ad-1b36-4ba4-b542-220e3abfa046
 """
 ```
