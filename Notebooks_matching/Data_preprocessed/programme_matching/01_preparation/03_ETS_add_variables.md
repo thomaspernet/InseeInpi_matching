@@ -153,7 +153,10 @@ WITH (
   format='PARQUET'
 ) AS
 WITH create_regex AS ( 
-SELECT siren, 
+SELECT
+index_id,
+sequence_id,
+siren, 
     code_greffe, 
     nom_greffe, 
     numero_gestion, 
@@ -324,9 +327,8 @@ SELECT siren,
     origine_fonds, 
     origine_fonds_info, 
     type_exploitation, 
-    csv_source, 
-    rn -- AS adress_nettoyee
-FROM ets_test_filtered
+    csv_source
+FROM ets_test_filtered_id_seq
 ) 
 SELECT 
   * 
@@ -334,6 +336,8 @@ FROM
   (
     WITH voie_type_voie AS (
       SELECT 
+      index_id,
+sequence_id,
         siren, 
         code_greffe, 
         nom_greffe, 
@@ -379,12 +383,13 @@ FROM
         origine_fonds, 
         origine_fonds_info, 
         type_exploitation, 
-        csv_source, 
-        rn 
+        csv_source
       FROM 
         type_voie 
         RIGHT JOIN (
           SELECT 
+          index_id,
+sequence_id,
             siren, 
             code_greffe, 
             nom_greffe, 
@@ -431,8 +436,7 @@ FROM
             origine_fonds, 
             origine_fonds_info, 
             type_exploitation, 
-            csv_source, 
-            rn 
+            csv_source
           FROM 
             create_regex
         ) as numero_voie_type_voie ON numero_voie_type_voie.voie_clean = type_voie.voie_clean
@@ -471,7 +475,8 @@ FROM
             voie_type_voie
         ) 
         SELECT 
-          ROW_NUMBER() OVER () as index_id,
+        index_id,
+        sequence_id,
           voie_type_voie.siren, 
           voie_type_voie.code_greffe, 
           voie_type_voie.nom_greffe, 
@@ -483,7 +488,7 @@ FROM
           file_timestamp, 
           libelle_evt, 
           last_libele_evt, 
-          CASE WHEN last_libele_evt = 'Etablissement ouvert' THEN 'A' ELSE 'F' END AS status_admin,
+          CASE WHEN last_libele_evt = 'Etablissement supprimé' THEN 'F' ELSE 'A' END AS status_admin,
           type, 
           CASE WHEN type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets,
           "siège_pm", 
@@ -520,8 +525,7 @@ FROM
           origine_fonds, 
           origine_fonds_info, 
           type_exploitation, 
-          csv_source, 
-          rn 
+          csv_source
         FROM 
           voie_type_voie 
           INNER JOIN (
@@ -1214,18 +1218,5 @@ SELECT
           AND voie_type_voie.id_etablissement = latest_libele.id_etablissement
       )
     ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe
-"""
-```
-
-## Etape 5: Création `index_id`
-
-Dans cette dernière étape, il faut créer un index avec le numéro de ligne dans la table. Il est possible de créer un numéro de ligne, sans prendre en compte l’ordre afin d’éviter le consommer toutes les ressources du serveur:
-
-- Discussion [StackEdit](https://stackoverflow.com/questions/51090433/select-rows-by-index-in-amazon-athena)
-
-```python
-query = """
-SELECT 
-          ROW_NUMBER() OVER () as index_id,
 """
 ```
