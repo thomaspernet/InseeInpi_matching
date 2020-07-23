@@ -247,6 +247,13 @@ SELECT COUNT(*) FROM "inpi"."ets_insee_inpi"
 
 ```python
 query = """
-https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/5c11d8ad-1b36-4ba4-b542-220e3abfa046
+SELECT occurrences, count(occurrences) as count_
+FROM (
+SELECT index_id, COUNT(*) AS occurrences
+FROM "inpi"."ets_insee_inpi"
+GROUP BY index_id
+  )
+  GROUP BY occurrences
+  ORDER BY occurrences
 """
 ```
