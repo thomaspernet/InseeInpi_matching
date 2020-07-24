@@ -301,23 +301,21 @@ index_id,
     0
   ) as jaccard_adresse_mot,
   CAST(
+      cardinality(
+        -- array_intersect(
+          -- split(adress_distance_inpi, ' '), 
+          split(adress_reconstituee_insee, ' ')
+        --)
+      ) AS DECIMAL(10, 2)
+    ) - 
+  CAST(
     cardinality(
-      array_union(
+      array_intersect(
         split(adress_distance_inpi, ' '), 
         split(adress_reconstituee_insee, ' ')
       )
     ) AS DECIMAL(10, 2)
-  ) - NULLIF(
-    CAST(
-      cardinality(
-        array_intersect(
-          split(adress_distance_inpi, ' '), 
-          split(adress_reconstituee_insee, ' ')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as difference_adresse_mot,
+  )  as difference_adresse_mots
   regexp_like(adress_reconstituee_insee, adress_regex_inpi) as regex_adresse,
   numerovoieetablissement, 
   numero_voie_matching,
@@ -390,7 +388,7 @@ index_id,
     0
   ) as jaccard_enseigne3_lettre
 FROM insee_inpi
-LIMIT 50
+-- LIMIT 50
 """
 ```
 
@@ -904,23 +902,21 @@ SELECT
     0
   ) as jaccard_adresse_mot, 
   CAST(
+      cardinality(
+        -- array_intersect(
+          -- split(adress_distance_inpi, ' '), 
+          split(adress_reconstituee_insee, ' ')
+        --)
+      ) AS DECIMAL(10, 2)
+    ) - 
+  CAST(
     cardinality(
-      array_union(
+      array_intersect(
         split(adress_distance_inpi, ' '), 
         split(adress_reconstituee_insee, ' ')
       )
     ) AS DECIMAL(10, 2)
-  ) - NULLIF(
-    CAST(
-      cardinality(
-        array_intersect(
-          split(adress_distance_inpi, ' '), 
-          split(adress_reconstituee_insee, ' ')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as difference_adresse_mot,
+  )  as difference_adresse_mots,
   numerovoieetablissement, 
   numero_voie_matching, 
   typevoieetablissement, 
