@@ -298,7 +298,7 @@ L'objectif de cette query est de calculer la *Levenshtein edit distance* entre l
      * `edit_enseigne2` 
      * `edit_enseigne3` 
      
-         
+Par exemple, si `edit_adresse` est égal à 3, cela signifie qu'il faut 3 éditions (ajout, suppression) pour faire correspondre les deux strings.
 
 ```python
 query = """
@@ -428,9 +428,9 @@ FROM "inpi"."ets_insee_inpi"
 """
 ```
 
-## Etape 2: Calcul Jaccard distance
+## Etape 2: Calcul Jaccard distance (niveau lettre)
 
-*  Calculer la distance de Jaccard entre les variables de l’adresse et les variables de l’enseigne
+*  Calculer la distance de Jaccard entre les variables de l’adresse (au niveau de la lettre) et les variables de l’enseigne
   * Adresse:
     * INPI: 
       * `adress_distance_inpi` 
@@ -445,18 +445,20 @@ FROM "inpi"."ets_insee_inpi"
       * `enseigne3etablissement` 
   * Nom des nouvelles variables
     * Adresse:
-      * `jaccard_adresse` 
+      * `jaccard_adresse_lettre` 
     * Enseigne:
-      * `jaccard_enseigne1` 
-      * `jaccard_enseigne2` 
-      * `jaccard_enseigne3` 
+      * `jaccard_enseigne1_lettre` 
+      * `jaccard_enseigne2_lettre` 
+      * `jaccard_enseigne3_lettre` 
+      
+Par exemple, si `jaccard_adresse_lettre` est égal à .10, ce la signifie qu'il y a 10% des lettre qui ne correspondent pas dans les deux strings.
 
 ```python
 query = """
 SELECT 
   index_id, 
   sequence_id, 
-  count_initial_insee,
+  count_initial_insee, 
   siren, 
   siret, 
   code_greffe, 
@@ -464,209 +466,109 @@ SELECT
   numero_gestion, 
   id_etablissement, 
   status, 
-  origin,
+  origin, 
   date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
+  file_timestamp, 
+  datecreationetablissement, 
+  "date_début_activité", 
   libelle_evt, 
-  last_libele_evt,
+  last_libele_evt, 
   etatadministratifetablissement, 
   status_admin, 
   type, 
-  etablissementsiege,
+  etablissementsiege, 
   status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
+  adress_reconstituee_inpi, 
+  adress_regex_inpi, 
   adress_distance_inpi, 
-  adress_reconstituee_insee,
-  1- (
+  adress_reconstituee_insee, 
+  1- CAST(
+    cardinality(
+      array_intersect(
+        regexp_extract_all(adress_distance_inpi, '(\d+)|([A-Z])'), 
+        regexp_extract_all(adress_reconstituee_insee, '(\d+)|([A-Z])')
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
     CAST(
-      array_intersection_adresse AS DECIMAL(10, 2)
-    )/ NULLIF(
-      CAST(
-        array_union_adresse AS DECIMAL(10, 2)
-      ), 
-      0
-    )
-  ) as jaccard_adresse, 
+      cardinality(
+        array_union(
+          regexp_extract_all(adress_distance_inpi, '(\d+)|([A-Z])'), 
+          regexp_extract_all(adress_reconstituee_insee, '(\d+)|([A-Z])')
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_adresse_lettre, 
   numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
+  numero_voie_matching, 
+  typevoieetablissement, 
   voie_clean, 
-  type_voie_matching,
+  type_voie_matching, 
   code_postal_matching, 
   ville_matching, 
-  codecommuneetablissement,
+  codecommuneetablissement, 
   code_commune, 
   enseigne, 
   enseigne1etablissement, 
   enseigne2etablissement, 
   enseigne3etablissement,
-  
-  1-(
+  1- CAST(
+    cardinality(
+      array_intersect(
+        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+        regexp_extract_all(enseigne1etablissement, '(\d+)|([A-Z])')
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
     CAST(
-      array_intersection_enseigne1 AS DECIMAL(10, 2)
-    )/ NULLIF(
-      CAST(
-        array_union_enseigne1 AS DECIMAL(10, 2)
-      ), 
-      0
-    )
-  ) as jaccard_enseigne1,
-  1-(
+      cardinality(
+        array_union(
+          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+          regexp_extract_all(enseigne1etablissement, '(\d+)|([A-Z])')
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_enseigne1_lettre,
+  1- CAST(
+    cardinality(
+      array_intersect(
+        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+        regexp_extract_all(enseigne2etablissement, '(\d+)|([A-Z])')
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
     CAST(
-      array_intersection_enseigne2 AS DECIMAL(10, 2)
-    )/ NULLIF(
-      CAST(
-        array_union_enseigne2 AS DECIMAL(10, 2)
-      ), 
-      0
-    )
-  ) as jaccard_enseigne2,
-  1-(
+      cardinality(
+        array_union(
+          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+          regexp_extract_all(enseigne2etablissement, '(\d+)|([A-Z])')
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_enseigne2_lettre,
+  1- CAST(
+    cardinality(
+      array_intersect(
+        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+        regexp_extract_all(enseigne3etablissement, '(\d+)|([A-Z])')
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
     CAST(
-      array_intersection_enseigne3 AS DECIMAL(10, 2)
-    )/ NULLIF(
-      CAST(
-        array_union_enseigne3 AS DECIMAL(10, 2)
-      ), 
-      0
-    )
-  ) as jaccard_enseigne3
+      cardinality(
+        array_union(
+          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+          regexp_extract_all(enseigne3etablissement, '(\d+)|([A-Z])')
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_enseigne3_lettre
 FROM 
-  (
-    SELECT
-    index_id, 
-  sequence_id, 
-  count_initial_insee,
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin,
-  date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
-  libelle_evt, 
-  last_libele_evt,
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege,
-  status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
-  adress_distance_inpi, 
-  adress_reconstituee_insee,
-      cardinality(
-        array_intersect(
-          regexp_extract_all(
-            adress_distance_inpi, '(\d+)|([A-Z])'
-          ), 
-          regexp_extract_all(
-            adress_reconstituee_insee, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_intersection_adresse, 
-      cardinality(
-        array_union(
-          regexp_extract_all(
-            adress_distance_inpi, '(\d+)|([A-Z])'
-          ), 
-          regexp_extract_all(
-            adress_reconstituee_insee, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_union_adresse,
-    numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
-  voie_clean, 
-  type_voie_matching,
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement,
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement,
-    
-  cardinality(
-        array_intersect(
-          regexp_extract_all(
-            enseigne, '(\d+)|([A-Z])'
-          ), 
-          regexp_extract_all(
-            enseigne1etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_intersection_enseigne1, 
-    
-    cardinality(
-        array_intersect(
-          regexp_extract_all(
-            enseigne, '(\d+)|([A-Z])'
-          ), 
-          regexp_extract_all(
-            enseigne2etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_intersection_enseigne2,
-    
-    cardinality(
-        array_intersect(
-          regexp_extract_all(
-            enseigne, '(\d+)|([A-Z])', 
-            1
-          ), 
-          regexp_extract_all(
-            enseigne3etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_intersection_enseigne3, 
-        
-  cardinality(
-        array_union(
-          regexp_extract_all(
-            enseigne, '(\d+)|([A-Z])'
-          ), 
-          regexp_extract_all(
-            enseigne1etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_union_enseigne1,  
-    cardinality(
-        array_union(
-          regexp_extract_all(
-            enseigne, '(\d+)|([A-Z])'
-          ), 
-          regexp_extract_all(
-            enseigne2etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_union_enseigne2,
-    cardinality(
-        array_union(
-          regexp_extract_all(
-            enseigne, '(\d+)|([A-Z])'
-          ), 
-          regexp_extract_all(
-            enseigne3etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) as array_union_enseigne3
-    
-    
-    FROM 
-      ets_insee_inpi 
-  )
-
+  ets_insee_inpi 
 """
 ```
 
@@ -687,10 +589,83 @@ FROM
 
 ```
 
-## Etape 3: Creation test regex
+## Etape 3: Calcul Jaccard distance (niveau mot)
+
+*  Calculer la distance de Jaccard entre les variables de l’adresse et les variables de l’enseigne
+  * Adresse:
+    * INPI: 
+      * `adress_distance_inpi` 
+    * INSEE:
+      * `adress_reconstituee_insee` 
+  * Nom des nouvelles variables
+    * Adresse:
+      * `jaccard_adresse_mot` 
+      
+Par exemple, si `jaccard_adresse_mot` est égal à .90, ce la signifie qu'il y a 90% des mots qui correspondent dans les deux strings.      
 
 ```python
-
+query = """
+SELECT 
+  index_id, 
+  sequence_id, 
+  count_initial_insee, 
+  siren, 
+  siret, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  status, 
+  origin, 
+  date_greffe, 
+  file_timestamp, 
+  datecreationetablissement, 
+  "date_début_activité", 
+  libelle_evt, 
+  last_libele_evt, 
+  etatadministratifetablissement, 
+  status_admin, 
+  type, 
+  etablissementsiege, 
+  status_ets, 
+  adress_reconstituee_inpi, 
+  adress_regex_inpi, 
+  adress_distance_inpi, 
+  adress_reconstituee_insee, 
+  CAST(
+    cardinality(
+      array_intersect(
+        split(adress_distance_inpi, ' '), 
+        split(adress_reconstituee_insee, ' ')
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
+    CAST(
+      cardinality(
+        array_union(
+          split(adress_distance_inpi, ' '), 
+          split(adress_reconstituee_insee, ' ')
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_adresse_mot, 
+  numerovoieetablissement, 
+  numero_voie_matching, 
+  typevoieetablissement, 
+  voie_clean, 
+  type_voie_matching, 
+  code_postal_matching, 
+  ville_matching, 
+  codecommuneetablissement, 
+  code_commune, 
+  enseigne, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement 
+FROM 
+  ets_insee_inpi 
+"""
 ```
 
 ## Etape 4: Creation test regex
@@ -704,6 +679,8 @@ FROM
  * Nom des nouvelles variables
    * Adresse:
      * `regex_adresse`
+     
+Par exemple, si `regex_adresse` est égal à true, cela signifie qu'au moins un des mots (excluant les types de voie) de l'adresse de l'INPI est présent dans l'adresse de l'INSEE. 
 
 ```python
 query = """
@@ -750,4 +727,20 @@ index_id,
   enseigne3etablissement
 FROM ets_insee_inpi 
 """
+```
+
+```python
+
+```
+
+### Test acceptance
+
+* Description of the rule to validate the US
+  *  Compter le nombre de true/false
+  * Comparer avec Levenshtein edit distance/Jaccard 
+    * Lorsque regex + Edit + Jaccard  egal True + 0 +0 
+    * Lorsque regex + Edit + Jaccard  egal False + 0 +0 
+
+```python
+
 ```
