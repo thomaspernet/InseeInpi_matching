@@ -682,3 +682,72 @@ FROM
   * Query test 1
   * Query test 2
   * Query test 3  
+
+```python
+
+```
+
+## Etape 3: Creation test regex
+
+```python
+
+```
+
+## Etape 4: Creation test regex
+
+* Calculer la distance de Jaccard entre les variables de l’adresse 
+   * Adresse:
+     * INPI: 
+       * `adress_regex_inpi` 
+     * INSEE:
+       * `adress_reconstituee_insee` 
+ * Nom des nouvelles variables
+   * Adresse:
+     * `regex_adresse`
+
+```python
+query = """
+SELECT 
+index_id, 
+  sequence_id, 
+  count_initial_insee,
+  siren, 
+  siret, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  status, 
+  origin,
+  date_greffe, 
+  file_timestamp,
+  datecreationetablissement,
+  "date_début_activité",
+  libelle_evt, 
+  last_libele_evt,
+  etatadministratifetablissement, 
+  status_admin, 
+  type, 
+  etablissementsiege,
+  status_ets, 
+  adress_reconstituee_inpi,
+  adress_regex_inpi,
+  adress_distance_inpi, 
+  adress_reconstituee_insee,
+  regexp_like(adress_reconstituee_insee, adress_regex_inpi) as regex_adresse,
+  numerovoieetablissement, 
+  numero_voie_matching,
+  typevoieetablissement,
+  voie_clean, 
+  type_voie_matching,
+  code_postal_matching, 
+  ville_matching, 
+  codecommuneetablissement,
+  code_commune, 
+  enseigne, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement
+FROM ets_insee_inpi 
+"""
+```
