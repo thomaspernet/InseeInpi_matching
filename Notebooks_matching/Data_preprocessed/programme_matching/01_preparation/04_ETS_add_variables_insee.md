@@ -134,6 +134,12 @@ dateCreationEtablissement,
          complementAdresseEtablissement,
          numeroVoieEtablissement,
          indiceRepetitionEtablissement,
+         CASE 
+WHEN indiceRepetitionEtablissement = 'B' THEN 'BIS'
+WHEN indiceRepetitionEtablissement = 'T' THEN 'TER' 
+WHEN indiceRepetitionEtablissement = 'Q' THEN 'QUATER' 
+WHEN indiceRepetitionEtablissement = 'C' THEN 'QUINQUIES' 
+ELSE indiceRepetitionEtablissement END as indiceRepetitionEtablissement_full,
          typeVoieEtablissement,
          -- type_voie.voie_clean,
          libelleVoieEtablissement,
@@ -172,14 +178,15 @@ dateCreationEtablissement,
          voie_clean,
          libelleVoieEtablissement,
          complementAdresseEtablissement,
-         indiceRepetitionEtablissement, 
+         indiceRepetitionEtablissement_full, 
          REGEXP_REPLACE(
             REGEXP_REPLACE(
               REGEXP_REPLACE(
                  REGEXP_REPLACE(
                       CONCAT(
                         COALESCE(numeroVoieEtablissement,''),
-                        COALESCE(indiceRepetitionEtablissement,''),
+                        ' ',
+                        COALESCE(indiceRepetitionEtablissement_full,''),
                         ' ',
                         COALESCE(voie_clean,''), ' ',  -- besoin sinon exclu
                         COALESCE(libelleVoieEtablissement,''), ' ',
@@ -245,7 +252,8 @@ dateCreationEtablissement,
          libelleVoieEtablissement,
          complementAdresseEtablissement,
          numeroVoieEtablissement,
-         indiceRepetitionEtablissement,
+         -- indiceRepetitionEtablissement,
+  indiceRepetitionEtablissement_full,
          typeVoieEtablissement,
          enseigne1Etablissement,
          enseigne2Etablissement,
@@ -270,7 +278,7 @@ dateCreationEtablissement,
   libelleVoieEtablissement,
          complementAdresseEtablissement,
          numeroVoieEtablissement,
-         indiceRepetitionEtablissement,
+         indiceRepetitionEtablissement_full,
          typeVoieEtablissement,
   voie_clean,
   adress_reconstituee_insee,
