@@ -13,6 +13,7 @@ jupyter:
     name: python3
 ---
 
+<!-- #region -->
 # Siretisation Version 3: SQL
 
 ## Etape 
@@ -91,6 +92,16 @@ Deduction siret sur séquence
     *  Table: insee_final_sql 
       * Notebook construction file (data lineage) 
         * md : [04_ETS_add_variables_insee.md](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md)
+        
+        
+Voici un tableau récapitulatif des règles appliquer sur les variables de l'adresse:
+
+| Table | Variable | article | digit | debut/fin espace | espace | accent | Upper |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| INPI | adresse_regex_inpi | X | X | X | X | X | X |
+|  | adress_distance_inpi | X |  | X | X | X | X |
+|  | adresse_reconstituee_inpi |  |  | X | X | X | X |
+| INSEE | adress_reconstituee_insee | X |  |  |  | |  |    
 
 ## Ouput
 
@@ -98,7 +109,7 @@ Deduction siret sur séquence
     * region: eu-west-3 
     * Database: inpi 
     *  Table: ets_insee_inpi 
-
+<!-- #endregion -->
 
 ## Connexion serveru
 
@@ -139,9 +150,9 @@ athena = service_athena.connect_athena(client = client,
 ## Etape 1: rapprochement INSEE-INPI
 
 *  Rapprocher la table de l’INSEE avec celle de l’INPI avec les variables de matching suivantes:
-   * siren
-   * ville_matching  → ville_matching
-   * code_postal_matching  → codepostaletablissement 
+   * `siren`
+   * `ville_matching`  → `ville_matching`
+   * `code_postal_matching`  → `codepostaletablissement`
 * La première query consiste à rapprocher les deux tables INPI & INSEE [NEW]
    
 
@@ -184,7 +195,7 @@ WITH (
   numero_voie_matching,
   typevoieetablissement,
   voie_clean, 
-  voie_matching type_voie_matching, 
+  voie_matching as type_voie_matching, 
   ets_final_sql.code_postal_matching, 
   ets_final_sql.ville_matching, 
   codecommuneetablissement,
@@ -234,6 +245,11 @@ WHERE
 
   1.  Compter le nombre d’observations à l’INPI matché à l’INSEE
   2. Compter le nombre de doublons (via index_id )
+  
+- Athena: 
+
+  - [Query test 1](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/4a8a96e2-ee37-417f-93f9-4c1065e5e0b6)
+  - [Query test 2](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/5c11d8ad-1b36-4ba4-b542-220e3abfa046)
 
 ```python
 query = """
@@ -255,5 +271,159 @@ GROUP BY index_id
   )
   GROUP BY occurrences
   ORDER BY occurrences
+"""
+```
+
+## Etape 2: Calcul Levenshtein edit distance
+
+L'objectif de cette query est de calculer la *Levenshtein edit distance* entre les variables de l’adresse et les variables de l’enseigne.
+
+* Adresse:
+   * INPI: 
+     * `adress_distance_inpi`: Clean via **article**, **accent** et **espace**
+   * INSEE:
+     * `adress_reconstituee_insee`: Clean via **article**
+* Enseigne
+   * INPI
+     * `enseigne` 
+   * INSEE
+     * `enseigne1etablissement` 
+     * `enseigne2etablissement` 
+     * `enseigne3etablissement` 
+* Nom des nouvelles variables
+   * Adresse:
+     * `edit_adresse` 
+   * Enseigne:
+     * `edit_enseigne1` 
+     * `edit_enseigne2` 
+     * `edit_enseigne3` 
+     
+         
+
+```python
+query = """
+SELECT
+index_id, 
+  sequence_id, 
+  count_initial_insee,
+  siren, 
+  siret, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  status, 
+  origin,
+  date_greffe, 
+  file_timestamp,
+  datecreationetablissement,
+  "date_début_activité",
+  libelle_evt, 
+  last_libele_evt,
+  etatadministratifetablissement, 
+  status_admin, 
+  type, 
+  etablissementsiege,
+  status_ets, 
+  adress_reconstituee_inpi,
+  adress_regex_inpi,
+  adress_distance_inpi, 
+  adress_reconstituee_insee,
+  levenshtein_distance(adress_distance_inpi, adress_reconstituee_insee) as edit_adresse,
+  numerovoieetablissement, 
+  numero_voie_matching,
+  typevoieetablissement,
+  voie_clean, 
+  type_voie_matching,
+  code_postal_matching, 
+  ville_matching, 
+  codecommuneetablissement,
+  code_commune, 
+  enseigne, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement,
+  levenshtein_distance(enseigne, enseigne1etablissement) as edit_enseigne1,
+  levenshtein_distance(enseigne, enseigne2etablissement) as edit_enseigne2,
+  levenshtein_distance(enseigne, enseigne3etablissement) as edit_enseigne3
+FROM "inpi"."ets_insee_inpi"
+"""
+```
+
+### test Acceptance 
+
+* Description of the rule to validate the US
+  *  Calculer le nombre de fois ou la distance est égale a 0 (adresse +enseigne)
+  * Donner la distribution des distances (adresse +enseigne)
+    * Exclure les NA
+    
+- Athena: 
+
+  - Query test 1
+
+    - [Adresse](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/d5891641-fd2e-4840-88c3-4355c12481cc)
+
+  - Query test 2
+
+    - [Enseigne](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/21de44d8-10b5-449a-920a-b54e6625ce8f)
+
+      - Attention beaucoup de 0 car champs vide dans l’enseigne
+
+```python
+query = """
+SELECT
+approx_percentile(edit_adresse, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_adress,
+approx_percentile(edit_enseigne1, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne1,
+approx_percentile(edit_enseigne2, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne2,
+approx_percentile(edit_enseigne3, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne3
+
+FROM(
+SELECT
+index_id, 
+  sequence_id, 
+  count_initial_insee,
+  siren, 
+  siret, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  status, 
+  origin,
+  date_greffe, 
+  file_timestamp,
+  datecreationetablissement,
+  "date_début_activité",
+  libelle_evt, 
+  last_libele_evt,
+  etatadministratifetablissement, 
+  status_admin, 
+  type, 
+  etablissementsiege,
+  status_ets, 
+  adress_reconstituee_inpi,
+  adress_regex_inpi,
+  adress_distance_inpi, 
+  adress_reconstituee_insee,
+  levenshtein_distance(adress_distance_inpi, adress_reconstituee_insee) as edit_adresse,
+  numerovoieetablissement, 
+  numero_voie_matching,
+  typevoieetablissement,
+  voie_clean, 
+  type_voie_matching,
+  code_postal_matching, 
+  ville_matching, 
+  codecommuneetablissement,
+  code_commune, 
+  enseigne, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement,
+  levenshtein_distance(enseigne, enseigne1etablissement) as edit_enseigne1,
+  levenshtein_distance(enseigne, enseigne2etablissement) as edit_enseigne2,
+  levenshtein_distance(enseigne, enseigne3etablissement) as edit_enseigne3
+FROM "inpi"."ets_insee_inpi"
+)
+-- WHERE edit_adresse = 0
 """
 ```
