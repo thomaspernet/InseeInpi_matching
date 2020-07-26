@@ -31,8 +31,9 @@ The global steps to construct the dataset are the following:
     * adress_reconstituee_inpi
     * adress_distance_inpi 
     * adress_regex_inpi 
-    * numero_voie_matching 
-    * voie_matching 
+    * numero_voie_matching
+    * list_numero_voie_matching 
+    * type_voie_matching 
     * last_libelle_evt 
     * status_admin 
     * status_ets 
@@ -134,7 +135,9 @@ La query met environ 5 minutes pour s'éxecuter. Il est possible d'améliorer le
     - Concatenation des champs de l'adresse, suppression des espaces, des articles et des numéros et ajout de `(?:^|(?<= ))(` et `)(?:(?= )|$)`
 * `numero_voie_matching`: 
     - Extraction du premier numéro de voie dans l'adresse
-* `voie_matching`: 
+* `list_numero_voie_matching`:
+    - Liste contenant tous les numéros de l'adresse dans l'INPI
+* `type_voie_matching`: 
     - Extration du type de voie dans l'adresse et match avec abbrévation type de voie de l'INSEE
 * `last_libelle_evt`: 
     - Extraction du dernier libellé de l'événement connu pour une séquence, et appliquer cette information à l'ensemble de la séquence
@@ -147,16 +150,11 @@ La query met environ 5 minutes pour s'éxecuter. Il est possible d'améliorer le
 
 ```python
 query = """
-/*Table préparée avec nouvelles */
-CREATE TABLE inpi.ets_final_sql
-WITH (
-  format='PARQUET'
-) AS
-WITH create_regex AS ( 
-SELECT
-index_id,
-sequence_id,
-siren, 
+CREATE TABLE inpi.ets_final_sql WITH (format = 'PARQUET') AS WITH create_regex AS (
+  SELECT 
+    index_id, 
+    sequence_id, 
+    siren, 
     code_greffe, 
     nom_greffe, 
     numero_gestion, 
@@ -172,100 +170,118 @@ siren,
     adresse_ligne1, 
     adresse_ligne2, 
     adresse_ligne3,
-  REGEXP_REPLACE(
-            REGEXP_REPLACE(
-              REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                  NORMALIZE(
-                    UPPER(
-                      CONCAT(
-                        adresse_ligne1, ' ', adresse_ligne2, 
-                        ' ', adresse_ligne3
-                      )
-                    ), 
-                    NFD
-                  ), 
-                  '\pM', 
-                  ''
-                ), 
-                '[^\w\s]| +', 
-                ' '
-              ), 
-            '\s\s+', 
-            ' '
-          ), 
-          '^\s+|\s+$', 
-          ''
-      ) AS adress_reconstituee_inpi,
-            REGEXP_REPLACE(
-          REGEXP_REPLACE(
-            REGEXP_REPLACE(
-              REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                  NORMALIZE(
-                    UPPER(
-                      CONCAT(
-                        adresse_ligne1, ' ', adresse_ligne2, 
-                        ' ', adresse_ligne3
-                      )
-                    ), 
-                    NFD
-                  ), 
-                  '\pM', 
-                  ''
-                ), 
-                '[^\w\s]| +', 
-                ' '
-              ), 
-              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
-              ''
+    REGEXP_REPLACE(
+    trim(
+      REGEXP_REPLACE(
+        REGEXP_REPLACE(
+          NORMALIZE(
+            UPPER(
+              CONCAT(
+                adresse_ligne1, ' ', adresse_ligne2, 
+                ' ', adresse_ligne3
+              )
             ), 
-            '\s\s+', 
-            ' '
+            NFD
           ), 
-          '^\s+|\s+$', 
+          '\pM', 
           ''
-      ) AS adress_distance_inpi,
-    CONCAT(
-      '(?:^|(?<= ))(', 
-      -- debut regex
+        ), 
+        '[^\w\s]| +', 
+        ' '
+      )
+    ), 
+    '\s+\s+', 
+    ' '
+  ) AS adresse_reconstituee_inpi ,
+    regexp_replace(
+    trim(
       REGEXP_REPLACE(
         REGEXP_REPLACE(
           REGEXP_REPLACE(
+            NORMALIZE(
+              UPPER(
+                CONCAT(
+                  adresse_ligne1, ' ', adresse_ligne2, 
+                  ' ', adresse_ligne3
+                )
+              ), 
+              NFD
+            ), 
+            '\pM', 
+            ''
+          ), 
+          '[^\w\s]|\d+| +', 
+          ' '
+        ), 
+        '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+        ''
+      )
+    ),
+    '\s+\s+',
+       ' '
+  ) AS adresse_distance_inpi ,
+  CONCAT(
+    '(?:^|(?<= ))(', 
+    -- debut regex
+    REGEXP_REPLACE(
+      regexp_replace(
+        trim(
+          REGEXP_REPLACE(
             REGEXP_REPLACE(
               REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                  NORMALIZE(
-                    UPPER(
-                      CONCAT(
-                        adresse_ligne1, ' ', adresse_ligne2, 
-                        ' ', adresse_ligne3
-                      )
-                    ), 
-                    NFD
+                NORMALIZE(
+                  UPPER(
+                    CONCAT(
+                      adresse_ligne1, ' ', adresse_ligne2, 
+                      ' ', adresse_ligne3
+                    )
                   ), 
-                  '\pM', 
-                  ''
+                  NFD
                 ), 
-                '[^\w\s]|\d+| +', 
-                ' '
+                '\pM', 
+                ''
               ), 
-              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+              '[^\w\s]|\d+| +', 
+              ' '
+            ), 
+            '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+            ''
+          )
+        ), 
+        '\s+\s+', 
+        ' '
+      ), 
+      '\s', 
+      '|'
+    ), 
+    -- milieu regex
+    ')(?:(?= )|$)' -- fin regex
+    ) AS adresse_regex_inpi,
+      array_distinct(
+    regexp_extract_all(
+        trim(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              NORMALIZE(
+                UPPER(
+                  CONCAT(
+                    adresse_ligne1, ' ', adresse_ligne2, 
+                    ' ', adresse_ligne3
+                  )
+                ), 
+                NFD
+              ), 
+              '\pM', 
               ''
             ), 
-            '\s\s+', 
+            '[^\w\s]| +', 
             ' '
-          ), 
-          '^\s+|\s+$', 
-          ''
-        ), 
-        '\s', 
-        '|'
+          )
       ), 
-      -- milieu regex
-      ')(?:(?= )|$)' -- fin regex
-      ) AS adress_regex_inpi,
-      code_postal, 
+      '[0-9]+'
+    )
+  ) AS list_numero_voie_matching_inpi,
+  code_postal, 
     code_postal_matching, 
     ville, 
     REGEXP_REPLACE(
@@ -328,16 +344,17 @@ siren,
     origine_fonds_info, 
     type_exploitation, 
     csv_source
-FROM ets_test_filtered_id_seq
-) 
+    FROM 
+    ets_test_filtered_id_seq
+)
 SELECT 
   * 
 FROM 
   (
     WITH voie_type_voie AS (
       SELECT 
-      index_id,
-sequence_id,
+        index_id, 
+        sequence_id, 
         siren, 
         code_greffe, 
         nom_greffe, 
@@ -354,14 +371,13 @@ sequence_id,
         adresse_ligne1, 
         adresse_ligne2, 
         adresse_ligne3, 
-        adress_reconstituee_inpi,
-        -- adress_nettoyee, 
-        -- adresse_inpi_reconstitue, 
-        adress_regex_inpi,
-        adress_distance_inpi, 
+        adresse_reconstituee_inpi,
+        adresse_regex_inpi, 
+        adresse_distance_inpi, 
+        list_numero_voie_matching_inpi, 
         numero_voie_matching, 
         numero_voie_type_voie.voie_clean, 
-        voie_matching, 
+        voie_matching as type_voie_matching, 
         code_postal, 
         code_postal_matching, 
         ville, 
@@ -384,12 +400,12 @@ sequence_id,
         origine_fonds_info, 
         type_exploitation, 
         csv_source
-      FROM 
+        FROM 
         type_voie 
         RIGHT JOIN (
           SELECT 
-          index_id,
-sequence_id,
+            index_id, 
+            sequence_id, 
             siren, 
             code_greffe, 
             nom_greffe, 
@@ -405,16 +421,15 @@ sequence_id,
             rcs_registre, 
             adresse_ligne1, 
             adresse_ligne2, 
-            adresse_ligne3,
-            adress_reconstituee_inpi,
-            adress_regex_inpi,
-            adress_distance_inpi,
-            -- adress_nettoyee,  
-            -- adress_regex, 
-            regexp_extract(adress_reconstituee_inpi, '\d+') as numero_voie_matching, 
+            adresse_ligne3, 
+            adresse_reconstituee_inpi, 
+            adresse_regex_inpi, 
+            adresse_distance_inpi, 
+            list_numero_voie_matching_inpi,
+            regexp_extract(adresse_reconstituee_inpi, '\d+') as numero_voie_matching,
             regexp_extract(
-              adress_reconstituee_inpi, '(?:^|(?<= ))(ALLEE|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CHAUSSEE|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTE   SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE)(?:(?= )|$)'
-            ) as voie_clean, 
+              adresse_reconstituee_inpi, '(?:^|(?<= ))(ALLEE|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CHAUSSEE|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTE   SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE)(?:(?= )|$)'
+            ) as voie_clean,
             code_postal, 
             code_postal_matching, 
             ville, 
@@ -436,11 +451,11 @@ sequence_id,
             origine_fonds, 
             origine_fonds_info, 
             type_exploitation, 
-            csv_source
-          FROM 
+            csv_source 
+            FROM 
             create_regex
         ) as numero_voie_type_voie ON numero_voie_type_voie.voie_clean = type_voie.voie_clean
-    ) 
+    )
     SELECT 
       * 
     FROM 
@@ -474,9 +489,9 @@ sequence_id,
           FROM 
             voie_type_voie
         ) 
-        SELECT 
-        index_id,
-        sequence_id,
+        SELECT
+        index_id, 
+          sequence_id, 
           voie_type_voie.siren, 
           voie_type_voie.code_greffe, 
           voie_type_voie.nom_greffe, 
@@ -488,22 +503,22 @@ sequence_id,
           file_timestamp, 
           libelle_evt, 
           last_libele_evt, 
-          CASE WHEN last_libele_evt = 'Etablissement supprimé' THEN 'F' ELSE 'A' END AS status_admin,
+          CASE WHEN last_libele_evt = 'Etablissement supprimé' THEN 'F' ELSE 'A' END AS status_admin, 
           type, 
-          CASE WHEN type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets,
+          CASE WHEN type = 'SIE' 
+          OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets, 
           "siège_pm", 
           rcs_registre, 
           adresse_ligne1, 
           adresse_ligne2, 
           adresse_ligne3, 
-          adress_reconstituee_inpi,
-        -- adress_nettoyee, 
-        -- adresse_inpi_reconstitue, 
-          adress_regex_inpi,
-          adress_distance_inpi,
+          adresse_reconstituee_inpi,
+          adresse_regex_inpi, 
+          adresse_distance_inpi, 
+          CASE WHEN cardinality(list_numero_voie_matching_inpi) = 0 THEN NULL ELSE list_numero_voie_matching_inpi END as list_numero_voie_matching_inpi,
           numero_voie_matching, 
           voie_clean, 
-          voie_matching,
+          type_voie_matching, 
           code_postal, 
           code_postal_matching, 
           ville, 
@@ -525,7 +540,7 @@ sequence_id,
           origine_fonds, 
           origine_fonds_info, 
           type_exploitation, 
-          csv_source
+          csv_source 
         FROM 
           voie_type_voie 
           INNER JOIN (
@@ -585,9 +600,16 @@ sequence_id,
           AND voie_type_voie.nom_greffe = latest_libele.nom_greffe 
           AND voie_type_voie.numero_gestion = latest_libele.numero_gestion 
           AND voie_type_voie.id_etablissement = latest_libele.id_etablissement
-      )
-    ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe
+      ) 
+    ORDER BY 
+      siren, 
+      code_greffe, 
+      nom_greffe, 
+      numero_gestion, 
+      id_etablissement, 
+      date_greffe
   )
+
 """
 ```
 
@@ -682,31 +704,40 @@ Dans le code ci dessus, `adress_new` fait référence a la concatenation des cha
 
 ```python
 query = """
-REGEXP_REPLACE(
-            REGEXP_REPLACE(
-              REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                  NORMALIZE(
-                    UPPER(
-                      CONCAT(
-                        adresse_ligne1, ' ', adresse_ligne2, 
-                        ' ', adresse_ligne3
-                      )
-                    ), 
-                    NFD
-                  ), 
-                  '\pM', 
-                  ''
-                ), 
-                '[^\w\s]| +', 
-                ' '
-              ), 
-            '\s\s+', 
-            ' '
+SELECT 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  REGEXP_REPLACE(
+    trim(
+      REGEXP_REPLACE(
+        REGEXP_REPLACE(
+          NORMALIZE(
+            UPPER(
+              CONCAT(
+                adresse_ligne1, ' ', adresse_ligne2, 
+                ' ', adresse_ligne3
+              )
+            ), 
+            NFD
           ), 
-          '^\s+|\s+$', 
+          '\pM', 
           ''
-      ) AS adress_reconstituee_inpi
+        ), 
+        '[^\w\s]| +', 
+        ' '
+      )
+    ), 
+    '\s+\s+', 
+    ' '
+  ) AS adresse_reconstituee_inpi 
+FROM 
+  ets_test_filtered_id_seq 
+WHERE 
+  siren = '851257634' 
+LIMIT 
+  20
+
 """
 ```
 
@@ -732,35 +763,43 @@ s3.download_file(
 
 ```python
 query = """
-REGEXP_REPLACE(
+SELECT 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  regexp_replace(
+    trim(
+      REGEXP_REPLACE(
+        REGEXP_REPLACE(
           REGEXP_REPLACE(
-            REGEXP_REPLACE(
-              REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                  NORMALIZE(
-                    UPPER(
-                      CONCAT(
-                        adresse_ligne1, ' ', adresse_ligne2, 
-                        ' ', adresse_ligne3
-                      )
-                    ), 
-                    NFD
-                  ), 
-                  '\pM', 
-                  ''
-                ), 
-                '[^\w\s]| +', 
-                ' '
+            NORMALIZE(
+              UPPER(
+                CONCAT(
+                  adresse_ligne1, ' ', adresse_ligne2, 
+                  ' ', adresse_ligne3
+                )
               ), 
-              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES(?:(?= )|$)', 
-              ''
+              NFD
             ), 
-            '\s\s+', 
-            ' '
+            '\pM', 
+            ''
           ), 
-          '^\s+|\s+$', 
-          ''
-      ) AS adress_distance_inpi
+          '[^\w\s]|\d+| +', 
+          ' '
+        ), 
+        '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+        ''
+      )
+    ),
+    '\s+\s+',
+       ' '
+  ) AS adresse_distance_inpi 
+FROM 
+  ets_test_filtered_id_seq 
+  -- WHERE siren = '851257634'
+LIMIT 
+  20
+
 """
 ```
 
@@ -782,100 +821,57 @@ Pattern regex:
 
 ```python
 query = """
-CONCAT(
-      '(?:^|(?<= ))(', 
-      -- debut regex
-      REGEXP_REPLACE(
-        REGEXP_REPLACE(
+SELECT 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  CONCAT(
+    '(?:^|(?<= ))(', 
+    -- debut regex
+    REGEXP_REPLACE(
+      regexp_replace(
+        trim(
           REGEXP_REPLACE(
             REGEXP_REPLACE(
               REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                  NORMALIZE(
-                    UPPER(
-                      CONCAT(
-                        adresse_ligne1, ' ', adresse_ligne2, 
-                        ' ', adresse_ligne3
-                      )
-                    ), 
-                    NFD
+                NORMALIZE(
+                  UPPER(
+                    CONCAT(
+                      adresse_ligne1, ' ', adresse_ligne2, 
+                      ' ', adresse_ligne3
+                    )
                   ), 
-                  '\pM', 
-                  ''
+                  NFD
                 ), 
-                '[^\w\s]|\d+| +', 
-                ' '
+                '\pM', 
+                ''
               ), 
-              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
-              ''
+              '[^\w\s]|\d+| +', 
+              ' '
             ), 
-            '\s\s+', 
-            ' '
-          ), 
-          '^\s+|\s+$', 
-          ''
+            '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+            ''
+          )
         ), 
-        '\s', 
-        '|'
+        '\s+\s+', 
+        ' '
       ), 
-      -- milieu regex
-      ')(?:(?= )|$)' -- fin regex
-      ) AS adress_regex_inpi
+      '\s', 
+      '|'
+    ), 
+    -- milieu regex
+    ')(?:(?= )|$)' -- fin regex
+    ) AS adresse_regex_inpi 
+FROM 
+  ets_test_filtered_id_seq 
+WHERE 
+  siren = '851257634' 
+LIMIT 
+  20
+
+
 """
 ```
-
-On peut tester si le regex marche en faisaint le test sur la variable `adress_nettoyee` et `adress_regex`. Avec la fonction `regexp_like`, on ne devrait retrouver que des `True`
-
-```
-WITH create_regex AS (
-SELECT 
-siren, adresse_ligne1, adresse_ligne2, adresse_ligne3,
-REGEXP_REPLACE(
-  REGEXP_REPLACE(
-    REGEXP_REPLACE(
-      NORMALIZE(
-        UPPER(CONCAT(adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3)),
-        NFD),
-      '\pM', ''),
-    '[^\w\s]', ' '),
-    '\s\s+',
-    ' '
-  ) AS adress_nettoyee,
-CONCAT(
- '(?:^|(?<= ))(', -- debut regex
- REGEXP_REPLACE(
-  REGEXP_REPLACE(  
-   REGEXP_REPLACE(
-    REGEXP_REPLACE(
-     REGEXP_REPLACE(
-      REGEXP_REPLACE(
-        NORMALIZE(
-          UPPER(CONCAT(adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3)),
-        NFD),
-      '\pM', ''),
-  '[^\w\s]|\d+| +', ' '
-  ), '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES|AVENUE|BOULEVARD|CARREFOUR|CHEMIN|CITE|CORNICHE|COURS|DOMAINE|DESCENTE|ECART|ESPLANADE|FAUBOURG|GRANDE RUE|HAMEAU|HALLE|IMPASSE|LIEU DIT|LOTISSEMENT|MARCHE|MONTEE|PASSAGE|PLACE|PLAINE|PLATEAU|PROMENADE|PARVIS|QUARTIER|QUAI|RESIDENCE|RUELLE|ROCADE|ROND POINT|ROUTE|RUE|SENTIER|SQUARE|TERRE PLEIN|TRAVERSE|VILLA|VILLAGE|RN|BP|CEDEX|BIS)(?:(?= )|$)',
-  ''),
-    '\s\s+',
-    ' '),
-  '^\s+|\s+$',''),
-  '\s', '|'), -- milieu regex
-  ')(?:(?= )|$)' -- fin regex
-  
-  ) AS adress_regex
-   
-  -- AS adress_nettoyee
-  
-FROM initial_partiel_evt_new_ets_status_final  
---WHERE (adresse_ligne1 IS NOT NULL and adresse_ligne2 IS NOT NULL)
---WHERE siren = '841344229'
-LIMIT 15
-)
-SELECT siren, adresse_ligne1, adresse_ligne2, adresse_ligne3, adress_nettoyee,adress_regex,
-regexp_like(adress_nettoyee,adress_regex)
-FROM create_regex   
-```
-
 
 ## Etape 3: Préparation `numero_voie_matching` & `voie_matching`
 
@@ -1219,4 +1215,53 @@ SELECT
       )
     ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe
 """
+```
+
+## Etape 5: Creation liste numéro de voie
+
+*  Récupérer la liste des numéros de voie de la table INPI dans le but de la comparer avec l’INSEE lors de la siretisation
+  * Il faut utiliser la variable adress_reconstituee_inpi pour créer
+    * `list_numero_voie_matching_inpi`
+
+```python
+query = """
+SELECT 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  array_distinct(
+    regexp_extract_all(
+        trim(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              NORMALIZE(
+                UPPER(
+                  CONCAT(
+                    adresse_ligne1, ' ', adresse_ligne2, 
+                    ' ', adresse_ligne3
+                  )
+                ), 
+                NFD
+              ), 
+              '\pM', 
+              ''
+            ), 
+            '[^\w\s]| +', 
+            ' '
+          )
+      ), 
+      '[0-9]+'
+    )
+  ) AS list_numero_voie_matching_inpi 
+FROM 
+  ets_test_filtered_id_seq
+  WHERE siren = '851257634'
+LIMIT 
+  20
+
+"""
+```
+
+```python
+
 ```
