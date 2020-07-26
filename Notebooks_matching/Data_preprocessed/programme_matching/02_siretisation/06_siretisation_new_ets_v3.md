@@ -408,12 +408,8 @@ FROM insee_inpi
 
 ```python
 query = """
-/*matching ets inpi insee*/
-CREATE TABLE inpi.ets_insee_inpi
-WITH (
-  format='PARQUET'
-) AS
-  SELECT 
+
+SELECT 
   index_id, 
   sequence_id, 
   count_initial_insee,
@@ -436,15 +432,18 @@ WITH (
   type, 
   etablissementsiege,
   status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
-  adress_distance_inpi, 
-  adress_reconstituee_insee, 
+  adresse_reconstituee_inpi,
+  adresse_reconstituee_insee, 
+  adresse_regex_inpi,
+  adresse_distance_inpi,
+  adresse_distance_insee, 
+  list_numero_voie_matching_inpi,
+  list_numero_voie_matching_insee,
   numerovoieetablissement, 
   numero_voie_matching,
   typevoieetablissement,
-  voie_clean, 
-  voie_matching as type_voie_matching, 
+  -- voie_clean, 
+  type_voie_matching, 
   ets_final_sql.code_postal_matching, 
   ets_final_sql.ville_matching, 
   codecommuneetablissement,
@@ -465,14 +464,12 @@ INNER JOIN (
   etatadministratifetablissement, 
   codepostaletablissement, 
   codecommuneetablissement, 
-  -- libellecommuneetablissement, 
   ville_matching, 
-  -- libellevoieetablissement, 
-  -- complementadresseetablissement, 
+  list_numero_voie_matching_insee,
   numerovoieetablissement, 
-  -- indicerepetitionetablissement, 
   typevoieetablissement, 
-  adress_reconstituee_insee, 
+  adresse_reconstituee_insee, 
+  adresse_distance_insee,
   enseigne1etablissement, 
   enseigne2etablissement, 
   enseigne3etablissement
@@ -484,7 +481,6 @@ AND ets_final_sql.ville_matching = insee.ville_matching
 AND ets_final_sql.code_postal_matching = insee.codepostaletablissement
 WHERE 
   status != 'IGNORE'
--- LIMIT 10
 """
 ```
 
@@ -852,7 +848,7 @@ FROM
       * `difference_adresse_mot`
       
 - Par exemple, si `jaccard_adresse_mot` est égal à .90, ce la signifie qu'il y a 90% des mots qui correspondent dans les deux strings.  
-- Par exemple, si `difference_adresse_mot` est égal à 3, ce la signifie qu'il manque 3 mots entre les deux strings.  
+- Par exemple, si `difference_adresse_mot` est égal à 3, ce la signifie qu'il manque 3 mots à l'INPI pour arriver à l'adresse de l'INSEE.
 
 ```python
 query = """
