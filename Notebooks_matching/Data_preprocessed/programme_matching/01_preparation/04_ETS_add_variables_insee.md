@@ -119,180 +119,259 @@ La query met environ 5 minutes pour s'éxecuter. Il est possible d'améliorer le
 
 ```python
 query = """
-CREATE TABLE inpi.insee_final_sql
-WITH (
-  format='PARQUET'
-) AS
-WITH remove_empty_siret AS (
-SELECT
-siren,
-siret, 
-regexp_like(siret, '\d+') as test_siret,
-dateCreationEtablissement,
-         etablissementSiege,
-         etatAdministratifEtablissement,
-         complementAdresseEtablissement,
-         numeroVoieEtablissement,
-         indiceRepetitionEtablissement,
-         CASE 
-WHEN indiceRepetitionEtablissement = 'B' THEN 'BIS'
-WHEN indiceRepetitionEtablissement = 'T' THEN 'TER' 
-WHEN indiceRepetitionEtablissement = 'Q' THEN 'QUATER' 
-WHEN indiceRepetitionEtablissement = 'C' THEN 'QUINQUIES' 
-ELSE indiceRepetitionEtablissement END as indiceRepetitionEtablissement_full,
-         typeVoieEtablissement,
-         -- type_voie.voie_clean,
-         libelleVoieEtablissement,
-         codePostalEtablissement,
-         libelleCommuneEtablissement,
-         libelleCommuneEtrangerEtablissement,
-         distributionSpecialeEtablissement,
-         codeCommuneEtablissement,
-         codeCedexEtablissement,
-         libelleCedexEtablissement,
-         codePaysEtrangerEtablissement,
-         libellePaysEtrangerEtablissement,
-         enseigne1Etablissement,
-         enseigne2Etablissement,
-         enseigne3Etablissement
-FROM insee_rawdata 
--- WHERE siren = '797406154'  
--- WHERE siren = '797406188'
- )
-  
-SELECT *
-FROM (
-  WITH concat_adress AS(
+CREATE TABLE inpi.insee_final_sql WITH (format = 'PARQUET') AS WITH remove_empty_siret AS (
+  SELECT 
+    siren, 
+    siret, 
+    regexp_like(siret, '\d+') as test_siret, 
+    dateCreationEtablissement, 
+    etablissementSiege, 
+    etatAdministratifEtablissement, 
+    complementAdresseEtablissement, 
+    numeroVoieEtablissement, 
+    indiceRepetitionEtablissement, 
+    CASE WHEN indiceRepetitionEtablissement = 'B' THEN 'BIS' WHEN indiceRepetitionEtablissement = 'T' THEN 'TER' WHEN indiceRepetitionEtablissement = 'Q' THEN 'QUATER' WHEN indiceRepetitionEtablissement = 'C' THEN 'QUINQUIES' ELSE indiceRepetitionEtablissement END as indiceRepetitionEtablissement_full, 
+    typeVoieEtablissement, 
+    -- type_voie.voie_clean,
+    libelleVoieEtablissement, 
+    codePostalEtablissement, 
+    libelleCommuneEtablissement, 
+    libelleCommuneEtrangerEtablissement, 
+    distributionSpecialeEtablissement, 
+    codeCommuneEtablissement, 
+    codeCedexEtablissement, 
+    libelleCedexEtablissement, 
+    codePaysEtrangerEtablissement, 
+    libellePaysEtrangerEtablissement, 
+    enseigne1Etablissement, 
+    enseigne2Etablissement, 
+    enseigne3Etablissement 
+  FROM 
+    insee_rawdata -- WHERE siren = '797406154'  
+    -- WHERE siren = '797406188'
+    ) 
 SELECT 
-siren,
-siret, 
-dateCreationEtablissement,
-         etablissementSiege,
-         etatAdministratifEtablissement,
-         codePostalEtablissement,
-         codeCommuneEtablissement,
-         libelleCommuneEtablissement,
-         ville_matching,
-         numeroVoieEtablissement,
-         typeVoieEtablissement,
-         voie_clean,
-         libelleVoieEtablissement,
-         complementAdresseEtablissement,
-         indiceRepetitionEtablissement_full, 
-         REGEXP_REPLACE(
+  * 
+FROM 
+  (
+    WITH concat_adress AS(
+      SELECT 
+        siren, 
+        siret, 
+        dateCreationEtablissement, 
+        etablissementSiege, 
+        etatAdministratifEtablissement, 
+        codePostalEtablissement, 
+        codeCommuneEtablissement, 
+        libelleCommuneEtablissement, 
+        ville_matching, 
+        numeroVoieEtablissement, 
+        array_distinct(
+          regexp_extract_all(
             REGEXP_REPLACE(
               REGEXP_REPLACE(
-                 REGEXP_REPLACE(
-                      CONCAT(
-                        COALESCE(numeroVoieEtablissement,''),
-                        ' ',
-                        COALESCE(indiceRepetitionEtablissement_full,''),
-                        ' ',
-                        COALESCE(voie_clean,''), ' ',  -- besoin sinon exclu
-                        COALESCE(libelleVoieEtablissement,''), ' ',
-                        COALESCE(complementAdresseEtablissement,'')
-                      ), 
+                REGEXP_REPLACE(
+                  CONCAT(
+                    COALESCE(numeroVoieEtablissement, ''), 
+                    ' ', 
+                    COALESCE(
+                      indiceRepetitionEtablissement_full, 
+                      ''
+                    ), 
+                    ' ', 
+                    COALESCE(voie_clean, ''), 
+                    ' ', 
+                    -- besoin sinon exclu
+                    COALESCE(libelleVoieEtablissement, ''), 
+                    ' ', 
+                    COALESCE(
+                      complementAdresseEtablissement, 
+                      ''
+                    )
+                  ), 
+                  '[^\w\s]| +', 
+                  ' '
+                ), 
+                '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+                ''
+              ), 
+              '\s+\s+', 
+              ' '
+            ), 
+            '[0-9]+'
+          )
+        ) AS list_numero_voie_matching_insee, 
+        typeVoieEtablissement, 
+        voie_clean, 
+        libelleVoieEtablissement, 
+        complementAdresseEtablissement, 
+        indiceRepetitionEtablissement_full, 
+        trim(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                CONCAT(
+                  COALESCE(numeroVoieEtablissement, ''), 
+                  ' ', 
+                  COALESCE(
+                    indiceRepetitionEtablissement_full, 
+                    ''
+                  ), 
+                  ' ', 
+                  COALESCE(voie_clean, ''), 
+                  ' ', 
+                  -- besoin sinon exclu
+                  COALESCE(libelleVoieEtablissement, ''), 
+                  ' ', 
+                  COALESCE(
+                    complementAdresseEtablissement, 
+                    ''
+                  )
+                ), 
                 '[^\w\s]| +', 
                 ' '
               ), 
-              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)',  
-              ''
+              '\s\s+', 
+              ' '
             ), 
-            '\s\s+', 
-            ' '
-          ), 
-          '^\s+|\s+$', 
-          ''
-      ) AS adress_reconstituee_insee,
-         enseigne1Etablissement,
-         enseigne2Etablissement,
-         enseigne3Etablissement
-FROM (
-  SELECT  
-siren,
-siret, 
-test_siret,
-dateCreationEtablissement,
-         etablissementSiege,
-         etatAdministratifEtablissement,
-         codePostalEtablissement,
-         codeCommuneEtablissement,
-         libelleCommuneEtablissement,
-      REGEXP_REPLACE(
+            '^\s+|\s+$', 
+            ''
+          )
+        ) AS adresse_reconstituee_insee, 
         REGEXP_REPLACE(
-          REGEXP_REPLACE(
+          trim(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                CONCAT(
+                  COALESCE(numeroVoieEtablissement, ''), 
+                  ' ', 
+                  COALESCE(
+                    indiceRepetitionEtablissement_full, 
+                    ''
+                  ), 
+                  ' ', 
+                  COALESCE(voie_clean, ''), 
+                  ' ', 
+                  -- besoin sinon exclu
+                  COALESCE(libelleVoieEtablissement, ''), 
+                  ' ', 
+                  COALESCE(
+                    complementAdresseEtablissement, 
+                    ''
+                  )
+                ), 
+                '[^\w\s]|\d+| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+              ''
+            )
+          ), 
+          '\s+\s+', 
+          ' '
+        ) AS adresse_distance_insee, 
+        enseigne1Etablissement, 
+        enseigne2Etablissement, 
+        enseigne3Etablissement 
+      FROM 
+        (
+          SELECT 
+            siren, 
+            siret, 
+            test_siret, 
+            dateCreationEtablissement, 
+            etablissementSiege, 
+            etatAdministratifEtablissement, 
+            codePostalEtablissement, 
+            codeCommuneEtablissement, 
+            libelleCommuneEtablissement, 
             REGEXP_REPLACE(
               REGEXP_REPLACE(
                 REGEXP_REPLACE(
                   REGEXP_REPLACE(
-                    libelleCommuneEtablissement, 
-                    '^\d+\s|\s\d+\s|\s\d+$', 
-                    -- digit
-                    ''
+                    REGEXP_REPLACE(
+                      REGEXP_REPLACE(
+                        REGEXP_REPLACE(
+                          libelleCommuneEtablissement, 
+                          '^\d+\s|\s\d+\s|\s\d+$', 
+                          -- digit
+                          ''
+                        ), 
+                        '^LA\s+|^LES\s+|^LE\s+|\\(.*\\)|^L(ES|A|E) | L(ES|A|E) | L(ES|A|E)$|CEDEX | CEDEX | CEDEX|^E[R*] | E[R*] | E[R*]$', 
+                        ''
+                      ), 
+                      '^STE | STE | STE$|^STES | STES | STES', 
+                      'SAINTE'
+                    ), 
+                    '^ST | ST | ST$', 
+                    'SAINT'
                   ), 
-                  '^LA\s+|^LES\s+|^LE\s+|\\(.*\\)|^L(ES|A|E) | L(ES|A|E) | L(ES|A|E)$|CEDEX | CEDEX | CEDEX|^E[R*] | E[R*] | E[R*]$', 
-                  ''
+                  'S/|^S | S | S$', 
+                  'SUR'
                 ), 
-                '^STE | STE | STE$|^STES | STES | STES', 
-                'SAINTE'
+                '/S', 
+                'SOUS'
               ), 
-              '^ST | ST | ST$', 
-              'SAINT'
-            ), 
-            'S/|^S | S | S$', 
-            'SUR'
-          ), 
-          '/S', 
-          'SOUS'
-        ), 
-        '[^\w\s]|\([^()]*\)|ER ARRONDISSEMENT|E ARRONDISSEMENT|" \
+              '[^\w\s]|\([^()]*\)|ER ARRONDISSEMENT|E ARRONDISSEMENT|" \
 "|^SUR$|CEDEX|[0-9]+|\s+', 
-        ''
-    ) as ville_matching,
-         libelleVoieEtablissement,
-         complementAdresseEtablissement,
-         numeroVoieEtablissement,
-         -- indiceRepetitionEtablissement,
-  indiceRepetitionEtablissement_full,
-         typeVoieEtablissement,
-         enseigne1Etablissement,
-         enseigne2Etablissement,
-         enseigne3Etablissement
-  FROM remove_empty_siret
+              ''
+            ) as ville_matching, 
+            libelleVoieEtablissement, 
+            complementAdresseEtablissement, 
+            numeroVoieEtablissement, 
+            -- indiceRepetitionEtablissement,
+            indiceRepetitionEtablissement_full, 
+            typeVoieEtablissement, 
+            enseigne1Etablissement, 
+            enseigne2Etablissement, 
+            enseigne3Etablissement 
+          FROM 
+            remove_empty_siret
+        ) 
+        LEFT JOIN type_voie ON typevoieetablissement = type_voie.voie_matching 
+      WHERE 
+        test_siret = true
+    ) 
+    SELECT 
+      count_initial_insee, 
+      concat_adress.siren, 
+      siret, 
+      dateCreationEtablissement, 
+      etablissementSiege, 
+      etatAdministratifEtablissement, 
+      codePostalEtablissement, 
+      codeCommuneEtablissement, 
+      libelleCommuneEtablissement, 
+      ville_matching, 
+      libelleVoieEtablissement, 
+      complementAdresseEtablissement, 
+      numeroVoieEtablissement, 
+      --list_numero_voie_matching_insee,
+      --cardinality(list_numero_voie_matching_insee) as test,
+      CASE WHEN cardinality(
+        list_numero_voie_matching_insee
+      ) = 0 THEN NULL ELSE list_numero_voie_matching_insee END as list_numero_voie_matching_insee, 
+      indiceRepetitionEtablissement_full, 
+      typeVoieEtablissement, 
+      voie_clean, 
+      adresse_reconstituee_insee, 
+      adresse_distance_insee, 
+      enseigne1Etablissement, 
+      enseigne2Etablissement, 
+      enseigne3Etablissement 
+    FROM 
+      concat_adress 
+      LEFT JOIN (
+        SELECT 
+          siren, 
+          COUNT(siren) as count_initial_insee 
+        FROM 
+          concat_adress 
+        GROUP BY 
+          siren
+      ) as count_siren ON concat_adress.siren = count_siren.siren
   )
-LEFT JOIN type_voie 
-ON typevoieetablissement = type_voie.voie_matching
-WHERE test_siret = true
-)
-SELECT 
-  count_initial_insee,
-  concat_adress.siren,
-siret, 
-dateCreationEtablissement,
-         etablissementSiege,
-         etatAdministratifEtablissement,
-         codePostalEtablissement,
-         codeCommuneEtablissement,
-         libelleCommuneEtablissement,
-  ville_matching,
-  libelleVoieEtablissement,
-         complementAdresseEtablissement,
-         numeroVoieEtablissement,
-         indiceRepetitionEtablissement_full,
-         typeVoieEtablissement,
-  voie_clean,
-  adress_reconstituee_insee,
-         enseigne1Etablissement,
-         enseigne2Etablissement,
-         enseigne3Etablissement
-FROM concat_adress
-LEFT JOIN (
-  SELECT siren, COUNT(siren) as count_initial_insee
-  FROM concat_adress
-  GROUP BY siren
-  ) as count_siren
-ON concat_adress.siren = count_siren.siren
-)
+
 """
 ```
 
@@ -487,5 +566,46 @@ LEFT JOIN (
   GROUP BY siren
   ) as count_siren
 ON concat_adress.siren = count_siren.siren
+"""
+```
+
+## Etape 4: Creation liste numéro de voie
+
+*  Récupérer la liste des numéros de voie de la table INSEE dans le but de la comparer avec l’INPI lors de la siretisation
+  * Il faut utiliser la variable adress_reconstituee_insee pour créer
+    * list_numero_voie_matching_insee 
+
+```python
+query = """
+SELECT 
+
+ array_distinct(      
+regexp_extract_all(
+         REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                 REGEXP_REPLACE(
+                      CONCAT(
+                        COALESCE(numeroVoieEtablissement,''),
+                        ' ',
+                        COALESCE(indiceRepetitionEtablissement_full,''),
+                        ' ',
+                        COALESCE(voie_clean,''), ' ',  -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement,''), ' ',
+                        COALESCE(complementAdresseEtablissement,'')
+                      ), 
+                '[^\w\s]|\d+| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)',  
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          '',),
+  '[0-9]+'
+  )) AS list_numero_voie_matching_insee,
 """
 ```
