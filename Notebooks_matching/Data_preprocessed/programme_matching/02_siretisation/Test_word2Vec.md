@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -17,10 +17,10 @@ jupyter:
 
 ```python
 import pandas as pd
-import nltk, re
-from nltk.corpus import stopwords
+import re
+#from nltk.corpus import stopwords
 import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+#from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from gensim.models import Word2Vec
 ```
 
@@ -77,14 +77,7 @@ list(
 ```
 
 ```python
-
-7
 import nltk
- 
-w1 = 'mapping'
-w2 = 'mappings'
- 
-nltk.edit_distance(w1, w2)
 ```
 
 ```python
@@ -93,26 +86,6 @@ list(
         lambda x:
         nltk.edit_distance('MATIISE', x),
         ['ANGLE', 'RUE', 'HENRI', 'MATISSE', 'PAUL', 'CEZANNE', 'AULNAY', 'SOUS', 'BOIS']
-    )
-)
-```
-
-```python
-list(
-    map(
-        lambda x:
-        model.wv.similarity('APPART', x),
-        ['HLM', 'PRE', 'ROND', 'CHEZ', 'MME', 'MARTHE', 'AUZANCE']
-    )
-)
-```
-
-```python
-list(
-    map(
-        lambda x:
-        model.wv.similarity('CDT', x),
-        ['CENTRE', 'COMMERCIAL', 'MAINE', 'MONTPARNASSE', 'RUE', 'L', 'ARRIVEE']
     )
 )
 ```
