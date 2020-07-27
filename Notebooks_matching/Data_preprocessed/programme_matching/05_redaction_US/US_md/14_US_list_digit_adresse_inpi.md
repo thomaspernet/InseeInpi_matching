@@ -1,4 +1,4 @@
-# Création list digit et adresse distance [INSEE] 
+# Création list digit [INPI] 
 
 ```
 Entant que {X} je souhaite {récuperer une liste de numéros présent dans les champs de l'adresse de l'INPI} afin de {pouvoir comparer cette même liste du coté de l'INSEE}
@@ -316,8 +316,3 @@ Contenu :
 ]
 
 # Creation markdown
-
-    jupyter nbconvert --no-input --to markdown 14_US_list_digit_adresse_inpi.ipynb
-    Report Available at this adress:
-     C:\Users\PERNETTH\Documents\Projects\InseeInpi_matching\Notebooks_matching\Data_preprocessed\programme_matching\05_redaction_US\US_md\14_US_list_digit_adresse_inpi.md
-    
