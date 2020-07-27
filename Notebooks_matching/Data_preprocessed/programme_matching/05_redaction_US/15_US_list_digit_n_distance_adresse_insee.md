@@ -33,9 +33,9 @@ Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la fai
 
 # Contexte
 
-La dernière étape de la création des variables de matching consiste à utiliser la variable `adresse_nettoyée` (US 2690) pour extraire le premier numéro de voie et extraire le type de voie. Il faut noter que la règle de gestion concernant le numéro de voie ne concerne que le premier numéro. Le regex ne va pas extraire tous les numéros de voie présent dans l'adresse, uniquement le premier. Lors de nos tests, nous avons essayé de créer une règle spéciale qui extrait, tous les numéros de voie, puis match avec l'INSEE. La règle améliore le matching, mais rend plus complexe le processus.
+Lors de la préparation de l'adresse à l'INPI, nous avons distingué un premier type d'adresse qui contient l'ensemble des informations, à savoir les articles, les digits, et nous avons créé un second champs dans lequel nous avons exclut les articles ainsi que les digits. Nous devons faire de même à l'INSEE afin de pouvoir comparer les deux. Seul le champs nettoyer des articles et des digits va servir à la comparaison. Le premier type a pour vocation la restitution de l'adresse dans l'IHM.
 
-L'extraction du type de voie se fait grâce aux informations présentes dans le site de l'[INSEE](https://www.sirene.fr/sirene/public/variable/typeVoieEtablissement). En effet, le type de voie est codifié à l'INSEE, et nous utilisons cette codification pour extraire l'information présente dans la variable `adress_reconstituee_inpi`.
+Une adresse à l'INSEE est formée des champs `numeroVoieEtablissement`, `indiceRepetitionEtablissement_full`, `voie_clean`, `libelleVoieEtablissement` et `complementAdresseEtablissement`. Les champs `libelleVoieEtablissement` et `complementAdresseEtablissement` peuvent contenir un ou plusieurs digits. Dans un précédent US, nous avons décider de récupérer le premier numéro pour le faire correspondre à avec le numéro de voie de l'INPI. Dans certains cas, cette règle de va pas fonctionner. Par exemple, une adresse peut être composée de 2 numéros si elle a deux entrées. Pour faire face a ce type de situation, nous allons créer une liste de numéro depuis les champs de l'adresse. 
 
 ## Règles de gestion
 
@@ -123,9 +123,9 @@ La table ci dessous récapitule l’ensemble des variables a créer pour siretis
 
 Dans cette US, le besoin est le suivant:
 
-- XX
-- YY
-- ZZ
+- Création de la variable `adresse_distance_insee`: 
+    - Concatenation des champs de l'adresse, suppression des espaces et des articles
+- créer une variable appelée `list_numero_voie_matching_insee` qui correspond à une liste contenant l'ensemble des numéros présent dans les champs de l'adresse
 
 
 <!-- #endregion -->
@@ -148,30 +148,65 @@ Dans cette US, le besoin est le suivant:
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
 *   Champs: 
+    - `numeroVoieEtablissement`
+    - `indiceRepetitionEtablissement`
+    - `typeVoieEtablissement`
+    - `libelleVoieEtablissement`
+    - `complementAdresseEtablissement`
 
 
 
 
 ### Exemple Input 1
 
-XXX
+Exemple avec un seul numéro présent dans l'adresse
 
-**Snippet**
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|
+| 28                      |                                    | RUE        | MONTAGNE STE GENEVIEVE   |                                |
+| 26                      |                                    | RUE        | DE MOGADOR               |                                |
+| 13                      |                                    | RUE        | DES CENDRIERS            |                                |
+| 76                      |                                    | RUE        | DE SILLY                 |                                |
+| 12                      |                                    | RUE        | JACQUES CALLOT           |                                |
 
-- [Snippet 1]()
-
-```python
-import pandas as pd
-import numpy as np
-```
 
 ### Exemple Input 2
 
-XXX
+Exemple avec deux ou plus de numéros dans l'adresse
 
-**Snippet**
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|
+| 5                       |                                    | RUE        | DU 11 NOVEMBRE           |                                |
+| 25                      |                                    | RUE        | DU 24 FEVRIER            |                                |
+| 16                      |                                    | RUE        | DE LA MAIRIE             | RESIDENCE DU PONT APT A44      |
+| 1                       |                                    | IMPASSE    | DU VIREVENT              | VILLA 9                        |
+| 350                     |                                    | RUE        | LAVOISIER                | ZAC EXTENSION NORD 2           |
 
-- [Snippet 2]()
+
+### Exemple Input 3
+
+Exemple 1: du découpage de l'adresse à l'INSEE. `indiceRepetitionEtablissement` vide
+
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|
+|                         |                                    | RUE        | DES ECOLES               |                                |
+|                         |                                    | RUE        | DE RICHEMONT             |                                |
+|                         |                                    | RUE        | PELLEPORT                |                                |
+| 28                      |                                    | RUE        | MONTAGNE STE GENEVIEVE   |                                |
+| 26                      |                                    | RUE        | DE MOGADOR               |                                |
+
+
+### Exemple Input 4
+
+Exemple 2: du découpage de l'adresse à l'INSEE. `indiceRepetitionEtablissement` non vide
+
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|
+| 14                      | TER                                | RUE        | REULOS                   |                                |
+| 1                       | BIS                                | RUE        | DE LA COTE ST REMY       |                                |
+| 27                      | BIS                                | RUE        | LOUIS ROLLAND            |                                |
+| 16                      | BIS                                | RUE        | PAUL ROCACHE             |                                |
+| 13                      | BIS                                | RUE        | GUERVEUR                 |                                |
 
 
 ## Output
@@ -184,7 +219,58 @@ XXX
 
 ]
 
-XXX
+
+
+### Exemple Output 1
+
+Exemple avec un seul numéro présent dans l'adresse
+
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement | list_numero_voie_matching_insee |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|---------------------------------|
+| 28                      |                                    | RUE        | MONTAGNE STE GENEVIEVE   |                                | [28]                            |
+| 26                      |                                    | RUE        | DE MOGADOR               |                                | [26]                            |
+| 13                      |                                    | RUE        | DES CENDRIERS            |                                | [13]                            |
+| 76                      |                                    | RUE        | DE SILLY                 |                                | [76]                            |
+| 12                      |                                    | RUE        | JACQUES CALLOT           |                                | [12]                            |
+
+
+### Exemple Output 2
+
+Exemple avec deux ou plus de numéros dans l'adresse
+
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement | list_numero_voie_matching_insee |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|---------------------------------|
+| 5                       |                                    | RUE        | DU 11 NOVEMBRE           |                                | [5, 11]                         |
+| 25                      |                                    | RUE        | DU 24 FEVRIER            |                                | [25, 24]                        |
+| 16                      |                                    | RUE        | DE LA MAIRIE             | RESIDENCE DU PONT APT A44      | [16, 44]                        |
+| 1                       |                                    | IMPASSE    | DU VIREVENT              | VILLA 9                        | [1, 9]                          |
+| 350                     |                                    | RUE        | LAVOISIER                | ZAC EXTENSION NORD 2           | [350, 2]                        |
+
+
+### Exemple Output 3
+
+Exemple 1: du découpage de l'adresse à l'INSEE. `indiceRepetitionEtablissement` vide
+
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement | adresse_distance_insee     |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|----------------------------|
+|                         |                                    | RUE        | DES ECOLES               |                                | RUE ECOLES                 |
+|                         |                                    | RUE        | DE RICHEMONT             |                                | RUE RICHEMONT              |
+|                         |                                    | RUE        | PELLEPORT                |                                | RUE PELLEPORT              |
+| 28                      |                                    | RUE        | MONTAGNE STE GENEVIEVE   |                                | RUE MONTAGNE STE GENEVIEVE |
+| 26                      |                                    | RUE        | DE MOGADOR               |                                | RUE MOGADOR                |
+
+
+### Exemple Output 4
+
+Exemple 2: du découpage de l'adresse à l'INSEE. `indiceRepetitionEtablissement` non vide
+
+| numeroVoieEtablissement | indiceRepetitionEtablissement_full | voie_clean | libelleVoieEtablissement | complementAdresseEtablissement | adresse_distance_insee |
+|-------------------------|------------------------------------|------------|--------------------------|--------------------------------|------------------------|
+| 14                      | TER                                | RUE        | REULOS                   |                                | TER RUE REULOS         |
+| 1                       | BIS                                | RUE        | DE LA COTE ST REMY       |                                | BIS RUE COTE ST REMY   |
+| 27                      | BIS                                | RUE        | LOUIS ROLLAND            |                                | BIS RUE LOUIS ROLLAND  |
+| 16                      | BIS                                | RUE        | PAUL ROCACHE             |                                | BIS RUE PAUL ROCACHE   |
+| 13                      | BIS                                | RUE        | GUERVEUR                 |                                | BIS RUE GUERVEUR       |
 
 <!-- #region -->
 ## Règles de gestion applicables
@@ -192,6 +278,37 @@ XXX
 [PO : Formules applicables]
 
 Si nouvelle règle, ajouter ici.
+
+
+### Information pour `list_numero_voie_matching_insee`
+
+- La technique doit être la meme que l'US [3000](https://tree.taiga.io/project/olivierlubet-air/us/3000)
+- Pensez a ne garder que les digits uniques. S [10,10,5] alors cela devient [10,5]
+
+
+
+### Information pour `adresse_distance_insee`
+
+Les règles a appliquer sur la variables `adresse_distance_insee` sont récapitulées ci-dessous
+
+| Table | Variables                  | Article | Digit | Debut/fin espace | Espace | Accent | Upper |
+|-------|----------------------------|---------|-------|------------------|--------|--------|-------|
+| INPI  | adresse_regex_inpi         | X       | X     | X                | X      | X      | X     |
+| INPI  | adresse_distance_inpi      | X       | X     | X                | X      | X      | X     |
+| INPI  | adresse_reconstituee_inpi  |         |       | X                | X      | X      | X     |
+| INSEE | adresse_reconstituee_insee |         |       | X                | X      | X      | X     |
+| INSEE | adresse_distance_insee     | X       | X     | X                | X      | X      | X     |
+
+
+
+- Les règles de nettoyage de l'adresse de l'INSEE doivent être identiques à l'US [2613](https://tree.taiga.io/project/olivierlubet-air/us/2690)
+- Pour la variable `indiceRepetitionEtablissement` doit être la même que lors de l'US [2953](https://tree.taiga.io/project/olivierlubet-air/us/2953)
+
+* Espace: Enlever les doubles espace \s\s . Cela se produit lorsque nous devons concatener un champ vide avec un champs non vide. Le champs vide va créer un espace, la séparation va aussi créer un espace, donc au final il va y avoir deux espaces. Il faut en supprimer un
+* On applique toutes les règles cotés INSEE car on a remarqué la possibilité d’accent, et de minuscule à l’INSEE.
+    - La technique doit être la même que lors de l'US [2954](https://tree.taiga.io/project/olivierlubet-air/us/2954)
+
+
 
 # Charges de l'équipe
 
@@ -207,7 +324,109 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
+Query SQL utilisée lors de nos tests `list_numero_voie_matching_insee`
+
+``` 
+SELECT 
+
+ array_distinct(      
+regexp_extract_all(
+         REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                 REGEXP_REPLACE(
+                      CONCAT(
+                        COALESCE(numeroVoieEtablissement,''),
+                        ' ',
+                        COALESCE(indiceRepetitionEtablissement_full,''),
+                        ' ',
+                        COALESCE(voie_clean,''), ' ',  -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement,''), ' ',
+                        COALESCE(complementAdresseEtablissement,'')
+                      ), 
+                '[^\w\s]|\d+| +', 
+                ' '
+              ), 
+              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)',  
+              ''
+            ), 
+            '\s\s+', 
+            ' '
+          ), 
+          '^\s+|\s+$', 
+          '',),
+  '[0-9]+'
+  )) AS list_numero_voie_matching_insee
+```
+
+
+Query SQL utilisée lors de nos tests `adresse_distance_insee`
+
+```
+ REGEXP_REPLACE(
+          NORMALIZE(
+            UPPER(
+              REGEXP_REPLACE(
+                trim(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                      CONCAT(
+                        COALESCE(numeroVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          indiceRepetitionEtablissement_full, 
+                          ''
+                        ), 
+                        ' ', 
+                        COALESCE(voie_clean, ''), 
+                        ' ', 
+                        -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          complementAdresseEtablissement, 
+                          ''
+                        )
+                      ), 
+                      '[^\w\s]|\d+| +', 
+                      ' '
+                    ), 
+                    '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+                    ''
+                  )
+                ), 
+                '\s+\s+', 
+                ' '
+              )
+            ), 
+            NFD
+          ), 
+          '\pM', 
+          ''
+        ) AS adresse_distance_insee
+```
+
 # Tests d'acceptance
+
+* Liste digits
+   * Donner la liste des pairs  (top 10) avec le plus de fréquence
+   * Donner la liste des pairs (top 10) avec le plus de fréquence lorsque la taille de l’array est égale à 
+     * 2
+     * 3
+     * 4
+   *  Compter le nombre occurrences sachant la taille de la liste:
+     * Exemple, combien de fois la liste est égale à 1, 2, etc 
+* Adresse Distance
+   * Compter le nombre d'observations après traitement, vérifier qu'il y a le même nombre d'observations qu'avant traitement
+   * Imprimer aléatoirement 10 adresses
+   *  Imprimer des patterns ou il y a le champs numeroVoieEtablissement  vide
+   *  Imprimer des patterns ou il y a le champs numeroVoieEtablissement non vide
+   *  Imprimer des patterns ou il y a le champs indiceRepetitionEtablissement  vide
+   *  Imprimer des patterns ou il y a le champs indiceRepetitionEtablissement non vide
+   *  Imprimer des patterns ou il y a le champs typeVoieEtablissement  vide
+   *  Imprimer des patterns ou il y a le champs typeVoieEtablissement non vide
+   *  Imprimer des patterns ou il y a le champs complementAdresseEtablissement  vide
+   *  Imprimer des patterns ou il y a le champs complementAdresseEtablissement non vide
 
 [PO : comment contrôler que la réalisation est conforme]
 
