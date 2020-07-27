@@ -1,4 +1,4 @@
-# TITRE 
+# Création list digit et adresse distance [INSEE] 
 
 ```
 Entant que {X} je souhaite {récuperer une liste de numéros présent dans les champs de l'adresse de l'INPI} afin de {pouvoir comparer cette même liste du coté de l'INSEE}
@@ -7,10 +7,10 @@ Entant que {X} je souhaite {récuperer une liste de numéros présent dans les c
 **Metadatab**
 
 - Taiga:
-    - Numero US: [3000](https://tree.taiga.io/project/olivierlubet-air/us/3000)
+    - Numero US: [3004](https://tree.taiga.io/project/olivierlubet-air/us/3004)
 - Gitlab
-    - Notebook: [14_US_list_digit_adresse_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/14_US_list_digit_adresse_inpi.md)
-    - Markdown: [14_US_list_digit_adresse_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/14_US_list_digit_adresse_inpi.ipynb)
+    - Notebook: [15_US_list_digit_n_distance_adresse_insee](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/15_US_list_digit_n_distance_adresse_insee.md)
+    - Markdown: [15_US_list_digit_n_distance_adresse_insee](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/15_US_list_digit_n_distance_adresse_insee.ipynb)
     - Data:
         - []()
         - 
@@ -199,7 +199,8 @@ Exemple avec deux ou plus de numéros dans les trois champs
 
 Si nouvelle règle, ajouter ici.
 
-Pattern regex pour récupérer tous les digits -> `[0-9]+`
+- Pattern regex pour récupérer tous les digits -> `[0-9]+`
+- Pensez a ne garder que les digits uniques. Si [10,10,5] alors cela devient [10,5]
 
 # Charges de l'équipe
 
