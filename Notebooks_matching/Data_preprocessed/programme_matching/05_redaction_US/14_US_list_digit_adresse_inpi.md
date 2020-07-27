@@ -17,25 +17,23 @@ jupyter:
 # TITRE 
 
 ```
-Entant que {X} je souhaite {normaliser la variable pays} afin de {pouvoir la faire correspondre à l'INSEE}
+Entant que {X} je souhaite {récuperer une liste de numéros présent dans les champs de l'adresse de l'INPI} afin de {pouvoir comparer cette même liste du coté de l'INSEE}
 ```
 
 **Metadatab**
 
 - Taiga:
-    - Numero US: []()
+    - Numero US: [3000](https://tree.taiga.io/project/olivierlubet-air/us/3000)
 - Gitlab
-    - Notebook: []()
-    - Markdown: []()
+    - Notebook: [14_US_list_digit_adresse_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/14_US_list_digit_adresse_inpi.md)
+    - Markdown: [14_US_list_digit_adresse_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/14_US_list_digit_adresse_inpi.ipynb)
     - Data:
         - []()
         - 
 
 # Contexte
 
-La dernière étape de la création des variables de matching consiste à utiliser la variable `adresse_nettoyée` (US 2690) pour extraire le premier numéro de voie et extraire le type de voie. Il faut noter que la règle de gestion concernant le numéro de voie ne concerne que le premier numéro. Le regex ne va pas extraire tous les numéros de voie présent dans l'adresse, uniquement le premier. Lors de nos tests, nous avons essayé de créer une règle spéciale qui extrait, tous les numéros de voie, puis match avec l'INSEE. La règle améliore le matching, mais rend plus complexe le processus.
-
-L'extraction du type de voie se fait grâce aux informations présentes dans le site de l'[INSEE](https://www.sirene.fr/sirene/public/variable/typeVoieEtablissement). En effet, le type de voie est codifié à l'INSEE, et nous utilisons cette codification pour extraire l'information présente dans la variable `adress_reconstituee_inpi`.
+Une adresse à l'INPI est formée de trois variables `adresse_1`, `adresse_2` et `adresse_3`. Chacun des champs peut contenir un ou plusieurs numéros. Dans un précédent US, nous avons décider de récupérer le premier numéro pour le faire correspondre à avec le numéro de voie de l'INSEE. Dans certains cas, cette règle de va pas fonctionner. Par exemple, une adresse peut être composée de 2 numéros si elle a deux entrées. Pour faire face a ce type de situation, nous allons créer une liste de numéro depuis les champs de l'adresse. 
 
 ## Règles de gestion
 
@@ -123,10 +121,7 @@ La table ci dessous récapitule l’ensemble des variables a créer pour siretis
 
 Dans cette US, le besoin est le suivant:
 
-- XX
-- YY
-- ZZ
-
+- créer une variable appelée `list_numero_voie_matching_inpi` qui correspond à une liste contenant l'ensemble des numéros présent dans les champs de l'adresse
 
 <!-- #endregion -->
 
@@ -148,30 +143,37 @@ Dans cette US, le besoin est le suivant:
 *   Tables: `inpi_etablissement_historique`
 *   CSV: 
 *   Champs: 
+    - `adresse_ligne1`
+    - `adresse_ligne2`
+    - `adresse_ligne3`
 
 
 
 
 ### Exemple Input 1
 
-XXX
+Exemple avec un seul numéro présent dans les trois champs
 
-**Snippet**
+| adresse_ligne1 | adresse_ligne2                 | adresse_ligne3 | adresse_reconstituee_inpi             |
+|----------------|--------------------------------|----------------|---------------------------------------|
+|                | 16 RUE DU GENERAL LECLERC      | VANNES         | 16 RUE DU GENERAL LECLERC VANNES      |
+|                | 42 RUE DU MENE                 | VANNES         | 42 RUE DU MENE VANNES                 |
+|                | 12 RUE DU CAPITAINE LABORDETTE | VANNES         | 12 RUE DU CAPITAINE LABORDETTE VANNES |
+|                | 5 RUE SAINT VINCENT            | VANNES         | 5 RUE SAINT VINCENT VANNES            |
+|                | 2 rue Aimé Jéglot              |                | 2 RUE AIME JEGLOT                     |
 
-- [Snippet 1]()
-
-```python
-import pandas as pd
-import numpy as np
-```
 
 ### Exemple Input 2
 
-XXX
+Exemple avec deux ou plus de numéros dans les trois champs
 
-**Snippet**
-
-- [Snippet 2]()
+| adresse_ligne1                         | adresse_ligne2                     | adresse_ligne3 | adresse_reconstituee_inpi                 |
+|----------------------------------------|------------------------------------|----------------|-------------------------------------------|
+|                                        | 17/19 boulevard du Général Leclerc |                | 17 19 BOULEVARD DU GENERAL LECLERC        |
+|                                        | 1 - 5 rue Talleyrand               |                | 1 5 RUE TALLEYRAND                        |
+| 3-5 rue Paul Duez                      |                                    |                | 3 5 RUE PAUL DUEZ                         |
+| 6 Rue du Pelvoux - Immeuble la Vanoise | 6-18                               |                | 6 RUE DU PELVOUX IMMEUBLE LA VANOISE 6 18 |
+| 350 rue Arthur Brunet                  | BP 50017                           |                | 350 RUE ARTHUR BRUNET BP 50017            |
 
 
 ## Output
@@ -181,10 +183,35 @@ XXX
 *   BDD cibles
 *   Tables: `inpi_etablissement_historique`
 *   Champs: 
+    - `list_numero_voie_matching_inpi`
 
 ]
 
-XXX
+La variable `list_numero_voie_matching_inpi` est un array contenant tous les numéros.
+
+### Exemple Output 1
+
+Exemple avec un seul numéro présent dans les trois champs
+
+| adresse_ligne1                    | adresse_ligne2  | adresse_ligne3 | adresse_reconstituee_inpi         | list_numero_voie_matching_inpi |
+|-----------------------------------|-----------------|----------------|-----------------------------------|--------------------------------|
+| 66 avenue du Général de Gaulle    |                 |                | 66 AVENUE DU GENERAL DE GAULLE    | [66]                           |
+| 2 avenue Barbara                  |                 |                | 2 AVENUE BARBARA                  | [2]                            |
+| 10 boulevard Rocheplatte          |                 |                | 10 BOULEVARD ROCHEPLATTE          | [10]                           |
+| 29 rue du Faubourg de la Chaussée |                 |                | 29 RUE DU FAUBOURG DE LA CHAUSSEE | [29]                           |
+|                                   | 12B rue Diderot |                | 12B RUE DIDEROT                   | [12]                           |
+
+### Exemple Output 2
+
+Exemple avec deux ou plus de numéros dans les trois champs
+
+| adresse_ligne1                         | adresse_ligne2                     | adresse_ligne3 | adresse_reconstituee_inpi                 | list_numero_voie_matching_inpi |
+|----------------------------------------|------------------------------------|----------------|-------------------------------------------|--------------------------------|
+|                                        | 17/19 boulevard du Général Leclerc |                | 17 19 BOULEVARD DU GENERAL LECLERC        | [17, 19]                       |
+|                                        | 1 - 5 rue Talleyrand               |                | 1 5 RUE TALLEYRAND                        | [1, 5]                         |
+| 3-5 rue Paul Duez                      |                                    |                | 3 5 RUE PAUL DUEZ                         | [3, 5]                         |
+| 6 Rue du Pelvoux - Immeuble la Vanoise | 6-18                               |                | 6 RUE DU PELVOUX IMMEUBLE LA VANOISE 6 18 | [6, 18]                        |
+| 350 rue Arthur Brunet                  | BP 50017                           |                | 350 RUE ARTHUR BRUNET BP 50017            | [350, 50017]                   |
 
 <!-- #region -->
 ## Règles de gestion applicables
@@ -192,6 +219,8 @@ XXX
 [PO : Formules applicables]
 
 Si nouvelle règle, ajouter ici.
+
+Pattern regex pour récupérer tous les digits -> `[0-9]+`
 
 # Charges de l'équipe
 
@@ -207,9 +236,50 @@ Spécifiquement pour l'intégration de nouvelles données dans DATUM :
 
 ]
 
+Query SQL utilisée lors de nos tests
+
+```
+SELECT 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  array_distinct(
+    regexp_extract_all(
+        trim(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              NORMALIZE(
+                UPPER(
+                  CONCAT(
+                    adresse_ligne1, ' ', adresse_ligne2, 
+                    ' ', adresse_ligne3
+                  )
+                ), 
+                NFD
+              ), 
+              '\pM', 
+              ''
+            ), 
+            '[^\w\s]| +', 
+            ' '
+          )
+      ), 
+      '[0-9]+'
+    )
+  ) AS list_numero_voie_matching_inpi 
+```
+
 # Tests d'acceptance
 
 [PO : comment contrôler que la réalisation est conforme]
+
+ * Donner la liste des pairs  (top 10) avec le plus de fréquence
+ * Donner la liste des pairs (top 10) avec le plus de fréquence lorsque la taille de l’array est égale à 
+   * 2
+   * 3
+   * 4
+*  Compter le nombre occurrences sachant la taille de la liste:
+   * Exemple, combien de fois la liste est égale à 1, 2, etc
 
 **Code reproduction**
 
