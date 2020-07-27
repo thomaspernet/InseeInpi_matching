@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -148,7 +148,8 @@ CREATE TABLE inpi.insee_final_sql WITH (format = 'PARQUET') AS WITH remove_empty
     enseigne3Etablissement 
   FROM 
     insee_rawdata -- WHERE siren = '797406154'  
-    -- WHERE siren = '797406188'
+    --WHERE 
+    --  siren = '530615913'
     ) 
 SELECT 
   * 
@@ -206,69 +207,87 @@ FROM
         libelleVoieEtablissement, 
         complementAdresseEtablissement, 
         indiceRepetitionEtablissement_full, 
-        trim(
-          REGEXP_REPLACE(
-            REGEXP_REPLACE(
-              REGEXP_REPLACE(
-                CONCAT(
-                  COALESCE(numeroVoieEtablissement, ''), 
-                  ' ', 
-                  COALESCE(
-                    indiceRepetitionEtablissement_full, 
-                    ''
+        REGEXP_REPLACE(
+          NORMALIZE(
+            UPPER(
+              trim(
+                REGEXP_REPLACE(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                      CONCAT(
+                        COALESCE(numeroVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          indiceRepetitionEtablissement_full, 
+                          ''
+                        ), 
+                        ' ', 
+                        COALESCE(voie_clean, ''), 
+                        ' ', 
+                        -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          complementAdresseEtablissement, 
+                          ''
+                        )
+                      ), 
+                      '[^\w\s]| +', 
+                      ' '
+                    ), 
+                    '\s\s+', 
+                    ' '
                   ), 
-                  ' ', 
-                  COALESCE(voie_clean, ''), 
-                  ' ', 
-                  -- besoin sinon exclu
-                  COALESCE(libelleVoieEtablissement, ''), 
-                  ' ', 
-                  COALESCE(
-                    complementAdresseEtablissement, 
-                    ''
-                  )
-                ), 
-                '[^\w\s]| +', 
-                ' '
-              ), 
-              '\s\s+', 
-              ' '
+                  '^\s+|\s+$', 
+                  ''
+                )
+              )
             ), 
-            '^\s+|\s+$', 
-            ''
-          )
+            NFD
+          ), 
+          '\pM', 
+          ''
         ) AS adresse_reconstituee_insee, 
         REGEXP_REPLACE(
-          trim(
-            REGEXP_REPLACE(
+          NORMALIZE(
+            UPPER(
               REGEXP_REPLACE(
-                CONCAT(
-                  COALESCE(numeroVoieEtablissement, ''), 
-                  ' ', 
-                  COALESCE(
-                    indiceRepetitionEtablissement_full, 
-                    ''
-                  ), 
-                  ' ', 
-                  COALESCE(voie_clean, ''), 
-                  ' ', 
-                  -- besoin sinon exclu
-                  COALESCE(libelleVoieEtablissement, ''), 
-                  ' ', 
-                  COALESCE(
-                    complementAdresseEtablissement, 
+                trim(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                      CONCAT(
+                        COALESCE(numeroVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          indiceRepetitionEtablissement_full, 
+                          ''
+                        ), 
+                        ' ', 
+                        COALESCE(voie_clean, ''), 
+                        ' ', 
+                        -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          complementAdresseEtablissement, 
+                          ''
+                        )
+                      ), 
+                      '[^\w\s]|\d+| +', 
+                      ' '
+                    ), 
+                    '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
                     ''
                   )
                 ), 
-                '[^\w\s]|\d+| +', 
+                '\s+\s+', 
                 ' '
-              ), 
-              '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
-              ''
-            )
+              )
+            ), 
+            NFD
           ), 
-          '\s+\s+', 
-          ' '
+          '\pM', 
+          ''
         ) AS adresse_distance_insee, 
         enseigne1Etablissement, 
         enseigne2Etablissement, 
@@ -371,7 +390,6 @@ FROM
           siren
       ) as count_siren ON concat_adress.siren = count_siren.siren
   )
-
 """
 ```
 
@@ -502,40 +520,110 @@ dateCreationEtablissement,
 
 ## Etape 2: Preparation `adress_reconstituee_insee`
 
-La variable `adress_reconstituee_insee` est la concatenation de `numeroVoieEtablissement`, `voie_clean`, `libelleVoieEtablissement` et `complementAdresseEtablissement`, avec la suppression des articles
+La variable `adress_reconstituee_insee` est la concatenation de `numeroVoieEtablissement`, `voie_clean`, `libelleVoieEtablissement` et `complementAdresseEtablissement`
 
 ```python
 query = """
-REGEXP_REPLACE(
-            REGEXP_REPLACE(
-              REGEXP_REPLACE(
-                -- REGEXP_REPLACE(
-                  -- NORMALIZE(
-                    -- UPPER(
+ REGEXP_REPLACE(
+          NORMALIZE(
+            UPPER(
+              trim(
+                REGEXP_REPLACE(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
                       CONCAT(
-                        numeroVoieEtablissement, ' ', voie_clean, 
-                        ' ', libelleVoieEtablissement, ' ',
-                        complementAdresseEtablissement
-                      ),
-                    -- ), 
-                    -- NFD
-                  -- ), 
-                  -- '\pM', 
-                  -- ''
-                -- ), 
-                '[^\w\s]| +', 
-                ' '
-              ), 
-            '\s\s+', 
-            ' '
+                        COALESCE(numeroVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          indiceRepetitionEtablissement_full, 
+                          ''
+                        ), 
+                        ' ', 
+                        COALESCE(voie_clean, ''), 
+                        ' ', 
+                        -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          complementAdresseEtablissement, 
+                          ''
+                        )
+                      ), 
+                      '[^\w\s]| +', 
+                      ' '
+                    ), 
+                    '\s\s+', 
+                    ' '
+                  ), 
+                  '^\s+|\s+$', 
+                  ''
+                )
+              )
+            ), 
+            NFD
           ), 
-          '^\s+|\s+$', 
+          '\pM', 
           ''
-      ) AS adress_reconstituee_insee
+        ) AS adresse_reconstituee_insee
 """"
+
+
+
+
+
 ```
 
-## Etape 3: `count_initial_insee` 
+## Etape 3: `adresse_distance_insee` 
+
+La variable `adress_reconstituee_insee` est la concatenation de `numeroVoieEtablissement`, `voie_clean`, `libelleVoieEtablissement` et `complementAdresseEtablissement`
+
+```python
+query = """
+ REGEXP_REPLACE(
+          NORMALIZE(
+            UPPER(
+              REGEXP_REPLACE(
+                trim(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                      CONCAT(
+                        COALESCE(numeroVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          indiceRepetitionEtablissement_full, 
+                          ''
+                        ), 
+                        ' ', 
+                        COALESCE(voie_clean, ''), 
+                        ' ', 
+                        -- besoin sinon exclu
+                        COALESCE(libelleVoieEtablissement, ''), 
+                        ' ', 
+                        COALESCE(
+                          complementAdresseEtablissement, 
+                          ''
+                        )
+                      ), 
+                      '[^\w\s]|\d+| +', 
+                      ' '
+                    ), 
+                    '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', 
+                    ''
+                  )
+                ), 
+                '\s+\s+', 
+                ' '
+              )
+            ), 
+            NFD
+          ), 
+          '\pM', 
+          ''
+        ) AS adresse_distance_insee
+"""
+```
+
+## Etape 5: `count_initial_insee` 
 
 ```python
 query = """
@@ -574,6 +662,7 @@ ON concat_adress.siren = count_siren.siren
 *  Récupérer la liste des numéros de voie de la table INSEE dans le but de la comparer avec l’INPI lors de la siretisation
   * Il faut utiliser la variable adress_reconstituee_insee pour créer
     * list_numero_voie_matching_insee 
+
 
 ```python
 query = """
