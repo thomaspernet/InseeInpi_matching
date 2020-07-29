@@ -1629,19 +1629,92 @@ athena.run_query(
 1. Filtrer les dates de greffes avec plusieurs transmissions, c’est a dire, ne garder que la dernière date connue et remplie
 
 ```python
-query = """CREATE TABLE inpi.pp_test_filtered
-WITH (
-  format='PARQUET'
-) AS
-select *,CASE
-WHEN code_postal = '' THEN REGEXP_EXTRACT(ville, '\d{5}')
-WHEN LENGTH(code_postal) = 5 THEN code_postal
-ELSE NULL END AS code_postal_matching
-from (select *,
-             row_number() over(PARTITION BY siren,"code_greffe", numero_gestion , date_greffe 
- ORDER BY siren,'code_greffe', numero_gestion,file_timestamp ) as rn
-      from initial_partiel_evt_new_pp_status_final ) as T
-where rn = 1 
+query = """"
+CREATE TABLE inpi.pp_test_filtered WITH (format = 'PARQUET') AS 
+select 
+  initial_partiel_evt_new_pp_status_final.siren, 
+  initial_partiel_evt_new_pp_status_final.code_greffe, 
+  initial_partiel_evt_new_pp_status_final.nom_greffe, 
+  initial_partiel_evt_new_pp_status_final.numero_gestion, 
+  status, 
+  origin, 
+  initial_partiel_evt_new_pp_status_final.date_greffe, 
+  file_timestamp, 
+  libelle_evt, 
+  type, 
+  type_inscription, 
+  date_immatriculation, 
+  date_1re_immatriculation, 
+  date_radiation, 
+  date_transfert, 
+  sans_activite, 
+  date_debut_activite, 
+  date_debut_1re_activite, 
+  date_cessation_activite, 
+  nom_patronymique, 
+  nom_usage, 
+  pseudonyme, 
+  prenoms, 
+  date_naissance, 
+  ville_naissance, 
+  pays_naissance, 
+  "nationalité", 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  code_postal, 
+  ville, 
+  code_commune, 
+  pays, 
+  activite_forain, 
+  eirl, 
+  auto_entrepreneur, 
+  dap, 
+  dap_denomination, 
+  dap_objet, 
+  dap_date_cloture, 
+  dap_adresse_ligne1, 
+  dap_adresse_ligne2, 
+  dap_adresse_ligne3, 
+  dap_code_postal, 
+  dap_ville, 
+  dap_code_commune, 
+  dap_pays, 
+  conjoint_collab_nom_patronym, 
+  conjoint_collab_nom_usage, 
+  conjoint_collab_pseudo, 
+  conjoint_collab_prenoms, 
+  conjoint_collab_date_fin, 
+  max_partiel, 
+  csv_source 
+FROM 
+  initial_partiel_evt_new_pp_status_final 
+  LEFT JOIN (
+    select 
+      siren, 
+      code_greffe, 
+      numero_gestion, 
+      date_greffe, 
+      max(file_timestamp) as max_timestamp 
+    from 
+      initial_partiel_evt_new_pp_status_final 
+    GROUP BY 
+      siren, 
+      code_greffe, 
+      numero_gestion, 
+      date_greffe
+  ) as max_time ON initial_partiel_evt_new_pp_status_final.siren = max_time.siren 
+  AND initial_partiel_evt_new_pp_status_final.code_greffe = max_time.code_greffe 
+  AND initial_partiel_evt_new_pp_status_final.numero_gestion = max_time.numero_gestion 
+  AND initial_partiel_evt_new_pp_status_final.date_greffe = max_time.date_greffe 
+WHERE 
+  file_timestamp = max_timestamp 
+ORDER BY 
+  siren, 
+  code_greffe, 
+  numero_gestion, 
+  date_greffe
+
 """
 
 output = athena.run_query(
