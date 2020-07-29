@@ -1243,7 +1243,6 @@ results = s3.copy_object_s3(source_key = source_key,
 
 ```python
 query = """
-"/*add filter and code postal mat*/
 CREATE TABLE inpi.pm_test_filtered
 WITH (
   format='PARQUET'
@@ -1251,7 +1250,7 @@ WITH (
 
 select 
   initial_partiel_evt_new_pm_status_final.siren, 
-  -- initial_partiel_evt_new_pm_status_final.code_greffe, 
+  initial_partiel_evt_new_pm_status_final."code greffe" as code_greffe, 
   initial_partiel_evt_new_pm_status_final.nom_greffe, 
   initial_partiel_evt_new_pm_status_final.numero_gestion, 
   status, 
@@ -1288,22 +1287,20 @@ FROM
   LEFT JOIN (
     select 
       siren, 
-      code_greffe, 
+      "code greffe", 
       numero_gestion, 
-      id_etablissement, 
       date_greffe, 
       max(file_timestamp) as max_timestamp 
     from 
-      initial_partiel_evt_new_ets_status_final --where siren = '055502868'
+      initial_partiel_evt_new_pm_status_final 
     GROUP BY 
       siren, 
-      code_greffe, 
+      "code greffe", 
       numero_gestion, 
-      id_etablissement, 
       date_greffe
   ) as max_time 
   ON initial_partiel_evt_new_pm_status_final.siren = max_time.siren 
-  -- AND initial_partiel_evt_new_pm_status_final.code_greffe = max_time.code_greffe 
+  AND initial_partiel_evt_new_pm_status_final."code greffe" = max_time."code greffe" 
   AND initial_partiel_evt_new_pm_status_final.numero_gestion = max_time.numero_gestion 
   AND initial_partiel_evt_new_pm_status_final.date_greffe = max_time.date_greffe 
 WHERE 
@@ -1312,7 +1309,6 @@ ORDER BY
   siren, 
   code_greffe, 
   numero_gestion, 
-  id_etablissement, 
   date_greffe
 
 """
