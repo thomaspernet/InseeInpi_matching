@@ -1239,12 +1239,91 @@ results = s3.copy_object_s3(source_key = source_key,
                       )
 ```
 
+## Filtrer les dates de greffe
+
+```python
+query = """
+"/*add filter and code postal mat*/
+CREATE TABLE inpi.pm_test_filtered
+WITH (
+  format='PARQUET'
+) AS
+
+select 
+  initial_partiel_evt_new_pm_status_final.siren, 
+  -- initial_partiel_evt_new_pm_status_final.code_greffe, 
+  initial_partiel_evt_new_pm_status_final.nom_greffe, 
+  initial_partiel_evt_new_pm_status_final.numero_gestion, 
+  status, 
+  origin, 
+  initial_partiel_evt_new_pm_status_final.date_greffe, 
+  file_timestamp, 
+  max_timestamp, 
+  type_inscription, 
+  date_immatriculation, 
+  date_1re_immatriculation, 
+  date_radiation, 
+  date_transfert, 
+  "sans_activité", 
+  "date_debut_activité", 
+  "date_début_1re_activité", 
+  "date_cessation_activité", 
+  denomination, 
+  sigle, 
+  forme_juridique, 
+  "associé_unique", 
+  "activité_principale", 
+  type_capital, 
+  capital, 
+  capital_actuel, 
+  devise, 
+  date_cloture, 
+  date_cloture_except, 
+  economie_sociale_solidaire, 
+  "durée_pm", 
+  libelle_evt, 
+  csv_source 
+FROM 
+  initial_partiel_evt_new_pm_status_final 
+  LEFT JOIN (
+    select 
+      siren, 
+      code_greffe, 
+      numero_gestion, 
+      id_etablissement, 
+      date_greffe, 
+      max(file_timestamp) as max_timestamp 
+    from 
+      initial_partiel_evt_new_ets_status_final --where siren = '055502868'
+    GROUP BY 
+      siren, 
+      code_greffe, 
+      numero_gestion, 
+      id_etablissement, 
+      date_greffe
+  ) as max_time 
+  ON initial_partiel_evt_new_pm_status_final.siren = max_time.siren 
+  -- AND initial_partiel_evt_new_pm_status_final.code_greffe = max_time.code_greffe 
+  AND initial_partiel_evt_new_pm_status_final.numero_gestion = max_time.numero_gestion 
+  AND initial_partiel_evt_new_pm_status_final.date_greffe = max_time.date_greffe 
+WHERE 
+  file_timestamp = max_timestamp 
+ORDER BY 
+  siren, 
+  code_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  date_greffe
+
+"""
+```
+
 # Table finale dans Athena
 
 La dernière étape du programme consiste a récupérer tous les csv du [dossier](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/sql_output_final_pm/) afin de recréer une table appelée `initial_partiel_evt_new_pm_status_final`. A noter que les variables sont renommées (i.e lower case, tiret du bas) puis les variables sont triées dans un nouvel ordre.
 
 ```python
-table = 'initial_partiel_evt_new_pm_status_final'
+table = 'pm_test_filtered'
 list_var = [
 "Code Greffe",
 "Nom_Greffe",
