@@ -6,109 +6,86 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
     name: python3
 ---
 
-<!-- #region -->
-# Siretisation Version 3: SQL
+# Preparation metric siretisation adresse INPI INSEE 
 
-## Etape 
+Objective(s)
 
-Décrire les étapes de siretisation en SQL 
-
-US potentielles
-Creation table rapprochement INSEE/INPI
-
-1. US 1 match sur siren + ville + code postal
-
-  1. US: US 01 rapprochement INSEE INPI
-  2. US taiga:
+  *   Creation d’une ou plusieurs metrics pour indiquer l’exactitude entre deux adresses
+  * Dans l’ideal, il faudrait trouver un indicateur qui reflète le niveau de validité entre les deux adresses, avant de passer aux autres tests, car c’est l’adresse qui détermine le siret
+  * Include DataStudio (tick if yes): false
   
-Création règles de gestion
+Metadata
 
-1. Création score
-
-2. US 3 Création Jaccard
-
-  1. US US 02 Variables regles de gestion
-  2. US taiga:
+* Metadata parameters are available here: Ressources_suDYJ#_luZqd
+* Task type:
+  * Jupyter Notebook
+* Users: :
+  * Thomas Pernet
+* Watchers:
+  * Thomas Pernet
+* Estimated Log points:
+  * One being a simple task, 15 a very difficult one
+  *  10
+* Task tag
+  *  #sql-query,#probability,#matching
+* Toggl Tag
+  * #datanalaysis
+* Instance [AWS/GCP]
+  *  
   
-  
-Dedoublonnage
+## Input Cloud Storage [AWS/GCP]
 
-1. US 6 Filtre selon règles de séparation
+If link from the internet, save it to the cloud first
 
-  1. US XX
-  2.  US taiga:
-  
-2. US 7 Création indicateur de doublons
+### AWS
 
-  1. Meme séquence, plusieurs siret → adresse différente au cours d’une séquence (ici, l’index est différent)
-  2. Meme index, plusieurs siret → adresse très similaire entre deux siret (ici, l’index est identique)
-  3. US XX
-  4. US taiga:
-  
-3. US 8 Récupération index unique et siret unique
+1. S3
+  * File (csv/json) + name and link: 
+    * 
+    * Notebook construction file (data lineage, md link from Github) 
+      * md :
+      * py :
+2. Athena 
+  * Region: eu-west-3 
+  * Database: inpi 
+    * Table: ets_final_sql  
+  * Notebook construction file (data lineage) 
+    * md : https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md
+  * Region: Europe (Paris)
+  * Database: inpi 
+    * Table: insee_final_sql  
+  * Notebook construction file (data lineage) 
+    * md : 04_ETS_add_variables_insee.md
+    
+## Destination Output/Delivery
 
-  1. US XX
-  2. US taiga:
-  
-Deduction siret sur séquence
-
-1. US 9 Attribution du siret sur une séquence
-
-  1. US XX
-  2. US taiga:
-  
-## Input
-
-* Athena 
-    * region: eu-west-3 
+1. Table/Data (AWS/GCP link)
+  * Description expected outcome:
+    *  La table rassemble l’INSEE et l’INPI et un ensemble de variables connexe pour distinguer les siret
+  * AWS
+    * Bucket:
+      * Link
+  * Athena: 
+    * Region: Europe (Paris)
     * Database: inpi 
-    *  Table: ets_final_sql 
-      * Notebook construction file (data lineage) 
-        * md : [03_ETS_add_variables.md](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md)
-    *  Table: insee_final_sql 
-      * Notebook construction file (data lineage) 
-        * md : [04_ETS_add_variables_insee.md](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md)
-        
-        
-Voici un tableau récapitulatif des règles appliquer sur les variables de l'adresse:
+    *  Table:   ets_insee_inpi  
+    
+## Things to know (Steps, Attention points or new flow of information)
 
-| Tables | Variables                          | Commentaire                                                                                                                                                                                                 | Inputs                                                                                                                                    | article | digit | debut/fin espace | espace | accent | Upper | Regles_speciales | Table_externe |
-|--------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|---------|-------|------------------|--------|--------|-------|------------------|---------------|
-| INPI   | adresse_reconstituee_inpi          | Concatenation des champs de l'adresse et suppression des espace                                                                                                                                             | adresse_ligne1,<br>adresse_ligne2,<br>adresse_ligne3                                                                                      |         |       | X                | X      | X      | X     |                  |               |
-| INPI   | adresse_distance_inpi              | Concatenation des champs de l'adresse, suppression des espaces et des articles.<br> Utilisé pour calculer le score permettant de distinguer la similarité/dissimilarité entre deux adresses (INPI vs INSEE  | adresse_ligne1,<br>adresse_ligne2,<br>adresse_ligne3                                                                                      | X       | X     | X                | X      | X      | X     |                  |               |
-| INPI   | adresse_regex_inpi                 | Concatenation des champs de l'adresse, suppression des espaces, des articles et des numéros et ajout de (?:^\|(?<= ))( et )(?:(?= )\|$)                                                                     | adresse_ligne1,<br>adresse_ligne2,<br>adresse_ligne3                                                                                      | X       | X     | X                | X      | X      | X     |                  |               |
-| INPI   | ville_matching                     | Nettoyage regex de la ville et suppression des espaces. La même logique de nettoyage est appliquée coté INSEE                                                                                               | ville                                                                                                                                     | X       | X     | X                | X      | X      | X     | X                |               |
-| INPI   | voie_clean                         | Extraction du type de voie contenu dans l’adresse. Variable pivot servant à reprendre l’abrevation du type de voie comme à l’INSEE                                                                          | adresse_reconstituee_inpi                                                                                                                 |         |       |                  |        |        |       | X                |               |
-| INPI   | type_voie_matching                 | Extration du type de voie dans l'adresse et match avec abbrévation type de voie de l'INSEE                                                                                                                  | voie_clean                                                                                                                                |         |       |                  |        |        |       |                  |               |
-| INPI   | numero_voie_matching               | Extraction du premier numéro de voie dans l'adresse                                                                                                                                                         | adresse_reconstituee_inpi                                                                                                                 |         | X     |                  |        |        |       |                  | type_voie     |
-| INPI   | list_numero_voie_matching_inpi     | Liste contenant tous les numéros de l'adresse dans l'INPI                                                                                                                                                   | adresse_ligne1,<br>adresse_ligne2,<br>adresse_ligne3                                                                                      |         | X     | X                | X      |        |       |                  |               |
-| INPI   | last_libele_evt                    | Extraction du dernier libellé de l'événement connu pour une séquence, et appliquer cette information à l'ensemble de la séquence                                                                            | libelle_evt                                                                                                                               |         |       |                  |        |        |       | X                |               |
-| INPI   | status_admin                       | Informe du status ouvert/fermé concernant une séquence                                                                                                                                                      | last_libele_evt                                                                                                                           |         |       |                  |        |        |       | X                |               |
-| INPI   | status_ets                         | Informe du type d'établissement (SIE/PRI/SEC) concernant une séquence                                                                                                                                       | type                                                                                                                                      |         |       |                  |        |        |       | X                |               |
-| INSEE  | indiceRepetitionEtablissement_full | Récupération du nom complet des indices de répétion; par exemple B devient BIS, T devient TER                                                                                                               | indiceRepetitionEtablissement                                                                                                             |         |       |                  |        |        |       | X                |               |
-| INSEE  | adress_reconstituee_insee          | Concatenation des champs de l'adresse et suppression des espace                                                                                                                                             | numeroVoieEtablissement,<br>indiceRepetitionEtablissement_full,<br>voie_clean,libelleVoieEtablissement,<br>complementAdresseEtablissement |         |       | X                | X      |        |       |                  |               |
-| INSEE  | adress_distance_insee              | Concatenation des champs de l'adresse, suppression des espaces et des articles. <br>Utilisé pour calculer le score permettant de distinguer la similarité/dissimilarité entre deux adresses (INPI vs INSEE) | numeroVoieEtablissement,<br>indiceRepetitionEtablissement_full,<br>voie_clean,libelleVoieEtablissement,<br>complementAdresseEtablissement | X       | X     | X                | X      |        |       |                  |               |
-| INSEE  | list_numero_voie_matching_insee    | Liste contenant tous les numéros de l'adresse dans l'INSEE                                                                                                                                                  | numeroVoieEtablissement,<br>indiceRepetitionEtablissement_full,<br>voie_clean,libelleVoieEtablissement,<br>complementAdresseEtablissement | X       | X     | X                | X      |        |       |                  |               |
-| INSEE  | ville_matching                     | Nettoyage regex de la ville et suppression des espaces. La même logique de nettoyage est appliquée coté INPI                                                                                                | libelleCommuneEtablissement                                                                                                               | X       | X     | X                | X      |        |       | X                |               |
-| INSEE  | voie_clean                         | Extraction du type de voie contenu dans l’adresse. Variable type voie nom complet. <br>Exemple, l'INSEE indique CH, pour chemin, il faut donc indiquer CHEMIN                                               |                                                                                                                                           |         |       |                  |        |        |       |                  | type_voie     |
-| INSEE  | count_initial_insee                | Compte du nombre de siret (établissement) par siren (entreprise)                                                                                                                                            | siren                                                                                                                                     |         |       |                  |        |        |       |                  |               |
+### Sources of information  (meeting notes, Documentation, Query, URL)
 
-## Ouput
+1. Other source [Name](link)
+  * Source 1: Ensemble fonctions Presto a appliquer sur les arrays. Les fonctions uniques, distinct, intersect sont intéressantes dans notre cas de figure
 
-* Athena: 
-    * region: eu-west-3 
-    * Database: inpi 
-    *  Table: ets_insee_inpi 
-<!-- #endregion -->
 
-## Connexion serveru
+## Connexion serveur
 
 ```python
 import os 
@@ -133,6 +110,693 @@ s3 = service_s3.connect_S3(client = client,
                       bucket = 'calfdata') 
 athena = service_athena.connect_athena(client = client,
                       bucket = 'calfdata') 
+```
+
+# Evaluation nombre de cas
+
+## Similarité entre deux adresses
+
+Le rapprochement entre les deux tables, à savoir l’INSEE et l’INPI, va amener à la création de deux vecteurs d’adresse. Un vecteur avec des mots contenus spécifiquement à l’INSEE, et un second vecteur avec les mots de l’adresse de l’INPI. Notre objectif est de comparé ses deux vecteurs pour définir si ils sont identiques ou non. Nous avons distingué 7 cas de figures possibles entre les deux vecteurs (figure 1).
+
+![](https://drive.google.com/uc?export=view&id=1Qj_HooHrhFYSuTsoqFbl4Vxy9tN3V5Bu)
+
+## Définition
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Intersection_of_sets_A_and_B.svg/400px-Intersection_of_sets_A_and_B.svg.png)
+
+
+
+
+La table `ets_insee_inpi` contient 11 600 551 observations
+
+```python
+initial_obs = 11600551
+```
+
+## Tableau recapitulatif
+
+| Cas de figure | Titre                                                              | Total   | Total cumulé | pourcentage | Pourcentage cumulé | Comment                 |
+|---------------|--------------------------------------------------------------------|---------|--------------|-------------|--------------------|-------------------------|
+| 1             | similarité parfaite                                                | 7774986 | 7774986      | 0.67        | 0.67               | Match parfait           |
+| 2             | Dissimilarité parfaite                                             | 974727  | 8749713      | 0.08        | 0.75               | Exclusion parfaite      |
+| 3             | Intersection parfaite INPI                                         | 407320  | 9157033      | 0.035       | 0.78               | Match partiel parfait   |
+| 4             | Intersection parfaite INSEE                                        | 558956  | 9715989      | 0.048       | 0.83               | Match partiel parfait   |
+| 5             | Cardinality exception parfaite INSEE INPI, intersection positive   | 1056522 | 10772511     | 0.091       | 0.92               | Match partiel compliqué |
+| 6             | Cardinality exception INSEE supérieure INPI, intersection positive | 361353  | 11133864     | 0.03        | 0.95               | Match partiel compliqué |
+| 7             | Cardinality exception INPI supérieure INSEE, intersection positive | 466687  | 11600551     | 0.04        | 1                  | Match partiel compliqué |
+
+
+## Cas de figure 1: similarité parfaite
+
+* Definition: Les mots dans l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE
+- Math definition: $\frac{|INSEE \cap INPI|}{|INSEE|+|INPI|-|INSEE \cap INPI|} =1$
+- Règle: $ \text{intersection} = \text{union} \rightarrow \text{cas 1}$
+* Query [case 1](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/24e58c22-4a67-4a9e-b98d-4eb9d65e7f27)
+
+| list_inpi              | list_insee             | insee_except | intersection | union_ |
+|------------------------|------------------------|--------------|--------------|--------|
+| [BOULEVARD, HAUSSMANN] | [BOULEVARD, HAUSSMANN] | []           | 2            | 2      |
+| [QUAI, GABUT]          | [QUAI, GABUT]          | []           | 2            | 2      |
+| [BOULEVARD, VOLTAIRE]  | [BOULEVARD, VOLTAIRE]  | []           | 2            | 2      |
+
+- Nombre d'observation: 7 774 986
+    - Percentage initial: 0.67
+    
+
+```python
+cas_1 =  7774986
+cas_1 / initial_obs
+```
+
+```python
+query = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi,
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+  array_distinct(
+              array_except(
+                split(adresse_distance_insee, ' '), 
+                split(adresse_distance_inpi, ' ')
+              )
+            )as insee_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_
+  FROM "inpi"."ets_insee_inpi"-- limit 10
+  )
+  SELECT count(*) 
+  FROM test_proba
+  WHERE intersection = union_
+  -- 7 774 986
+"""
+```
+
+## Cas de figure 2: Dissimilarité parfaite
+
+* Definition: Aucun des mots de l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE
+* Math definition: $\frac{|INSEE \cap INPI|}{|INSEE|+|INPI|-|INSEE \cap INPI|}$
+* Query [case 2](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/4363e8b4-b3c7-4964-804f-4e66b0780a17)
+* Règle: $\text{intersection} = 0 \rightarrow \text{cas 2}$
+
+| list_inpi                               | list_insee                              | insee_except                            | intersection | union_ |
+|-----------------------------------------|-----------------------------------------|-----------------------------------------|--------------|--------|
+| [CHEMIN, MOUCHE]                        | [AVENUE, CHARLES, GAULLE, SAINT, GENIS] | [AVENUE, CHARLES, GAULLE, SAINT, GENIS] | 0            | 7      |
+| [AVENUE, CHARLES, GAULLE, SAINT, GENIS] | [CHEMIN, MOUCHE]                        | [CHEMIN, MOUCHE]                        | 0            | 7      |
+
+- Nombre d'observation: 974 727
+    - Percentage initial: 0.08
+
+```python
+cas_2 =974727
+
+cas_2/initial_obs 
+```
+
+```python
+cas_1 +cas_2
+```
+
+```python
+(cas_1 +cas_2)/initial_obs
+```
+
+```python
+query = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi,
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+  array_distinct(
+              array_except(
+                split(adresse_distance_insee, ' '), 
+                split(adresse_distance_inpi, ' ')
+              )
+            )as insee_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_
+  FROM "inpi"."ets_insee_inpi"-- limit 10
+  )
+  SELECT count(*) 
+  FROM test_proba
+  WHERE intersection = 0
+"""
+```
+
+## Cas de figure 3: Intersection parfaite INPI
+
+* Definition:  Tous les mots dans l’adresse de l’INPI  sont contenus dans l’adresse de l’INSEE
+* Math définition: $\frac{|INPI|}{|INSEE \cap INPI|}  \text{  = 1 and }|INSEE \cap INPI| <> |INSEE \cup INPI|$
+* Query [case 3](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/7fb420a1-5f50-4256-a2ba-b8c7c2b63c9b)
+* Règle: $|\text{list_inpi}|= \text{intersection}  \text{  = 1 and }\text{intersection} \neq  \text{union} \rightarrow \text{cas 3}$
+
+| list_inpi                    | list_insee                                               | insee_except                            | intersection | union_ |
+|------------------------------|----------------------------------------------------------|-----------------------------------------|--------------|--------|
+| [ALLEE, BERLIOZ]             | [ALLEE, BERLIOZ, CHEZ, MME, IDALI]                       | [CHEZ, MME, IDALI]                      | 2            | 5      |
+| [RUE, MAI, OLONNE, SUR, MER] | [RUE, HUIT, MAI, OLONNE, SUR, MER]                       | [HUIT]                                  | 5            | 6      |
+| [RUE, CAMILLE, CLAUDEL]      | [RUE, CAMILLE, CLAUDEL, VITRE]                           | [VITRE]                                 | 3            | 4      |
+| [ROUTE, D, ESLETTES]         | [ROUTE, D, ESLETTES, A]                                  | [A]                                     | 3            | 4      |
+| [AVENUE, MAI]                | [AVENUE, HUIT, MAI]                                      | [HUIT]                                  | 2            | 3      |
+| [RUE, SOUS, DINE]            | [RUE, SOUS, DINE, RES, SOCIALE, HENRIETTE, D, ANGEVILLE] | [RES, SOCIALE, HENRIETTE, D, ANGEVILLE] | 3            | 8      |
+
+- Nombre d'observation:407320
+    - Percentage initial: 0.03
+
+```python
+cas_3 = 407320
+cas_3/ initial_obs
+```
+
+```python
+cas_1 + cas_2 +cas_3
+```
+
+```python
+(cas_1 + cas_2 +cas_3)/initial_obs
+```
+
+```python
+query = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee, 
+  
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+  array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_ 
+  FROM 
+    "inpi"."ets_insee_inpi" -- limit 10
+    ) 
+SELECT 
+   count(*) 
+FROM 
+  test_proba 
+WHERE lenght_list_inpi = intersection AND intersection != union_
+-- LIMIT 10 
+--  10 -- WHERE intersection = 0
+
+"""
+```
+
+## Cas de figure 4: Intersection parfaite INSEE
+
+* Definition:  Tous les mots dans l’adresse de l’INSEE  sont contenus dans l’adresse de l’INPI
+* Math definition: $\frac{|INSEE|}{|INSEE \cap INPI|}  \text{  = 1 and }|INSEE \cap INPI| <> |INSEE \cup INPI|$
+* Query [case 4](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/65344bf4-8999-4ddb-a65e-11bb825f5f40)
+* Règle: $|\text{list_insee}|= \text{intersection}  \text{  = 1 and }\text{intersection} \neq  \text{union} \rightarrow \text{cas 4}$
+
+| list_inpi                                                 | list_insee                                      | insee_except | intersection | union_ |
+|-----------------------------------------------------------|-------------------------------------------------|--------------|--------------|--------|
+| [ROUTE, D, ENGHIEN]                                       | [ROUTE, ENGHIEN]                                | []           | 2            | 3      |
+| [ZAC, PARC, D, ACTIVITE, PARIS, EST, ALLEE, LECH, WALESA] | [ALLEE, LECH, WALESA, ZAC, PARC, ACTIVITE, EST] | []           | 7            | 9      |
+| [LIEU, DIT, PADER, QUARTIER, RIBERE]                      | [LIEU, DIT, RIBERE]                             | []           | 3            | 5      |
+| [A, BOULEVARD, CONSTANTIN, DESCAT]                        | [BOULEVARD, CONSTANTIN, DESCAT]                 | []           | 3            | 4      |
+| [RUE, MENILMONTANT, BP]                                   | [RUE, MENILMONTANT]                             | []           | 2            | 3      |
+
+- Nombre d'observation: 558 956
+    - Percentage initial: 0.04
+
+```python
+cas_4 = 558956
+cas_4 / initial_obs
+```
+
+```python
+cas_1 + cas_2 + cas_3 + cas_4
+```
+
+```python
+(cas_1 + cas_2 + cas_3 + cas_4) / initial_obs
+```
+
+```python
+query = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee, 
+  
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+  array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_ 
+  FROM 
+    "inpi"."ets_insee_inpi" -- limit 10
+    ) 
+SELECT 
+   count(*) 
+FROM 
+  test_proba 
+WHERE lenght_list_insee = intersection AND intersection != union_
+-- LIMIT 10 
+--  10 -- WHERE intersection = 0
+
+"""
+```
+
+## Cas de figure 5: Cardinality exception parfaite INSEE INPI, intersection positive
+
+* Definition:  L’adresse de l’INPI contient des mots de l’adresse de l’INPI et la cardinality des mots non présents dans les deux adresses est équivalente
+* Math definition: $|INPI|-|INPI \cap INSEE| = |INSEE|-|INPI \cap INSEE|$
+* Query [case 5](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/fec67222-3a7b-4bfb-af20-dd70d82932e3)
+* Règle: $|\text{insee_except}| = |\text{inpi_except}| \text{ and } \text{intersection} > 0 \rightarrow \text{cas 5}$
+
+| list_inpi                                                                                  | list_insee                                                                              | insee_except | inpi_except  | intersection | union_ |
+|--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|--------------|--------------|--------------|--------|
+| [AVENUE, GEORGES, VACHER, C, A, SAINTE, VICTOIRE, IMMEUBLE, CCE, CD, ZI, ROUSSET, PEYNIER] | [AVENUE, GEORGES, VACHER, C, A, STE, VICTOIRE, IMMEUBLE, CCE, CD, ZI, ROUSSET, PEYNIER] | [STE]        | [SAINTE]     | 12           | 14     |
+| [BIS, AVENUE, PAUL, DOUMER, RES, SAINT, MARTIN, BAT, D, C, O, M, ROSSI]                    | [BIS, AVENUE, PAUL, DOUMER, RES, ST, MARTIN, BAT, D, C, O, M, ROSSI]                    | [ST]         | [SAINT]      | 12           | 14     |
+| [ROUTE, DEPARTEMENTALE, CHEZ, SOREME, CENTRE, COMMERCIAL, L, OCCITAN, PLAN, OCCIDENTAL]    | [ROUTE, DEPARTEMENTALE, CHEZ, SOREME, CENTRE, COMMERCIAL, L, OCCITAN, PLAN, OC]         | [OC]         | [OCCIDENTAL] | 9            | 11     |
+| [LIEU, DIT, FOND, CHAMP, MALTON, PARC, EOLIEN, SUD, MARNE, PDL]                            | [LIEU, DIT, FONDD, CHAMP, MALTON, PARC, EOLIEN, SUD, MARNE, PDL]                        | [FONDD]      | [FOND]       | 9            | 11     |
+| [AVENUE, ROBERT, BRUN, ZI, CAMP, LAURENT, LOT, NUMERO, ST, BERNARD]                        | [AVENUE, ROBERT, BRUN, ZI, CAMP, LAURENT, LOT, ST, BERNARD, N]                          | [N]          | [NUMERO]     | 9            | 11     |
+| [PLACE, MARCEL, DASSAULT, PARC, D, ACTIVITES, TY, NEHUE, BATIMENT, H]                      | [PLACE, MARCEL, DASSAULT, PARC, D, ACTIVITES, TY, NEHUE, BAT, H]                        | [BAT]        | [BATIMENT]   | 9            | 11     |
+
+- Nombre d'observation: 1 056 522
+    - Percentage initial: 0.09
+
+```python
+cas_5 = 1056522
+cas_5/ initial_obs
+```
+
+```python
+cas_1 + cas_2 + cas_3 + cas_4 + cas_5
+```
+
+```python
+(cas_1 + cas_2 + cas_3 + cas_4 + cas_5)/initial_obs
+```
+
+```python
+query = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee, 
+  
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+  array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_ 
+  FROM 
+    "inpi"."ets_insee_inpi" -- limit 10
+    ) 
+SELECT 
+-- *
+   count(*) 
+FROM 
+  test_proba 
+WHERE cardinality(insee_except) = cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0
+--    
+--  10 -- WHERE intersection = 0
+
+"""
+```
+
+## Cas de figure 6: Cardinality exception INSEE supérieure INPI, intersection positive 
+
+* Definition:  L’adresse de l’INPI contient des mots de l’adresse de l’INPI et la cardinality des mots non présents dans l’adresse de l’INSEE est supérieure à la cardinality de l’adresse de l’INPI
+* Math definition: $|INPI|-|INPI \cap INSEE| < |INSEE|-|INPI \cap INSEE|$
+* Query [case 6](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/9bdce567-5871-4a5a-add4-d5cca6a83528)
+* Règle: $|\text{insee_except}| > |\text{inpi_except}| \text{ and } \text{intersection} > 0 \rightarrow \text{cas 6}$
+
+| list_inpi                                                                         | list_insee                                                                               | insee_except          | inpi_except   | intersection | union_ |
+|-----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|-----------------------|---------------|--------------|--------|
+| [AVENUE, AUGUSTE, PICARD, POP, UP, TOURVILLE, CC, EMPLACEMENT, DIT, PRECAIRE, N]  | [AVENUE, AUGUSTE, PICARD, POP, UP, TOURVILL, CC, TOURVILLE, EMPLACEMT, DIT, PRECAIRE, N] | [TOURVILL, EMPLACEMT] | [EMPLACEMENT] | 10           | 13     |
+| [ROUTE, COTE, D, AZUR, C, O, TENERGIE, ARTEPARC, MEYREUIL, BAT, A]                | [ROUTE, C, O, TENERGIE, ARTEPARC, MEYREUI, BAT, A, RTE, COTE, D, AZUR]                   | [MEYREUI, RTE]        | [MEYREUIL]    | 10           | 13     |
+| [C, O, TENERGIE, ARTEPARC, MEYREUIL, BATIMENT, A, ROUTE, COTE, D, AZUR]           | [ROUTE, C, O, TENERGIE, ARTEPARC, MEYREUI, BATIMENT, A, RTE, COTE, D, AZUR]              | [MEYREUI, RTE]        | [MEYREUIL]    | 10           | 13     |
+| [LOTISSEMENT, VANGA, DI, L, ORU, VILLA, FRANCK, TINA, CHEZ, COLOMBANI, CHRISTIAN] | [LIEU, DIT, VANGA, DI, L, ORU, VILLA, FRANCK, TINA, CHEZ, COLOMBANI, CHRISTIAN]          | [LIEU, DIT]           | [LOTISSEMENT] | 10           | 13     |
+| [AVENUE, DECLARATION, DROITS, HOMME, RES, CLOS, ST, MAMET, BAT, C, APPT]          | [AVENUE, DECL, DROITS, L, HOMME, RES, CLOS, ST, MAMET, BAT, C, APPT]                     | [DECL, L]             | [DECLARATION] | 10           | 13     |
+
+- Nombre d'observation: 361 353
+    - Percentage initial: 0.03
+
+```python
+cas_6 = 361353
+cas_6/ initial_obs
+```
+
+```python
+cas_1 + cas_2 +cas_3 +cas_4 + cas_5 +cas_6
+```
+
+```python
+(cas_1 + cas_2 +cas_3 +cas_4 + cas_5 +cas_6)/ initial_obs
+```
+
+```python
+query = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee, 
+  
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+  array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_ 
+  FROM 
+    "inpi"."ets_insee_inpi" -- limit 10
+    ) 
+SELECT 
+-- *
+   count(*) 
+FROM 
+  test_proba 
+WHERE cardinality(insee_except) > cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0
+--    
+--  10 -- WHERE intersection = 0
+
+"""
+```
+
+## Cas de figure 7: Cardinality exception INPI supérieure INSEE, intersection positive 
+
+* Definition:  L’adresse de l’INSEE contient des mots de l’adresse de l’INPI et la cardinality des mots non présents dans l’adresse de l’INPI est supérieure à la cardinality de l’adresse de l’INSEE
+* Math definition: $|INPI|-|INPI \cap INSEE| > |INSEE|-|INPI \cap INSEE|$
+* Règle: $|\text{insee_except}| < |\text{inpi_except}| \text{ and } \text{intersection} > 0 \rightarrow \text{cas 7}$
+
+| list_inpi                                                                                    | list_insee                                                                   | insee_except | inpi_except                 | intersection | union_ |
+|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------------|-----------------------------|--------------|--------|
+| [RTE, CABRIERES, D, AIGUES, CHEZ, MR, DOL, JEAN, CLAUDE, LIEUDIT, PLAN, PLUS, LOIN]          | [ROUTE, CABRIERES, D, AIGUES, CHEZ, MR, DOL, JEAN, CLAUDE, PLAN, PLUS, LOIN] | [ROUTE]      | [RTE, LIEUDIT]              | 11           | 14     |
+| [ROUTE, N, ZAC, PONT, RAYONS, CC, GRAND, VAL, ILOT, B, BAT, A, LOCAL]                        | [ZONE, ZAC, PONT, RAYONS, CC, GRAND, VAL, ILOT, B, BAT, A, LOCAL]            | [ZONE]       | [ROUTE, N]                  | 11           | 14     |
+| [BOULEVARD, PAUL, VALERY, BAT, B, ESC, H, APPT, C, O, MADAME, BLANDINE, BOVE]                | [BOULEVARD, PAUL, VALERY, BAT, B, ESC, H, APT, C, O, BOVE, BLANDINE]         | [APT]        | [APPT, MADAME]              | 11           | 14     |
+| [RUE, JEANNE, D, ARC, A, L, ANGLE, N, ROLLON, EME, ETAGE, POLE, PRO, AGRI]                   | [RUE, JEANNE, D, ARC, A, L, ANGLE, N, ROLLON, E, ETAGE]                      | [E]          | [EME, POLE, PRO, AGRI]      | 10           | 15     |
+| [CHEZ, MR, MME, DANIEL, DEZEMPTE, AVENUE, BALCONS, FRONT, MER, L, OISEAU, BLEU, BATIMENT, B] | [AVENUE, BALCONS, FRONT, MER, CHEZ, MR, MME, DANIEL, DEZEMPTE, L, OISEA]     | [OISEA]      | [OISEAU, BLEU, BATIMENT, B] | 10           | 15     |
+
+- Nombre d'observation: 466687
+    - Percentage initial: 0.04
+
+```python
+cas_7 = 466687
+cas_7 / initial_obs
+```
+
+```python
+cas_1 + cas_2 + cas_3 + cas_4 + cas_5+ cas_6 + cas_7
+```
+
+```python
+(cas_1 + cas_2 + cas_3 + cas_4 + cas_5+ cas_6 + cas_7)/initial_obs
+```
+
+```python
+query = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee, 
+  
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+  array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_ 
+  FROM 
+    "inpi"."ets_insee_inpi" -- limit 10
+    ) 
+SELECT 
+-- *
+   count(*) 
+FROM 
+  test_proba 
+WHERE cardinality(insee_except) < cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0
+--    
+--  10 -- WHERE intersection = 0
+
+"""
 ```
 
 # Parametres et fonctions
