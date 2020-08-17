@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.2
+      jupytext_version: 1.4.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -1137,7 +1137,7 @@ for nature, values in dic_.items():
 
 ## Step 3: Creation table Initial/Partiel/EVT/NEW
 
-Pour cette étape, on récupère les csv de ce [dossier](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/sql_output_preparation/), qu'on aggrège avant de préparer les valeurs manquantes.
+Pour cette étape, on récupère les csv de ce [dossier](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/sql_output_preparation_rep/), qu'on aggrège avant de préparer les valeurs manquantes.
 
 La table agrégée s'appelle `initial_partiel_evt_new_etb`.
 
@@ -1164,7 +1164,7 @@ athena.run_query(
 
 Dans cette étape, on crée une colonne `status`, qui indique si les lignes sont a ignorer (IGNORE) ou non (Vide). La logique c'est de prendre la date maximum des stocks partiels par quadruplet, si la date de transfert est inférieure a la date max, alors on ignore. La query prend quelques minutes.
 
-Output de la query va dans ce dossier [INPI/sql_output_status](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/sql_output_status/?region=eu-west-3&tab=overview)
+Output de la query va dans ce dossier [INPI/sql_output_status](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/sql_output_status_rep/?region=eu-west-3&tab=overview)
 La table avec `status` s'appelle `initial_partiel_evt_new_ets_status`.
 
 ```python
@@ -1204,7 +1204,7 @@ query = "DROP TABLE `{}`".format(table)
 output = athena.run_query(
                 query=query,
                 database=dic_['global']['database'],
-                s3_output='INPI/sql_output_status_rep'
+                s3_output=dic_['global']['output']
                     )
 ```
 
@@ -1488,6 +1488,10 @@ output = athena.run_query(
 ```
 
 ```python
+#print(query_.format(table))
+```
+
+```python
 dic_['global']['table_final_id']['REP']['EVT'] =  output['QueryExecutionId']
 dic_['global']['table_final_id']['REP']
 ```
@@ -1514,34 +1518,20 @@ query = """SELECT
 "Nom_Greffe",
 "Numero_Gestion",
 "Siren",
-
-"status",
-"origin",
-
+"origin",    
 Coalesce(
          try(date_parse(file_timestamp, '%Y-%m-%d')),
          try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss.SSS')),
          try(date_parse(file_timestamp, '%Y-%m-%d %hh:%mm:%ss')),
          try(cast(file_timestamp as timestamp))
        )  as file_timestamp,
-
-Coalesce(
-         try(date_parse(date_greffe, '%Y-%m-%d')),
-         try(date_parse(date_greffe, '%Y/%m/%d')),
-         try(date_parse(date_greffe, '%d %M %Y')),
-         try(date_parse(date_greffe, '%d/%m/%Y')),
-         try(date_parse(date_greffe, '%d-%m-%Y'))
-  ) as date_greffe,
-  
-"Libelle_Evt",  
-
 "Type",
 "Nom_Patronymique",
 "Nom_Usage",
 "Pseudonyme",
 "Prénoms",
 "Dénomination",
-"SIREN_PM",
+"Siren_PM",
 "Forme_Juridique",
 "Adresse_Ligne1",
 "Adresse_Ligne2",
@@ -1577,6 +1567,15 @@ Coalesce(
 "Conjoint_Collab_Date_Fin",
 "ID_Représentant",
 
+Coalesce(
+         try(date_parse(date_greffe, '%Y-%m-%d')),
+         try(date_parse(date_greffe, '%Y/%m/%d')),
+         try(date_parse(date_greffe, '%d %M %Y')),
+         try(date_parse(date_greffe, '%d/%m/%Y')),
+         try(date_parse(date_greffe, '%d-%m-%Y'))
+  )
+  as date_greffe,
+"Libelle_Evt",
 "csv_source"
 
 FROM {}
@@ -1620,17 +1619,101 @@ list_var = [
 "Nom_Greffe",
 "Numero_Gestion",
 "Siren",
-    
-"status",
-"origin",
-    
+"origin",    
 "file_timestamp",
-    
-"date_greffe",
-    
-"Libelle_Evt",  
-    
 "Type",
+"Nom_Patronymique",
+"Nom_Usage",
+"Pseudonyme",
+"Prénoms",
+"Dénomination",
+"Siren_PM",
+"Forme_Juridique",
+"Adresse_Ligne1",
+"Adresse_Ligne2",
+"Adresse_Ligne3",
+"Code_Postal",
+"Ville",
+"Code_Commune",
+"Pays",
+"Date_Naissance",
+"Ville_Naissance",
+"Pays_Naissance",
+"Nationalité",
+"Qualité",
+"Rep_Perm_Nom",
+"Rep_Perm_Nom_Usage",
+"Rep_Perm_Pseudo",
+"Rep_Perm_Prénoms",
+"Rep_Perm_Date_Naissance",
+"Rep_Perm_Ville_Naissance",
+"Rep_Perm_Pays_Naissance",
+"Rep_Perm_Nationalité",
+"Rep_Perm_Adr_Ligne1",
+"Rep_Perm_Adr_Ligne2",
+"Rep_Perm_Adr_Ligne3",
+"Rep_Perm_Code_Postal",
+"Rep_Perm_Ville",
+"Rep_Perm_Code_Commune",
+"Rep_Perm_Pays",
+"Conjoint_Collab_Nom_Patronym",
+"Conjoint_Collab_Nom_Usage",
+"Conjoint_Collab_Pseudo",
+"Conjoint_Collab_Prénoms",
+"Conjoint_Collab_Date_Fin",
+"ID_Représentant",
+"date_greffe",
+"Libelle_Evt",
+"csv_source"
+]
+
+query_ = """CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s ("""% (dic_['global']['database'],
+                                                   table)
+for x, value in enumerate(list_var):
+    if  x != len(list_var)-1:
+        q = "`{}` string,".format(value)
+        query_+=q
+    else:
+        q = "`{}` string".format(value)
+        query_+=q
+        end = """)
+     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+   'separatorChar' = ',',
+   'quoteChar' = '"'
+   )
+     LOCATION '%s'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1')""" % ("s3://calfdata/{}".format(
+                                                       "INPI/sql_output_final_rep")
+                                                 )
+        query_+=end
+athena.run_query(
+    query=query_,
+    database=dic_['global']['database'],
+    s3_output=dic_['global']['output']
+)
+```
+
+### Filtrer les dates de greffe
+
+```python
+query = """
+CREATE TABLE inpi.rep_test_filtered
+WITH (
+  format='PARQUET'
+) AS
+
+select 
+  initial_partiel_evt_new_rep_status_final.siren, 
+  initial_partiel_evt_new_rep_status_final."code greffe" as code_greffe, 
+  initial_partiel_evt_new_rep_status_final.nom_greffe, 
+  initial_partiel_evt_new_rep_status_final.numero_gestion, 
+  origin, 
+  initial_partiel_evt_new_rep_status_final.date_greffe, 
+  file_timestamp, 
+ "Libelle_Evt",  
+    "Type",
 "Nom_Patronymique",
 "Nom_Usage",
 "Pseudonyme",
@@ -1671,37 +1754,38 @@ list_var = [
 "Conjoint_Collab_Prénoms",
 "Conjoint_Collab_Date_Fin",
 "ID_Représentant",
-    
-"csv_source"
-    
-]
+"csv_source" 
+FROM 
+  initial_partiel_evt_new_rep_status_final 
+  LEFT JOIN (
+    select 
+      siren, 
+      "code greffe", 
+      numero_gestion, 
+      date_greffe, 
+      max(file_timestamp) as max_timestamp 
+    from 
+      initial_partiel_evt_new_rep_status_final 
+    GROUP BY 
+      siren, 
+      "code greffe", 
+      numero_gestion, 
+      date_greffe
+  ) as max_time 
+  ON initial_partiel_evt_new_rep_status_final.siren = max_time.siren 
+  AND initial_partiel_evt_new_rep_status_final."code greffe" = max_time."code greffe" 
+  AND initial_partiel_evt_new_rep_status_final.numero_gestion = max_time.numero_gestion 
+  AND initial_partiel_evt_new_rep_status_final.date_greffe = max_time.date_greffe 
+WHERE 
+  file_timestamp = max_timestamp 
+ORDER BY 
+  siren, 
+  code_greffe, 
+  numero_gestion, 
+  date_greffe
 
-query_ = """CREATE EXTERNAL TABLE IF NOT EXISTS %s.%s ("""% (dic_['global']['database'],
-                                                   table)
-for x, value in enumerate(list_var):
-    if  x != len(list_var)-1:
-        q = "`{}` string,".format(value)
-        query_+=q
-    else:
-        q = "`{}` string".format(value)
-        query_+=q
-        end = """)
-     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    WITH SERDEPROPERTIES (
-   'separatorChar' = ',',
-   'quoteChar' = '"'
-   )
-     LOCATION '%s'
-     TBLPROPERTIES ('has_encrypted_data'='false',
-              'skip.header.line.count'='1')""" % ("s3://calfdata/{}".format(
-                                                       "INPI/sql_output_final_rep")
-                                                 )
-        query_+=end
-athena.run_query(
-    query=query_,
-    database=dic_['global']['database'],
-    s3_output=dic_['global']['output']
-)
+"""
+
 ```
 
 ### Create csv
