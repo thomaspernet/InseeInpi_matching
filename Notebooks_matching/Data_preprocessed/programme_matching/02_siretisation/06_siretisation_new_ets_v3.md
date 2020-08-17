@@ -13,13 +13,35 @@ jupyter:
     name: python3
 ---
 
-# Preparation metric siretisation adresse INPI INSEE 
+# Analyse divergence adresse INPI INSEE
 
 Objective(s)
 
-  *   Creation d’une ou plusieurs metrics pour indiquer l’exactitude entre deux adresses
-  * Dans l’ideal, il faudrait trouver un indicateur qui reflète le niveau de validité entre les deux adresses, avant de passer aux autres tests, car c’est l’adresse qui détermine le siret
-  * Include DataStudio (tick if yes): false
+* Création d’une table d’analyse rapprochant la table préparée de l’INPI et la table préparée de l’INSEE
+* Analyse des similarités/dissimilarités entre l’adresse de l’INPI et de l’INSEE
+* L’analyse comporte le compte du nombre d’observations impactant chacun des cas (1 a 7)
+* L’analyse doit comporter pour chacun des cas, l’analyse des divergences en prenant en compte les informations complémentaires de la base de données, a savoir:
+  * Information sur établissement
+    * Date de création
+      * datecreationetablissement 
+      * date_début_activité 
+    * Etablissement ouvert/fermé
+      * etatadministratifetablissement 
+      * status_admin 
+    * Etablissement Siege 
+      * etablissementsiege 
+      * status_ets 
+  * Information sur l’adresse
+    * Code commune
+      * codecommuneetablissement 
+      * code_commune  
+    * Adresse 
+      * Numéro de voie
+        * numerovoieetablissement 
+        * numero_voie_matching 
+      * Type de voie
+        * typevoieetablissement 
+        * type_voie_matching 
   
 Metadata
 
@@ -110,6 +132,322 @@ s3 = service_s3.connect_S3(client = client,
                       bucket = 'calfdata') 
 athena = service_athena.connect_athena(client = client,
                       bucket = 'calfdata') 
+```
+
+# Creation table analyse
+
+## Full Pipeline
+
+*   Dans ce notebook, tous les codes SQL pour faire la siretisation seront présent de manière atomique afin de faciliter l’écriture des US. 
+   * La première query consiste à rapprocher les deux tables INPI & INSEE
+   * La second partie consiste a calculer Levenshtein edit distance sur l’adresse et l’enseigne 
+   * La troisième partie consiste a calculer la distance de Jaccard sur l’adresse (au niveau de la lettre) et l’enseigne
+   * La quatrième partie consiste a calculer la présence d’un des mots de l’adresse de l’INPI dans l’adresse de l’INSEE  
+   * La cinquième partie consiste a calculer la distance de Jaccard sur l’adresse au niveau du mot 
+
+```python
+query = """
+CREATE TABLE inpi.ets_insee_inpi WITH (format = 'PARQUET') AS WITH insee_inpi AS (
+  SELECT 
+    index_id, 
+    sequence_id, 
+    count_initial_insee, 
+    ets_final_sql.siren, 
+    siret, 
+    code_greffe, 
+    nom_greffe, 
+    numero_gestion, 
+    id_etablissement, 
+    status, 
+    origin, 
+    date_greffe, 
+    file_timestamp, 
+    datecreationetablissement, 
+    "date_début_activité", 
+    libelle_evt, 
+    last_libele_evt, 
+    etatadministratifetablissement, 
+    status_admin, 
+    type, 
+    etablissementsiege, 
+    status_ets, 
+    adresse_reconstituee_inpi, 
+    adresse_reconstituee_insee, 
+    adresse_regex_inpi, 
+    adresse_distance_inpi, 
+    adresse_distance_insee, 
+    list_numero_voie_matching_inpi, 
+    list_numero_voie_matching_insee, 
+    numerovoieetablissement, 
+    numero_voie_matching, 
+    typevoieetablissement, 
+    type_voie_matching, 
+    ets_final_sql.code_postal_matching, 
+    ets_final_sql.ville_matching, 
+    codecommuneetablissement, 
+    code_commune, 
+    enseigne, 
+    enseigne1etablissement, 
+    enseigne2etablissement, 
+    enseigne3etablissement 
+  FROM 
+    ets_final_sql 
+    INNER JOIN (
+      SELECT 
+        count_initial_insee, 
+        siren, 
+        siret, 
+        datecreationetablissement, 
+        etablissementsiege, 
+        etatadministratifetablissement, 
+        codepostaletablissement, 
+        codecommuneetablissement, 
+        ville_matching, 
+        list_numero_voie_matching_insee, 
+        numerovoieetablissement, 
+        typevoieetablissement, 
+        adresse_reconstituee_insee, 
+        adresse_distance_insee, 
+        enseigne1etablissement, 
+        enseigne2etablissement, 
+        enseigne3etablissement 
+      FROM 
+        insee_final_sql
+    ) as insee ON ets_final_sql.siren = insee.siren 
+    AND ets_final_sql.ville_matching = insee.ville_matching 
+    AND ets_final_sql.code_postal_matching = insee.codepostaletablissement 
+  WHERE 
+    status != 'IGNORE'
+) 
+SELECT 
+  index_id, 
+  sequence_id, 
+  count_initial_insee, 
+  siren, 
+  siret, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  status, 
+  origin, 
+  date_greffe, 
+  file_timestamp, 
+  datecreationetablissement, 
+  "date_début_activité", 
+  libelle_evt, 
+  last_libele_evt, 
+  etatadministratifetablissement, 
+  status_admin, 
+  type, 
+  etablissementsiege, 
+  status_ets, 
+  adresse_reconstituee_inpi, 
+  adresse_reconstituee_insee, 
+  adresse_regex_inpi, 
+  adresse_distance_inpi, 
+  adresse_distance_insee, 
+  (
+    CAST(
+      cardinality(
+        array_distinct(
+          split(adresse_distance_inpi, ' ')
+        )
+      ) AS DECIMAL(10, 2)
+    ) / (
+      CAST(
+        cardinality(
+          array_distinct(
+            split(adresse_distance_insee, ' ')
+          )
+        ) AS DECIMAL(10, 2)
+      )
+    )
+  ) / NULLIF(
+    CAST(
+      cardinality(
+        array_distinct(
+          array_except(
+            split(adresse_distance_insee, ' '), 
+            split(adresse_distance_inpi, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  )* (
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    )* cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    )
+  )/(
+    NULLIF(
+      CAST(
+        cardinality(
+          array_distinct(
+            array_union(
+              split(adresse_distance_inpi, ' '), 
+              split(adresse_distance_insee, ' ')
+            )
+          )
+        ) AS DECIMAL(10, 2)
+      ), 
+      0
+    ) * NULLIF(
+      CAST(
+        cardinality(
+          array_distinct(
+            array_intersect(
+              split(adresse_distance_inpi, ' '), 
+              split(adresse_distance_insee, ' ')
+            )
+          )
+        ) AS DECIMAL(10, 2)
+      ), 
+      0
+    )
+  ) as score_pairing, 
+  CASE WHEN cardinality(
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    )
+  ) = 0 THEN NULL ELSE array_distinct(
+    split(adresse_distance_inpi, ' ')
+  ) END as liste_distinct_inpi, 
+  CASE WHEN cardinality(
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    )
+  ) = 0 THEN NULL ELSE array_distinct(
+    split(adresse_distance_insee, ' ')
+  ) END as liste_distinct_insee, 
+  CASE WHEN cardinality(
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    )
+  ) = 0 THEN NULL ELSE array_distinct(
+    array_except(
+      split(adresse_distance_insee, ' '), 
+      split(adresse_distance_inpi, ' ')
+    )
+  ) END as insee_exclusion, 
+  CASE WHEN cardinality(
+    array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    )
+  ) = 0 THEN NULL ELSE array_distinct(
+    array_except(
+      split(adresse_distance_inpi, ' '), 
+      split(adresse_distance_insee, ' ')
+    )
+  ) END as inpi_exclusion, 
+  regexp_like(
+    adresse_reconstituee_insee, adresse_regex_inpi
+  ) as regex_adresse, 
+  list_numero_voie_matching_inpi, 
+  list_numero_voie_matching_insee, 
+  numerovoieetablissement, 
+  numero_voie_matching, 
+  typevoieetablissement, 
+  type_voie_matching, 
+  code_postal_matching, 
+  ville_matching, 
+  codecommuneetablissement, 
+  code_commune, 
+  enseigne, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement, 
+  levenshtein_distance(
+    enseigne, enseigne1etablissement
+  ) as edit_enseigne1, 
+  levenshtein_distance(
+    enseigne, enseigne2etablissement
+  ) as edit_enseigne2, 
+  levenshtein_distance(
+    enseigne, enseigne3etablissement
+  ) as edit_enseigne3, 
+  1 - CAST(
+    cardinality(
+      array_intersect(
+        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+        regexp_extract_all(
+          enseigne1etablissement, '(\d+)|([A-Z])'
+        )
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
+    CAST(
+      cardinality(
+        array_union(
+          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+          regexp_extract_all(
+            enseigne1etablissement, '(\d+)|([A-Z])'
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_enseigne1_lettre, 
+  1 - CAST(
+    cardinality(
+      array_intersect(
+        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+        regexp_extract_all(
+          enseigne2etablissement, '(\d+)|([A-Z])'
+        )
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
+    CAST(
+      cardinality(
+        array_union(
+          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+          regexp_extract_all(
+            enseigne2etablissement, '(\d+)|([A-Z])'
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_enseigne2_lettre, 
+  1 - CAST(
+    cardinality(
+      array_intersect(
+        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+        regexp_extract_all(
+          enseigne3etablissement, '(\d+)|([A-Z])'
+        )
+      )
+    ) AS DECIMAL(10, 2)
+  ) / NULLIF(
+    CAST(
+      cardinality(
+        array_union(
+          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
+          regexp_extract_all(
+            enseigne3etablissement, '(\d+)|([A-Z])'
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ), 
+    0
+  ) as jaccard_enseigne3_lettre 
+FROM 
+  insee_inpi
+
+"""
 ```
 
 # Evaluation nombre de cas
@@ -807,320 +1145,6 @@ WHERE cardinality(insee_except) < cardinality(inpi_except) AND intersection != 0
 - `edit_distance`: Calcul le nombre de modification a faire pour obtenir la même séquence
 - `import_dask`: Charge csv en Dask DataFrame pour clusteriser les calculs 
 
-
-# Full Pipeline
-
-*   Dans ce notebook, tous les codes SQL pour faire la siretisation seront présent de manière atomique afin de faciliter l’écriture des US. 
-   * La première query consiste à rapprocher les deux tables INPI & INSEE
-   * La second partie consiste a calculer Levenshtein edit distance sur l’adresse et l’enseigne 
-   * La troisième partie consiste a calculer la distance de Jaccard sur l’adresse (au niveau de la lettre) et l’enseigne
-   * La quatrième partie consiste a calculer la présence d’un des mots de l’adresse de l’INPI dans l’adresse de l’INSEE  
-   * La cinquième partie consiste a calculer la distance de Jaccard sur l’adresse au niveau du mot 
-
-```python
-query = """
-CREATE TABLE inpi.ets_insee_inpi WITH (format = 'PARQUET') AS WITH insee_inpi AS (
-  SELECT 
-    index_id, 
-    sequence_id, 
-    count_initial_insee, 
-    ets_final_sql.siren, 
-    siret, 
-    code_greffe, 
-    nom_greffe, 
-    numero_gestion, 
-    id_etablissement, 
-    status, 
-    origin, 
-    date_greffe, 
-    file_timestamp, 
-    datecreationetablissement, 
-    "date_début_activité", 
-    libelle_evt, 
-    last_libele_evt, 
-    etatadministratifetablissement, 
-    status_admin, 
-    type, 
-    etablissementsiege, 
-    status_ets, 
-    adresse_reconstituee_inpi, 
-    adresse_reconstituee_insee, 
-    adresse_regex_inpi, 
-    adresse_distance_inpi, 
-    adresse_distance_insee, 
-    list_numero_voie_matching_inpi, 
-    list_numero_voie_matching_insee, 
-    numerovoieetablissement, 
-    numero_voie_matching, 
-    typevoieetablissement, 
-    type_voie_matching, 
-    ets_final_sql.code_postal_matching, 
-    ets_final_sql.ville_matching, 
-    codecommuneetablissement, 
-    code_commune, 
-    enseigne, 
-    enseigne1etablissement, 
-    enseigne2etablissement, 
-    enseigne3etablissement 
-  FROM 
-    ets_final_sql 
-    INNER JOIN (
-      SELECT 
-        count_initial_insee, 
-        siren, 
-        siret, 
-        datecreationetablissement, 
-        etablissementsiege, 
-        etatadministratifetablissement, 
-        codepostaletablissement, 
-        codecommuneetablissement, 
-        ville_matching, 
-        list_numero_voie_matching_insee, 
-        numerovoieetablissement, 
-        typevoieetablissement, 
-        adresse_reconstituee_insee, 
-        adresse_distance_insee, 
-        enseigne1etablissement, 
-        enseigne2etablissement, 
-        enseigne3etablissement 
-      FROM 
-        insee_final_sql
-    ) as insee ON ets_final_sql.siren = insee.siren 
-    AND ets_final_sql.ville_matching = insee.ville_matching 
-    AND ets_final_sql.code_postal_matching = insee.codepostaletablissement 
-  WHERE 
-    status != 'IGNORE'
-) 
-SELECT 
-  index_id, 
-  sequence_id, 
-  count_initial_insee, 
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin, 
-  date_greffe, 
-  file_timestamp, 
-  datecreationetablissement, 
-  "date_début_activité", 
-  libelle_evt, 
-  last_libele_evt, 
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege, 
-  status_ets, 
-  adresse_reconstituee_inpi, 
-  adresse_reconstituee_insee, 
-  adresse_regex_inpi, 
-  adresse_distance_inpi, 
-  adresse_distance_insee, 
-  (
-    CAST(
-      cardinality(
-        array_distinct(
-          split(adresse_distance_inpi, ' ')
-        )
-      ) AS DECIMAL(10, 2)
-    ) / (
-      CAST(
-        cardinality(
-          array_distinct(
-            split(adresse_distance_insee, ' ')
-          )
-        ) AS DECIMAL(10, 2)
-      )
-    )
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_distinct(
-          array_except(
-            split(adresse_distance_insee, ' '), 
-            split(adresse_distance_inpi, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  )* (
-    cardinality(
-      array_distinct(
-        split(adresse_distance_inpi, ' ')
-      )
-    )* cardinality(
-      array_distinct(
-        split(adresse_distance_insee, ' ')
-      )
-    )
-  )/(
-    NULLIF(
-      CAST(
-        cardinality(
-          array_distinct(
-            array_union(
-              split(adresse_distance_inpi, ' '), 
-              split(adresse_distance_insee, ' ')
-            )
-          )
-        ) AS DECIMAL(10, 2)
-      ), 
-      0
-    ) * NULLIF(
-      CAST(
-        cardinality(
-          array_distinct(
-            array_intersect(
-              split(adresse_distance_inpi, ' '), 
-              split(adresse_distance_insee, ' ')
-            )
-          )
-        ) AS DECIMAL(10, 2)
-      ), 
-      0
-    )
-  ) as score_pairing, 
-  CASE WHEN cardinality(
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    )
-  ) = 0 THEN NULL ELSE array_distinct(
-    split(adresse_distance_inpi, ' ')
-  ) END as liste_distinct_inpi, 
-  CASE WHEN cardinality(
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    )
-  ) = 0 THEN NULL ELSE array_distinct(
-    split(adresse_distance_insee, ' ')
-  ) END as liste_distinct_insee, 
-  CASE WHEN cardinality(
-    array_distinct(
-      array_except(
-        split(adresse_distance_insee, ' '), 
-        split(adresse_distance_inpi, ' ')
-      )
-    )
-  ) = 0 THEN NULL ELSE array_distinct(
-    array_except(
-      split(adresse_distance_insee, ' '), 
-      split(adresse_distance_inpi, ' ')
-    )
-  ) END as insee_exclusion, 
-  CASE WHEN cardinality(
-    array_distinct(
-      array_except(
-        split(adresse_distance_inpi, ' '), 
-        split(adresse_distance_insee, ' ')
-      )
-    )
-  ) = 0 THEN NULL ELSE array_distinct(
-    array_except(
-      split(adresse_distance_inpi, ' '), 
-      split(adresse_distance_insee, ' ')
-    )
-  ) END as inpi_exclusion, 
-  regexp_like(
-    adresse_reconstituee_insee, adresse_regex_inpi
-  ) as regex_adresse, 
-  list_numero_voie_matching_inpi, 
-  list_numero_voie_matching_insee, 
-  numerovoieetablissement, 
-  numero_voie_matching, 
-  typevoieetablissement, 
-  type_voie_matching, 
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement, 
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement, 
-  levenshtein_distance(
-    enseigne, enseigne1etablissement
-  ) as edit_enseigne1, 
-  levenshtein_distance(
-    enseigne, enseigne2etablissement
-  ) as edit_enseigne2, 
-  levenshtein_distance(
-    enseigne, enseigne3etablissement
-  ) as edit_enseigne3, 
-  1 - CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(
-          enseigne1etablissement, '(\d+)|([A-Z])'
-        )
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(
-            enseigne1etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne1_lettre, 
-  1 - CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(
-          enseigne2etablissement, '(\d+)|([A-Z])'
-        )
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(
-            enseigne2etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne2_lettre, 
-  1 - CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(
-          enseigne3etablissement, '(\d+)|([A-Z])'
-        )
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(
-            enseigne3etablissement, '(\d+)|([A-Z])'
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne3_lettre 
-FROM 
-  insee_inpi
-
-"""
-```
 
 # Detail steps
 
