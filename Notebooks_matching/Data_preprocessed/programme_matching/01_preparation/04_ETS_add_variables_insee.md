@@ -147,7 +147,7 @@ CREATE TABLE inpi.insee_final_sql WITH (format = 'PARQUET') AS WITH remove_empty
     enseigne2Etablissement, 
     enseigne3Etablissement 
   FROM 
-    insee_rawdata -- WHERE siren = '797406154'  
+    insee_rawdata_juillet -- WHERE siren = '797406154'  
     --WHERE 
     --  siren = '530615913'
     ) 
@@ -697,4 +697,5 @@ regexp_extract_all(
   '[0-9]+'
   )) AS list_numero_voie_matching_insee,
 """
+```
 ```
