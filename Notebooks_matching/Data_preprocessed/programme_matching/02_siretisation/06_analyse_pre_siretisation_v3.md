@@ -35,6 +35,9 @@ Objective(s)
     * Code commune
       * codecommuneetablissement 
       * code_commune  
+    * Code commune
+      * codecommuneetablissement 
+      * code_commune  
     * Adresse 
       * Numéro de voie
         * numerovoieetablissement 
@@ -42,8 +45,14 @@ Objective(s)
       * Type de voie
         * typevoieetablissement 
         * type_voie_matching 
-  
-Metadata
+* L’analyse doit aussi comporter le nombre de doublon (les lignes index_id  par cas)
+  * Pour un cas donnée
+  * Pour un cas et test donnée
+* L’analyse doit aussi comporter le nombre de doublon (les sequences sequence_id  par cas)
+  * Pour un cas donnée
+  * Pour un cas et test donnée  
+
+## Metadata
 
 * Metadata parameters are available here: Ressources_suDYJ#_luZqd
 * Task type:
@@ -110,16 +119,12 @@ If link from the internet, save it to the cloud first
 ## Connexion serveur
 
 ```python
-import os 
-os.getcwd()
-```
-
-```python
 from awsPy.aws_authorization import aws_connector
 from awsPy.aws_athena import service_athena
 from awsPy.aws_s3 import service_s3
 from pathlib import Path
 import pandas as pd
+import numpy as np
 import os, shutil
 bucket = 'calfdata'
 path = os.getcwd()
@@ -129,9 +134,1107 @@ con = aws_connector.aws_instantiate(credential = path_cred,
                                        region = 'eu-west-3')
 client= con.client_boto()
 s3 = service_s3.connect_S3(client = client,
-                      bucket = 'calfdata') 
+                      bucket = 'calfdata', verbose = False) 
 athena = service_athena.connect_athena(client = client,
                       bucket = 'calfdata') 
+```
+
+# Functions
+
+La fonction ci dessous va générer le tableau d'analayse via une query, et retourne un dataframe Pandas, tout en stockant le resultat dans le dossier suivant:
+
+- [calfdata/Analyse_cas_similarite_adresse](https://s3.console.aws.amazon.com/s3/buckets/calfdata/Analyse_cas_similarite_adresse/?region=eu-west-3&tab=overview)
+
+```python
+a = ["True", "False", "NULL"]
+b = range(1,20)
+
+
+index = pd.MultiIndex.from_product([a, b], names = ["groups", "cnt_test"])
+
+df_ = (pd.DataFrame(index = index)
+       .reset_index()
+       .sort_values(by = ["cnt_test", "groups"])
+       .to_csv('cartesian_table.csv', index = False)
+      )
+
+s3.upload_file(file_to_upload = 'cartesian_table.csv',
+            destination_in_s3 = 'Temp_table_analyse_similarite')
+```
+
+```python
+create_table = """
+CREATE EXTERNAL TABLE IF NOT EXISTS inpi.cartesian_table (
+`groups`                     string,
+`cnt_test`                   int
+    )
+     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+   'separatorChar' = ',',
+   'quoteChar' = '"'
+   )
+     LOCATION 's3://calfdata/Temp_table_analyse_similarite'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1');"""
+output = athena.run_query(
+        query=create_table,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+```
+
+## Compte nombre obs par cas
+
+```python
+query_count = """
+WITH test_proba AS (
+  SELECT 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee, 
+  
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+  array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_ 
+  FROM 
+    "inpi"."ets_insee_inpi" -- limit 10
+    ) 
+SELECT 
+ count(*) 
+FROM 
+  test_proba 
+WHERE {}
+"""
+
+filter_ = ""
+```
+
+```python
+def compte_obs_cas(case = 1):
+    """
+    """
+    
+    if case ==1:
+        
+        filter_= "intersection = union_"
+        
+    if case ==2:
+        
+        filter_= "intersection = 0"
+    
+    if case ==3:
+        
+        filter_= "lenght_list_inpi = intersection AND intersection != union_"
+    
+    if case ==4:
+        
+        filter_= "lenght_list_insee = intersection AND intersection != union_"
+    
+    if case ==5:
+        
+        filter_= "cardinality(insee_except) = cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0"
+    
+    if case ==6:
+        
+        filter_= "cardinality(insee_except) > cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+    
+    if case ==7:
+        
+        filter_= "cardinality(insee_except) < cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+    
+    query_ =query_count.format(filter_)
+    
+    output = athena.run_query(
+        query=query_,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+
+    results = False
+    
+    filename = 'nb_obs_cas_{}.csv'.format(case)
+    
+    while results != True:
+        source_key = "{}/{}.csv".format(
+                            'INPI/sql_output',
+                            output['QueryExecutionId']
+                                   )
+        destination_key = "{}/{}".format(
+                                'Analyse_cas_similarite_adresse',
+                                filename
+                            )
+
+        results = s3.copy_object_s3(
+                                source_key = source_key,
+                                destination_key = destination_key,
+                                remove = True
+                            )
+        
+    df_ = (s3.read_df_from_s3(
+        key = 'Analyse_cas_similarite_adresse/{}'.format(filename), sep = ',')
+          ).values[0][0]
+    
+    return df_
+```
+
+## Compte nombre duplicate par cas
+
+```python
+query_duplicate_cas = """
+WITH test_proba AS (
+  SELECT 
+    {0}, 
+    Coalesce(
+      try(
+        date_parse(
+          datecreationetablissement, '%Y-%m-%d'
+        )
+      ), 
+      try(
+        date_parse(
+          datecreationetablissement, '%Y-%m-%d %hh:%mm:%ss.SSS'
+        )
+      ), 
+      try(
+        date_parse(
+          datecreationetablissement, '%Y-%m-%d %hh:%mm:%ss'
+        )
+      ), 
+      try(
+        cast(
+          datecreationetablissement as timestamp
+        )
+      )
+    ) as datecreationetablissement, 
+    Coalesce(
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d'
+        )
+      ), 
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d %hh:%mm:%ss.SSS'
+        )
+      ), 
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d %hh:%mm:%ss'
+        )
+      ), 
+      try(
+        cast(
+          "date_début_activité" as timestamp
+        )
+      )
+    ) as date_debut_activite, 
+    etatadministratifetablissement, 
+    status_admin, 
+    etablissementsiege, 
+    status_ets, 
+    codecommuneetablissement, 
+    code_commune, 
+    codepostaletablissement, 
+    code_postal_matching, 
+    numerovoieetablissement, 
+    numero_voie_matching, 
+    typevoieetablissement, 
+    type_voie_matching, 
+    adresse_distance_inpi, 
+    adresse_distance_insee, 
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee, 
+    array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as inpi_except, 
+    array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as insee_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_ 
+  FROM 
+    "inpi"."ets_insee_inpi" -- limit 10
+    ) 
+SELECT 
+  * 
+FROM 
+  (
+    WITH tests AS (
+      SELECT 
+        {0}, 
+        adresse_distance_inpi, 
+        adresse_distance_insee, 
+        datecreationetablissement, 
+        date_debut_activite, 
+        CASE WHEN datecreationetablissement = date_debut_activite THEN 'True' WHEN datecreationetablissement IS NULL 
+        OR date_debut_activite IS NULL THEN 'NULL' ELSE 'False' END AS test_date, 
+        etatadministratifetablissement, 
+        status_admin, 
+        CASE WHEN etatadministratifetablissement = status_admin THEN 'True' WHEN etatadministratifetablissement = '' 
+        OR status_admin = '' THEN 'NULL' ELSE 'False' END AS test_status_admin, 
+        etablissementsiege, 
+        status_ets, 
+        CASE WHEN etablissementsiege = status_ets THEN 'True' WHEN etablissementsiege = '' 
+        OR status_ets = '' THEN 'NULL' ELSE 'False' END AS test_siege, 
+        codecommuneetablissement, 
+        code_commune, 
+        CASE WHEN codecommuneetablissement = code_commune THEN 'True' WHEN codecommuneetablissement = '' 
+        OR code_commune = '' THEN 'NULL' ELSE 'False' END AS test_code_commune, 
+        codepostaletablissement, 
+        code_postal_matching, 
+        CASE WHEN codepostaletablissement = code_postal_matching THEN 'True' WHEN codepostaletablissement = '' 
+        OR code_postal_matching = '' THEN 'NULL' ELSE 'False' END AS test_code_postal, 
+        numerovoieetablissement, 
+        numero_voie_matching, 
+        CASE WHEN numerovoieetablissement = numero_voie_matching THEN 'True' WHEN numerovoieetablissement = '' 
+        OR numero_voie_matching = '' THEN 'NULL' ELSE 'False' END AS test_numero_voie, 
+        typevoieetablissement, 
+        type_voie_matching, 
+        CASE WHEN typevoieetablissement = type_voie_matching THEN 'True' WHEN typevoieetablissement = '' 
+        OR type_voie_matching = '' THEN 'NULL' ELSE 'False' END AS test_type_voie, 
+        list_inpi, 
+        list_insee, 
+        inpi_except, 
+        insee_except, 
+        intersection, 
+        union_ 
+      FROM 
+        test_proba 
+      WHERE 
+        {1}
+    ) 
+    SELECT 
+      count_index_id, 
+      COUNT(*) count_duplicate_index_id 
+    FROM 
+      (
+        SELECT 
+          {0}, 
+          COUNT(*) AS count_index_id 
+        FROM 
+          tests 
+        GROUP BY 
+          {0}
+      ) 
+    GROUP BY 
+      count_index_id -- WHERE test_type_voie = 'False'
+      ) 
+ORDER BY 
+  count_index_id,
+  count_duplicate_index_id DESC
+"""
+```
+
+```python
+def compte_dup_cas(var = 'index_id', case = 1):
+    """
+    """
+    
+    if case ==1:
+        
+        filter_= "intersection = union_"
+        
+    if case ==2:
+        
+        filter_= "intersection = 0"
+    
+    if case ==3:
+        
+        filter_= "lenght_list_inpi = intersection AND intersection != union_"
+    
+    if case ==4:
+        
+        filter_= "lenght_list_insee = intersection AND intersection != union_"
+    
+    if case ==5:
+        
+        filter_= "cardinality(insee_except) = cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0"
+    
+    if case ==6:
+        
+        filter_= "cardinality(insee_except) > cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+    
+    if case ==7:
+        
+        filter_= "cardinality(insee_except) < cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+    
+    query_ =query_duplicate_cas.format(var, filter_)
+    
+    output = athena.run_query(
+        query=query_,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+
+    results = False
+    
+    filename = 'nb_dup_cas_{}.csv'.format(case)
+    
+    while results != True:
+        source_key = "{}/{}.csv".format(
+                            'INPI/sql_output',
+                            output['QueryExecutionId']
+                                   )
+        destination_key = "{}/{}".format(
+                                'Analyse_cas_similarite_adresse',
+                                filename
+                            )
+
+        results = s3.copy_object_s3(
+                                source_key = source_key,
+                                destination_key = destination_key,
+                                remove = True
+                            )
+        
+    df_ = (s3.read_df_from_s3(
+        key = 'Analyse_cas_similarite_adresse/{}'.format(filename), sep = ',')
+           .assign(percentage = lambda x: x['count_duplicate_index_id'] / 
+                  x['count_duplicate_index_id'].sum())
+           .style
+           .bar(subset= ['count_duplicate_index_id'],
+                   color='#d65f5f')
+           .format("{:.2%}", subset =  ['percentage'])
+           .format("{:,.0f}", subset =  ['count_duplicate_index_id'])
+           
+          )
+    
+    return df_
+```
+
+## Compte nombre obs par cas et test
+
+```python
+query_count_case = """
+WITH test_proba AS (
+  SELECT 
+  Coalesce(
+         try(date_parse(datecreationetablissement, '%Y-%m-%d')),
+         try(date_parse(datecreationetablissement, '%Y-%m-%d %hh:%mm:%ss.SSS')),
+         try(date_parse(datecreationetablissement, '%Y-%m-%d %hh:%mm:%ss')),
+         try(cast(datecreationetablissement as timestamp))
+       )  as datecreationetablissement,
+
+Coalesce(
+         try(date_parse("date_début_activité", '%Y-%m-%d')),
+         try(date_parse("date_début_activité", '%Y-%m-%d %hh:%mm:%ss.SSS')),
+         try(date_parse("date_début_activité", '%Y-%m-%d %hh:%mm:%ss')),
+         try(cast("date_début_activité" as timestamp))
+  ) as date_debut_activite,
+  etatadministratifetablissement, status_admin,
+  etablissementsiege,status_ets,
+  codecommuneetablissement, code_commune,
+  codepostaletablissement, code_postal_matching,
+  numerovoieetablissement, numero_voie_matching,
+  typevoieetablissement, type_voie_matching,
+  
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee,
+  
+  array_distinct(
+              array_except(
+                split(adresse_distance_insee, ' '), 
+                split(adresse_distance_inpi, ' ')
+              )
+            )as inpi_except, 
+  array_distinct(
+              array_except(
+                split(adresse_distance_inpi, ' '), 
+                split(adresse_distance_insee, ' ')
+              )
+            )as insee_except,
+  
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_
+  FROM "inpi"."ets_insee_inpi"-- limit 10
+  )
+  SELECT *
+  FROM (WITH tests AS (
+    SELECT 
+  datecreationetablissement,date_debut_activite,
+  CASE WHEN datecreationetablissement = date_debut_activite THEN 'True'
+  WHEN datecreationetablissement IS NULL OR date_debut_activite IS NULL THEN 'NULL'
+  ELSE 'False' END AS test_date,
+  
+  etatadministratifetablissement,status_admin,
+  CASE WHEN etatadministratifetablissement = status_admin THEN 'True' 
+  WHEN etatadministratifetablissement = '' OR status_admin = '' THEN 'NULL'
+  ELSE 'False' END AS test_status_admin,
+  
+  etablissementsiege,status_ets,
+  CASE WHEN etablissementsiege = status_ets THEN 'True' 
+  WHEN etablissementsiege = '' OR status_ets = '' THEN 'NULL'
+  ELSE 'False' END AS test_siege,
+  
+  codecommuneetablissement,code_commune,
+  CASE WHEN codecommuneetablissement = code_commune THEN 'True' 
+  WHEN codecommuneetablissement = '' OR code_commune = '' THEN 'NULL'
+  ELSE 'False' END AS test_code_commune,
+  
+  codepostaletablissement,code_postal_matching,
+  CASE WHEN codepostaletablissement = code_postal_matching THEN 'True' 
+  WHEN codepostaletablissement = '' OR code_postal_matching = '' THEN 'NULL'
+  ELSE 'False' END AS test_code_postal,
+  
+  numerovoieetablissement,numero_voie_matching,
+  CASE WHEN numerovoieetablissement = numero_voie_matching THEN 'True' 
+  WHEN numerovoieetablissement = '' OR numero_voie_matching = '' THEN 'NULL'
+  ELSE 'False' END AS test_numero_voie,
+  
+  typevoieetablissement,type_voie_matching,
+  CASE WHEN typevoieetablissement = type_voie_matching THEN 'True'
+  WHEN typevoieetablissement = '' OR type_voie_matching = '' THEN 'NULL'
+  ELSE 'False' END AS test_type_voie,
+  
+  list_inpi, list_insee, inpi_except, insee_except, intersection, union_
+  
+  FROM test_proba
+  WHERE {}
+    )
+        
+  SELECT DISTINCT(test_date) as groups,
+        count_test_date,
+        count_test_status_admin,
+        count_test_siege,
+        count_test_commune,
+        count_test_cp,
+        count_test_num_voie,
+        count_test_type_voie
+        
+  FROM tests
+  LEFT JOIN (
+    SELECT test_date as groups,  count(*) as count_test_date
+    FROM tests
+    GROUP BY test_date
+    ) as date_
+  ON date_.groups = tests.test_date
+        
+  LEFT JOIN (
+    SELECT test_status_admin as groups,  count(*) as count_test_status_admin
+    FROM tests
+    GROUP BY test_status_admin
+    ) as admin_
+  ON admin_.groups = tests.test_date      
+        
+LEFT JOIN (
+    SELECT test_siege as groups,  count(*) as count_test_siege
+    FROM tests
+    GROUP BY test_siege
+    ) as siege_
+  ON siege_.groups = tests.test_date
+
+LEFT JOIN (
+      SELECT test_code_commune as groups,  count(*) as count_test_commune
+      FROM tests
+      GROUP BY test_code_commune
+      ) as code_commune_
+    ON code_commune_.groups = tests.test_date
+
+LEFT JOIN (
+        SELECT test_code_postal as groups,  count(*) as count_test_cp
+        FROM tests
+        GROUP BY test_code_postal
+        ) as cp_
+      ON cp_.groups = tests.test_date
+
+LEFT JOIN (
+          SELECT test_numero_voie as groups,  count(*) as count_test_num_voie
+          FROM tests
+          GROUP BY test_numero_voie
+          ) as num_voie_
+        ON num_voie_.groups = tests.test_date
+
+LEFT JOIN (
+            SELECT test_type_voie as groups,  count(*) as count_test_type_voie
+            FROM tests
+            GROUP BY test_type_voie
+            ) as type_voie_
+          ON type_voie_.groups = tests.test_date
+ )
+"""
+```
+
+```python
+def generate_analytical_table(case = 1):
+    """
+    """
+    if case ==1:
+        
+        filter_= "intersection = union_"
+        
+    if case ==2:
+        
+        filter_= "intersection = 0"
+    
+    if case ==3:
+        
+        filter_= "lenght_list_inpi = intersection AND intersection != union_"
+    
+    if case ==4:
+        
+        filter_= "lenght_list_insee = intersection AND intersection != union_"
+    
+    if case ==5:
+        
+        filter_= "cardinality(insee_except) = cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0"
+    
+    if case ==6:
+        
+        filter_= "cardinality(insee_except) > cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+    
+    if case ==7:
+        
+        filter_= "cardinality(insee_except) < cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+
+    output = athena.run_query(
+        query=query_count_case.format(filter_),
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+
+    results = False
+    filename = 'cas_{}.csv'.format(case)
+    
+    while results != True:
+        source_key = "{}/{}.csv".format(
+                            'INPI/sql_output',
+                            output['QueryExecutionId']
+                                   )
+        destination_key = "{}/{}".format(
+                                'Analyse_cas_similarite_adresse',
+                                filename
+                            )
+
+        results = s3.copy_object_s3(
+                                source_key = source_key,
+                                destination_key = destination_key,
+                                remove = True
+                            )
+
+    test_1 = (s3.read_df_from_s3(
+        key = 'Analyse_cas_similarite_adresse/{}'.format(filename), sep = ',')
+              .assign(test = 'cas_{}'.format(case),
+                     count_test_date_pct = lambda x: x['count_test_date'] / x['count_test_date'].sum(),
+                     count_test_status_admin_pct = lambda x: x['count_test_status_admin'] / x['count_test_status_admin'].sum(),
+                     count_test_siege_pct = lambda x: x['count_test_siege'] / x['count_test_siege'].sum(),
+                     count_test_commune_pct = lambda x: x['count_test_commune'] / x['count_test_commune'].sum(),
+                     count_test_cp_pct = lambda x: x['count_test_cp'] / x['count_test_cp'].sum(),
+                     count_test_num_voie_pct = lambda x: x['count_test_num_voie'] / x['count_test_num_voie'].sum(),
+                     count_test_type_voie_pct = lambda x: x['count_test_type_voie'] / x['count_test_type_voie'].sum(),
+                     )
+
+              .replace({'groups' :{np.nan: 'Null'}})
+              #.set_index(['test'])
+              .reindex(columns = [
+                  'test',
+                  'groups',
+                   'count_test_num_voie','count_test_num_voie_pct',
+                  'count_test_type_voie','count_test_type_voie_pct',
+                  'count_test_commune','count_test_commune_pct',
+                  'count_test_date','count_test_date_pct',
+                  'count_test_status_admin','count_test_status_admin_pct',
+                  'count_test_siege','count_test_siege_pct',
+                  
+                  'count_test_cp','count_test_cp_pct',
+                 
+              ])
+              .fillna(0)
+              .style
+              .format("{:,.0f}", subset =  ['count_test_date',
+                                            'count_test_status_admin',
+                                            'count_test_siege',
+                                            'count_test_commune',
+                                            'count_test_cp',
+                                            'count_test_num_voie',
+                                            'count_test_type_voie'])
+              .format("{:.2%}", subset =  ['count_test_date_pct',
+                                           'count_test_status_admin_pct',
+                                           'count_test_siege_pct',
+                                           'count_test_commune_pct',
+                                           'count_test_cp_pct',
+                                           'count_test_num_voie_pct',
+                                           'count_test_type_voie_pct'])
+              .bar(subset= ['count_test_date',
+                                            'count_test_status_admin',
+                                            'count_test_siege',
+                                            'count_test_commune',
+                                            'count_test_cp',
+                                            'count_test_num_voie',
+                                            'count_test_type_voie'],
+                   color='#d65f5f')
+              #.unstack(0)
+             )    
+    
+    return test_1
+```
+
+## Compte nombre duplicate par cas et test
+
+```python
+query_dup_cas = """
+WITH test_proba AS (
+  SELECT 
+  {0},
+  Coalesce(
+         try(date_parse(datecreationetablissement, '%Y-%m-%d')),
+         try(date_parse(datecreationetablissement, '%Y-%m-%d %hh:%mm:%ss.SSS')),
+         try(date_parse(datecreationetablissement, '%Y-%m-%d %hh:%mm:%ss')),
+         try(cast(datecreationetablissement as timestamp))
+       )  as datecreationetablissement,
+
+Coalesce(
+         try(date_parse("date_début_activité", '%Y-%m-%d')),
+         try(date_parse("date_début_activité", '%Y-%m-%d %hh:%mm:%ss.SSS')),
+         try(date_parse("date_début_activité", '%Y-%m-%d %hh:%mm:%ss')),
+         try(cast("date_début_activité" as timestamp))
+  ) as date_debut_activite,
+  etatadministratifetablissement, status_admin,
+  etablissementsiege,status_ets,
+  codecommuneetablissement, code_commune,
+  codepostaletablissement, code_postal_matching,
+  numerovoieetablissement, numero_voie_matching,
+  typevoieetablissement, type_voie_matching,
+  
+    array_distinct(
+      split(adresse_distance_inpi, ' ')
+    ) as list_inpi, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as lenght_list_inpi, 
+  
+    array_distinct(
+      split(adresse_distance_insee, ' ')
+    ) as list_insee, 
+  
+    cardinality(
+      array_distinct(
+        split(adresse_distance_insee, ' ')
+      )
+    ) as lenght_list_insee,
+  
+  array_distinct(
+              array_except(
+                split(adresse_distance_insee, ' '), 
+                split(adresse_distance_inpi, ' ')
+              )
+            )as inpi_except, 
+  array_distinct(
+              array_except(
+                split(adresse_distance_inpi, ' '), 
+                split(adresse_distance_insee, ' ')
+              )
+            )as insee_except,
+  
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_
+  FROM "inpi"."ets_insee_inpi"-- limit 10
+  )
+  SELECT *
+  FROM (WITH tests AS (
+    SELECT 
+    {0},
+  datecreationetablissement,date_debut_activite,
+  CASE WHEN datecreationetablissement = date_debut_activite THEN 'True'
+  WHEN datecreationetablissement IS NULL OR date_debut_activite IS NULL THEN 'NULL'
+  ELSE 'False' END AS test_date,
+  
+  etatadministratifetablissement,status_admin,
+  CASE WHEN etatadministratifetablissement = status_admin THEN 'True' 
+  WHEN etatadministratifetablissement = '' OR status_admin = '' THEN 'NULL'
+  ELSE 'False' END AS test_status_admin,
+  
+  etablissementsiege,status_ets,
+  CASE WHEN etablissementsiege = status_ets THEN 'True' 
+  WHEN etablissementsiege = '' OR status_ets = '' THEN 'NULL'
+  ELSE 'False' END AS test_siege,
+  
+  codecommuneetablissement,code_commune,
+  CASE WHEN codecommuneetablissement = code_commune THEN 'True' 
+  WHEN codecommuneetablissement = '' OR code_commune = '' THEN 'NULL'
+  ELSE 'False' END AS test_code_commune,
+  
+  codepostaletablissement,code_postal_matching,
+  CASE WHEN codepostaletablissement = code_postal_matching THEN 'True' 
+  WHEN codepostaletablissement = '' OR code_postal_matching = '' THEN 'NULL'
+  ELSE 'False' END AS test_code_postal,
+  
+  numerovoieetablissement,numero_voie_matching,
+  CASE WHEN numerovoieetablissement = numero_voie_matching THEN 'True' 
+  WHEN numerovoieetablissement = '' OR numero_voie_matching = '' THEN 'NULL'
+  ELSE 'False' END AS test_numero_voie,
+  
+  typevoieetablissement,type_voie_matching,
+  CASE WHEN typevoieetablissement = type_voie_matching THEN 'True'
+  WHEN typevoieetablissement = '' OR type_voie_matching = '' THEN 'NULL'
+  ELSE 'False' END AS test_type_voie,
+  
+  list_inpi, list_insee, inpi_except, insee_except, intersection, union_
+  
+  FROM test_proba
+  WHERE {1}
+    )
+        SELECT 
+        cartesian_table.groups, 
+        cnt_test,
+        cnt_index_date,
+        cnt_index_admin,
+        cnt_index_siege,
+        cnt_index_commune,
+        cnt_index_cp,
+        cnt_index_num_voie,
+        cnt_index_type_voie
+
+        
+  FROM cartesian_table
+        
+  LEFT JOIN (
+    
+    SELECT groups, cnt_test_date, COUNT(*) AS cnt_index_date   
+    FROM (    
+    SELECT test_date as groups,{0},   count(*) as cnt_test_date
+    FROM tests
+    GROUP BY test_date, {0}
+    ) as date_
+    GROUP BY groups, cnt_test_date
+        ) as count_dup_date
+   ON count_dup_date.groups = cartesian_table.groups and
+        count_dup_date.cnt_test_date = cartesian_table.cnt_test
+        
+   LEFT JOIN (
+    
+    SELECT groups, cnt_test_admin, COUNT(*) AS cnt_index_admin
+    FROM (    
+    SELECT test_status_admin as groups,{0}, count(*) as cnt_test_admin
+    FROM tests
+    GROUP BY test_status_admin, {0}
+    ) as admin_
+    GROUP BY groups, cnt_test_admin
+        ) as count_dup_admin_
+   ON count_dup_admin_.groups = cartesian_table.groups and
+        count_dup_admin_.cnt_test_admin = cartesian_table.cnt_test   
+        
+   
+   LEFT JOIN (
+    
+    SELECT groups, cnt_test_siege, COUNT(*) AS cnt_index_siege
+    FROM (    
+    SELECT test_siege as groups,{0}, count(*) as cnt_test_siege
+    FROM tests
+    GROUP BY test_siege, {0}
+    ) as admin_
+    GROUP BY groups, cnt_test_siege
+        ) as count_dup_siege_
+   ON count_dup_siege_.groups = cartesian_table.groups and
+        count_dup_siege_.cnt_test_siege = cartesian_table.cnt_test
+        
+   LEFT JOIN (
+    
+    SELECT groups, cnt_test_commune, COUNT(*) AS cnt_index_commune
+    FROM (    
+    SELECT test_code_commune as groups,{0}, count(*) as cnt_test_commune
+    FROM tests
+    GROUP BY test_code_commune, {0}
+    ) as siege_
+    GROUP BY groups, cnt_test_commune
+        ) as count_dup_commune_
+   ON count_dup_commune_.groups = cartesian_table.groups and
+        count_dup_commune_.cnt_test_commune = cartesian_table.cnt_test
+        
+    LEFT JOIN (
+    
+    SELECT groups, cnt_test_cp, COUNT(*) AS cnt_index_cp
+    FROM (    
+    SELECT test_code_postal as groups,{0}, count(*) as cnt_test_cp
+    FROM tests
+    GROUP BY test_code_postal, {0}
+    ) as cp_
+    GROUP BY groups, cnt_test_cp
+        ) as count_dup_cp_
+   ON count_dup_cp_.groups = cartesian_table.groups and
+        count_dup_cp_.cnt_test_cp = cartesian_table.cnt_test
+        
+   LEFT JOIN (
+    
+    SELECT groups, cnt_test_num_voie, COUNT(*) AS cnt_index_num_voie
+    FROM (    
+    SELECT test_numero_voie as groups,{0}, count(*) as cnt_test_num_voie
+    FROM tests
+    GROUP BY test_numero_voie, {0}
+    ) as num_voie_
+    GROUP BY groups, cnt_test_num_voie
+        ) as count_dup_num_voie_
+   ON count_dup_num_voie_.groups = cartesian_table.groups and
+        count_dup_num_voie_.cnt_test_num_voie = cartesian_table.cnt_test
+        
+   LEFT JOIN (
+    
+    SELECT groups, cnt_test_type_voie, COUNT(*) AS cnt_index_type_voie
+    FROM (    
+    SELECT test_type_voie as groups,{0}, count(*) as cnt_test_type_voie
+    FROM tests
+    GROUP BY test_type_voie, {0}
+    ) as type_voie_
+    GROUP BY groups, cnt_test_type_voie
+        ) as count_dup_type_voie_
+   ON count_dup_type_voie_.groups = cartesian_table.groups and
+        count_dup_type_voie_.cnt_test_type_voie = cartesian_table.cnt_test
+   
+        )
+   ORDER BY cnt_test ASC, groups
+"""
+```
+
+```python
+def generate_analytical_table_dup(var = 'index_id', case = 1):
+    """
+    """
+    if case ==1:
+        
+        filter_= "intersection = union_"
+        
+    if case ==2:
+        
+        filter_= "intersection = 0"
+    
+    if case ==3:
+        
+        filter_= "lenght_list_inpi = intersection AND intersection != union_"
+    
+    if case ==4:
+        
+        filter_= "lenght_list_insee = intersection AND intersection != union_"
+    
+    if case ==5:
+        
+        filter_= "cardinality(insee_except) = cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0"
+    
+    if case ==6:
+        
+        filter_= "cardinality(insee_except) > cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+    
+    if case ==7:
+        
+        filter_= "cardinality(insee_except) < cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0"
+
+    output = athena.run_query(
+        query=query_dup_cas.format(var, filter_),
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+
+    results = False
+    filename = 'cas_dup_{}.csv'.format(case)
+    
+    while results != True:
+        source_key = "{}/{}.csv".format(
+                            'INPI/sql_output',
+                            output['QueryExecutionId']
+                                   )
+        destination_key = "{}/{}".format(
+                                'Analyse_cas_similarite_adresse',
+                                filename
+                            )
+
+        results = s3.copy_object_s3(
+                                source_key = source_key,
+                                destination_key = destination_key,
+                                remove = True
+                            )
+
+    test_1 = (s3.read_df_from_s3(
+        key = 'Analyse_cas_similarite_adresse/{}'.format(filename), sep = ',')
+              .assign(test = 'cas_{}'.format(case),
+                     count_test_date_pct = lambda x: x['cnt_index_date'] / x['cnt_index_date'].sum(),
+                     count_test_status_admin_pct = lambda x: x['cnt_index_admin'] / x['cnt_index_admin'].sum(),
+                     count_test_siege_pct = lambda x: x['cnt_index_siege'] / x['cnt_index_siege'].sum(),
+                     count_test_commune_pct = lambda x: x['cnt_index_commune'] / x['cnt_index_commune'].sum(),
+                     count_test_cp_pct = lambda x: x['cnt_index_cp'] / x['cnt_index_cp'].sum(),
+                     count_test_num_voie_pct = lambda x: x['cnt_index_num_voie'] / x['cnt_index_num_voie'].sum(),
+                     count_test_type_voie_pct = lambda x: x['cnt_index_type_voie'] / x['cnt_index_type_voie'].sum(),
+                     )
+
+              .replace({'groups' :{np.nan: 'Null'}})
+              #.set_index(['test'])
+              .reindex(columns = [
+                  'test',
+                  'groups',
+                  "cnt_test",
+                  'cnt_index_num_voie','count_test_num_voie_pct',
+                  'cnt_index_type_voie','count_test_type_voie_pct',
+                  'cnt_index_commune','count_test_commune_pct',
+                  'cnt_index_date','count_test_date_pct',
+                  'cnt_index_admin','count_test_status_admin_pct',
+                  'cnt_index_siege','count_test_siege_pct',        
+                  'cnt_index_cp','count_test_cp_pct',
+                  
+                  
+              ])
+              .fillna(0)
+              .style
+              .format("{:,.0f}", subset =  ['cnt_index_date',
+                                            'cnt_index_admin',
+                                            'cnt_index_siege',
+                                            'cnt_index_commune',
+                                            'cnt_index_cp',
+                                            'cnt_index_num_voie',
+                                            'cnt_index_type_voie'])
+              .format("{:.2%}", subset =  ['count_test_date_pct',
+                                           'count_test_status_admin_pct',
+                                           'count_test_siege_pct',
+                                           'count_test_commune_pct',
+                                           'count_test_cp_pct',
+                                           'count_test_num_voie_pct',
+                                           'count_test_type_voie_pct'])
+              .bar(subset= ['cnt_index_date',
+                                            'cnt_index_admin',
+                                            'cnt_index_siege',
+                                            'cnt_index_commune',
+                                            'cnt_index_cp',
+                                            'cnt_index_num_voie',
+                                            'cnt_index_type_voie'],
+                   color='#d65f5f')
+              #.unstack(0)
+             )    
+    
+    return test_1
 ```
 
 # Creation table analyse
@@ -473,16 +1576,27 @@ initial_obs = 11600551
 
 ## Tableau recapitulatif
 
-| Cas de figure | Titre                                                              | Total   | Total cumulé | pourcentage | Pourcentage cumulé | Comment                 |
-|---------------|--------------------------------------------------------------------|---------|--------------|-------------|--------------------|-------------------------|
-| 1             | similarité parfaite                                                | 7774986 | 7774986      | 0.67        | 0.67               | Match parfait           |
-| 2             | Dissimilarité parfaite                                             | 974727  | 8749713      | 0.08        | 0.75               | Exclusion parfaite      |
-| 3             | Intersection parfaite INPI                                         | 407320  | 9157033      | 0.035       | 0.78               | Match partiel parfait   |
-| 4             | Intersection parfaite INSEE                                        | 558956  | 9715989      | 0.048       | 0.83               | Match partiel parfait   |
-| 5             | Cardinality exception parfaite INSEE INPI, intersection positive   | 1056522 | 10772511     | 0.091       | 0.92               | Match partiel compliqué |
-| 6             | Cardinality exception INSEE supérieure INPI, intersection positive | 361353  | 11133864     | 0.03        | 0.95               | Match partiel compliqué |
-| 7             | Cardinality exception INPI supérieure INSEE, intersection positive | 466687  | 11600551     | 0.04        | 1                  | Match partiel compliqué |
+|   Cas de figure | Titre                   |   Total |   Total cumulé |   pourcentage |   Pourcentage cumulé | Comment                 |
+|----------------:|:------------------------|--------:|---------------:|--------------:|---------------------:|:------------------------|
+|               1 | similarité parfaite     | 7775392 |        7775392 |     0.670261  |             0.670261 | Match parfait           |
+|               2 | Exclusion parfaite      |  974444 |        8749836 |     0.0839998 |             0.75426  | Match parfait           |
+|               3 | Match partiel parfait   |  407404 |        9157240 |     0.0351194 |             0.78938  | Match partiel parfait   |
+|               4 | Match partiel parfait   |  558992 |        9716232 |     0.0481867 |             0.837566 | Match partiel parfait   |
+|               5 | Match partiel compliqué | 1056406 |       10772638 |     0.0910652 |             0.928632 | Match partiel parfait   |
+|               6 | Match partiel compliqué | 1056406 |       11133880 |     0.0311401 |             0.959772 | Match partiel compliqué |
+|               7 | Match partiel compliqué | 1056406 |       11600551 |     0.0402283 |             1        | Match partiel compliqué |
 
+```python
+dic_ = {
+    'Cas de figure': [], 
+    'Titre': [], 
+    'Total': [], 
+    'Total cumulé': [], 
+    'pourcentage': [], 
+    'Pourcentage cumulé': [], 
+    'Comment': [], 
+}
+```
 
 ## Cas de figure 1: similarité parfaite
 
@@ -502,55 +1616,37 @@ initial_obs = 11600551
     
 
 ```python
-cas_1 =  7774986
-cas_1 / initial_obs
+cas_1 =  compte_obs_cas(case= 1)
 ```
 
 ```python
-query = """
-WITH test_proba AS (
-  SELECT 
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    ) as list_inpi,
-  
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    ) as list_insee, 
-  
-  array_distinct(
-              array_except(
-                split(adresse_distance_insee, ' '), 
-                split(adresse_distance_inpi, ' ')
-              )
-            )as insee_except, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_intersect(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as intersection, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_union(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as union_
-  FROM "inpi"."ets_insee_inpi"-- limit 10
-  )
-  SELECT count(*) 
-  FROM test_proba
-  WHERE intersection = union_
-  -- 7 774 986
-"""
+dic_['Cas de figure'].append(1)
+dic_['Titre'].append('similarité parfaite')
+dic_['Total'].append(cas_1)
+dic_['Total cumulé'].append(cas_1)
+dic_['pourcentage'].append(cas_1/initial_obs)
+dic_['Pourcentage cumulé'].append(cas_1/initial_obs)
+dic_['Comment'].append("Match parfait")
+```
+
+```python
+generate_analytical_table(case = 1)
+```
+
+```python
+compte_dup_cas(var = 'index_id', case = 1)
+```
+
+```python
+generate_analytical_table_dup(var = 'index_id', case = 1)
+```
+
+```python
+compte_dup_cas(var = 'sequence_id', case = 1)
+```
+
+```python
+generate_analytical_table_dup(var = 'sequence_id', case = 1)
 ```
 
 ## Cas de figure 2: Dissimilarité parfaite
@@ -569,63 +1665,37 @@ WITH test_proba AS (
     - Percentage initial: 0.08
 
 ```python
-cas_2 =974727
-
-cas_2/initial_obs 
+cas_2 =compte_obs_cas(case= 2)
 ```
 
 ```python
-cas_1 +cas_2
+dic_['Cas de figure'].append(2)
+dic_['Titre'].append('Exclusion parfaite')
+dic_['Total'].append(cas_2)
+dic_['Total cumulé'].append(cas_1 + cas_2)
+dic_['pourcentage'].append(cas_2/initial_obs)
+dic_['Pourcentage cumulé'].append((cas_1 +cas_2)/initial_obs)
+dic_['Comment'].append("Exclusion parfaite")
 ```
 
 ```python
-(cas_1 +cas_2)/initial_obs
+generate_analytical_table(case = 2)
 ```
 
 ```python
-query = """
-WITH test_proba AS (
-  SELECT 
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    ) as list_inpi,
-  
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    ) as list_insee, 
-  
-  array_distinct(
-              array_except(
-                split(adresse_distance_insee, ' '), 
-                split(adresse_distance_inpi, ' ')
-              )
-            )as insee_except, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_intersect(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as intersection, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_union(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as union_
-  FROM "inpi"."ets_insee_inpi"-- limit 10
-  )
-  SELECT count(*) 
-  FROM test_proba
-  WHERE intersection = 0
-"""
+compte_dup_cas(var = 'index_id', case = 2)
+```
+
+```python
+generate_analytical_table_dup(var = 'index_id', case = 2)
+```
+
+```python
+compte_dup_cas(var = 'sequence_id', case = 2)
+```
+
+```python
+generate_analytical_table_dup(var = 'sequence_id', case = 2)
 ```
 
 ## Cas de figure 3: Intersection parfaite INPI
@@ -644,90 +1714,41 @@ WITH test_proba AS (
 | [AVENUE, MAI]                | [AVENUE, HUIT, MAI]                                      | [HUIT]                                  | 2            | 3      |
 | [RUE, SOUS, DINE]            | [RUE, SOUS, DINE, RES, SOCIALE, HENRIETTE, D, ANGEVILLE] | [RES, SOCIALE, HENRIETTE, D, ANGEVILLE] | 3            | 8      |
 
-- Nombre d'observation:407320
+- Nombre d'observation: 407 320
     - Percentage initial: 0.03
 
 ```python
-cas_3 = 407320
-cas_3/ initial_obs
+cas_3 = compte_obs_cas(case= 3)
 ```
 
 ```python
-cas_1 + cas_2 +cas_3
+dic_['Cas de figure'].append(3)
+dic_['Titre'].append('Match partiel parfait')
+dic_['Total'].append(cas_3)
+dic_['Total cumulé'].append(cas_1 + cas_2 +cas_3)
+dic_['pourcentage'].append(cas_3/initial_obs)
+dic_['Pourcentage cumulé'].append((cas_1 + cas_2 +cas_3)/initial_obs)
+dic_['Comment'].append("Match partiel parfait")
 ```
 
 ```python
-(cas_1 + cas_2 +cas_3)/initial_obs
+generate_analytical_table(case = 3)
 ```
 
 ```python
-query = """
-WITH test_proba AS (
-  SELECT 
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    ) as list_inpi, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as lenght_list_inpi, 
-  
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    ) as list_insee, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_insee, ' ')
-      )
-    ) as lenght_list_insee, 
-  
-    array_distinct(
-      array_except(
-        split(adresse_distance_insee, ' '), 
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as insee_except, 
-  array_distinct(
-      array_except(
-        split(adresse_distance_inpi, ' '), 
-        split(adresse_distance_insee, ' ')
-      )
-    ) as inpi_except,
-    CAST(
-      cardinality(
-        array_distinct(
-          array_intersect(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as intersection, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_union(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as union_ 
-  FROM 
-    "inpi"."ets_insee_inpi" -- limit 10
-    ) 
-SELECT 
-   count(*) 
-FROM 
-  test_proba 
-WHERE lenght_list_inpi = intersection AND intersection != union_
--- LIMIT 10 
---  10 -- WHERE intersection = 0
+compte_dup_cas(var = 'index_id', case = 3)
+```
 
-"""
+```python
+generate_analytical_table_dup(var = 'index_id', case = 3)
+```
+
+```python
+compte_dup_cas(var = 'sequence_id', case = 3)
+```
+
+```python
+generate_analytical_table_dup(var = 'sequence_id', case = 3)
 ```
 
 ## Cas de figure 4: Intersection parfaite INSEE
@@ -749,86 +1770,37 @@ WHERE lenght_list_inpi = intersection AND intersection != union_
     - Percentage initial: 0.04
 
 ```python
-cas_4 = 558956
-cas_4 / initial_obs
+cas_4 = compte_obs_cas(case= 4)
 ```
 
 ```python
-cas_1 + cas_2 + cas_3 + cas_4
+dic_['Cas de figure'].append(4)
+dic_['Titre'].append('Match partiel parfait')
+dic_['Total'].append(cas_4)
+dic_['Total cumulé'].append(cas_1 + cas_2 + cas_3 + cas_4)
+dic_['pourcentage'].append(cas_4/initial_obs)
+dic_['Pourcentage cumulé'].append((cas_1 + cas_2 + cas_3 + cas_4) / initial_obs)
+dic_['Comment'].append("Match partiel parfait")
 ```
 
 ```python
-(cas_1 + cas_2 + cas_3 + cas_4) / initial_obs
+generate_analytical_table(case = 4)
 ```
 
 ```python
-query = """
-WITH test_proba AS (
-  SELECT 
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    ) as list_inpi, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as lenght_list_inpi, 
-  
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    ) as list_insee, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_insee, ' ')
-      )
-    ) as lenght_list_insee, 
-  
-    array_distinct(
-      array_except(
-        split(adresse_distance_insee, ' '), 
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as insee_except, 
-  array_distinct(
-      array_except(
-        split(adresse_distance_inpi, ' '), 
-        split(adresse_distance_insee, ' ')
-      )
-    ) as inpi_except,
-    CAST(
-      cardinality(
-        array_distinct(
-          array_intersect(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as intersection, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_union(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as union_ 
-  FROM 
-    "inpi"."ets_insee_inpi" -- limit 10
-    ) 
-SELECT 
-   count(*) 
-FROM 
-  test_proba 
-WHERE lenght_list_insee = intersection AND intersection != union_
--- LIMIT 10 
---  10 -- WHERE intersection = 0
+compte_dup_cas(var = 'index_id', case = 4)
+```
 
-"""
+```python
+generate_analytical_table_dup(var = 'index_id', case = 4)
+```
+
+```python
+compte_dup_cas(var = 'sequence_id', case = 4)
+```
+
+```python
+generate_analytical_table_dup(var = 'sequence_id', case = 4)
 ```
 
 ## Cas de figure 5: Cardinality exception parfaite INSEE INPI, intersection positive
@@ -851,87 +1823,37 @@ WHERE lenght_list_insee = intersection AND intersection != union_
     - Percentage initial: 0.09
 
 ```python
-cas_5 = 1056522
-cas_5/ initial_obs
+cas_5 = compte_obs_cas(case= 5)
 ```
 
 ```python
-cas_1 + cas_2 + cas_3 + cas_4 + cas_5
+dic_['Cas de figure'].append(5)
+dic_['Titre'].append('Match partiel compliqué')
+dic_['Total'].append(cas_5)
+dic_['Total cumulé'].append(cas_1 + cas_2 + cas_3 + cas_4 + cas_5)
+dic_['pourcentage'].append(cas_5/initial_obs)
+dic_['Pourcentage cumulé'].append((cas_1 + cas_2 + cas_3 + cas_4 + cas_5)/initial_obs)
+dic_['Comment'].append("Match partiel compliqué")
 ```
 
 ```python
-(cas_1 + cas_2 + cas_3 + cas_4 + cas_5)/initial_obs
+generate_analytical_table(case = 5)
 ```
 
 ```python
-query = """
-WITH test_proba AS (
-  SELECT 
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    ) as list_inpi, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as lenght_list_inpi, 
-  
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    ) as list_insee, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_insee, ' ')
-      )
-    ) as lenght_list_insee, 
-  
-    array_distinct(
-      array_except(
-        split(adresse_distance_insee, ' '), 
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as insee_except, 
-  array_distinct(
-      array_except(
-        split(adresse_distance_inpi, ' '), 
-        split(adresse_distance_insee, ' ')
-      )
-    ) as inpi_except,
-    CAST(
-      cardinality(
-        array_distinct(
-          array_intersect(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as intersection, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_union(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as union_ 
-  FROM 
-    "inpi"."ets_insee_inpi" -- limit 10
-    ) 
-SELECT 
--- *
-   count(*) 
-FROM 
-  test_proba 
-WHERE cardinality(insee_except) = cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0
---    
---  10 -- WHERE intersection = 0
+compte_dup_cas(var = 'index_id', case = 5)
+```
 
-"""
+```python
+generate_analytical_table_dup(var = 'index_id', case = 5)
+```
+
+```python
+compte_dup_cas(var = 'sequence_id', case = 5)
+```
+
+```python
+generate_analytical_table_dup(var = 'sequence_id', case = 5)
 ```
 
 ## Cas de figure 6: Cardinality exception INSEE supérieure INPI, intersection positive 
@@ -953,87 +1875,37 @@ WHERE cardinality(insee_except) = cardinality(inpi_except) AND intersection != 0
     - Percentage initial: 0.03
 
 ```python
-cas_6 = 361353
-cas_6/ initial_obs
+cas_6 = compte_obs_cas(case= 6)
 ```
 
 ```python
-cas_1 + cas_2 +cas_3 +cas_4 + cas_5 +cas_6
+dic_['Cas de figure'].append(6)
+dic_['Titre'].append('Match partiel compliqué')
+dic_['Total'].append(cas_6)
+dic_['Total cumulé'].append(cas_1 + cas_2 +cas_3 +cas_4 + cas_5 +cas_6)
+dic_['pourcentage'].append(cas_6/initial_obs)
+dic_['Pourcentage cumulé'].append((cas_1 + cas_2 +cas_3 +cas_4 + cas_5 +cas_6)/initial_obs)
+dic_['Comment'].append("Match partiel compliqué")
 ```
 
 ```python
-(cas_1 + cas_2 +cas_3 +cas_4 + cas_5 +cas_6)/ initial_obs
+generate_analytical_table(case = 6)
 ```
 
 ```python
-query = """
-WITH test_proba AS (
-  SELECT 
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    ) as list_inpi, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as lenght_list_inpi, 
-  
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    ) as list_insee, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_insee, ' ')
-      )
-    ) as lenght_list_insee, 
-  
-    array_distinct(
-      array_except(
-        split(adresse_distance_insee, ' '), 
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as insee_except, 
-  array_distinct(
-      array_except(
-        split(adresse_distance_inpi, ' '), 
-        split(adresse_distance_insee, ' ')
-      )
-    ) as inpi_except,
-    CAST(
-      cardinality(
-        array_distinct(
-          array_intersect(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as intersection, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_union(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as union_ 
-  FROM 
-    "inpi"."ets_insee_inpi" -- limit 10
-    ) 
-SELECT 
--- *
-   count(*) 
-FROM 
-  test_proba 
-WHERE cardinality(insee_except) > cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0
---    
---  10 -- WHERE intersection = 0
+compte_dup_cas(var = 'index_id', case = 6)
+```
 
-"""
+```python
+generate_analytical_table_dup(var = 'index_id', case = 6)
+```
+
+```python
+compte_dup_cas(var = 'sequence_id', case = 6)
+```
+
+```python
+generate_analytical_table_dup(var = 'sequence_id', case = 6)
 ```
 
 ## Cas de figure 7: Cardinality exception INPI supérieure INSEE, intersection positive 
@@ -1054,983 +1926,122 @@ WHERE cardinality(insee_except) > cardinality(inpi_except) AND intersection != 0
     - Percentage initial: 0.04
 
 ```python
-cas_7 = 466687
-cas_7 / initial_obs
+cas_7 = compte_obs_cas(case= 7)
 ```
 
 ```python
-cas_1 + cas_2 + cas_3 + cas_4 + cas_5+ cas_6 + cas_7
+dic_['Cas de figure'].append(7)
+dic_['Titre'].append('Match partiel compliqué')
+dic_['Total'].append(cas_7)
+dic_['Total cumulé'].append(cas_1 + cas_2 + cas_3 + cas_4 + cas_5+ cas_6 + cas_7)
+dic_['pourcentage'].append(cas_7/initial_obs)
+dic_['Pourcentage cumulé'].append((cas_1 + cas_2 + cas_3 + cas_4 + cas_5+ cas_6 + cas_7)/initial_obs)
+dic_['Comment'].append("Match partiel compliqué")
 ```
 
 ```python
-(cas_1 + cas_2 + cas_3 + cas_4 + cas_5+ cas_6 + cas_7)/initial_obs
+generate_analytical_table(case = 7)
 ```
 
 ```python
-query = """
-WITH test_proba AS (
-  SELECT 
-    array_distinct(
-      split(adresse_distance_inpi, ' ')
-    ) as list_inpi, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as lenght_list_inpi, 
-  
-    array_distinct(
-      split(adresse_distance_insee, ' ')
-    ) as list_insee, 
-  
-    cardinality(
-      array_distinct(
-        split(adresse_distance_insee, ' ')
-      )
-    ) as lenght_list_insee, 
-  
-    array_distinct(
-      array_except(
-        split(adresse_distance_insee, ' '), 
-        split(adresse_distance_inpi, ' ')
-      )
-    ) as insee_except, 
-  array_distinct(
-      array_except(
-        split(adresse_distance_inpi, ' '), 
-        split(adresse_distance_insee, ' ')
-      )
-    ) as inpi_except,
-    CAST(
-      cardinality(
-        array_distinct(
-          array_intersect(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as intersection, 
-    CAST(
-      cardinality(
-        array_distinct(
-          array_union(
-            split(adresse_distance_inpi, ' '), 
-            split(adresse_distance_insee, ' ')
-          )
-        )
-      ) AS DECIMAL(10, 2)
-    ) as union_ 
-  FROM 
-    "inpi"."ets_insee_inpi" -- limit 10
-    ) 
-SELECT 
--- *
-   count(*) 
-FROM 
-  test_proba 
-WHERE cardinality(insee_except) < cardinality(inpi_except) AND intersection != 0 AND cardinality(insee_except) > 0 AND cardinality(inpi_except) > 0
---    
---  10 -- WHERE intersection = 0
-
-"""
-```
-
-# Parametres et fonctions
-
-- `split_duplication`: Split un dataframe si l'index (la variable, pas l'index) contient des doublons
-- `find_regex`: Performe une recherche regex entre deux colonnes
-- `jackard_distance`: Calcul l'indice de dissimilarité entre deux colonnes
-- `edit_distance`: Calcul le nombre de modification a faire pour obtenir la même séquence
-- `import_dask`: Charge csv en Dask DataFrame pour clusteriser les calculs 
-
-
-# Detail steps
-
-
-## Etape 1: rapprochement INSEE-INPI
-
-*  Rapprocher la table de l’INSEE avec celle de l’INPI avec les variables de matching suivantes:
-   * `siren`
-   * `ville_matching`  → `ville_matching`
-   * `code_postal_matching`  → `codepostaletablissement`
-* La première query consiste à rapprocher les deux tables INPI & INSEE [NEW]
-
-```python
-query = """
-
-SELECT 
-  index_id, 
-  sequence_id, 
-  count_initial_insee,
-  ets_final_sql.siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin,
-  date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
-  libelle_evt, 
-  last_libele_evt,
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege,
-  status_ets, 
-  adresse_reconstituee_inpi,
-  adresse_reconstituee_insee, 
-  adresse_regex_inpi,
-  adresse_distance_inpi,
-  adresse_distance_insee, 
-  list_numero_voie_matching_inpi,
-  list_numero_voie_matching_insee,
-  numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
-  type_voie_matching, 
-  ets_final_sql.code_postal_matching, 
-  ets_final_sql.ville_matching, 
-  codecommuneetablissement,
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement
-FROM 
-  ets_final_sql 
-INNER JOIN (
-  SELECT 
-  count_initial_insee, 
-  siren, 
-  siret, 
-  datecreationetablissement, 
-  etablissementsiege, 
-  etatadministratifetablissement, 
-  codepostaletablissement, 
-  codecommuneetablissement, 
-  ville_matching, 
-  list_numero_voie_matching_insee,
-  numerovoieetablissement, 
-  typevoieetablissement, 
-  adresse_reconstituee_insee, 
-  adresse_distance_insee,
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement
-FROM 
-  insee_final_sql 
-  ) as insee
-ON ets_final_sql.siren = insee.siren
-AND ets_final_sql.ville_matching = insee.ville_matching
-AND ets_final_sql.code_postal_matching = insee.codepostaletablissement
-WHERE 
-  status != 'IGNORE'
-"""
-```
-
-### test Acceptance 
-
-* Description of the rule(s) to validate the US
-
-  1.  Compter le nombre d’observations à l’INPI matché à l’INSEE
-  2. Compter le nombre de doublons (via index_id )
-  
-- Athena: 
-
-  - [Query test 1](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/4a8a96e2-ee37-417f-93f9-4c1065e5e0b6)
-  - [Query test 2](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/5c11d8ad-1b36-4ba4-b542-220e3abfa046)
-
-```python
-query = """
-SELECT COUNT(*) FROM "inpi"."ets_insee_inpi"
-"""
+compte_dup_cas(var = 'index_id', case = 7)
 ```
 
 ```python
-query = """
-SELECT occurrences, count(occurrences) as count_
-FROM (
-SELECT index_id, COUNT(*) AS occurrences
-FROM "inpi"."ets_insee_inpi"
-GROUP BY index_id
-  )
-  GROUP BY occurrences
-  ORDER BY occurrences
-"""
+generate_analytical_table_dup(var = 'index_id', case = 7)
 ```
 
-## Etape 2: Calcul Levenshtein edit distance
-
-L'objectif de cette query est de calculer la *Levenshtein edit distance* entre les variables de l’enseigne.
-
-* Enseigne
-   * INSEE
-     * `enseigne1etablissement` 
-     * `enseigne2etablissement` 
-     * `enseigne3etablissement` 
-* Nom des nouvelles variables
-   * Enseigne:
-     * `edit_enseigne1` 
-     * `edit_enseigne2` 
-     * `edit_enseigne3` 
-     
-Par exemple, si `edit_adresse` est égal à 3, cela signifie qu'il faut 3 éditions (ajout, suppression) pour faire correspondre les deux strings.
-
 ```python
-query = """
-SELECT
-index_id, 
-  sequence_id, 
-  count_initial_insee,
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin,
-  date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
-  libelle_evt, 
-  last_libele_evt,
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege,
-  status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
-  adress_distance_inpi, 
-  adress_reconstituee_insee,
-  levenshtein_distance(adress_distance_inpi, adress_reconstituee_insee) as edit_adresse,
-  numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
-  voie_clean, 
-  type_voie_matching,
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement,
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement,
-  levenshtein_distance(enseigne, enseigne1etablissement) as edit_enseigne1,
-  levenshtein_distance(enseigne, enseigne2etablissement) as edit_enseigne2,
-  levenshtein_distance(enseigne, enseigne3etablissement) as edit_enseigne3
-FROM "inpi"."ets_insee_inpi"
-"""
+compte_dup_cas(var = 'sequence_id', case = 7)
 ```
 
-### test Acceptance 
+```python
+generate_analytical_table_dup(var = 'sequence_id', case = 7)
+```
 
-* Description of the rule to validate the US
-  *  Calculer le nombre de fois ou la distance est égale a 0 (adresse +enseigne)
-  * Donner la distribution des distances (adresse +enseigne)
-    * Exclure les NA
-    
-- Athena: 
-
-  - Query test 2
-
-    - [Enseigne](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/21de44d8-10b5-449a-920a-b54e6625ce8f)
-
-      - Attention beaucoup de 0 car champs vide dans l’enseigne
+## Recapitulatif cas
 
 ```python
-query = """
-SELECT
-approx_percentile(edit_enseigne1, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne1,
-approx_percentile(edit_enseigne2, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne2,
-approx_percentile(edit_enseigne3, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne3
-
-FROM(
-SELECT
-index_id, 
-  sequence_id, 
-  count_initial_insee,
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin,
-  date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
-  libelle_evt, 
-  last_libele_evt,
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege,
-  status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
-  adress_distance_inpi, 
-  adress_reconstituee_insee,
-  numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
-  voie_clean, 
-  type_voie_matching,
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement,
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement,
-  levenshtein_distance(enseigne, enseigne1etablissement) as edit_enseigne1,
-  levenshtein_distance(enseigne, enseigne2etablissement) as edit_enseigne2,
-  levenshtein_distance(enseigne, enseigne3etablissement) as edit_enseigne3
-FROM "inpi"."ets_insee_inpi"
+(pd.DataFrame(dic_)
+ .style
+ .format("{:,.0f}", subset =  ['Total',
+                                            'Total cumulé'])
+              .format("{:.2%}", subset =  ['pourcentage',
+                                           'Pourcentage cumulé'])
+              .bar(subset= ['Total',
+                                            'Total cumulé'],
+                   color='#d65f5f')
 )
--- WHERE edit_adresse = 0
-"""
 ```
-
-## Etape 2: Calcul Jaccard distance (niveau mots)
-
-*  Calculer la distance de Jaccard entre les variables de l’enseigne
-  * Enseigne
-    * INPI
-      * `enseigne` 
-    * INSEE
-      * `enseigne1etablissement` 
-      * `enseigne2etablissement` 
-      * `enseigne3etablissement` 
-  * Nom des nouvelles variables
-    * Enseigne:
-      * `jaccard_enseigne1_lettre` 
-      * `jaccard_enseigne2_lettre` 
-      * `jaccard_enseigne3_lettre` 
-      
-Par exemple, si `jaccard_adresse_lettre` est égal à .10, ce la signifie qu'il y a 10% des lettre qui ne correspondent pas dans les deux strings.
 
 ```python
-query = """"
-SELECT 
-  index_id, 
-  sequence_id, 
-  count_initial_insee, 
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin, 
-  date_greffe, 
-  file_timestamp, 
-  datecreationetablissement, 
-  "date_début_activité", 
-  libelle_evt, 
-  last_libele_evt, 
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege, 
-  status_ets, 
-  adress_reconstituee_inpi, 
-  adress_regex_inpi, 
-  adress_distance_inpi, 
-  adress_reconstituee_insee, 
-  numerovoieetablissement, 
-  numero_voie_matching, 
-  typevoieetablissement, 
-  voie_clean, 
-  type_voie_matching, 
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement, 
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement,
-  1- CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(enseigne1etablissement, '(\d+)|([A-Z])')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(enseigne1etablissement, '(\d+)|([A-Z])')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne1_lettre,
-  1- CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(enseigne2etablissement, '(\d+)|([A-Z])')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(enseigne2etablissement, '(\d+)|([A-Z])')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne2_lettre,
-  1- CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(enseigne3etablissement, '(\d+)|([A-Z])')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(enseigne3etablissement, '(\d+)|([A-Z])')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne3_lettre
-FROM 
-  ets_insee_inpi 
-""""    
+#print(pd.DataFrame(dic_).set_index('Cas de figure').to_markdown())
 ```
 
-### test Acceptance 
+# Generate report
 
-* Description of the rule to validate the US
-  *  Calculer le nombre de fois ou la distance est égale a 0 (adresse +enseigne)
-  * Donner la distribution des distances (adresse +enseigne)
-    * Exclure les NA
+```python
+import os, time, shutil, urllib, ipykernel, json
+from pathlib import Path
+from notebook import notebookapp
+```
+
+```python
+def create_report(extension = "html"):
+    """
+    Create a report from the current notebook and save it in the 
+    Report folder (Parent-> child directory)
     
-- Athena: 
-
-  - Query test 1
-
-    - [Adresse](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/d5891641-fd2e-4840-88c3-4355c12481cc)
-
-  - Query test 2
-
-    - [Enseigne](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/21de44d8-10b5-449a-920a-b54e6625ce8f)
-
-      - Attention beaucoup de 0 car champs vide dans l’enseigne
-
-
-# Archive
-
-
-## Etape 2: Calcul Levenshtein edit distance
-
-L'objectif de cette query est de calculer la *Levenshtein edit distance* entre les variables de l’adresse et les variables de l’enseigne.
-
-* Adresse:
-   * INPI: 
-     * `adress_distance_inpi`: Clean via **article**, **accent** et **espace**
-   * INSEE:
-     * `adress_reconstituee_insee`: Clean via **article**
-* Enseigne
-   * INPI
-     * `enseigne` 
-   * INSEE
-     * `enseigne1etablissement` 
-     * `enseigne2etablissement` 
-     * `enseigne3etablissement` 
-* Nom des nouvelles variables
-   * Adresse:
-     * `edit_adresse` 
-   * Enseigne:
-     * `edit_enseigne1` 
-     * `edit_enseigne2` 
-     * `edit_enseigne3` 
-     
-Par exemple, si `edit_adresse` est égal à 3, cela signifie qu'il faut 3 éditions (ajout, suppression) pour faire correspondre les deux strings.
-
-```python
-query = """
-SELECT
-index_id, 
-  sequence_id, 
-  count_initial_insee,
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin,
-  date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
-  libelle_evt, 
-  last_libele_evt,
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege,
-  status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
-  adress_distance_inpi, 
-  adress_reconstituee_insee,
-  levenshtein_distance(adress_distance_inpi, adress_reconstituee_insee) as edit_adresse,
-  numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
-  voie_clean, 
-  type_voie_matching,
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement,
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement,
-  levenshtein_distance(enseigne, enseigne1etablissement) as edit_enseigne1,
-  levenshtein_distance(enseigne, enseigne2etablissement) as edit_enseigne2,
-  levenshtein_distance(enseigne, enseigne3etablissement) as edit_enseigne3
-FROM "inpi"."ets_insee_inpi"
-"""
-```
-
-### test Acceptance 
-
-* Description of the rule to validate the US
-  *  Calculer le nombre de fois ou la distance est égale a 0 (adresse +enseigne)
-  * Donner la distribution des distances (adresse +enseigne)
-    * Exclure les NA
+    1. Exctract the current notbook name
+    2. Convert the Notebook 
+    3. Move the newly created report
     
-- Athena: 
+    Args:
+    extension: string. Can be "html", "pdf", "md"
+    
+    
+    """
+    
+    ### Get notebook name
+    connection_file = os.path.basename(ipykernel.get_connection_file())
+    kernel_id = connection_file.split('-', 1)[0].split('.')[0]
 
-  - Query test 1
-
-    - [Adresse](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/d5891641-fd2e-4840-88c3-4355c12481cc)
-
-  - Query test 2
-
-    - [Enseigne](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/21de44d8-10b5-449a-920a-b54e6625ce8f)
-
-      - Attention beaucoup de 0 car champs vide dans l’enseigne
-
-```python
-query = """
-SELECT
-approx_percentile(edit_adresse, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_adress,
-approx_percentile(edit_enseigne1, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne1,
-approx_percentile(edit_enseigne2, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne2,
-approx_percentile(edit_enseigne3, ARRAY[0.25,0.50,0.75,0.95, 0.99]) as percentiles_edit_enseigne3
-
-FROM(
-SELECT
-index_id, 
-  sequence_id, 
-  count_initial_insee,
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin,
-  date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
-  libelle_evt, 
-  last_libele_evt,
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege,
-  status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
-  adress_distance_inpi, 
-  adress_reconstituee_insee,
-  levenshtein_distance(adress_distance_inpi, adress_reconstituee_insee) as edit_adresse,
-  numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
-  voie_clean, 
-  type_voie_matching,
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement,
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement,
-  levenshtein_distance(enseigne, enseigne1etablissement) as edit_enseigne1,
-  levenshtein_distance(enseigne, enseigne2etablissement) as edit_enseigne2,
-  levenshtein_distance(enseigne, enseigne3etablissement) as edit_enseigne3
-FROM "inpi"."ets_insee_inpi"
-)
--- WHERE edit_adresse = 0
-"""
-```
-
-## Etape 2: Calcul Jaccard distance (niveau lettre)
-
-*  Calculer la distance de Jaccard entre les variables de l’adresse (au niveau de la lettre) et les variables de l’enseigne
-  * Adresse:
-    * INPI: 
-      * `adress_distance_inpi` 
-    * INSEE:
-      * `adress_reconstituee_insee` 
-  * Enseigne
-    * INPI
-      * `enseigne` 
-    * INSEE
-      * `enseigne1etablissement` 
-      * `enseigne2etablissement` 
-      * `enseigne3etablissement` 
-  * Nom des nouvelles variables
-    * Adresse:
-      * `jaccard_adresse_lettre` 
-    * Enseigne:
-      * `jaccard_enseigne1_lettre` 
-      * `jaccard_enseigne2_lettre` 
-      * `jaccard_enseigne3_lettre` 
-      
-Par exemple, si `jaccard_adresse_lettre` est égal à .10, ce la signifie qu'il y a 10% des lettre qui ne correspondent pas dans les deux strings.
-
-```python
-query = """
-SELECT 
-  index_id, 
-  sequence_id, 
-  count_initial_insee, 
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin, 
-  date_greffe, 
-  file_timestamp, 
-  datecreationetablissement, 
-  "date_début_activité", 
-  libelle_evt, 
-  last_libele_evt, 
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege, 
-  status_ets, 
-  adress_reconstituee_inpi, 
-  adress_regex_inpi, 
-  adress_distance_inpi, 
-  adress_reconstituee_insee, 
-  1- CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(adress_distance_inpi, '(\d+)|([A-Z])'), 
-        regexp_extract_all(adress_reconstituee_insee, '(\d+)|([A-Z])')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(adress_distance_inpi, '(\d+)|([A-Z])'), 
-          regexp_extract_all(adress_reconstituee_insee, '(\d+)|([A-Z])')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_adresse_lettre, 
-  numerovoieetablissement, 
-  numero_voie_matching, 
-  typevoieetablissement, 
-  voie_clean, 
-  type_voie_matching, 
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement, 
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement,
-  1- CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(enseigne1etablissement, '(\d+)|([A-Z])')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(enseigne1etablissement, '(\d+)|([A-Z])')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne1_lettre,
-  1- CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(enseigne2etablissement, '(\d+)|([A-Z])')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(enseigne2etablissement, '(\d+)|([A-Z])')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne2_lettre,
-  1- CAST(
-    cardinality(
-      array_intersect(
-        regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-        regexp_extract_all(enseigne3etablissement, '(\d+)|([A-Z])')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          regexp_extract_all(enseigne, '(\d+)|([A-Z])'), 
-          regexp_extract_all(enseigne3etablissement, '(\d+)|([A-Z])')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_enseigne3_lettre
-FROM 
-  ets_insee_inpi 
-"""
-```
-
-### test Acceptance 
-
-* Description of the rule to validate the US
-  * Calculer le nombre de fois ou la distance est égale a 0 (adresse +enseigne)
-  * Donner la distribution des distances (adresse +enseigne)
-    * Exclure les NA 
-  * Comparer avec Levenshtein edit distance
-  
-* Athena: 
-  * Query test 1
-  * Query test 2
-  * Query test 3  
-
-```python
-
-```
-
-## Etape 3: Calcul Jaccard distance (niveau mot)
-
-*  Calculer la distance de Jaccard entre les variables de l’adresse et les variables de l’enseigne
-  * Adresse:
-    * INPI: 
-      * `adress_distance_inpi` 
-    * INSEE:
-      * `adress_reconstituee_insee` 
-  * Nom des nouvelles variables
-    * Adresse:
-      * `jaccard_adresse_mot` 
-      * `difference_adresse_mot`
-      
-- Par exemple, si `jaccard_adresse_mot` est égal à .90, ce la signifie qu'il y a 90% des mots qui correspondent dans les deux strings.  
-- Par exemple, si `difference_adresse_mot` est égal à 3, ce la signifie qu'il manque 3 mots à l'INPI pour arriver à l'adresse de l'INSEE.
-
-```python
-query = """
-SELECT 
-  index_id, 
-  sequence_id, 
-  count_initial_insee, 
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin, 
-  date_greffe, 
-  file_timestamp, 
-  datecreationetablissement, 
-  "date_début_activité", 
-  libelle_evt, 
-  last_libele_evt, 
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege, 
-  status_ets, 
-  adress_reconstituee_inpi, 
-  adress_regex_inpi, 
-  adress_distance_inpi, 
-  adress_reconstituee_insee, 
-  CAST(
-    cardinality(
-      array_intersect(
-        split(adress_distance_inpi, ' '), 
-        split(adress_reconstituee_insee, ' ')
-      )
-    ) AS DECIMAL(10, 2)
-  ) / NULLIF(
-    CAST(
-      cardinality(
-        array_union(
-          split(adress_distance_inpi, ' '), 
-          split(adress_reconstituee_insee, ' ')
-        )
-      ) AS DECIMAL(10, 2)
-    ), 
-    0
-  ) as jaccard_adresse_mot, 
-  CAST(
-      cardinality(
-        -- array_intersect(
-          -- split(adress_distance_inpi, ' '), 
-          split(adress_reconstituee_insee, ' ')
-        --)
-      ) AS DECIMAL(10, 2)
-    ) - 
-  CAST(
-    cardinality(
-      array_intersect(
-        split(adress_distance_inpi, ' '), 
-        split(adress_reconstituee_insee, ' ')
-      )
-    ) AS DECIMAL(10, 2)
-  )  as difference_adresse_mots,
-  numerovoieetablissement, 
-  numero_voie_matching, 
-  typevoieetablissement, 
-  voie_clean, 
-  type_voie_matching, 
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement, 
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement 
-FROM 
-  ets_insee_inpi 
-"""
-```
-
-## Etape 4: Creation test regex
-
-* Calculer la distance de Jaccard entre les variables de l’adresse 
-   * Adresse:
-     * INPI: 
-       * `adress_regex_inpi` 
-     * INSEE:
-       * `adress_reconstituee_insee` 
- * Nom des nouvelles variables
-   * Adresse:
-     * `regex_adresse`
-     
-Par exemple, si `regex_adresse` est égal à true, cela signifie qu'au moins un des mots (excluant les types de voie) de l'adresse de l'INPI est présent dans l'adresse de l'INSEE. 
-
-```python
-query = """
-SELECT 
-index_id, 
-  sequence_id, 
-  count_initial_insee,
-  siren, 
-  siret, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  status, 
-  origin,
-  date_greffe, 
-  file_timestamp,
-  datecreationetablissement,
-  "date_début_activité",
-  libelle_evt, 
-  last_libele_evt,
-  etatadministratifetablissement, 
-  status_admin, 
-  type, 
-  etablissementsiege,
-  status_ets, 
-  adress_reconstituee_inpi,
-  adress_regex_inpi,
-  adress_distance_inpi, 
-  adress_reconstituee_insee,
-  regexp_like(adress_reconstituee_insee, adress_regex_inpi) as regex_adresse,
-  numerovoieetablissement, 
-  numero_voie_matching,
-  typevoieetablissement,
-  voie_clean, 
-  type_voie_matching,
-  code_postal_matching, 
-  ville_matching, 
-  codecommuneetablissement,
-  code_commune, 
-  enseigne, 
-  enseigne1etablissement, 
-  enseigne2etablissement, 
-  enseigne3etablissement
-FROM ets_insee_inpi 
-"""
+    for srv in notebookapp.list_running_servers():
+        try:
+            if srv['token']=='' and not srv['password']:  
+                req = urllib.request.urlopen(srv['url']+'api/sessions')
+            else:
+                req = urllib.request.urlopen(srv['url']+ \
+                                             'api/sessions?token=' + \
+                                             srv['token'])
+            sessions = json.load(req)
+            notebookname = sessions[0]['name']
+        except:
+            pass  
+    
+    sep = '.'
+    path = os.getcwd()
+    #parent_path = str(Path(path).parent)
+    
+    ### Path report
+    #path_report = "{}/Reports".format(parent_path)
+    #path_report = "{}/Reports".format(path)
+    
+    ### Path destination
+    name_no_extension = notebookname.split(sep, 1)[0]
+    source_to_move = name_no_extension +'.{}'.format(extension)
+    dest = os.path.join(path,'Reports', source_to_move)
+    
+    ### Generate notebook
+    os.system('jupyter nbconvert --no-input --to {} {}'.format(
+    extension,notebookname))
+    
+    ### Move notebook to report folder
+    #time.sleep(5)
+    shutil.move(source_to_move, dest)
+    print("Report Available at this adress:\n {}".format(dest))
 ```
 
 ```python
-
-```
-
-### Test acceptance
-
-* Description of the rule to validate the US
-  *  Compter le nombre de true/false
-  * Comparer avec Levenshtein edit distance/Jaccard 
-    * Lorsque regex + Edit + Jaccard  egal True + 0 +0 
-    * Lorsque regex + Edit + Jaccard  egal False + 0 +0 
-
-```python
-
+create_report(extension = "html")
 ```
