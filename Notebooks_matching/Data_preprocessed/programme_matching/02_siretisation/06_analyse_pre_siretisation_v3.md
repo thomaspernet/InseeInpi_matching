@@ -1579,12 +1579,12 @@ initial_obs = 11600551
 |   Cas de figure | Titre                   |   Total |   Total cumulé |   pourcentage |   Pourcentage cumulé | Comment                 |
 |----------------:|:------------------------|--------:|---------------:|--------------:|---------------------:|:------------------------|
 |               1 | similarité parfaite     | 7775392 |        7775392 |     0.670261  |             0.670261 | Match parfait           |
-|               2 | Exclusion parfaite      |  974444 |        8749836 |     0.0839998 |             0.75426  | Match parfait           |
+|               2 | Exclusion parfaite      |  974444 |        8749836 |     0.0839998 |             0.75426  | Exclusion parfaite      |
 |               3 | Match partiel parfait   |  407404 |        9157240 |     0.0351194 |             0.78938  | Match partiel parfait   |
 |               4 | Match partiel parfait   |  558992 |        9716232 |     0.0481867 |             0.837566 | Match partiel parfait   |
-|               5 | Match partiel compliqué | 1056406 |       10772638 |     0.0910652 |             0.928632 | Match partiel parfait   |
-|               6 | Match partiel compliqué | 1056406 |       11133880 |     0.0311401 |             0.959772 | Match partiel compliqué |
-|               7 | Match partiel compliqué | 1056406 |       11600551 |     0.0402283 |             1        | Match partiel compliqué |
+|               5 | Match partiel compliqué | 1056406 |       10772638 |     0.0910652 |             0.928632 | Match partiel compliqué |
+|               6 | Match partiel compliqué |  361242 |       11133880 |     0.0311401 |             0.959772 | Match partiel compliqué |
+|               7 | Match partiel compliqué |  466671 |       11600551 |     0.0402283 |             1        | Match partiel compliqué |
 
 ```python
 dic_ = {
@@ -1611,9 +1611,8 @@ dic_ = {
 | [QUAI, GABUT]          | [QUAI, GABUT]          | []           | 2            | 2      |
 | [BOULEVARD, VOLTAIRE]  | [BOULEVARD, VOLTAIRE]  | []           | 2            | 2      |
 
-- Nombre d'observation: 7 774 986
+- Nombre d'observation:  7 775 392 
     - Percentage initial: 0.67
-    
 
 ```python
 cas_1 =  compte_obs_cas(case= 1)
@@ -1633,6 +1632,8 @@ dic_['Comment'].append("Match parfait")
 generate_analytical_table(case = 1)
 ```
 
+Analyse Index
+
 ```python
 compte_dup_cas(var = 'index_id', case = 1)
 ```
@@ -1640,6 +1641,8 @@ compte_dup_cas(var = 'index_id', case = 1)
 ```python
 generate_analytical_table_dup(var = 'index_id', case = 1)
 ```
+
+Analyse séquence
 
 ```python
 compte_dup_cas(var = 'sequence_id', case = 1)
@@ -1682,6 +1685,8 @@ dic_['Comment'].append("Exclusion parfaite")
 generate_analytical_table(case = 2)
 ```
 
+Analyse index
+
 ```python
 compte_dup_cas(var = 'index_id', case = 2)
 ```
@@ -1689,6 +1694,8 @@ compte_dup_cas(var = 'index_id', case = 2)
 ```python
 generate_analytical_table_dup(var = 'index_id', case = 2)
 ```
+
+Analyse séquence
 
 ```python
 compte_dup_cas(var = 'sequence_id', case = 2)
@@ -1714,7 +1721,7 @@ generate_analytical_table_dup(var = 'sequence_id', case = 2)
 | [AVENUE, MAI]                | [AVENUE, HUIT, MAI]                                      | [HUIT]                                  | 2            | 3      |
 | [RUE, SOUS, DINE]            | [RUE, SOUS, DINE, RES, SOCIALE, HENRIETTE, D, ANGEVILLE] | [RES, SOCIALE, HENRIETTE, D, ANGEVILLE] | 3            | 8      |
 
-- Nombre d'observation: 407 320
+- Nombre d'observation: 407404
     - Percentage initial: 0.03
 
 ```python
@@ -1735,6 +1742,8 @@ dic_['Comment'].append("Match partiel parfait")
 generate_analytical_table(case = 3)
 ```
 
+Analyse index
+
 ```python
 compte_dup_cas(var = 'index_id', case = 3)
 ```
@@ -1742,6 +1751,8 @@ compte_dup_cas(var = 'index_id', case = 3)
 ```python
 generate_analytical_table_dup(var = 'index_id', case = 3)
 ```
+
+Analyse séquence
 
 ```python
 compte_dup_cas(var = 'sequence_id', case = 3)
@@ -1766,8 +1777,8 @@ generate_analytical_table_dup(var = 'sequence_id', case = 3)
 | [A, BOULEVARD, CONSTANTIN, DESCAT]                        | [BOULEVARD, CONSTANTIN, DESCAT]                 | []           | 3            | 4      |
 | [RUE, MENILMONTANT, BP]                                   | [RUE, MENILMONTANT]                             | []           | 2            | 3      |
 
-- Nombre d'observation: 558 956
-    - Percentage initial: 0.04
+- Nombre d'observation: 558992
+    - Percentage initial: 0.05
 
 ```python
 cas_4 = compte_obs_cas(case= 4)
@@ -1787,6 +1798,8 @@ dic_['Comment'].append("Match partiel parfait")
 generate_analytical_table(case = 4)
 ```
 
+Analyse index
+
 ```python
 compte_dup_cas(var = 'index_id', case = 4)
 ```
@@ -1794,6 +1807,8 @@ compte_dup_cas(var = 'index_id', case = 4)
 ```python
 generate_analytical_table_dup(var = 'index_id', case = 4)
 ```
+
+Analyse séquence
 
 ```python
 compte_dup_cas(var = 'sequence_id', case = 4)
@@ -1819,7 +1834,7 @@ generate_analytical_table_dup(var = 'sequence_id', case = 4)
 | [AVENUE, ROBERT, BRUN, ZI, CAMP, LAURENT, LOT, NUMERO, ST, BERNARD]                        | [AVENUE, ROBERT, BRUN, ZI, CAMP, LAURENT, LOT, ST, BERNARD, N]                          | [N]          | [NUMERO]     | 9            | 11     |
 | [PLACE, MARCEL, DASSAULT, PARC, D, ACTIVITES, TY, NEHUE, BATIMENT, H]                      | [PLACE, MARCEL, DASSAULT, PARC, D, ACTIVITES, TY, NEHUE, BAT, H]                        | [BAT]        | [BATIMENT]   | 9            | 11     |
 
-- Nombre d'observation: 1 056 522
+- Nombre d'observation: 1056406
     - Percentage initial: 0.09
 
 ```python
@@ -1840,6 +1855,8 @@ dic_['Comment'].append("Match partiel compliqué")
 generate_analytical_table(case = 5)
 ```
 
+Analyse index
+
 ```python
 compte_dup_cas(var = 'index_id', case = 5)
 ```
@@ -1847,6 +1864,8 @@ compte_dup_cas(var = 'index_id', case = 5)
 ```python
 generate_analytical_table_dup(var = 'index_id', case = 5)
 ```
+
+Analyse séquence
 
 ```python
 compte_dup_cas(var = 'sequence_id', case = 5)
@@ -1871,7 +1890,7 @@ generate_analytical_table_dup(var = 'sequence_id', case = 5)
 | [LOTISSEMENT, VANGA, DI, L, ORU, VILLA, FRANCK, TINA, CHEZ, COLOMBANI, CHRISTIAN] | [LIEU, DIT, VANGA, DI, L, ORU, VILLA, FRANCK, TINA, CHEZ, COLOMBANI, CHRISTIAN]          | [LIEU, DIT]           | [LOTISSEMENT] | 10           | 13     |
 | [AVENUE, DECLARATION, DROITS, HOMME, RES, CLOS, ST, MAMET, BAT, C, APPT]          | [AVENUE, DECL, DROITS, L, HOMME, RES, CLOS, ST, MAMET, BAT, C, APPT]                     | [DECL, L]             | [DECLARATION] | 10           | 13     |
 
-- Nombre d'observation: 361 353
+- Nombre d'observation: 361242
     - Percentage initial: 0.03
 
 ```python
@@ -1892,6 +1911,8 @@ dic_['Comment'].append("Match partiel compliqué")
 generate_analytical_table(case = 6)
 ```
 
+Analyse index
+
 ```python
 compte_dup_cas(var = 'index_id', case = 6)
 ```
@@ -1899,6 +1920,8 @@ compte_dup_cas(var = 'index_id', case = 6)
 ```python
 generate_analytical_table_dup(var = 'index_id', case = 6)
 ```
+
+Analyse séquence
 
 ```python
 compte_dup_cas(var = 'sequence_id', case = 6)
@@ -1922,7 +1945,7 @@ generate_analytical_table_dup(var = 'sequence_id', case = 6)
 | [RUE, JEANNE, D, ARC, A, L, ANGLE, N, ROLLON, EME, ETAGE, POLE, PRO, AGRI]                   | [RUE, JEANNE, D, ARC, A, L, ANGLE, N, ROLLON, E, ETAGE]                      | [E]          | [EME, POLE, PRO, AGRI]      | 10           | 15     |
 | [CHEZ, MR, MME, DANIEL, DEZEMPTE, AVENUE, BALCONS, FRONT, MER, L, OISEAU, BLEU, BATIMENT, B] | [AVENUE, BALCONS, FRONT, MER, CHEZ, MR, MME, DANIEL, DEZEMPTE, L, OISEA]     | [OISEA]      | [OISEAU, BLEU, BATIMENT, B] | 10           | 15     |
 
-- Nombre d'observation: 466687
+- Nombre d'observation: 466671
     - Percentage initial: 0.04
 
 ```python
@@ -1943,6 +1966,8 @@ dic_['Comment'].append("Match partiel compliqué")
 generate_analytical_table(case = 7)
 ```
 
+Analyse index
+
 ```python
 compte_dup_cas(var = 'index_id', case = 7)
 ```
@@ -1950,6 +1975,8 @@ compte_dup_cas(var = 'index_id', case = 7)
 ```python
 generate_analytical_table_dup(var = 'index_id', case = 7)
 ```
+
+Analyse séquence
 
 ```python
 compte_dup_cas(var = 'sequence_id', case = 7)
@@ -1977,6 +2004,22 @@ generate_analytical_table_dup(var = 'sequence_id', case = 7)
 ```python
 #print(pd.DataFrame(dic_).set_index('Cas de figure').to_markdown())
 ```
+
+## Resume match
+
+Le tableau ci dessous résume les matches si on n'utilise qu'un seul des tests sur les index uniques. Par exemple, il y a 7,443,607 lignes uniques pour le cas numéro 1. Parmi ses 7,443,607, il y a 6,443,723 lignes uniques qui ont passé le test du numéro de voie. L'ensemble des lignes uniques qui ont passé le test du numéro de voie représente environ 70% des lignes de l'INPI
+
+| Test              | Cas 1                           | Cas 2             | Cas 3              | Cas 4             | Cas 5                  | Cas 6             | Cas 7                | SUM             | pourcentage INPI |
+|-------------------|---------------------------------|-------------------|--------------------|-------------------|------------------------|-------------------|----------------------|-----------------|------------------|
+| Total analyse     |                7 775 392        |          974 444  |          407 404   |          558 992  |         1 056 406      |         361 242   |         466 671      |    11 600 551   |                  |
+| Index unique      |                7 443 607        |                   |          387 589   |          525 832  |              943 789   |         367 508   |         296 702      |      9 965 027  | 89,47%           |
+|                   |      test count (1) + True      |                   |                    |                   |                        |                   |                      |                 |                  |
+| Test numéro voie  |                6 443 723        |                   |          254 858   |          320 206  |              624 127   |         115 627   |               7 163  |      7 765 704  | 69,72%           |
+| Test type voie    |                6 676 760        |                   |          275 559   |          361 456  |              628 397   |         223 805   |         186 222      |      8 352 199  | 74,99%           |
+| Test date         |                    3 757   064  |                   |          179 688   |          253 205  |                44 084  |           15 059  |         115 524      |      4 364 624  | 39,19%           |
+| Test status admin |                    6 246   835  |                   |            31 054  |          418 014  |              679 414   |         223 096   |         173 412      |      7 771 825  | 69,78%           |
+| Test siege        |                    4 500   976  |                   |          234 578   |          331 856  |              561 655   |         224 637   |           175 751    |      6 029 453  | 54,13%           |
+
 
 # Generate report
 
