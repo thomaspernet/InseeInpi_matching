@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.2'
-      jupytext_version: 1.4.0
+      jupytext_version: 1.4.2
   kernelspec:
     display_name: Python 3
     language: python
@@ -25,6 +25,100 @@ Objective(s)
       * Calcul des tests 
       * Calcul des duplicates sur index & séquence
         * Filtrer les lignes sans duplicate et tests (a definir les règles sur les tests)
+   * ATTENTION, on exclut lorsque le test list_num_voie est faux, et que le status_cas est egal à 2. En effet, il n’est pas nécéssaire d’analyser lorsqu’au des numéros ne se trouve dans l’une des deux listes ou bien qu’aucun des mots de l’adresse n’est commun.
+     * La création de la table ets_inpi_insee_cases doit contenir les variables suivantes:
+    * row_id
+    * count_initial_insee
+    * index_id, 
+    * sequence_id, 
+    * siren, 
+    * siret,
+    * count_initial_insee, 
+    *  count_inpi_siren_siret, 
+      * Pour un siren donné, combien de siret possible. Par exemple, si → 7, cela signifie que pour un même siren, il y a 7 siret (etb). 
+      * Si cette variable est égale à count_initial_insee, potentiellement, tous les etb on été trouvé
+    *  count_inpi_siren_sequence,
+      * Pour un siren donné, combien de séquence (etb au sens de l’INPI) possible. Si → 3, cela signifie que pour un même siren, il y a 3 établissements au sens de l’INPI
+    *  count_inpi_sequence_siret, 
+      * Pour une séquence donnée, combien de siret possible. Cette variable indique le nombre de duplicate par séquence. Si → 3, cela signifie que pour la meme séquence, il y a 3 siret possible
+    * count_inpi_sequence_stat_cas_siret:
+      * Pour une séquence-status cas donnée, combien de siret possible. Cette variable indique le nombre de siret possible pour chaque cas. En effet, un duplicate peut se retrouver dans plusieurs cas; C’est le cas lorsque les doublons n’ont pas de relation avec l’adresse de l’INPI. Si 3 → cela signifie que pour la même séquence, appartenant au même cas, il y a trois siret possible.
+      * Si la variable est différente de count_inpi_sequence_siret, cela signifie que l’adresse de l’INSEE appartient a plusieurs cas.
+    * count_inpi_index_id_siret,
+      * Pour un index id, combien de siret possible. Cette variable indique le nombre de ligne dupliqué 
+      * Si 3 → Il y a 3 siret pour un index, donc 3 lignes dupliquées
+    * count_inpi_index_id_stat_cas_siret
+      * Pour une pair index id cas, combien de siret possible. Cette variable indique le nombre de ligne dupliqué pour chacun des cas
+      * Si 3 → Il y a 3 siret pour un index-cas, donc 3 lignes dupliquées pour le même cas
+    * count_inpi_index_id_stat_cas:
+      * Nombre de cas par index.
+      * Si 3 → Il y a trois cas possible pour le meme index
+    * index_id_duplicate: 
+    * count_inpi_index_id_siret > 1 THEN 'True' ELSE 'False'
+    * Indique si la ligne est doublée
+    * test_siren_insee_siren_inpi
+      * count_initial_insee = count_inpi_siren_siret THEN 'True' ELSE 'False'
+      * Si la variable est ‘True’ alors tous les établissements ont été trouvé
+    * test_sequence_siret
+      * count_inpi_sequence_siret = 1 THEN ‘True’ ELSE ‘False
+      * Si la variable est ‘True’ alors, il n’y a pas de duplicate pour une séquence, candidat très probable
+    * test_index_siret
+      * count_inpi_index_id_stat_cas_siret = 1 THEN 'True' ELSE 'False'
+      * Si la variable est true, alors, il n’y a qu”un seul cas de figure par index 
+    * test_sequence_siret_many_cas:
+      * count_inpi_sequence_siret = count_inpi_sequence_stat_cas_siret THEN 'True' ELSE 'False
+      * test si la séquence appartient a plusieurs cas
+    * list_numero_voie_matching_inpi,
+    *  list_numero_voie_matching_insee,
+    * intersection_numero_voie
+    * union_numero_voie
+    * test_list_num_voie: Numéros contenus dans list_numero_voie_matching_inpi sont dans list_numero_voie_matching_insee alors True, sinon False. Si liste Null alors Null
+    *  datecreationetablissement, 
+    * date_debut_activite,
+    * test_date
+    * etatadministratifetablissement, 
+    * status_admin,
+    * test_status_admin
+    * etablissementsiege, 
+    * status_ets,
+    * test_siege
+    * codecommuneetablissement, 
+    * code_commune, 
+    * test_code_commune
+    * codepostaletablissement, 
+    * code_postal_matching, 
+    * numerovoieetablissement, 
+    * numero_voie_matching,
+    * test_numero_voie
+    * typevoieetablissement, 
+    *  type_voie_matching,
+    * test_type_voie
+    * list_inpi,  
+    *   lenght_list_inpi,
+    *   list_insee,
+    *   lenght_list_insee,
+    *   inpi_except,
+    *   insee_except,
+    *   intersection,
+    *   union_
+    * status_cas:
+      * Cas 1, 2,3,4,5,6,7
+    * index_id_dup_has_cas_1_3_4
+      * MAX(test_adresse_cas_1_3_4) by index_id
+      * Informe si l’un des doublons de l’index peut etre trouvé via les cas 1,3 ou 4
+    * test_duplicates_is_in_cas_1_3_4
+      * test_adresse_cas_1_3_4 = 'True' AND index_id_dup_has_cas_1_3_4 = 'True' AND count_inpi_index_id_siret > 1 THEN 'TO_KEEP' WHEN test_adresse_cas_1_3_4 = 'False' AND index_id_dup_has_cas_1_3_4 = 'True' AND count_inpi_index_id_siret > 1 THEN 'TO_REMOVE' WHEN count_inpi_index_id_siret = 1 THEN 'NULL' ELSE 'TO_FIND' END AS test_duplicates_is_in_cas_1_3_4
+      * Indique si la ligne peut etre supprimée car possibilité d’être trouvé via cas 1,3,4
+    * test_adresse_cas_1_3_4:
+      * test.status_cas = 'CAS_1' OR test.status_cas = 'CAS_3' OR  test.status_cas = 'CAS_4
+      * indique si la ligne appartient a un full match ou pas
+    * enseigne, → enelver les accents
+    *  enseigne1etablissement
+    * enseigne2etablissement,
+    *  enseigne3etablissement, 
+    * test_enseigne:  Si une des enseignes de l’INSEE est contenue dans l’INPI alors True else False, If une des enseignes INPI ou INSEE est null alors null
+  * Pour fournir le taux de matching, il faut créer un ensemble de test pour chacun des cas (1 à 7).
+  * Pour fournir le taux de matching, il faut créer un ensemble de test pour chacun des cas (1 à 7).
 
 ## Metadata
 
@@ -109,6 +203,13 @@ athena = service_athena.connect_athena(client = client,
                       bucket = 'calfdata') 
 ```
 
+```python
+import seaborn as sns
+
+cm = sns.light_palette("green", as_cmap=True)
+pd.set_option('display.max_columns', None)
+```
+
 # Creation table analyse
 
 
@@ -125,13 +226,9 @@ if drop_table:
 ```python
 create_table = """
 /*match insee inpi 7 cas de figs*/
-CREATE TABLE inpi.ets_inpi_insee_cases
-WITH (
-  format='PARQUET'
-) AS
-WITH test_proba AS (
+CREATE TABLE inpi.ets_inpi_insee_cases WITH (format = 'PARQUET') AS WITH test_proba AS (
   SELECT 
-  count_initial_insee, 
+    count_initial_insee, 
     index_id, 
     sequence_id, 
     siren, 
@@ -243,18 +340,18 @@ WITH test_proba AS (
           )
         )
       ) AS DECIMAL(10, 2)
-    ) as union_,
-  CAST(
+    ) as union_, 
+    CAST(
       cardinality(
         array_distinct(
           array_intersect(
-            list_numero_voie_matching_inpi,
+            list_numero_voie_matching_inpi, 
             list_numero_voie_matching_insee
           )
         )
       ) AS DECIMAL(10, 2)
-    ) as intersection_numero_voie,
-  CAST(
+    ) as intersection_numero_voie, 
+    CAST(
       cardinality(
         array_distinct(
           array_union(
@@ -263,159 +360,319 @@ WITH test_proba AS (
           )
         )
       ) AS DECIMAL(10, 2)
-    ) as union_numero_voie,
-     REGEXP_REPLACE(
-  NORMALIZE(
-  enseigne, 
-            NFD
+    ) as union_numero_voie, 
+    REGEXP_REPLACE(
+      NORMALIZE(enseigne, NFD), 
+      '\pM', 
+      ''
+    ) AS enseigne, 
+    enseigne1etablissement, 
+    enseigne2etablissement, 
+    enseigne3etablissement, 
+    array_remove(
+      array_distinct(
+        SPLIT(
+          concat(
+            enseigne1etablissement, ',', enseigne2etablissement, 
+            ',', enseigne3etablissement
           ), 
-          '\pM', 
-          ''
-        ) AS enseigne,
-  enseigne1etablissement, enseigne2etablissement, enseigne3etablissement, 
-  array_remove(
-array_distinct(
-SPLIT(
-  concat(
-  enseigne1etablissement,',', enseigne2etablissement,',', enseigne3etablissement),
-  ',')
-  ), ''
-  ) as test, 
-  
-contains( 
-         array_remove(
-array_distinct(
-SPLIT(
-  concat(
-  enseigne1etablissement,',', enseigne2etablissement,',', enseigne3etablissement),
-  ',')
-  ), ''
-  ),REGEXP_REPLACE(
-  NORMALIZE(
-  enseigne, 
-            NFD
-          ), 
-          '\pM', 
-          ''
+          ','
         )
-         ) AS temp_test_enseigne
+      ), 
+      ''
+    ) as test, 
+    contains(
+      array_remove(
+        array_distinct(
+          SPLIT(
+            concat(
+              enseigne1etablissement, ',', enseigne2etablissement, 
+              ',', enseigne3etablissement
+            ), 
+            ','
+          )
+        ), 
+        ''
+      ), 
+      REGEXP_REPLACE(
+        NORMALIZE(enseigne, NFD), 
+        '\pM', 
+        ''
+      )
+    ) AS temp_test_enseigne 
   FROM 
     "inpi"."ets_insee_inpi" -- limit 10
     ) 
 SELECT 
-count_initial_insee,
-  index_id, 
-  sequence_id, 
-  siren, 
-  siret, 
-  CASE WHEN cardinality(list_numero_voie_matching_inpi) = 0 THEN NULL ELSE list_numero_voie_matching_inpi END as list_numero_voie_matching_inpi, 
-  CASE WHEN cardinality(list_numero_voie_matching_insee) = 0 THEN NULL ELSE list_numero_voie_matching_insee END as list_numero_voie_matching_insee,
-  intersection_numero_voie,
-  union_numero_voie,
-  
-  CASE WHEN intersection_numero_voie = union_numero_voie AND (intersection_numero_voie IS NOT NULL OR union_numero_voie IS NOT NULL) THEN 'True' 
-  WHEN (intersection_numero_voie IS NULL OR union_numero_voie IS NULL) THEN 'NULL'
-  ELSE 'False' END AS test_list_num_voie,
-  
-  datecreationetablissement, 
-  date_debut_activite, 
-  
-  CASE WHEN datecreationetablissement = date_debut_activite THEN 'True' 
-  WHEN datecreationetablissement IS NULL 
-  OR date_debut_activite IS NULL  THEN 'NULL'
-  --WHEN datecreationetablissement = '' 
-  --OR date_debut_activite = ''   THEN 'NULL'
-  ELSE 'False' 
-  END AS test_date, 
-  
-  etatadministratifetablissement, 
-  status_admin, 
-  
-  CASE WHEN etatadministratifetablissement = status_admin THEN 'True' 
-  WHEN etatadministratifetablissement IS NULL 
-  OR status_admin IS NULL  THEN 'NULL'
-  WHEN etatadministratifetablissement = '' 
-  OR status_admin = '' THEN 'NULL'
-  ELSE 'False'  
-  END AS test_status_admin, 
-  
-  etablissementsiege, 
-  status_ets, 
-  
-  CASE WHEN etablissementsiege = status_ets THEN 'True' 
-  WHEN etablissementsiege IS NULL 
-  OR status_ets IS NULL  THEN 'NULL'
-  WHEN etablissementsiege = '' 
-  OR status_ets = ''   THEN 'NULL'
-  ELSE 'False'  
-  END AS test_siege, 
-  
-  codecommuneetablissement, 
-  code_commune, 
-  
-  CASE WHEN codecommuneetablissement = code_commune THEN 'True' 
-  WHEN codecommuneetablissement IS NULL 
-  OR code_commune IS NULL  THEN 'NULL'
-  WHEN codecommuneetablissement = '' 
-  OR code_commune = ''   THEN 'NULL'
-  ELSE 'False'  
-  END AS test_code_commune, 
-  
-  codepostaletablissement, 
-  code_postal_matching, 
-  numerovoieetablissement, 
-  numero_voie_matching, 
-  
-  CASE WHEN numerovoieetablissement = numero_voie_matching THEN 'True' 
-  WHEN numerovoieetablissement IS NULL 
-  OR numero_voie_matching IS NULL  THEN 'NULL'
-  WHEN numerovoieetablissement = '' 
-  OR numero_voie_matching = ''   THEN 'NULL'
-  ELSE 'False'  
-  END AS test_numero_voie, 
-  
-  typevoieetablissement, 
-  type_voie_matching, 
-  
-  CASE WHEN typevoieetablissement = type_voie_matching THEN 'True' 
-  WHEN typevoieetablissement IS NULL 
-  OR type_voie_matching IS NULL  THEN 'NULL'
-  WHEN typevoieetablissement = '' 
-  OR type_voie_matching = ''   THEN 'NULL'
-  ELSE 'False'  
-  END AS test_type_voie, 
-  
-  CASE WHEN cardinality(list_inpi) = 0 THEN NULL ELSE list_inpi END as list_inpi,
-  
-  lenght_list_inpi, 
-  
-  CASE WHEN cardinality(list_insee) = 0 THEN NULL ELSE list_insee END as list_insee,
-  lenght_list_insee, 
-  
-  CASE WHEN cardinality(inpi_except) = 0 THEN NULL ELSE inpi_except END as inpi_except,
-  CASE WHEN cardinality(insee_except) = 0 THEN NULL ELSE insee_except END as insee_except,
-   
-  intersection, 
-  union_, 
-  CASE WHEN intersection = union_  THEN 'CAS_1' WHEN intersection = 0 THEN 'CAS_2' WHEN lenght_list_inpi = intersection 
-  AND intersection != union_ THEN 'CAS_3' WHEN lenght_list_insee = intersection 
-  AND intersection != union_ THEN 'CAS_4' WHEN cardinality(insee_except) = cardinality(inpi_except) 
-  AND intersection != 0 
-  AND cardinality(insee_except) > 0 THEN 'CAS_5' WHEN cardinality(insee_except) > cardinality(inpi_except) 
-  AND intersection != 0 
-  AND cardinality(insee_except) > 0 
-  AND cardinality(inpi_except) > 0 THEN 'CAS_6' WHEN cardinality(insee_except) < cardinality(inpi_except) 
-  AND intersection != 0 
-  AND cardinality(insee_except) > 0 
-  AND cardinality(inpi_except) > 0 THEN 'CAS_7' ELSE 'CAS_NO_ADRESSE' END AS status_cas,
-  enseigne, enseigne1etablissement, enseigne2etablissement, enseigne3etablissement, 
-  CASE WHEN cardinality(test) = 0 THEN 'NULL'
-WHEN enseigne = '' THEN 'NULL'
-WHEN temp_test_enseigne = TRUE THEN 'True'
-ELSE 'False' END AS test_enseigne 
-  
+  * 
 FROM 
-  test_proba
+  (
+    WITH test_rules AS (
+      SELECT 
+        ROW_NUMBER() OVER () AS row_id, 
+        count_initial_insee, 
+        index_id, 
+        sequence_id, 
+        siren, 
+        siret, 
+        CASE WHEN cardinality(list_numero_voie_matching_inpi) = 0 THEN NULL ELSE list_numero_voie_matching_inpi END as list_numero_voie_matching_inpi, 
+        CASE WHEN cardinality(
+          list_numero_voie_matching_insee
+        ) = 0 THEN NULL ELSE list_numero_voie_matching_insee END as list_numero_voie_matching_insee, 
+        intersection_numero_voie, 
+        union_numero_voie, 
+        CASE WHEN intersection_numero_voie = union_numero_voie 
+        AND (
+          intersection_numero_voie IS NOT NULL 
+          OR union_numero_voie IS NOT NULL
+        ) THEN 'True' WHEN (
+          intersection_numero_voie IS NULL 
+          OR union_numero_voie IS NULL
+        ) THEN 'NULL' ELSE 'False' END AS test_list_num_voie, 
+        datecreationetablissement, 
+        date_debut_activite, 
+        CASE WHEN datecreationetablissement = date_debut_activite THEN 'True' WHEN datecreationetablissement IS NULL 
+        OR date_debut_activite IS NULL THEN 'NULL' --WHEN datecreationetablissement = '' 
+        ELSE 'False' END AS test_date, 
+        etatadministratifetablissement, 
+        status_admin, 
+        CASE WHEN etatadministratifetablissement = status_admin THEN 'True' WHEN etatadministratifetablissement IS NULL 
+        OR status_admin IS NULL THEN 'NULL' WHEN etatadministratifetablissement = '' 
+        OR status_admin = '' THEN 'NULL' ELSE 'False' END AS test_status_admin, 
+        etablissementsiege, 
+        status_ets, 
+        CASE WHEN etablissementsiege = status_ets THEN 'True' WHEN etablissementsiege IS NULL 
+        OR status_ets IS NULL THEN 'NULL' WHEN etablissementsiege = '' 
+        OR status_ets = '' THEN 'NULL' ELSE 'False' END AS test_siege, 
+        codecommuneetablissement, 
+        code_commune, 
+        CASE WHEN codecommuneetablissement = code_commune THEN 'True' WHEN codecommuneetablissement IS NULL 
+        OR code_commune IS NULL THEN 'NULL' WHEN codecommuneetablissement = '' 
+        OR code_commune = '' THEN 'NULL' ELSE 'False' END AS test_code_commune, 
+        codepostaletablissement, 
+        code_postal_matching, 
+        numerovoieetablissement, 
+        numero_voie_matching, 
+        CASE WHEN numerovoieetablissement = numero_voie_matching THEN 'True' WHEN numerovoieetablissement IS NULL 
+        OR numero_voie_matching IS NULL THEN 'NULL' WHEN numerovoieetablissement = '' 
+        OR numero_voie_matching = '' THEN 'NULL' ELSE 'False' END AS test_numero_voie, 
+        typevoieetablissement, 
+        type_voie_matching, 
+        CASE WHEN typevoieetablissement = type_voie_matching THEN 'True' WHEN typevoieetablissement IS NULL 
+        OR type_voie_matching IS NULL THEN 'NULL' WHEN typevoieetablissement = '' 
+        OR type_voie_matching = '' THEN 'NULL' ELSE 'False' END AS test_type_voie, 
+        CASE WHEN cardinality(list_inpi) = 0 THEN NULL ELSE list_inpi END as list_inpi, 
+        lenght_list_inpi, 
+        CASE WHEN cardinality(list_insee) = 0 THEN NULL ELSE list_insee END as list_insee, 
+        lenght_list_insee, 
+        CASE WHEN cardinality(inpi_except) = 0 THEN NULL ELSE inpi_except END as inpi_except, 
+        CASE WHEN cardinality(insee_except) = 0 THEN NULL ELSE insee_except END as insee_except, 
+        intersection, 
+        union_, 
+        intersection / union_ as pct_intersection, 
+        cardinality(inpi_except) AS len_inpi_except, 
+        cardinality(insee_except) AS len_insee_except, 
+        CASE WHEN intersection = union_ THEN 'CAS_1' WHEN intersection = 0 THEN 'CAS_2' WHEN lenght_list_inpi = intersection 
+        AND intersection != union_ THEN 'CAS_3' WHEN lenght_list_insee = intersection 
+        AND intersection != union_ THEN 'CAS_4' WHEN cardinality(insee_except) = cardinality(inpi_except) 
+        AND intersection != 0 
+        AND cardinality(insee_except) > 0 THEN 'CAS_5' WHEN cardinality(insee_except) > cardinality(inpi_except) 
+        AND intersection != 0 
+        AND cardinality(insee_except) > 0 
+        AND cardinality(inpi_except) > 0 THEN 'CAS_6' WHEN cardinality(insee_except) < cardinality(inpi_except) 
+        AND intersection != 0 
+        AND cardinality(insee_except) > 0 
+        AND cardinality(inpi_except) > 0 THEN 'CAS_7' ELSE 'CAS_NO_ADRESSE' END AS status_cas, 
+        enseigne, 
+        enseigne1etablissement, 
+        enseigne2etablissement, 
+        enseigne3etablissement, 
+        CASE WHEN cardinality(test) = 0 THEN 'NULL' WHEN enseigne = '' THEN 'NULL' WHEN temp_test_enseigne = TRUE THEN 'True' ELSE 'False' END AS test_enseigne 
+      FROM 
+        test_proba
+      
+    ) 
+    
+    SELECT *
+    FROM (
+      WITH test AS(
+        SELECT *,
+        CASE WHEN status_cas = 'CAS_1' OR
+        status_cas = 'CAS_3' OR 
+        status_cas = 'CAS_4' THEN 'True' ELSE 'False' END AS test_adresse_cas_1_3_4 
+        FROM test_rules
+        WHERE test_list_num_voie != 'False' and status_cas != 'CAS_2'
+        )
+    
+    SELECT 
+      row_id, 
+      test.index_id, 
+      test.sequence_id, 
+      test.siren, 
+      test.siret,
+      
+      count_initial_insee, 
+      count_inpi_siren_siret, 
+      count_inpi_siren_sequence, 
+      count_inpi_sequence_siret, 
+      count_inpi_sequence_stat_cas_siret,
+      count_inpi_index_id_siret,
+      count_inpi_index_id_stat_cas_siret,
+      count_inpi_index_id_stat_cas,
+      CASE WHEN count_inpi_index_id_siret > 1 THEN 'True' ELSE 'False' END AS index_id_duplicate,
+      CASE WHEN count_inpi_sequence_siret = 1 THEN 'True' ELSE 'False' END AS test_sequence_siret,
+      CASE WHEN count_inpi_index_id_stat_cas_siret = 1 THEN 'True' ELSE 'False' END AS test_index_siret,
+      CASE WHEN count_initial_insee = count_inpi_siren_siret THEN 'True' ELSE 'False' END AS test_siren_insee_siren_inpi, 
+    
+      CASE WHEN count_inpi_sequence_siret = count_inpi_sequence_stat_cas_siret THEN 'True' ELSE 'False' END AS test_sequence_siret_many_cas,
+    
+      list_numero_voie_matching_inpi, 
+      list_numero_voie_matching_insee, 
+      intersection_numero_voie, 
+      union_numero_voie, 
+      test_list_num_voie, 
+      datecreationetablissement, 
+      date_debut_activite, 
+      test_date, 
+      etatadministratifetablissement, 
+      status_admin, 
+      test_status_admin, 
+      etablissementsiege, 
+      status_ets, 
+      test_siege, 
+      codecommuneetablissement, 
+      code_commune, 
+      test_code_commune, 
+      codepostaletablissement, 
+      code_postal_matching, 
+      numerovoieetablissement, 
+      numero_voie_matching, 
+      test_numero_voie, 
+      typevoieetablissement, 
+      type_voie_matching, 
+      test_type_voie, 
+      list_inpi, 
+      lenght_list_inpi, 
+      list_insee, 
+      lenght_list_insee, 
+      inpi_except, 
+      insee_except, 
+      intersection, 
+      union_, 
+      pct_intersection, 
+      len_inpi_except, 
+      len_insee_except, 
+      test.status_cas, 
+      test_adresse_cas_1_3_4,
+      index_id_dup_has_cas_1_3_4,
+      CASE
+      WHEN test_adresse_cas_1_3_4 = 'True' AND index_id_dup_has_cas_1_3_4 = 'True' AND count_inpi_index_id_siret > 1 THEN 'TO_KEEP' 
+      WHEN test_adresse_cas_1_3_4 = 'False' AND index_id_dup_has_cas_1_3_4 = 'True' AND count_inpi_index_id_siret > 1 THEN 'TO_REMOVE'
+      WHEN count_inpi_index_id_siret = 1 THEN 'NULL'
+      ELSE 'TO_FIND' END AS test_duplicates_is_in_cas_1_3_4,
+      enseigne, 
+      enseigne1etablissement, 
+      enseigne2etablissement, 
+      enseigne3etablissement, 
+      test_enseigne 
+    FROM 
+      test 
+      LEFT JOIN (
+        SELECT 
+          siren, 
+          COUNT(
+            DISTINCT(siret)
+          ) AS count_inpi_siren_siret 
+        FROM 
+          test 
+        GROUP BY 
+          siren
+      ) AS count_rows_sequence ON test.siren = count_rows_sequence.siren 
+      LEFT JOIN (
+        SELECT 
+          siren, 
+          COUNT(
+            DISTINCT(sequence_id)
+          ) AS count_inpi_siren_sequence 
+        FROM 
+          test 
+        GROUP BY 
+          siren
+      ) AS count_rows_siren_sequence ON test.siren = count_rows_siren_sequence.siren 
+      LEFT JOIN (
+        SELECT 
+          sequence_id, 
+          COUNT(
+            DISTINCT(siret)
+          ) AS count_inpi_sequence_siret 
+        FROM 
+          test 
+        GROUP BY 
+          sequence_id
+      ) AS count_rows_siret ON test.sequence_id = count_rows_siret.sequence_id
+    -- 
+    LEFT JOIN (
+        SELECT 
+          sequence_id, 
+          status_cas,
+          COUNT(
+            DISTINCT(siret)
+          ) AS count_inpi_sequence_stat_cas_siret 
+        FROM 
+          test 
+        GROUP BY 
+          sequence_id,
+      status_cas
+      ) AS count_rows_status_cas_siret ON test.sequence_id = count_rows_status_cas_siret.sequence_id AND
+    test.status_cas = count_rows_status_cas_siret.status_cas
+    -- duplicate index
+    LEFT JOIN (
+        SELECT 
+          index_id, 
+          COUNT(
+            DISTINCT(siret)
+          ) AS count_inpi_index_id_siret 
+        FROM 
+          test 
+        GROUP BY 
+          index_id
+      ) AS count_rows_index_id_siret ON test.index_id = count_rows_index_id_siret.index_id
+    -- duplicate index cas
+    LEFT JOIN (
+        SELECT 
+          index_id, 
+          status_cas,
+          COUNT(
+            DISTINCT(siret)
+          ) AS count_inpi_index_id_stat_cas_siret 
+        FROM 
+          test_rules 
+        GROUP BY 
+          index_id,
+          status_cas
+      ) AS count_rows_index_status_cas_siret ON test.index_id = count_rows_index_status_cas_siret.index_id AND
+    test.status_cas = count_rows_index_status_cas_siret.status_cas
+    -- nb de cas par index
+    LEFT JOIN (
+        SELECT 
+          index_id, 
+          COUNT(
+            DISTINCT(status_cas)
+          ) AS count_inpi_index_id_stat_cas
+        FROM 
+           test 
+        GROUP BY 
+          index_id
+      ) AS count_rows_index_status_cas ON test.index_id = count_rows_index_status_cas.index_id
+   LEFT JOIN (
+     SELECT 
+     index_id,
+     MAX(test_adresse_cas_1_3_4) AS index_id_dup_has_cas_1_3_4
+     FROM test
+     GROUP BY index_id
+     ) AS  is_index_id_dup_has_cas_1_3_4 ON test.index_id = is_index_id_dup_has_cas_1_3_4.index_id
+  )
+ )
 """
 output = athena.run_query(
         query=create_table,
@@ -503,460 +760,7 @@ output = athena.run_query(
     )
 ```
 
-### Fonctions
-
-```python
-def create_table_test_not_false(cas = "CAS_1"):
-    """
-    
-    """
-    top = """
-    SELECT count_test_list_num_voie.status_cas,
-    nb_unique_index, 
-    index_unique,
-    count_cas,
-    test_list_num_voie,
-    test_siege,
-    test_enseigne,
-    test_date, 
-    test_status_admin,
-    test_code_commune,
-    test_type_voie
-    FROM index_20 
-    
-    LEFT JOIN (
-    SELECT count_, COUNT(count_) as count_cas
-    FROM (
-    SELECT COUNT(index_id) as count_
-    FROM ets_inpi_insee_cases 
-    WHERE status_cas = '{0}'
-    GROUP BY index_id
-    ORDER BY count_ DESC
-  )
-  GROUP BY count_
-  ORDER BY count_
-  ) AS count_unique
-  ON index_20.index_unique = count_unique.count_ 
-    """.format(cas)
-    query = """
-    LEFT JOIN (
-    SELECT status_cas,count_index,  count(count_index) AS {1}
-    FROM (
-    SELECT status_cas, index_id, COUNT(test_enseigne) as count_index
-    FROM ets_inpi_insee_cases 
-    WHERE status_cas = '{0}' AND  {1} != 'False'
-    GROUP BY status_cas, index_id
-      ) as c
-      GROUP BY status_cas, count_index
-      ORDER BY count_index
-      ) AS count_{1}
-      ON index_20.index_unique = count_{1}.count_index 
-    """
-    
-    bottom = """
-    LEFT JOIN (
-    SELECT  DISTINCT(status_cas), COUNT(DISTINCT(index_id)) as nb_unique_index
-    FROM ets_inpi_insee_cases 
-    WHERE status_cas = '{0}' 
-    GROUP BY status_cas
-    ) as index_unique
-    ON index_unique.status_cas = count_test_list_num_voie.status_cas
-    ORDER BY index_unique
-    """.format(cas)
-
-    for i, table in enumerate(["test_list_num_voie",
-              "test_siege",
-              "test_enseigne",
-              "test_date", "test_status_admin", "test_code_commune", "test_type_voie"]):
-
-        top += query.format(cas, table)
-    top += bottom
-    
-    ### run query
-    output = athena.run_query(
-        query=top,
-        database='inpi',
-        s3_output='INPI/sql_output'
-    )
-
-    results = False
-    filename = 'table_{}_test_not_false.csv'.format(cas)
-    
-    while results != True:
-        source_key = "{}/{}.csv".format(
-                            'INPI/sql_output',
-                            output['QueryExecutionId']
-                                   )
-        destination_key = "{}/{}".format(
-                                'ANALYSE_PRE_SIRETISATION',
-                                filename
-                            )
-        
-        results = s3.copy_object_s3(
-                                source_key = source_key,
-                                destination_key = destination_key,
-                                remove = True
-                            )
-        
-    #filename = 'table_{}_test_not_false.csv'.format('CAS_1')
-    index_unique_inpi = 10981811
-    reindex= ['status_cas','nb_unique_index', 'index_unique','count_cas',
-              'test_list_num_voie',
-              'count_num_voie',
-              'test_siege',
-              'count_siege',
-           'test_enseigne',
-               'count_enseigne',
-              'test_date',
-               'count_date',
-              'test_status_admin',
-              'count_admin',
-              'test_code_commune',
-              'count_code_commune',
-           'test_type_voie',
-              'count_type_voie']
-    test_1 = (s3.read_df_from_s3(
-            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename), sep = ',')
-             )
-    
-    df_ = (
-        test_1
-     .assign(
-
-         count_num_voie = lambda x: x['test_list_num_voie'] /  index_unique_inpi,
-         count_siege = lambda x: x['test_siege'] /  index_unique_inpi,
-         count_enseigne	 = lambda x: x['test_enseigne'] /  index_unique_inpi,
-         count_date = lambda x: x['test_date'] /  index_unique_inpi,
-         count_admin = lambda x: x['test_status_admin'] /  index_unique_inpi,
-         count_code_commune = lambda x: x['test_code_commune'] /  index_unique_inpi,
-         count_type_voie = lambda x: x['test_type_voie'] /  index_unique_inpi,
-         status_cas = lambda x: x['status_cas'].fillna(method='ffill'),
-         nb_unique_index = lambda x: x['nb_unique_index'].fillna(method='ffill')
-     )
-     .reindex(columns = reindex)
-     .fillna(0)
-                  .style
-                  .format("{:,.0f}", subset =  [
-                      "nb_unique_index",
-                      "count_cas",
-                      'test_list_num_voie',
-                                                'test_siege',
-                                                'test_enseigne',
-                                                'test_date',
-                                                'test_status_admin',
-                                                'test_code_commune',
-                                                'test_type_voie'])
-                  .format("{:.2%}", subset =  ['count_num_voie',
-                                               'count_siege',
-                                               'count_enseigne',
-                                               'count_date',
-                                               'count_admin',
-                                               'count_code_commune',
-                                               'count_type_voie'])
-                  .bar(subset= ['count_num_voie',
-                                               'count_siege',
-                                               'count_enseigne',
-                                               'count_date',
-                                               'count_admin',
-                                               'count_code_commune',
-                                               'count_type_voie'],
-                       color='#d65f5f')
-     )
-    
-    unique_1 = test_1.loc[lambda x: x['index_unique'].isin([1])]
-    dic_ = {
-    
-    'nb_index_unique_{}'.format(cas): int(unique_1['nb_unique_index'].values[0]),
-     'index_unique_inpi':index_unique_inpi,   
-    'lignes_matches': {   
-        'lignes_matche_list_num': int(unique_1['test_list_num_voie'].values[0]),
-    'lignes_matche_list_num_pct': unique_1['test_list_num_voie'].values[0] / index_unique_inpi
-    },    
-    'lignes_a_trouver': {
-        'test_list_num_voie':[
-            int((unique_1['nb_unique_index'].values - unique_1['test_list_num_voie'].values)[0]),
-            (unique_1['test_list_num_voie'].values / unique_1['nb_unique_index'].values)[0]
-        ],
-        'test_siege':[
-            int((unique_1['nb_unique_index'].values - unique_1['test_siege'].values)[0]),
-            (unique_1['test_siege'].values / unique_1['nb_unique_index'].values)[0]
-        ],
-        'test_enseigne':[
-            int((unique_1['nb_unique_index'].values - unique_1['test_enseigne'].values)[0]),
-            (unique_1['test_enseigne'].values / unique_1['nb_unique_index'].values)[0]
-        ],
-        'test_date':[
-            int((unique_1['nb_unique_index'].values - unique_1['test_date'].values)[0]),
-            (unique_1['test_date'].values / unique_1['nb_unique_index'].values)[0]
-        ],
-        'status_admin':[
-            int((unique_1['nb_unique_index'].values - unique_1['test_status_admin'].values)[0]),
-            (unique_1['test_status_admin'].values / unique_1['nb_unique_index'].values)[0]
-        ],
-        'test_code_commune':[
-            int((unique_1['nb_unique_index'].values - unique_1['test_code_commune'].values)[0]),
-            (unique_1['test_code_commune'].values / unique_1['nb_unique_index'].values)[0]
-        ],
-        'test_type_voie':[
-            int((unique_1['nb_unique_index'].values - unique_1['test_type_voie'].values)[0]),
-            (unique_1['test_type_voie'].values / unique_1['nb_unique_index'].values)[0]
-        ],
-    }
-}
-    
-    return test_1, dic_
-```
-
-```python
-def table_list_num_other_tests(cas = 'CAS_1'):
-    """
-    """
-    top = """
-    SELECT 
-    count_test_siege.status_cas,
-    index_unique, 
-    groups, 
-    cnt_test_list_num_voie,
-    cnt_test_siege,
-    cnt_test_enseigne,
-    cnt_test_date, 
-    cnt_test_status_admin,
-    cnt_test_code_commune,
-    cnt_test_type_voie
-    FROM index_20_true 
-    """
-    
-    query = """
-    -- {0}
-    LEFT JOIN (
-    SELECT status_cas, count_index,{0}, COUNT(index_id) as cnt_{0}
-    FROM (
-    SELECT ets_inpi_insee_cases.status_cas, count_index, ets_inpi_insee_cases.index_id, {0}
-    FROM ets_inpi_insee_cases
-    RIGHT JOIN (
-    SELECT *
-    FROM(
-    SELECT status_cas, index_id, COUNT(index_id) as count_index
-    FROM ets_inpi_insee_cases 
-    WHERE status_cas = '{1}' AND  test_list_num_voie != 'False'
-    GROUP BY status_cas, index_id
-  )
-  ) as index_
-  ON ets_inpi_insee_cases.status_cas = index_.status_cas AND
-  ets_inpi_insee_cases.index_id = index_.index_id
-  WHERE ets_inpi_insee_cases.status_cas = '{1}' AND  test_list_num_voie != 'False'
-  ) 
-  GROUP BY status_cas, count_index, {0}
-  ) as count_{0}
-  ON index_20_true.index_unique = count_{0}.count_index AND
-  index_20_true.groups = count_{0}.{0}
- 
-    """
-    
-    bottom =   """ORDER BY index_unique, groups"""
-    for i, table in enumerate(["test_list_num_voie",
-              "test_siege",
-              "test_enseigne",
-              "test_date", "test_status_admin", "test_code_commune", "test_type_voie"]):
-
-        top += query.format(table, cas)
-    top += bottom
-    ### run query
-    output = athena.run_query(
-        query=top,
-        database='inpi',
-        s3_output='INPI/sql_output'
-    )
-
-    results = False
-    filename = 'table_{}_num_voie_test_not_false.csv'.format(cas)
-    
-    while results != True:
-        source_key = "{}/{}.csv".format(
-                            'INPI/sql_output',
-                            output['QueryExecutionId']
-                                   )
-        destination_key = "{}/{}".format(
-                                'ANALYSE_PRE_SIRETISATION',
-                                filename
-                            )
-        
-        results = s3.copy_object_s3(
-                                source_key = source_key,
-                                destination_key = destination_key,
-                                remove = True
-                            )
-    reindex= ['status_cas',
-          'index_unique',
-          'groups',
-              "total_rows",
-              'cnt_test_list_num_voie',
-              'count_list_num_voie',
-              'cnt_test_siege',
-              'count_siege',
-           'cnt_test_enseigne',
-               'count_enseigne',
-              'cnt_test_date',
-               'count_date',
-              'cnt_test_status_admin',
-              'count_admin',
-              'cnt_test_code_commune',
-              'count_code_commune',
-           'cnt_test_type_voie',
-              'count_type_voie']
-
-    test_1 = (s3.read_df_from_s3(
-            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename), sep = ',')
-          .assign(
-         total_rows = lambda x: x['cnt_test_siege'].groupby(x['index_unique']).transform('sum'),
-         count_list_num_voie = lambda x: x['cnt_test_list_num_voie'] /  x['total_rows'],
-         count_siege = lambda x: x['cnt_test_siege'] /  x['total_rows'],
-         count_enseigne	 = lambda x: x['cnt_test_enseigne'] /  x['total_rows'],
-         count_date = lambda x: x['cnt_test_date'] /  x['total_rows'],
-         count_admin = lambda x: x['cnt_test_status_admin'] /  x['total_rows'],
-         count_code_commune = lambda x: x['cnt_test_code_commune'] /  x['total_rows'],
-         count_type_voie = lambda x: x['cnt_test_type_voie'] /  x['total_rows'],
-         status_cas = lambda x: x['status_cas'].fillna(method='ffill'),
-         groups = lambda x: x['groups'].fillna('Null')
-          )
-          .reindex(columns = reindex)
-          .fillna(0)
-          .style
-                  .format("{:,.0f}", subset =  ['total_rows',
-                                                'cnt_test_list_num_voie',
-                                                'cnt_test_siege',
-                                                'cnt_test_enseigne',
-                                                'cnt_test_date',
-                                                'cnt_test_status_admin',
-                                                'cnt_test_code_commune',
-                                                'cnt_test_type_voie'])
-                  .format("{:.2%}", subset =  ['count_list_num_voie',
-                                               'count_siege',
-                                               'count_enseigne',
-                                               'count_date',
-                                               'count_admin',
-                                               'count_code_commune',
-                                               'count_type_voie'])
-                  .bar(subset= ['count_list_num_voie',
-                                               'count_siege',
-                                               'count_enseigne',
-                                               'count_date',
-                                               'count_admin',
-                                               'count_code_commune',
-                                               'count_type_voie'],
-                       color='#d65f5f')
-             )
-    
-    return test_1
-```
-
-```python
-def filter_list_num_test_false(cas = 'CAS_1',test = 'test_type_voie'):
-    """
-    """
-    
-    to_append = """count_initial_insee, index_id, sequence_id, siren, siret,
-             list_inpi, list_insee,etablissementsiege, status_ets,
-             enseigne, enseigne1etablissement, enseigne2etablissement,
-             enseigne3etablissement, datecreationetablissement,
-             date_debut_activite, etatadministratifetablissement, status_admin,
-             typevoieetablissement, type_voie_matching"""
-
-    for i, value in enumerate(["test_siege", "test_enseigne", "test_date", "test_status_admin", "test_type_voie"]):
-        if value not in [test]:
-            to_append += ",{}".format(value) 
-    
-    query = """
-    SELECT  
-
-count_initial_insee,filter_a.index_id, sequence_id, siren, siret,list_inpi, list_insee,
-etablissementsiege, status_ets, test_siege, 
-enseigne, enseigne1etablissement, enseigne2etablissement, enseigne3etablissement, test_enseigne, 
-datecreationetablissement, date_debut_activite, test_date, 
-etatadministratifetablissement, status_admin, test_status_admin, 
-test_type_voie, typevoieetablissement, type_voie_matching 
-
-    FROM (
-    SELECT ets_inpi_insee_cases.status_cas, count_index, ets_inpi_insee_cases.index_id, {1}
-    FROM ets_inpi_insee_cases
-    RIGHT JOIN (
-    SELECT *
-    FROM(
-    SELECT status_cas, index_id, COUNT(index_id) as count_index
-    FROM ets_inpi_insee_cases 
-    WHERE status_cas = '{0}' AND  test_list_num_voie != 'False'
-    GROUP BY status_cas, index_id
-  )
-      WHERE count_index = 1
-  ) as index_
-  ON ets_inpi_insee_cases.status_cas = index_.status_cas AND
-  ets_inpi_insee_cases.index_id = index_.index_id
-  WHERE ets_inpi_insee_cases.status_cas = '{0}' AND  test_list_num_voie != 'False'
-  ) as filter_a
-  
-  LEFT JOIN (
-    
-    SELECT {2}
-    
-    FROM ets_inpi_insee_cases
-    WHERE ets_inpi_insee_cases.status_cas = '{0}' AND  test_list_num_voie != 'False'
-    ) as filter_b
-    ON filter_a.index_id = filter_b.index_id
-    WHERE {1} = 'False'
-    LIMIT 10
-    """
-    #print(query.format(cas, test,to_append))
-    output = athena.run_query(
-        query=query.format(cas, test,to_append),
-        database='inpi',
-        s3_output='INPI/sql_output'
-    )
-
-    results = False
-    filename = 'table_{0}_{1}_example_filter.csv'.format(cas, test)
-    
-    while results != True:
-        source_key = "{}/{}.csv".format(
-                            'INPI/sql_output',
-                            output['QueryExecutionId']
-                                   )
-        destination_key = "{}/{}".format(
-                                'ANALYSE_PRE_SIRETISATION',
-                                filename
-                            )
-        
-        results = s3.copy_object_s3(
-                                source_key = source_key,
-                                destination_key = destination_key,
-                                remove = True
-                            )
-    
-    test_1 = (s3.read_df_from_s3(
-            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename), sep = ',')
-             )
-    
-    return test_1
-    
-    
-    
-```
-
 # Analyse
-
-
-## Nombre observations par cas
-
-Le nombre d'observations doit correspondre au suivant:
-
-|   Cas de figure | Titre                   |   Total |   Total cumulé |   pourcentage |   Pourcentage cumulé | Comment                 |
-|----------------:|:------------------------|--------:|---------------:|--------------:|---------------------:|:------------------------|
-|               1 | similarité parfaite     | 7775392 |        7775392 |     0.670261  |             0.670261 | Match parfait           |
-|               2 | Exclusion parfaite      |  974444 |        8749836 |     0.0839998 |             0.75426  | Exclusion parfaite      |
-|               3 | Match partiel parfait   |  407404 |        9157240 |     0.0351194 |             0.78938  | Match partiel parfait   |
-|               4 | Match partiel parfait   |  558992 |        9716232 |     0.0481867 |             0.837566 | Match partiel parfait   |
-|               5 | Match partiel compliqué | 1056406 |       10772638 |     0.0910652 |             0.928632 | Match partiel compliqué |
-|               6 | Match partiel compliqué |  361242 |       11133880 |     0.0311401 |             0.959772 | Match partiel compliqué |
-|               7 | Match partiel compliqué |  466671 |       11600551 |     0.0402283 |             1        | Match partiel compliqué |
 
 
 ## Nombre ets par cas
@@ -1002,250 +806,1210 @@ SELECT
 FROM 
   ets_inpi_insee_cases 
 """
+
 ```
 
-# Anayse cas
+Nombre d'index a trouver
 
-Explication:
+```python
+query = """
+SELECT COUNT(DISTINCT(index_id))
+FROM ets_inpi_insee_cases 
+"""
 
-- Dictionnaire:
-    - 
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
 
-- Table 1:
-    - nb_unique_index: Nombre d'index unique pour un cas donnée. Ex. Il y a 7,584,503 index unique pour la cas 1
-    - index_unique: . Possibilité de duplicate allant 1 (aucun duplicate) a 20. Si supérieur à 1, cela indique le nombre de lignes ayant 2,3,4 etc doublons
-    - count_cas: Compte le nombre de duplicate par cas et index_unique. Par exemple, le cas 1 possède 128,821 lignes avec deux doublons pour un index donnée
-    - `test_*`: Nombre de lignes ayant un result de test différent de false, pour chaqun des duplicates. par exemple, il y a 7,471,838 lignes ayant passées le test test_list_num_voie et n'ayant aucun duplicate.
-    - `count_*`: test_* / nb_unique_index. Informe du pourcentage de lignes ayant un test concluant sur le nombre d'index unique. Se référé à la ligne 0.
-- Table 2:
-    - index_unique: Idem que index_unique
-    - groups: Possibilité des résultats des tests -> True, False, NULL. NULL si aucune info dans les variables pour faire le test
-    - total_rows: Nombre de lignes ayant réussi le test test_list_num_voie. Le chiffre doit correspondre à test_list_num_voie, ligne 0
-    - `cnt_test_*`: Nombre de lignes ayant résussi le test test_list_num_voie, puis décomposé par résultat pour chaque test. Par exemple, il y a 3,037,959 lignes parmi les 7,471,838 lignes n'ayant pas de duplicates qui ont un test_siege egal à True.
-    - `count_*`: cnt_test_* / total_rows. Pourcentage de lignes par décomposition des tests sur le nombre de lignes ayant réussi le test test_list_num_voie, décomposé par duplicate.
+results = False
+filename = 'index_a_trouver.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
     
-
-
-## Cas 01: similarité parfaite
-
-* Definition: Les mots dans l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE
-- Math definition: $\frac{|INSEE \cap INPI|}{|INSEE|+|INPI|-|INSEE \cap INPI|} =1$
-- Règle: $ \text{intersection} = \text{union} \rightarrow \text{cas 1}$
-* Query [case 1](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/24e58c22-4a67-4a9e-b98d-4eb9d65e7f27)
-
-| list_inpi              | list_insee             | insee_except | intersection | union_ |
-|------------------------|------------------------|--------------|--------------|--------|
-| [BOULEVARD, HAUSSMANN] | [BOULEVARD, HAUSSMANN] | []           | 2            | 2      |
-| [QUAI, GABUT]          | [QUAI, GABUT]          | []           | 2            | 2      |
-| [BOULEVARD, VOLTAIRE]  | [BOULEVARD, VOLTAIRE]  | []           | 2            | 2      |
-
-```python
-tb1, dic_tb1 = create_table_test_not_false(cas = "CAS_1")
+nb_index = (s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename), sep = ',')
+         )
+nb_index.values[0][0]
 ```
 
+# Verification nombre index post-filtre
+
+Lors de la création de la table `ets_inpi_insee_cases`, nous avons exclu les lignes dont le `status_cas` était différent de `CAS_2`, a savoir aucun mot en commun dans l'adresse. De plus, nous avons filré toutes les lignes n'ayant aucun chiffre en commun. 
+
+un troisième filtre peut être appliqué, lorsque la variable `index_id` a des doublons (plusieurs siret), et qu'au moins une des lignes peut être retrouvée via le cas de figure 1, 3 ou 4. 
+
+Ci dessous un exemple d'`index_id` qui satisfait la troisième condition:
+
+L'index 1142 a deux siret possibles, toutefois l'un des deux peut être retrouvé via le `cas_1`. La variable `test_adresse_cas_1_3_4` indique si la ligne fait partie des cas 1, 3 ou 4, alors que la variable `index_id_dup_has_cas_1_3_4` informe si la séquence à au moins une des lignes fait partie des cas 1, 3 ou 4. Le test `test_duplicates_is_in_cas_1_3_4` résume les possiblités, a savoir `TO_KEEP` si il faut garder la ligne, `TO_REMOVE` si il faut la supprimer, `TO_FIND` au cas ou la séquence ne possède pas de cas 1,3 ou 4 (cf exemple ci dessous) ou `NULL` si la séquence n'a pas de doublon.
+
 ```python
-dic_tb1
+query = """
+SELECT index_id, sequence_id, siren, siret, count_inpi_index_id_siret,
+list_inpi,list_insee, inpi_except, insee_except, status_cas, test_adresse_cas_1_3_4,
+index_id_dup_has_cas_1_3_4, test_duplicates_is_in_cas_1_3_4  
+FROM ets_inpi_insee_cases 
+WHERE index_id = 1142
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'exemple_index_id_1142.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+(s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')
+ .set_index(['index_id', 'sequence_id', 'siren', 'count_inpi_index_id_siret'])
+         )    
 ```
 
+Exemple d'index id sans cas de figure 1, 3, ou 4.
+
 ```python
-table_list_num_other_tests(cas = 'CAS_1')
+query = """
+SELECT index_id, sequence_id, siren, siret, count_inpi_index_id_siret, 
+list_inpi,list_insee, inpi_except, insee_except, test_adresse_cas_1_3_4,
+index_id_dup_has_cas_1_3_4, test_duplicates_is_in_cas_1_3_4  
+FROM ets_inpi_insee_cases 
+WHERE index_id = 4560
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'exemple_index_id_4560.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+(s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')
+ .set_index(['index_id', 'sequence_id', 'siren', 'count_inpi_index_id_siret'])
+         )    
 ```
 
-```python
-pd.set_option('display.max_columns', None) 
-```
+Le nombre d'index avant se filtre et de:
 
 ```python
-filter_list_num_test_false(cas = 'CAS_1',test = 'test_enseigne')
-```
+query = """
+SELECT COUNT(DISTINCT(index_id))
+FROM ets_inpi_insee_cases 
+-- WHERE test_duplicates_is_in_cas_1_3_4 !=  'TO_REMOVE'
 
-## CAS 03: Intersection parfaite INPI
+"""
 
-* Definition:  Tous les mots dans l’adresse de l’INPI  sont contenus dans l’adresse de l’INSEE
-* Math définition: $\frac{|INPI|}{|INSEE \cap INPI|}  \text{  = 1 and }|INSEE \cap INPI| <> |INSEE \cup INPI|$
-* Query [case 3](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/7fb420a1-5f50-4256-a2ba-b8c7c2b63c9b)
-* Règle: $|\text{list_inpi}|= \text{intersection}  \text{  = 1 and }\text{intersection} \neq  \text{union} \rightarrow \text{cas 3}$
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
 
-```python
-tb3, dic_tb3 = create_table_test_not_false(cas = "CAS_3")
-```
+results = False
+filename = 'index_a_trouver.csv'
 
-```python
-dic_tb3
-```
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename
+                                )
 
-```python
-tb3
-```
-
-```python
-table_list_num_other_tests(cas = 'CAS_3')
-```
-
-```python
-filter_list_num_test_false(cas = 'CAS_3',test = 'test_type_voie')
-```
-
-## CAS 04: Intersection parfaite INSEE
-
-* Definition:  Tous les mots dans l’adresse de l’INSEE  sont contenus dans l’adresse de l’INPI
-* Math definition: $\frac{|INSEE|}{|INSEE \cap INPI|}  \text{  = 1 and }|INSEE \cap INPI| <> |INSEE \cup INPI|$
-* Query [case 4](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/65344bf4-8999-4ddb-a65e-11bb825f5f40)
-* Règle: $|\text{list_insee}|= \text{intersection}  \text{  = 1 and }\text{intersection} \neq  \text{union} \rightarrow \text{cas 4}$
-
-| list_inpi                                                 | list_insee                                      | insee_except | intersection | union_ |
-|-----------------------------------------------------------|-------------------------------------------------|--------------|--------------|--------|
-| [ROUTE, D, ENGHIEN]                                       | [ROUTE, ENGHIEN]                                | []           | 2            | 3      |
-| [ZAC, PARC, D, ACTIVITE, PARIS, EST, ALLEE, LECH, WALESA] | [ALLEE, LECH, WALESA, ZAC, PARC, ACTIVITE, EST] | []           | 7            | 9      |
-| [LIEU, DIT, PADER, QUARTIER, RIBERE]                      | [LIEU, DIT, RIBERE]                             | []           | 3            | 5      |
-| [A, BOULEVARD, CONSTANTIN, DESCAT]                        | [BOULEVARD, CONSTANTIN, DESCAT]                 | []           | 3            | 4      |
-| [RUE, MENILMONTANT, BP]                                   | [RUE, MENILMONTANT]                             | []           | 2            | 3      |
-
-
-```python
-tb4, dic_tb4 = create_table_test_not_false(cas = "CAS_4")
-```
-
-```python
-dic_tb4
-```
-
-```python
-tb4
-```
-
-```python
-table_list_num_other_tests(cas = 'CAS_4')
-```
-
-```python
-filter_list_num_test_false(cas = 'CAS_4',test = 'test_type_voie')
-```
-
-## CAS 05: Cardinality exception parfaite INSEE INPI, intersection positive
-
-* Definition:  L’adresse de l’INPI contient des mots de l’adresse de l’INSEE et la cardinality des mots non présents dans les deux adresses est équivalente
-* Math definition: $|INPI|-|INPI \cap INSEE| = |INSEE|-|INPI \cap INSEE|$
-* Query [case 5](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/fec67222-3a7b-4bfb-af20-dd70d82932e3)
-* Règle: $|\text{insee_except}| = |\text{inpi_except}| \text{ and } \text{intersection} > 0 \rightarrow \text{cas 5}$
-
-```python
-tb5, dic_tb5 = create_table_test_not_false(cas = "CAS_5")
-```
-
-```python
-dic_tb5
-```
-
-```python
-tb5
-```
-
-```python
-table_list_num_other_tests(cas = 'CAS_5')
-```
-
-```python
-filter_list_num_test_false(cas = 'CAS_5',test = 'test_type_voie')
-```
-
-## CAS 06: Cardinality exception INSEE supérieure INPI, intersection positive 
-
-* Definition:  L’adresse de l’INPI contient des mots de l’adresse de l’INSEE et la cardinality des mots non présents dans l’adresse de l’INSEE est supérieure à la cardinality de l’adresse de l’INPI
-* Math definition: $|INPI|-|INPI \cap INSEE| < |INSEE|-|INPI \cap INSEE|$
-* Query [case 6](https://eu-west-3.console.aws.amazon.com/athena/home?region=eu-west-3#query/history/9bdce567-5871-4a5a-add4-d5cca6a83528)
-* Règle: $|\text{insee_except}| > |\text{inpi_except}| \text{ and } \text{intersection} > 0 \rightarrow \text{cas 6}$
-
-```python
-tb6, dic_tb6 = create_table_test_not_false(cas = "CAS_6")
-```
-
-```python
-dic_tb6
-```
-
-```python
-tb6
-```
-
-```python
-table_list_num_other_tests(cas = 'CAS_6')
-```
-
-```python
-filter_list_num_test_false(cas = 'CAS_6',test = 'test_type_voie')
-```
-
-## CAS 07: Cardinality exception INPI supérieure INSEE, intersection positive 
-
-* Definition:  L’adresse de l’INSEE contient des mots de l’adresse de l’INPI et la cardinality des mots non présents dans l’adresse de l’INPI est supérieure à la cardinality de l’adresse de l’INSEE
-* Math definition: $|INPI|-|INPI \cap INSEE| > |INSEE|-|INPI \cap INSEE|$
-* Règle: $|\text{insee_except}| < |\text{inpi_except}| \text{ and } \text{intersection} > 0 \rightarrow \text{cas 7}$
-
-```python
-tb7, dic_tb7 = create_table_test_not_false(cas = "CAS_7")
-```
-
-```python
-dic_tb7
-```
-
-```python
-tb7
-```
-
-```python
-table_list_num_other_tests(cas = 'CAS_7')
-```
-
-```python
-filter_list_num_test_false(cas = 'CAS_7',test = 'test_type_voie')
-```
-
-## Resume tests
-
-La différence du nombre d'observation vient du cas numéro 2, ou les siren ont été matché mais aucune des deux adresses ne correspond
-
-```python
-nb_to_find = {
-    'cas':[],
-    'lignes_matche_list_num':[],
-    'to_find':[],
-    'lignes_matche_list_num_pct': [],
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
     
-}
+nb_index_before = (s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename), sep = ',')
+         )
+nb_index_before.values[0][0]
+```
 
-for d, value in enumerate([dic_tb1,dic_tb3,dic_tb4,dic_tb5,dic_tb6,dic_tb7]):
-    cas = d + 1
-    if d >= 1:
-        cas = d + 2
-    nb_to_find['cas'].append(cas)
-    nb_to_find['to_find'].append(value['lignes_a_trouver']['test_list_num_voie'][0]),
-    nb_to_find['lignes_matche_list_num'].append(value['lignes_matches']['lignes_matche_list_num']),
-    nb_to_find['lignes_matche_list_num_pct'].append(value['lignes_matches']['lignes_matche_list_num_pct'])
+Le nombre d'index après se filtre et de:
+
+```python
+query = """
+SELECT COUNT(DISTINCT(index_id))
+FROM ets_inpi_insee_cases 
+WHERE test_duplicates_is_in_cas_1_3_4 !=  'TO_REMOVE'
+
+"""
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename = 'index_a_trouver_remove_test_duplicates_is_in_cas_1_3_4.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
     
-reindex = ["cas",
-           "lignes_matche_list_num", "lignes_matche_list_num_pct", "cum_sum_matche","cum_sum_matche_pct",
-           "to_find","to_find_pct", "cum_sum_to_find", "cum_sum_to_find_pct"
-          ]
+nb_index_after = (s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename), sep = ',')
+         )
+nb_index_after.values[0][0]
+```
+
+Le nombre d'index doit être identique. Si ce n'est pas le cas, il y a un problème
+
+```python
+nb_index_before.values[0][0] - nb_index_after.values[0][0] ==  0
+```
+
+Le tableau ci dessous récapitule le nombre de lignes selon le status de `test_duplicates_is_in_cas_1_3_4`
+
+```python
+query = """
+SELECT count_inpi_index_id_siret,test_duplicates_is_in_cas_1_3_4,  COUNT(index_id) as nb_distinct
+FROM ets_inpi_insee_cases
+WHERE index_id_duplicate = 'True'
+GROUP BY count_inpi_index_id_siret, test_duplicates_is_in_cas_1_3_4
+ORDER BY count_inpi_index_id_siret, test_duplicates_is_in_cas_1_3_4
+"""
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_multi = 'duplicate_test_filename_multi.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_multi
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )  
     
-(pd.DataFrame(nb_to_find).assign(
-    cum_sum_to_find = lambda x: x['to_find'].cumsum(),
-    cum_sum_matche = lambda x: x['lignes_matche_list_num'].cumsum(),
-    cum_sum_matche_pct = lambda x: x['lignes_matche_list_num_pct'].cumsum(),
-    to_find_pct = lambda x:  x['to_find']/x['to_find'].sum(),
-    cum_sum_to_find_pct = lambda x: x['cum_sum_to_find']/x['to_find'].sum(),
-    #cum_sum_to_find_pct = lambda x: x['pct_total'].cumsum(),
-    #cum_sum_pct_inverse = lambda x: 1-x['pct_total'].cumsum(),
-    #cum_pct_match = lambda x: x['pct_match'].cumsum(),
-    
+(
+pd.concat([
+(test_ligne
+ .groupby('test_duplicates_is_in_cas_1_3_4')['nb_distinct']
+ .sum()
+ .to_frame()
+ .T
+),
+    (test_ligne
+ .fillna(0)
+ .set_index(['count_inpi_index_id_siret', 'test_duplicates_is_in_cas_1_3_4'])
+ .unstack(-1)
+     .droplevel(level = 0, axis = 1)
+)], axis = 0
 )
- .reindex(columns  = reindex)
+    .assign( 
+ total_row = lambda x : x.sum(axis = 1)
+ )
+.style
+ .format("{:,.0f}")
+)
+```
+
+# Nombre ligne duplicate-index
+
+Dans le tableau ci dessous, on regarde le nombre de siret possible par index, quelque soit le cas.
+
+
+Par exemple, il y a 251,612 lignes avec 2 siret possibles, qui constituent 125,694 index a trouver
+
+```python
+#### Lignes
+query = """
+SELECT count_inpi_index_id_siret, COUNT(*) as nb_distinct
+FROM ets_inpi_insee_cases 
+GROUP BY count_inpi_index_id_siret
+ORDER BY count_inpi_index_id_siret
+"""
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'nb_duplicates_ligne.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+    
+##### Index
+query = """
+SELECT count_inpi_index_id_siret, COUNT(DISTINCT(index_id)) as nb_distinct
+FROM ets_inpi_insee_cases 
+GROUP BY count_inpi_index_id_siret
+ORDER BY count_inpi_index_id_siret
+"""
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_index = 'nb_duplicates_index.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_index
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+    
+test_ligne = (s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')
+         )
+
+test_index = (s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_index), sep = ',')
+         )
+(
+pd.concat([    
+ pd.concat([
+    pd.concat(
+    [
+        test_ligne.sum().to_frame().T.rename(index = {0:'total'}), 
+        test_ligne
+    ], axis = 0),
+    ],axis = 1,keys=["Lignes"]),
+    (
+ pd.concat([
+    pd.concat(
+    [
+        test_index.sum().to_frame().T.rename(index = {0:'total'}), 
+        test_index
+    ], axis = 0),
+    ],axis = 1,keys=["Index"])
+)],axis= 1
+    )
+    .style
+    .format("{:,.0f}")
+                  .bar(subset= [
+                      ('Lignes','nb_distinct'),
+                      ('Index','nb_distinct'),
+                      
+                  ],
+                       color='#d65f5f')
+)
+```
+
+## Nombre de cas par index dupliqué
+
+Le tableau ci dessous est intéréssant car il informe sur le nombre de cas de figure possible pour chacun des index dupliqués (plusieurs siret possible). Par exemple, lorsque le nombre de doublon par index est de deux, il est composé de 80,230 lignes (40,073 index) appartenant au cas de figure 1 et 171,382 lignes (85,621) au cas de figure 2.
+
+```python
+#### Lignes
+query = """ 
+SELECT count_inpi_index_id_siret,count_inpi_index_id_stat_cas, COUNT(index_id) as nb_distinct
+FROM ets_inpi_insee_cases 
+GROUP BY count_inpi_index_id_stat_cas, count_inpi_index_id_siret
+ORDER BY count_inpi_index_id_siret, count_inpi_index_id_stat_cas
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'nb_cas_per_duplicate_ligne.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+
+#### Index
+query = """ 
+SELECT count_inpi_index_id_siret,count_inpi_index_id_stat_cas, COUNT(Distinct(index_id)) as nb_distinct
+FROM ets_inpi_insee_cases 
+GROUP BY count_inpi_index_id_stat_cas, count_inpi_index_id_siret
+ORDER BY count_inpi_index_id_siret, count_inpi_index_id_stat_cas
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_index = 'nb_cas_per_duplicate_index.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_index
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+test_ligne = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')    
+test_index = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_index), sep = ',')
+
+(
+    pd.concat([
+pd.concat([    
+pd.concat([
+(
+ test_ligne
+ .set_index(['count_inpi_index_id_siret','count_inpi_index_id_stat_cas'])
+ .unstack(-1)
+ .sum()
+ .to_frame()
+ .unstack(-1)
+ .droplevel(level = 0, axis=1)
+),
+(
+ test_ligne
+ .set_index(['count_inpi_index_id_siret','count_inpi_index_id_stat_cas'])
+ .unstack(-1)
+ .fillna(0)
+    .droplevel(level = 0, axis=1)
+)], axis = 0)
+    .assign( 
+ total_row = lambda x : x.sum(axis = 1)
+ )],axis = 1, keys=["Lignes"]
+    ),
+
+pd.concat([    
+pd.concat([
+(
+ test_index
+ .set_index(['count_inpi_index_id_siret','count_inpi_index_id_stat_cas'])
+ .unstack(-1)
+ .sum()
+ .to_frame()
+ .unstack(-1)
+ .droplevel(level = 0, axis=1)
+),
+(
+ test_index
+ .set_index(['count_inpi_index_id_siret','count_inpi_index_id_stat_cas'])
+ .unstack(-1)
+ .fillna(0)
+    .droplevel(level = 0, axis=1)
+)], axis = 0)
+    .assign( 
+ total_row = lambda x : x.sum(axis = 1)
+ )],axis = 1, keys=["Index"])],
+        axis= 1)
+    .style
+    .format("{:,.0f}")
+                  .bar(subset= [
+                      ('Lignes','total_row'),
+                      ('Index','total_row'),
+                      
+                  ],
+                       color='#d65f5f')
+           
+)
+```
+
+Dans le tableau précédent, nous avons regardé le nombre de cas possibles pour chacun des duplicates. Pour connaitre les cas de figure concernant les duplicates, il faut regarder le tableau ci dessous. Par exemple, il y a 16,594 lignes (14,491 index) pour lesquelles il y a deux doublons par index concernant le cas de figure 2.
+
+Le tableau nous informe aussi de cas de figure ou l'ensemble des mots de l'adresse sont identiques, avec aussi les numéros de voie, mais il y a encore des doublons. C'est le cas pour 110,798 lignes (86,652 index). Ce cas peut être trouvé dans la colonne `CAS_1` et `status_cas` supérieur à 1. Lorsque ce genre de cas arrive, il faut appliquer d'avantage de règles que nous véront plus tard dans le notebook.  
+
+```python
+### Lignes
+query = """ 
+SELECT count_inpi_index_id_siret,status_cas, COUNT(index_id) as nb_distinct
+FROM ets_inpi_insee_cases 
+GROUP BY status_cas, count_inpi_index_id_siret
+ORDER BY count_inpi_index_id_siret, status_cas
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'nb_cas_per_duplicate_ligne.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+### index
+query = """ 
+SELECT count_inpi_index_id_siret,status_cas, COUNT(DISTINCT(index_id)) as nb_distinct
+FROM ets_inpi_insee_cases 
+GROUP BY status_cas, count_inpi_index_id_siret
+ORDER BY count_inpi_index_id_siret, status_cas
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_index = 'nb_cas_per_duplicate_index.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_index
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+    
+test_ligne = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')    
+test_index = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_index), sep = ',')
+
+(
+    pd.concat([
+pd.concat([    
+pd.concat([
+(
+ test_ligne
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .sum()
+ .to_frame()
+ .unstack(-1)
+ .droplevel(level = 0, axis=1)
+),
+(
+ test_ligne
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .fillna(0)
+    .droplevel(level = 0, axis=1)
+)], axis = 0)
+    .assign( 
+ total_row = lambda x : x.sum(axis = 1)
+ )],axis = 1, keys=["Lignes"]
+    ),
+
+pd.concat([    
+pd.concat([
+(
+ test_index
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .sum()
+ .to_frame()
+ .unstack(-1)
+ .droplevel(level = 0, axis=1)
+),
+(
+ test_index
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .fillna(0)
+    .droplevel(level = 0, axis=1)
+)], axis = 0)
+    .assign( 
+ total_row = lambda x : x.sum(axis = 1)
+ )],axis = 1, keys=["Index"])],
+        axis= 1)
+    .style
+    .format("{:,.0f}")
+                  .bar(subset= [
+                      ('Lignes','total_row'),
+                      ('Index','total_row'),
+                      
+                  ],
+                       color='#d65f5f')
+           
+)  
+```
+
+# Analyse `test_siren_insee_siren_inpi`
+
+Dans cette partie, nous nous intéréssons aux resultats des tests lorsque `test_siren_insee_siren_inpi` n'est pas égal à `False`
+
+
+
+## Analyse `test_siren_insee_siren_inpi`
+
+Dans ce tableau, le nombre de lignes n'ayant pas de doublon et la méthode sur l'adresse correspond au 3 est égal à  223,608 (223,461). 
+
+```python
+#### Lignes
+query = """
+SELECT status_cas,count_inpi_index_id_siret, COUNT(index_id) as nb_distinct
+FROM ets_inpi_insee_cases
+WHERE test_siren_insee_siren_inpi != 'False'  
+GROUP BY status_cas, count_inpi_index_id_siret
+ORDER BY status_cas
+
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'nb_duplicate_par_cas_test_siren_insee_siren_inpi_ligne.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )
+#### index
+query = """
+SELECT status_cas,count_inpi_index_id_siret, COUNT(DISTINCT(index_id)) as nb_distinct
+FROM ets_inpi_insee_cases
+WHERE test_siren_insee_siren_inpi != 'False'  
+GROUP BY status_cas, count_inpi_index_id_siret
+ORDER BY status_cas
+
+"""
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_index = 'nb_duplicate_par_cas_test_siren_insee_siren_inpi_index.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_index
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )  
+    
+test_ligne = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')    
+test_index = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_index), sep = ',')
+
+(
+    pd.concat([
+pd.concat([    
+pd.concat([
+(
+ test_ligne
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .sum()
+ .to_frame()
+ .unstack(-1)
+ .droplevel(level = 0, axis=1)
+),
+(
+ test_ligne
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .fillna(0)
+    .droplevel(level = 0, axis=1)
+)], axis = 0)
+    .assign( 
+ total_row = lambda x : x.sum(axis = 1)
+ )],axis = 1, keys=["Lignes"]
+    ),
+
+pd.concat([    
+pd.concat([
+(
+ test_index
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .sum()
+ .to_frame()
+ .unstack(-1)
+ .droplevel(level = 0, axis=1)
+),
+(
+ test_index
+ .set_index(['count_inpi_index_id_siret','status_cas'])
+ .unstack(-1)
+ .fillna(0)
+    .droplevel(level = 0, axis=1)
+)], axis = 0)
+    .assign( 
+ total_row = lambda x : x.sum(axis = 1)
+ )],axis = 1, keys=["Index"])],
+        axis= 1)
+    .style
+    .format("{:,.0f}")
+                  .bar(subset= [
+                      ('Lignes','total_row'),
+                      ('Index','total_row'),
+                      
+                  ],
+                       color='#d65f5f')
+           
+)      
+```
+
+## Analyse `test_list_num` par rapport aux autres tests
+
+Lors de la partie précédente, nous avons mis en évidence des cas ou l'adresse peut être identique en tout point mais possède des doublons. Pour cela, il faut appliquer d'autres tests. Nous avons recensé les tests suivants:
+
+- `test_sequence_siret`: Pertinence faible
+    - `count_inpi_sequence_siret = 1 THEN ‘True’ ELSE ‘False``
+    - Si la variable est ‘True’ alors, il n’y a pas de duplicate pour une séquence
+- `test_index_siret`: Pertinence faible
+    - `count_inpi_index_id_stat_cas_siret = 1 THEN 'True' ELSE 'False'`
+    - Si la variable est true, alors, il n’y a qu”un seul cas de figure par index 
+- `test_siren_insee_siren_inpi`: Pertinence elevée
+    - `count_initial_insee = count_inpi_siren_siret THEN 'True' ELSE 'False'`
+    - Si la variable est ‘True’ alors tous les établissements ont été trouvé
+- `test_sequence_siret_many_cas`: Pertinence faible
+    - `count_inpi_sequence_siret = count_inpi_sequence_stat_cas_siret THEN 'True' ELSE 'False`
+    - test si la séquence appartient a plusieurs cas
+- `test_date`: Pertinence moyenne
+    - `WHEN datecreationetablissement = date_debut_activite THEN 'True' WHEN datecreationetablissement IS NULL 
+        OR date_debut_activite IS NULL THEN 'NULL' --WHEN datecreationetablissement = '' 
+        ELSE 'False'``
+    - Test si la date de création de l'établissement est égale à la date de création. 
+- `test_status_admin`: Pertinence moyenne
+    - `WHEN etatadministratifetablissement = status_admin THEN 'True' WHEN etatadministratifetablissement IS NULL 
+        OR status_admin IS NULL THEN 'NULL' WHEN etatadministratifetablissement = '' 
+        OR status_admin = '' THEN 'NULL' ELSE 'False'``
+    - Test si l'établissement est fermé ou non. Pas radié mais fermé. L'INSEE n'indique pas les radiations, et le fichier ETS de l'INPI n'indique pas les radiations et n'indique pas les fermetures resultants de radiation. Pour cela il faut construire la variable via la table PM ou PP.
+- `test_siege`: Pertinence elevée
+    - `etablissementsiege = status_ets THEN 'True' WHEN etablissementsiege IS NULL 
+        OR status_ets IS NULL THEN 'NULL' WHEN etablissementsiege = '' 
+        OR status_ets = '' THEN 'NULL' ELSE 'False'``
+    - Test si le siret est un siège ou non. 
+- `test_code_commune`: Pertinence faible
+    - `codecommuneetablissement = code_commune THEN 'True' WHEN codecommuneetablissement IS NULL 
+        OR code_commune IS NULL THEN 'NULL' WHEN codecommuneetablissement = '' 
+        OR code_commune = '' THEN 'NULL' ELSE 'False'``
+    - Test si le code commune est identique entre l'INPI et l'INSEE. Pas suffisament fiable
+- `test_type_voie`: Pertinence faible
+    - `numerovoieetablissement = numero_voie_matching THEN 'True' WHEN numerovoieetablissement IS NULL 
+        OR numero_voie_matching IS NULL THEN 'NULL' WHEN numerovoieetablissement = '' 
+        OR numero_voie_matching = '' THEN 'NULL' ELSE 'False'`
+    - Test si le type de voie est identique entre les deux variables. Methode d'extraction que nous avons utilisé n'est pas suffisement pertinente
+- `test_enseigne`: Pertinence moyenne
+    - `WHEN cardinality(test) = 0 THEN 'NULL' WHEN enseigne = '' THEN 'NULL' WHEN temp_test_enseigne = TRUE THEN 'True' ELSE 'False'`
+    - Test si l'enseigne est identique entre les variables. Aucun retraitement si ce n'est mise en majuscule et exclusion des accents. Ne regardepas les fautes d'orthographe
+    
+###  `test_list_num`:  Doublon ligne
+
+Le tableau ci dessous indique que lorsque l'index id n'a pas de doublon, 6,619,308 lignes ont passé le test, 	3,770,568 ne sont pas des sièges, 5,523,137 lignes avec siège.
+
+```python
+top_1 = """
+SELECT 
+index_unique, groups,
+"""
+top_2 = " FROM index_20_true "
+
+middle_1 = ""
+
+middle_2 =  """
+
+-- {0}
+
+LEFT JOIN (
+
+SELECT {0}, count_inpi_index_id_siret, COUNT(index_id) as nb_dict_{0}
+FROM ets_inpi_insee_cases
+WHERE test_list_num_voie != 'False'  
+GROUP BY {0}, count_inpi_index_id_siret
+  ) as nb_{0}
+ON index_20_true.index_unique = nb_{0}.count_inpi_index_id_siret AND
+index_20_true.groups = nb_{0}.{0}
+
+"""
+
+bottom = "ORDER BY index_unique, groups"
+
+tests = [
+    "test_sequence_siret",
+    "test_index_siret",
+    "test_siren_insee_siren_inpi",
+    "test_sequence_siret_many_cas",
+    "test_list_num_voie",
+    "test_date",
+    "test_status_admin",
+    "test_siege",
+    "test_code_commune",
+    "test_type_voie",
+    "test_enseigne"] 
+
+for i, test in enumerate(tests):
+    var = 'nb_dict_{}'.format(test)
+    if i == len(tests) -1:
+        top_1 += '{}'.format(var)
+    else:
+        top_1+='{},'.format(var)
+        
+    middle_1+= middle_2.format(test)
+
+query = top_1 + top_2 + middle_1 + bottom
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'nb_duplicate_par_cas_list_true_lignes_tests.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )  
+    
+test_ligne = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')  
+(test_ligne
+ .assign(groups = lambda x: x['groups'].fillna('NULL'))
+ .fillna(0)
+ .set_index(['index_unique', 'groups'])
+ .unstack(-1)
  .style
- .format("{:.2%}", subset =  ['lignes_matche_list_num_pct', 'cum_sum_matche_pct', 'to_find_pct',
-                              'cum_sum_to_find_pct'])
- .format("{:,.0f}", subset =  ['lignes_matche_list_num','cum_sum_matche', 'to_find', 'cum_sum_to_find'])
- .bar(subset= ['lignes_matche_list_num_pct','to_find_pct'], color='#d65f5f')
+ .format("{:,.0f}")
+)
+```
+
+###  `test_list_num`:  Doublon index
+
+Le tableau ci dessous indique que lorsque l'index id n'a pas de doublon, 1,640,499 lignes ont une divergence entre fermeture/ouverture et 7,639,370 lignes ont un status administratif identique.
+
+```python
+top_1 = """
+SELECT 
+index_unique, groups,
+"""
+top_2 = " FROM index_20_true "
+
+middle_1 = ""
+
+middle_2 =  """
+
+-- {0}
+
+LEFT JOIN (
+
+SELECT {0}, count_inpi_index_id_siret, COUNT(DISTINCT(index_id)) as nb_dict_{0}
+FROM ets_inpi_insee_cases
+WHERE test_list_num_voie != 'False'  
+GROUP BY {0}, count_inpi_index_id_siret
+  ) as nb_{0}
+ON index_20_true.index_unique = nb_{0}.count_inpi_index_id_siret AND
+index_20_true.groups = nb_{0}.{0}
+
+"""
+
+bottom = "ORDER BY index_unique, groups"
+
+tests = [
+    "test_sequence_siret",
+    "test_index_siret",
+    "test_siren_insee_siren_inpi",
+    "test_sequence_siret_many_cas",
+    "test_list_num_voie",
+    "test_date",
+    "test_status_admin",
+    "test_siege",
+    "test_code_commune",
+    "test_type_voie",
+    "test_enseigne"] 
+
+for i, test in enumerate(tests):
+    var = 'nb_dict_{}'.format(test)
+    if i == len(tests) -1:
+        top_1 += '{}'.format(var)
+    else:
+        top_1+='{},'.format(var)
+        
+    middle_1+= middle_2.format(test)
+
+query = top_1 + top_2 + middle_1 + bottom
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_index = 'nb_duplicate_par_cas_list_true_index_tests.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_index
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )  
+    
+test_ligne = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_index), sep = ',')  
+(test_ligne
+ .assign(groups = lambda x: x['groups'].fillna('NULL'))
+ .fillna(0)
+ .set_index(['index_unique', 'groups'])
+ .unstack(-1)
+ .style
+ .format("{:,.0f}")
+)
+```
+
+## Verification `test_siren_insee_siren_inpi` 
+
+On regarde les tests lorsque `test_siren_insee_siren_inpi` est égal à true (pas de doublon) -> Lignes
+
+```python
+top_1 = """
+SELECT 
+index_unique, groups,
+"""
+top_2 = " FROM index_20_true "
+
+middle_1 = ""
+
+middle_2 =  """
+
+-- {0}
+
+LEFT JOIN (
+
+SELECT {0}, count_inpi_index_id_siret, COUNT(index_id) as nb_dict_{0}
+FROM ets_inpi_insee_cases
+WHERE test_siren_insee_siren_inpi != 'False'  
+GROUP BY {0}, count_inpi_index_id_siret
+  ) as nb_{0}
+ON index_20_true.index_unique = nb_{0}.count_inpi_index_id_siret AND
+index_20_true.groups = nb_{0}.{0}
+
+"""
+
+bottom = "ORDER BY index_unique, groups"
+
+tests = [
+    #"test_sequence_siret",
+    "test_index_siret",
+    "test_siren_insee_siren_inpi",
+    "test_sequence_siret_many_cas",
+    "test_list_num_voie",
+    "test_date",
+    "test_status_admin",
+    "test_siege",
+    "test_code_commune",
+    "test_type_voie",
+    "test_enseigne"] 
+
+for i, test in enumerate(tests):
+    var = 'nb_dict_{}'.format(test)
+    if i == len(tests) -1:
+        top_1 += '{}'.format(var)
+    else:
+        top_1+='{},'.format(var)
+        
+    middle_1+= middle_2.format(test)
+
+query = top_1 + top_2 + middle_1 + bottom
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'nb_duplicate_test_siren_insee_siren_inpi_tests.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )  
+    
+test_ligne = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')  
+(test_ligne
+ .assign(groups = lambda x: x['groups'].fillna('NULL'))
+ .fillna(0)
+ .set_index(['index_unique', 'groups'])
+ .unstack(-1)
+ .style
+ .format("{:,.0f}")
+)
+```
+
+## Analyse CAS 1,3,4 et doublons index
+
+Il y a environ 150k lignes qui ont un match parfait de l'adresse, des numéros de voie mais qui ont plusieurs siret. Dans cette partie, nous allons regarder les tests complémentaires pour determiner combien peuvent être récupérer.
+
+```python
+top_1 = """
+SELECT 
+index_unique, groups,
+"""
+top_2 = " FROM index_20_true "
+
+middle_1 = ""
+
+middle_2 =  """
+
+-- {0}
+
+LEFT JOIN (
+
+SELECT {0}, count_inpi_index_id_siret, COUNT(index_id) as nb_dict_{0}
+FROM ets_inpi_insee_cases
+WHERE index_id_duplicate = 'True' AND test_adresse_cas_1_3_4 = 'True'  
+GROUP BY {0}, count_inpi_index_id_siret
+  ) as nb_{0}
+ON index_20_true.index_unique = nb_{0}.count_inpi_index_id_siret AND
+index_20_true.groups = nb_{0}.{0}
+
+"""
+
+bottom = "ORDER BY index_unique, groups"
+
+tests = [
+    #"test_sequence_siret",
+    "test_index_siret",
+    "test_siren_insee_siren_inpi",
+    "test_sequence_siret_many_cas",
+    "test_list_num_voie",
+    "test_date",
+    "test_status_admin",
+    "test_siege",
+    "test_code_commune",
+    "test_type_voie",
+    "test_enseigne"] 
+
+for i, test in enumerate(tests):
+    var = 'nb_dict_{}'.format(test)
+    if i == len(tests) -1:
+        top_1 += '{}'.format(var)
+    else:
+        top_1+='{},'.format(var)
+        
+    middle_1+= middle_2.format(test)
+
+query = top_1 + top_2 + middle_1 + bottom
+
+output = athena.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output'
+        )
+
+results = False
+filename_ligne = 'duplicate_test_complementaire_match_adresse_full.csv'
+
+while results != True:
+    source_key = "{}/{}.csv".format(
+                                'INPI/sql_output',
+                                output['QueryExecutionId']
+                                       )
+    destination_key = "{}/{}".format(
+                                    'ANALYSE_PRE_SIRETISATION',
+                                    filename_ligne
+                                )
+
+    results = s3.copy_object_s3(
+                                    source_key = source_key,
+                                    destination_key = destination_key,
+                                    remove = True
+                                )  
+    
+test_ligne = s3.read_df_from_s3(
+            key = 'ANALYSE_PRE_SIRETISATION/{}'.format(filename_ligne), sep = ',')  
+(test_ligne
+ .assign(groups = lambda x: x['groups'].fillna('NULL'))
+ .fillna(0)
+ .set_index(['index_unique', 'groups'])
+ .unstack(-1)
+ .style
+ .format("{:,.0f}")
 )
 ```
 
