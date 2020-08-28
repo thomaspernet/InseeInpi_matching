@@ -316,12 +316,22 @@ Nous devons calculer la similarité entre les mots communs dans l'adresse INPI/I
 
 La librarie `gensim` permet d'exporter les poids en `.txt`. Toutefois, il n'est pas concevable de calculer l'ensembles des similarités entre toutes les occurences (environ 90.000), donc lors des traitements dans Athena, nous calculerons le cosines à la demande. 
 
+Version 1 [DEPRECATED]
+
 Pour cela, nous allons créer un csv avec deux colonnes, `words` et `list_weights`. Attention, cette dernière n'est pas une liste dans le csv, mais le sera dans Athena. Athena permet d'importer un ensemble de valeur dans un array. Si on crée une liste dans le csv, Athena va créer une liste de liste. Ainsi, il est plus simple dans le csv de créer uniquement deux colonnes, les mots et les poids. Le séparateur `|` sera utilisé. Le csv ressemble a ca:
 
 ```
 Words | list_of_weights
 RUE | .1, .4 ......
 AVENUE | .2, .9 ......
+```
+
+Version 2:
+
+Sauvegarde l'ensemble des poids dans des colonnes
+
+```python
+import pandas as pd
 ```
 
 ```python
@@ -339,20 +349,28 @@ model_wieghts = pd.read_csv('word2vec_weights_100.txt',
 ```
 
 ```python
-zipped_weight = list(
-    zip(
-    model_wieghts.set_index(0).index.values.tolist(),
-    model_wieghts.set_index(0).values.tolist()
-)
-    )
+model_wieghts
 ```
 
 ```python
-(pd.DataFrame(zipped_weight)
-  .rename(columns= {0:'words', 1: 'list_weights'})
-  .assign(list_weights = lambda x:x['list_weights'].apply(lambda x: ','.join(map(str, x))))
-  .to_csv('word2vec_weights_100.csv', index = False, sep = "|")       
- )
+#zipped_weight = list(
+#    zip(
+#    model_wieghts.set_index(0).index.values.tolist(),
+#    model_wieghts.set_index(0).values.tolist()
+#)
+#    )
+```
+
+```python
+#(pd.DataFrame(zipped_weight)
+#  .rename(columns= {0:'words', 1: 'list_weights'})
+#  .assign(list_weights = lambda x:x['list_weights'].apply(lambda x: ','.join(map(str, x))))
+#  .to_csv('word2vec_weights_100.csv', index = False, sep = "|")       
+# )
+```
+
+```python
+model_wieghts.to_csv('word2vec_weights_100.csv', index = False)  
 ```
 
 Le modèle se trouve à l'adresse suivante [MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS](https://s3.console.aws.amazon.com/s3/buckets/calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/?region=eu-west-3&tab=overview)
@@ -364,30 +382,104 @@ s3.upload_file('word2vec_weights_100.csv',
 
 ## Create tables weights
 
-Pour convertir un string en array, il suffit d'utiliser `array<string>`  
+Athena ne peut pas créer des array float a partir de fichier csv, du coup on utilise la fonction concat. C'est une solution pour le poc. 
+
+On créer une table temporaire qui contient l'ensemble des poids en colonnes `list_mots_insee_inpi_word2vec_weights_temp` puis on canct les colonnes dans la table `list_mots_insee_inpi_word2vec_weights`
 
 ```python
-query = """
-CREATE EXTERNAL TABLE IF NOT EXISTS machine_learning.list_mots_insee_inpi_word2vec_weights (
+top = """
+CREATE EXTERNAL TABLE IF NOT EXISTS machine_learning.list_mots_insee_inpi_word2vec_weights_temp (
 
 `Words` string,
-`list_weights` array<string>
-  )
-
-ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
-     WITH SERDEPROPERTIES (
-      'serialization.format' = ',',
-      'field.delim' = '|') 
-     LOCATION 's3://calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS'
-     TBLPROPERTIES ('has_encrypted_data'='false', 
-     'skip.header.line.count'='1')
-     
 """
+middle = ""
+
+for i in range(0,100):
+    if i == 99:
+        middle += "vec_{} float )".format(i)
+    else:
+        middle += "vec_{} float,".format(i)
+bottom = """
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+   'separatorChar' = ',',
+   'quoteChar' = '"'
+   ) 
+     LOCATION 's3://calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1');
+""" 
+query = top + middle +bottom
 output = athena.run_query(
         query=query,
         database='machine_learning',
         s3_output='INPI/sql_output'
     )
+```
+
+```python
+query = """
+
+CREATE TABLE machine_learning.list_mots_insee_inpi_word2vec_weights
+WITH (
+  format='PARQUET'
+) AS
+SELECT words,
+CONCAT(
+
+"""
+middle = ""
+for i in range(0, 100):
+    if i ==99:
+        middle  = "ARRAY[vec_{}]) as list_weights".format(i)
+    else:
+        middle  = "ARRAY[vec_{}],".format(i)
+    query += middle
+bottom = """
+FROM "machine_learning"."list_mots_insee_inpi_word2vec_weights_temp"
+"""
+query += bottom
+output = athena.run_query(
+        query=query,
+        database='machine_learning',
+        s3_output='INPI/sql_output'
+    )
+```
+
+```python
+output = athena.run_query(
+        query="DROP TABLE `list_mots_insee_inpi_word2vec_weights_temp`;",
+        database='machine_learning',
+        s3_output='INPI/sql_output'
+    )
+```
+
+```python
+
+```
+
+```python
+#query = """
+#CREATE EXTERNAL TABLE IF NOT EXISTS machine_learning.list_mots_insee_inpi_word2vec_weights (
+
+#`Words` string,
+#`list_weights` array<string>
+#  )
+
+#ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+#     WITH SERDEPROPERTIES (
+#      'serialization.format' = ',',
+#      'field.delim' = '|') 
+#     LOCATION 's3://calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS'
+#     TBLPROPERTIES ('has_encrypted_data'='false', 
+#     'skip.header.line.count'='1')
+#     
+#"""
+#output = athena.run_query(
+#        query=query,
+#        database='machine_learning',
+#        s3_output='INPI/sql_output'
+#    )
 ```
 
 # Analyse du modèle
