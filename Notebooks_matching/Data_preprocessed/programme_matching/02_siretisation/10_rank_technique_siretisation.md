@@ -20,6 +20,7 @@ Copy paste from Coda to fill the information
 ## Objective(s)
 
 - Lors de [l’US 7: Test nombre lignes siretise avec nouvelles regles de gestion](https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-ETS-version-3_su0VF), nous avons créé une table avec l’ensemble des possibilités de tests, trié par ordre de préférence. 
+- Lors de l’US, [Creation table distance word2vec et merge table ets inpi insee cas](https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-ETS-version-3_su0VF), nous avons crée deux variables pour les tests, a savoir le test sur la distance de cosine, et le test de levhenstein. 
   - Afin de séparer les doublons, il suffit de récupérer le rank minimum par index. Celui ci va nous donner le meilleur des probables. 
   - Il est bien sur possible d’avoir encore des doublons, dans ces cas la, il faut aller plus loin dans la rédaction des tests
   - L’objectif de cette US est de récupérer le rank minimum de la table ets_inpi_insee_cases puis de faire une analyse brève des index récupérés. 
@@ -59,11 +60,11 @@ If link from the internet, save it to the cloud first
 
 ### Tables [AWS/BigQuery]
 
-- - Batch 1:
+- Batch 1:
 
   - Select Provider: Athena
 
-    - Select table(s): ets_inpi_insee_cases
+    -  Select table(s): ets_inpi_insee_cases_distance
 
     - Select only tables created from the same notebook, else copy/paste selection to add new input tables
 
@@ -80,7 +81,7 @@ If link from the internet, save it to the cloud first
 
         - Database: inpi
 
-        - Notebook construction file: [07_pourcentage_siretisation_v3](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/02_siretisation/07_pourcentage_siretisation_v3.md)
+        - Notebook construction file: [07_bis_creation_distance](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/02_siretisation/07_bis_creation_distance.md)
     
 ## Destination Output/Delivery
 
@@ -153,11 +154,29 @@ WITH (
 WITH tb_min_rank AS (
 SELECT 
 min_rank,
-  ets_inpi_insee_cases.index_id, 
   row_id, 
+  ets_inpi_insee_cases_distance.index_id, 
   sequence_id, 
   siren, 
-  siret, 
+  siret,
+  list_inpi, 
+  lenght_list_inpi, 
+  list_insee, 
+  lenght_list_insee, 
+  inpi_except, 
+  insee_except, 
+  intersection, 
+  union_, 
+  pct_intersection, 
+  len_inpi_except, 
+  len_insee_except, 
+  status_cas,
+  unzip_inpi,
+  unzip_insee,
+  max_cosine_distance,
+  test_distance_cosine,
+  levenshtein_distance,
+  test_distance_levhenstein, 
   count_initial_insee, 
   count_inpi_siren_siret, 
   count_inpi_siren_sequence, 
@@ -196,18 +215,6 @@ min_rank,
   typevoieetablissement, 
   type_voie_matching, 
   test_type_voie, 
-  list_inpi, 
-  lenght_list_inpi, 
-  list_insee, 
-  lenght_list_insee, 
-  inpi_except, 
-  insee_except, 
-  intersection, 
-  union_, 
-  pct_intersection, 
-  len_inpi_except, 
-  len_insee_except, 
-  status_cas, 
   test_adresse_cas_1_3_4, 
   index_id_dup_has_cas_1_3_4, 
   test_duplicates_is_in_cas_1_3_4, 
@@ -215,24 +222,43 @@ min_rank,
   enseigne1etablissement, 
   enseigne2etablissement, 
   enseigne3etablissement, 
-  test_enseigne 
-FROM ets_inpi_insee_cases 
+  test_enseigne,
+  key_except_to_test
+FROM ets_inpi_insee_cases_distance 
 INNER JOIN (
   SELECT index_id, MIN(rank) AS min_rank
-FROM ets_inpi_insee_cases
+FROM ets_inpi_insee_cases_distance
 GROUP BY index_id
   ) as tb_min_rank
-ON ets_inpi_insee_cases.index_id = tb_min_rank.index_id AND
-ets_inpi_insee_cases.rank = tb_min_rank.min_rank
+ON ets_inpi_insee_cases_distance.index_id = tb_min_rank.index_id AND
+ets_inpi_insee_cases_distance.rank = tb_min_rank.min_rank
   ) 
   SELECT 
   min_rank,
+  row_id, 
   tb_min_rank.index_id, 
   count_index,
-  row_id, 
   sequence_id, 
   siren, 
-  siret, 
+  siret,
+  list_inpi, 
+  lenght_list_inpi, 
+  list_insee, 
+  lenght_list_insee, 
+  inpi_except, 
+  insee_except, 
+  intersection, 
+  union_, 
+  pct_intersection, 
+  len_inpi_except, 
+  len_insee_except, 
+  status_cas,
+  unzip_inpi,
+  unzip_insee,
+  max_cosine_distance,
+  test_distance_cosine,
+  levenshtein_distance,
+  test_distance_levhenstein, 
   count_initial_insee, 
   count_inpi_siren_siret, 
   count_inpi_siren_sequence, 
@@ -271,18 +297,6 @@ ets_inpi_insee_cases.rank = tb_min_rank.min_rank
   typevoieetablissement, 
   type_voie_matching, 
   test_type_voie, 
-  list_inpi, 
-  lenght_list_inpi, 
-  list_insee, 
-  lenght_list_insee, 
-  inpi_except, 
-  insee_except, 
-  intersection, 
-  union_, 
-  pct_intersection, 
-  len_inpi_except, 
-  len_insee_except, 
-  status_cas, 
   test_adresse_cas_1_3_4, 
   index_id_dup_has_cas_1_3_4, 
   test_duplicates_is_in_cas_1_3_4, 
@@ -290,7 +304,8 @@ ets_inpi_insee_cases.rank = tb_min_rank.min_rank
   enseigne1etablissement, 
   enseigne2etablissement, 
   enseigne3etablissement, 
-  test_enseigne 
+  test_enseigne,
+  key_except_to_test 
   FROM tb_min_rank
   LEFT JOIN (
     SELECT index_id, COUNT(*) AS count_index
