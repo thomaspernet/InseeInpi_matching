@@ -26,7 +26,6 @@ Objective(s)
       * Calcul des duplicates sur index & séquence
         * Filtrer les lignes sans duplicate et tests (a definir les règles sur les tests)
    * ATTENTION, on exclut lorsque le test list_num_voie est faux, et que le status_cas est egal à 2. En effet, il n’est pas nécéssaire d’analyser lorsqu’au des numéros ne se trouve dans l’une des deux listes ou bien qu’aucun des mots de l’adresse n’est commun.
-     * La création de la table ets_inpi_insee_cases doit contenir les variables suivantes:
     * row_id
     * count_initial_insee
     * index_id, 
@@ -225,8 +224,10 @@ if drop_table:
 
 ```python
 create_table = """
+
 /*match insee inpi 7 cas de figs*/
-CREATE TABLE inpi.ets_inpi_insee_cases WITH (format = 'PARQUET') AS WITH test_proba AS (
+CREATE TABLE inpi.ets_inpi_insee_cases WITH (format = 'PARQUET') AS 
+WITH test_proba AS (
   SELECT 
     count_initial_insee, 
     index_id, 
@@ -505,6 +506,7 @@ FROM
         )
     
     SELECT 
+      --rank,
       row_id, 
       test.index_id, 
       test.sequence_id, 
@@ -530,7 +532,7 @@ FROM
       list_numero_voie_matching_insee, 
       intersection_numero_voie, 
       union_numero_voie, 
-      test_list_num_voie, 
+      test.test_list_num_voie, 
       datecreationetablissement, 
       date_debut_activite, 
       test_date, 
@@ -539,7 +541,7 @@ FROM
       test_status_admin, 
       etablissementsiege, 
       status_ets, 
-      test_siege, 
+      test.test_siege, 
       codecommuneetablissement, 
       code_commune, 
       test_code_commune, 
@@ -574,7 +576,7 @@ FROM
       enseigne1etablissement, 
       enseigne2etablissement, 
       enseigne3etablissement, 
-      test_enseigne 
+      test.test_enseigne 
     FROM 
       test 
       LEFT JOIN (
@@ -671,6 +673,12 @@ FROM
      FROM test
      GROUP BY index_id
      ) AS  is_index_id_dup_has_cas_1_3_4 ON test.index_id = is_index_id_dup_has_cas_1_3_4.index_id
+   
+  -- LEFT JOIN regles_tests 
+  --ON  test.status_cas = regles_tests.status_cas 
+  --AND test.test_list_num_voie = regles_tests.test_list_num_voie 
+  --AND test.test_siege = regles_tests.test_siege 
+  --AND test.test_enseigne = regles_tests.test_enseigne    
   )
  )
 """
