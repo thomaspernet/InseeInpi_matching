@@ -19,9 +19,18 @@ Copy paste from Coda to fill the information
 
 ## Objective(s)
 
-- Lors de [l’US 7: Test nombre lignes siretise avec nouvelles regles de gestion](https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-ETS-version-3_su0VF), nous avons créé une table avec l’ensemble des possibilités de tests, trié par ordre de préférence. 
-
-  - Toutefois, il manque deux variables:
+* Création d’une table avec un rank qui récapitule par ordre de préférence les relations entre les tests. Pour cela, on va utiliser 4 variables:
+        * - status_cas 
+        * index_id_duplicate 
+        * - test_ligne_num_voie 
+        * - test_siege 
+        * - test_enseigne
+            * Un produit cartésien va être réalisé sur l’ensemble de ses tests pour avoir une matrice avec 162 cas possibles triés par ordre de préférence
+    * test_distance_cosine 
+    * test_distance_levhenstein 
+     * La création de la table ets_inpi_insee_cases doit contenir les variables suivantes:
+    * Rank: 
+      * ordre chronologique des tests. 1 étant le meilleur des cas, car tous les tests ont été réussi. 
 
     - max_distance_cosine
     - test_distance_costine:
@@ -161,6 +170,89 @@ import seaborn as sns
 
 cm = sns.light_palette("green", as_cmap=True)
 pd.set_option('display.max_columns', None)
+```
+
+## Tests index a dedoublonné
+
+Pour faciliter la discrimination des doublons et éviter d'écrire d'innombrable lignes, nous avons créé une table regroupement l'ensemble des tests selon un ordre de préférence. Il y a 4 variables qui, en l'état, peuvent être utilisées pour filtrer les doublons
+
+- `status_cas`
+- `test_ligne_num_voie`
+- `test_siege`
+- `test_enseigne`
+
+L'idée dans cette partie est de mergé la table des doublons avec une table contenant tous les tests, par ordre de préférence. Chacun des index va être matché selon cette table, puis, le rank minimum va être gardé. Le rank minimum étant le quadruplet le plus contraignant selon les variables citées précédement. Par exemple, le quadruplet le plus contraignant est : CAS_1  (status_cas),True(test_list_num_voie),	True(test_siege),	True (test_enseigne) puis le second est  CAS_1  (status_cas),True(test_list_num_voie),	True(test_siege),	NULL (test_enseigne). Ainsi de suite. Au total, il y a 162 possibilitées. 
+
+L'idée générale pour dédoublonner les lignes est de prendre le rank du test minimum, c'est a dire celui qui satisfait le plus de conditions. 
+
+```python
+status_cas = ['CAS_1','CAS_3','CAS_4', 'CAS_5','CAS_7', 'CAS_6']
+index_id_duplicate = ['True', 'False']
+test_list_num_voie = ['True', 'NULL', 'False']
+test_siege = ['True','NULL','False']
+test_enseigne =  ['True','NULL', 'False']
+test_distance_cosine = ['TRUE', 'FALSE', 'NULL']
+test_distance_levhtenstein = ['TRUE', 'FALSE', 'NULL']
+
+index = pd.MultiIndex.from_product([
+    status_cas,
+    index_id_duplicate,
+    test_list_num_voie,
+    test_siege,
+    test_enseigne,
+    test_distance_cosine,
+    test_distance_levhtenstein
+],
+                                   names = ["status_cas",
+                                            'index_id_duplicate',
+                                            "test_list_num_voie",
+                                           'test_siege', 
+                                           'test_enseigne',
+                                           'test_distance_cosine',
+                                           'test_distance_levhtenstein'])
+
+df_ = (pd.DataFrame(index = index)
+       .reset_index()
+       .assign(rank = lambda x: x.index + 1)
+       #.to_csv('Regle_tests.csv', index = False)
+      )
+df_.head()
+```
+
+```python
+df_.shape
+```
+
+```python
+df_.to_csv('Regle_tests.csv', index = False)
+s3.upload_file(file_to_upload = 'Regle_tests.csv',
+            destination_in_s3 = 'TEMP_ANALYSE_SIRETISATION/REGLES_TESTS')
+
+create_table = """
+CREATE EXTERNAL TABLE IF NOT EXISTS inpi.REGLES_TESTS (
+`status_cas`                     string,
+`index_id_duplicate`                     string,
+`test_list_num_voie`                     string,
+`test_siege`                     string,
+`test_enseigne`                     string,
+`test_distance_cosine`                     string,
+`test_distance_levhtenstein`                     string,
+`rank`                     integer
+
+    )
+     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+   'separatorChar' = ',',
+   'quoteChar' = '"'
+   )
+     LOCATION 's3://calfdata/TEMP_ANALYSE_SIRETISATION/REGLES_TESTS'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1');"""
+output = s3.run_query(
+        query=create_table,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
 ```
 
 # Creation tables
@@ -479,8 +571,8 @@ CREATE TABLE inpi.ets_inpi_insee_cases_distance
 WITH (
   format='PARQUET'
 ) AS
+WITH tb_distance AS (
 SELECT 
-  rank, 
   ets_inpi_insee_cases.row_id, 
   ets_inpi_insee_cases.index_id, 
   sequence_id, 
@@ -501,9 +593,11 @@ SELECT
   unzip_inpi,
   unzip_insee,
   max_cosine_distance,
-  test_distance_costine,
+  CASE WHEN test_distance_costine IS NULL THEN 'NULL' ELSE test_distance_costine END AS test_distance_costine,
+  -- test_distance_costine,
   levenshtein_distance,
-  test_levhenstein, 
+  CASE WHEN test_levhenstein IS NULL THEN 'NULL' ELSE test_levhenstein END AS test_levhenstein,
+  -- test_levhenstein, 
   count_initial_insee, 
   count_inpi_siren_siret, 
   count_inpi_siren_sequence, 
@@ -556,7 +650,93 @@ FROM
 LEFT JOIN
 ets_inpi_distance_max_word2vec 
 ON ets_inpi_insee_cases.row_id = ets_inpi_distance_max_word2vec.row_id
-
+)
+SELECT 
+  rank, 
+  row_id, 
+  index_id, 
+  sequence_id, 
+  siren, 
+  siret,
+  list_inpi, 
+  lenght_list_inpi, 
+  list_insee, 
+  lenght_list_insee, 
+  inpi_except, 
+  insee_except, 
+  intersection, 
+  union_, 
+  pct_intersection, 
+  len_inpi_except, 
+  len_insee_except, 
+  tb_distance.status_cas,
+  unzip_inpi,
+  unzip_insee,
+  max_cosine_distance,
+  tb_distance.test_distance_costine as test_distance_cosine,
+  -- test_distance_costine,
+  levenshtein_distance,
+  tb_distance.test_levhenstein as test_distance_levhenstein,
+  -- test_levhenstein, 
+  count_initial_insee, 
+  count_inpi_siren_siret, 
+  count_inpi_siren_sequence, 
+  count_inpi_sequence_siret, 
+  count_inpi_sequence_stat_cas_siret, 
+  count_inpi_index_id_siret, 
+  count_inpi_index_id_stat_cas_siret, 
+  count_inpi_index_id_stat_cas, 
+  tb_distance.index_id_duplicate, 
+  test_sequence_siret, 
+  test_index_siret, 
+  test_siren_insee_siren_inpi, 
+  test_sequence_siret_many_cas, 
+  list_numero_voie_matching_inpi, 
+  list_numero_voie_matching_insee, 
+  intersection_numero_voie, 
+  union_numero_voie, 
+  tb_distance.test_list_num_voie, 
+  datecreationetablissement, 
+  date_debut_activite, 
+  test_date, 
+  etatadministratifetablissement, 
+  status_admin, 
+  test_status_admin, 
+  etablissementsiege, 
+  status_ets, 
+  tb_distance.test_siege, 
+  codecommuneetablissement, 
+  code_commune, 
+  test_code_commune, 
+  codepostaletablissement, 
+  code_postal_matching, 
+  numerovoieetablissement, 
+  numero_voie_matching, 
+  test_numero_voie, 
+  typevoieetablissement, 
+  type_voie_matching, 
+  test_type_voie, 
+  test_adresse_cas_1_3_4, 
+  index_id_dup_has_cas_1_3_4, 
+  test_duplicates_is_in_cas_1_3_4, 
+  enseigne, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement, 
+  tb_distance.test_enseigne,
+  key_except_to_test
+FROM tb_distance
+LEFT JOIN regles_tests 
+  ON  tb_distance.status_cas = regles_tests.status_cas 
+  
+  AND tb_distance.index_id_duplicate = regles_tests.index_id_duplicate 
+  
+  AND tb_distance.test_list_num_voie = regles_tests.test_list_num_voie 
+  AND tb_distance.test_siege = regles_tests.test_siege 
+  AND tb_distance.test_enseigne = regles_tests.test_enseigne
+  
+  AND tb_distance.test_distance_costine = regles_tests.test_distance_cosine 
+  AND tb_distance.test_levhenstein = regles_tests.test_distance_levhtenstein
 """
 ```
 
