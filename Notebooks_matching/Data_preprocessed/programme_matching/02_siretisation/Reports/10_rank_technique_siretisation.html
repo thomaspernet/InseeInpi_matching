@@ -13079,7 +13079,8 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Test-nombre-lignes-siretise">Test nombre lignes siretise<a class="anchor-link" href="#Test-nombre-lignes-siretise">&#182;</a></h1><p>Copy paste from Coda to fill the information</p>
 <h2 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h2><ul>
-<li>Lors de <a href="https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-ETS-version-3_su0VF">l’US 7: Test nombre lignes siretise avec nouvelles regles de gestion</a>, nous avons créé une table avec l’ensemble des possibilités de tests, trié par ordre de préférence. <ul>
+<li>Lors de <a href="https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-ETS-version-3_su0VF">l’US 7: Test nombre lignes siretise avec nouvelles regles de gestion</a>, nous avons créé une table avec l’ensemble des possibilités de tests, trié par ordre de préférence. </li>
+<li>Lors de l’US, <a href="https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-ETS-version-3_su0VF">Creation table distance word2vec et merge table ets inpi insee cas</a>, nous avons crée deux variables pour les tests, a savoir le test sur la distance de cosine, et le test de levhenstein. <ul>
 <li>Afin de séparer les doublons, il suffit de récupérer le rank minimum par index. Celui ci va nous donner le meilleur des probables. </li>
 <li>Il est bien sur possible d’avoir encore des doublons, dans ces cas la, il faut aller plus loin dans la rédaction des tests</li>
 <li>L’objectif de cette US est de récupérer le rank minimum de la table ets_inpi_insee_cases puis de faire une analyse brève des index récupérés. </li>
@@ -13128,12 +13129,11 @@ div#notebook {
 </ul>
 <h2 id="Input-Cloud-Storage-[AWS/GCP]">Input Cloud Storage [AWS/GCP]<a class="anchor-link" href="#Input-Cloud-Storage-[AWS/GCP]">&#182;</a></h2><p>If link from the internet, save it to the cloud first</p>
 <h3 id="Tables-[AWS/BigQuery]">Tables [AWS/BigQuery]<a class="anchor-link" href="#Tables-[AWS/BigQuery]">&#182;</a></h3><ul>
-<li><ul>
 <li><p>Batch 1:</p>
-</li>
+<ul>
 <li><p>Select Provider: Athena</p>
 <ul>
-<li><p>Select table(s): ets_inpi_insee_cases</p>
+<li><p>Select table(s): ets_inpi_insee_cases_distance</p>
 </li>
 <li><p>Select only tables created from the same notebook, else copy/paste selection to add new input tables</p>
 <ul>
@@ -13151,7 +13151,7 @@ div#notebook {
 </li>
 <li><p>Database: inpi</p>
 </li>
-<li><p>Notebook construction file: <a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/02_siretisation/07_pourcentage_siretisation_v3.md">07_pourcentage_siretisation_v3</a></p>
+<li><p>Notebook construction file: <a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/02_siretisation/07_bis_creation_distance.md">07_bis_creation_distance</a></p>
 </li>
 </ul>
 </li>
@@ -13212,6 +13212,55 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: 45136c83-bf59-43be-9012-20e233d6fc12
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;QueryExecutionId&#39;: &#39;45136c83-bf59-43be-9012-20e233d6fc12&#39;,
+ &#39;ResponseMetadata&#39;: {&#39;RequestId&#39;: &#39;cb873d36-2dbd-4bff-b772-4375e55eeb6e&#39;,
+  &#39;HTTPStatusCode&#39;: 200,
+  &#39;HTTPHeaders&#39;: {&#39;content-type&#39;: &#39;application/x-amz-json-1.1&#39;,
+   &#39;date&#39;: &#39;Sat, 29 Aug 2020 05:29:34 GMT&#39;,
+   &#39;x-amzn-requestid&#39;: &#39;cb873d36-2dbd-4bff-b772-4375e55eeb6e&#39;,
+   &#39;content-length&#39;: &#39;59&#39;,
+   &#39;connection&#39;: &#39;keep-alive&#39;},
+  &#39;RetryAttempts&#39;: 0}}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: db96e130-6aa0-4ae0-b963-bba236f630ae
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
@@ -13243,7 +13292,7 @@ div#notebook {
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: 4c35f15f-a463-4a0b-9768-a3d7c3c6fb74
+<pre>Execution ID: ae1ec9db-ae19-40da-9c97-7903e84e34b5
 </pre>
 </div>
 </div>
@@ -13276,7 +13325,7 @@ div#notebook {
   <tbody>
     <tr>
       <th>0</th>
-      <td>9446844</td>
+      <td>9450637</td>
     </tr>
   </tbody>
 </table>
@@ -13305,7 +13354,7 @@ div#notebook {
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: bda44f34-72e1-44ad-8bcb-f0249e6e40b0
+<pre>Execution ID: be591202-ebc5-4028-91d4-06a60d9872a1
 </pre>
 </div>
 </div>
@@ -13366,7 +13415,7 @@ div#notebook {
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: 131b8604-265a-4f1b-989e-87c6d6a71b79
+<pre>Execution ID: 4dd63b2f-db14-4711-b2b3-1927735297a8
 </pre>
 </div>
 </div>
@@ -13383,7 +13432,7 @@ div#notebook {
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: 7a152a3b-a93c-4aa7-97c7-46c687568ad7
+<pre>Execution ID: 153b7586-dada-4db8-82c4-eeae5ff65378
 </pre>
 </div>
 </div>
@@ -13402,217 +13451,316 @@ div#notebook {
 
 <div class="output_html rendered_html output_subarea output_execute_result">
 <style  type="text/css" >
-#T_d45fac3e_e933_11ea_8040_acde48001122row0_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row0_col3{
+#T_d0185830_e9b8_11ea_b973_acde48001122row0_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row0_col3{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#d65f5f 100.0%, transparent 100.0%);
-        }#T_d45fac3e_e933_11ea_8040_acde48001122row1_col1{
+        }#T_d0185830_e9b8_11ea_b973_acde48001122row1_col1{
             width:  10em;
              height:  80%;
-            background:  linear-gradient(90deg,#d65f5f 99.5%, transparent 99.5%);
-        }#T_d45fac3e_e933_11ea_8040_acde48001122row1_col3{
+            background:  linear-gradient(90deg,#d65f5f 99.4%, transparent 99.4%);
+        }#T_d0185830_e9b8_11ea_b973_acde48001122row1_col3{
             width:  10em;
              height:  80%;
-            background:  linear-gradient(90deg,#d65f5f 99.8%, transparent 99.8%);
-        }#T_d45fac3e_e933_11ea_8040_acde48001122row2_col1{
+            background:  linear-gradient(90deg,#d65f5f 99.7%, transparent 99.7%);
+        }#T_d0185830_e9b8_11ea_b973_acde48001122row2_col1{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#d65f5f 0.5%, transparent 0.5%);
-        }#T_d45fac3e_e933_11ea_8040_acde48001122row2_col3{
+        }#T_d0185830_e9b8_11ea_b973_acde48001122row2_col3{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#d65f5f 0.2%, transparent 0.2%);
-        }#T_d45fac3e_e933_11ea_8040_acde48001122row3_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row3_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row4_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row4_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row5_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row5_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row6_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row6_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row7_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row7_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row8_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row8_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row9_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row9_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row10_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row10_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row11_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row11_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row12_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row12_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row13_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row13_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row14_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row14_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row15_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row15_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row17_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row17_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row18_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row18_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row19_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row20_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row21_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row21_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row22_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row23_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row23_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row24_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row24_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row25_col1{
+        }#T_d0185830_e9b8_11ea_b973_acde48001122row3_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row3_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row4_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row5_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row5_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row6_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row6_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row7_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row7_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row8_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row8_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row9_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row9_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row11_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row11_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row12_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row13_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row13_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row14_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row14_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row15_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row15_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row16_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row16_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row17_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row17_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row18_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row18_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row19_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row19_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row20_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row20_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row21_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row22_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row22_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row23_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row24_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row24_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row25_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row25_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row26_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row27_col1{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#d65f5f 0.0%, transparent 0.0%);
-        }#T_d45fac3e_e933_11ea_8040_acde48001122row16_col1,#T_d45fac3e_e933_11ea_8040_acde48001122row16_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row19_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row20_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row22_col3,#T_d45fac3e_e933_11ea_8040_acde48001122row25_col3{
+        }#T_d0185830_e9b8_11ea_b973_acde48001122row4_col1{
             width:  10em;
              height:  80%;
-        }</style><table id="T_d45fac3e_e933_11ea_8040_acde48001122" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" colspan=2>Lignes</th>        <th class="col_heading level0 col2" colspan=2>Index</th>    </tr>    <tr>        <th class="blank level1" ></th>        <th class="col_heading level1 col0" >count_index</th>        <th class="col_heading level1 col1" >ligne_dup</th>        <th class="col_heading level1 col2" >count_index</th>        <th class="col_heading level1 col3" >index_dup</th>    </tr></thead><tbody>
+            background:  linear-gradient(90deg,#d65f5f 0.1%, transparent 0.1%);
+        }#T_d0185830_e9b8_11ea_b973_acde48001122row10_col1,#T_d0185830_e9b8_11ea_b973_acde48001122row10_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row12_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row21_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row23_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row26_col3,#T_d0185830_e9b8_11ea_b973_acde48001122row27_col3{
+            width:  10em;
+             height:  80%;
+        }</style><table id="T_d0185830_e9b8_11ea_b973_acde48001122" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" colspan=2>Lignes</th>        <th class="col_heading level0 col2" colspan=2>Index</th>    </tr>    <tr>        <th class="blank level1" ></th>        <th class="col_heading level1 col0" >count_index</th>        <th class="col_heading level1 col1" >ligne_dup</th>        <th class="col_heading level1 col2" >count_index</th>        <th class="col_heading level1 col3" >index_dup</th>    </tr></thead><tbody>
                 <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row0" class="row_heading level0 row0" >total</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row0_col0" class="data row0 col0" >394</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row0_col1" class="data row0 col1" >9,446,844</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row0_col2" class="data row0 col2" >394</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row0_col3" class="data row0 col3" >9,421,163</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row0" class="row_heading level0 row0" >total</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row0_col0" class="data row0 col0" >707</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row0_col1" class="data row0 col1" >9,450,637</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row0_col2" class="data row0 col2" >707</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row0_col3" class="data row0 col3" >9,421,163</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row1" class="row_heading level0 row1" >0</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row1_col0" class="data row1 col0" >1</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row1_col1" class="data row1 col1" >9,398,003</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row1_col2" class="data row1 col2" >1</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row1_col3" class="data row1 col3" >9,398,003</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row1" class="row_heading level0 row1" >0</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row1_col0" class="data row1 col0" >1</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row1_col1" class="data row1 col1" >9,397,225</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row1_col2" class="data row1 col2" >1</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row1_col3" class="data row1 col3" >9,397,225</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row2" class="row_heading level0 row2" >1</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row2_col0" class="data row2 col0" >2</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row2_col1" class="data row2 col1" >44,424</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row2_col2" class="data row2 col2" >2</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row2_col3" class="data row2 col3" >22,212</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row2" class="row_heading level0 row2" >1</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row2_col0" class="data row2 col0" >2</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row2_col1" class="data row2 col1" >43,754</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row2_col2" class="data row2 col2" >2</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row2_col3" class="data row2 col3" >21,877</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row3" class="row_heading level0 row3" >2</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row3_col0" class="data row3 col0" >3</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row3_col1" class="data row3 col1" >1,626</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row3_col2" class="data row3 col2" >3</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row3_col3" class="data row3 col3" >542</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row3" class="row_heading level0 row3" >2</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row3_col0" class="data row3 col0" >3</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row3_col1" class="data row3 col1" >1,452</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row3_col2" class="data row3 col2" >3</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row3_col3" class="data row3 col3" >484</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row4" class="row_heading level0 row4" >3</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row4_col0" class="data row4 col0" >4</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row4_col1" class="data row4 col1" >708</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row4_col2" class="data row4 col2" >4</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row4_col3" class="data row4 col3" >177</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row4" class="row_heading level0 row4" >3</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row4_col0" class="data row4 col0" >4</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row4_col1" class="data row4 col1" >5,268</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row4_col2" class="data row4 col2" >4</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row4_col3" class="data row4 col3" >1,317</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row5" class="row_heading level0 row5" >4</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row5_col0" class="data row5 col0" >5</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row5_col1" class="data row5 col1" >365</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row5_col2" class="data row5 col2" >5</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row5_col3" class="data row5 col3" >73</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row5" class="row_heading level0 row5" >4</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row5_col0" class="data row5 col0" >5</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row5_col1" class="data row5 col1" >285</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row5_col2" class="data row5 col2" >5</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row5_col3" class="data row5 col3" >57</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row6" class="row_heading level0 row6" >5</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row6_col0" class="data row6 col0" >6</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row6_col1" class="data row6 col1" >204</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row6_col2" class="data row6 col2" >6</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row6_col3" class="data row6 col3" >34</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row6" class="row_heading level0 row6" >5</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row6_col0" class="data row6 col0" >6</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row6_col1" class="data row6 col1" >438</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row6_col2" class="data row6 col2" >6</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row6_col3" class="data row6 col3" >73</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row7" class="row_heading level0 row7" >6</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row7_col0" class="data row7 col0" >7</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row7_col1" class="data row7 col1" >147</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row7_col2" class="data row7 col2" >7</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row7_col3" class="data row7 col3" >21</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row7" class="row_heading level0 row7" >6</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row7_col0" class="data row7 col0" >7</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row7_col1" class="data row7 col1" >126</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row7_col2" class="data row7 col2" >7</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row7_col3" class="data row7 col3" >18</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row8" class="row_heading level0 row8" >7</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row8_col0" class="data row8 col0" >8</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row8_col1" class="data row8 col1" >176</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row8_col2" class="data row8 col2" >8</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row8_col3" class="data row8 col3" >22</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row8" class="row_heading level0 row8" >7</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row8_col0" class="data row8 col0" >8</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row8_col1" class="data row8 col1" >216</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row8_col2" class="data row8 col2" >8</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row8_col3" class="data row8 col3" >27</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row9" class="row_heading level0 row9" >8</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row9_col0" class="data row9 col0" >9</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row9_col1" class="data row9 col1" >72</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row9_col2" class="data row9 col2" >9</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row9_col3" class="data row9 col3" >8</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row9" class="row_heading level0 row9" >8</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row9_col0" class="data row9 col0" >9</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row9_col1" class="data row9 col1" >180</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row9_col2" class="data row9 col2" >9</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row9_col3" class="data row9 col3" >20</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row10" class="row_heading level0 row10" >9</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row10_col0" class="data row10 col0" >10</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row10_col1" class="data row10 col1" >190</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row10_col2" class="data row10 col2" >10</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row10_col3" class="data row10 col3" >19</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row10" class="row_heading level0 row10" >9</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row10_col0" class="data row10 col0" >10</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row10_col1" class="data row10 col1" >10</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row10_col2" class="data row10 col2" >10</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row10_col3" class="data row10 col3" >1</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row11" class="row_heading level0 row11" >10</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row11_col0" class="data row11 col0" >11</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row11_col1" class="data row11 col1" >55</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row11_col2" class="data row11 col2" >11</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row11_col3" class="data row11 col3" >5</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row11" class="row_heading level0 row11" >10</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row11_col0" class="data row11 col0" >12</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row11_col1" class="data row11 col1" >108</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row11_col2" class="data row11 col2" >12</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row11_col3" class="data row11 col3" >9</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row12" class="row_heading level0 row12" >11</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row12_col0" class="data row12 col0" >12</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row12_col1" class="data row12 col1" >48</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row12_col2" class="data row12 col2" >12</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row12_col3" class="data row12 col3" >4</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row12" class="row_heading level0 row12" >11</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row12_col0" class="data row12 col0" >13</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row12_col1" class="data row12 col1" >13</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row12_col2" class="data row12 col2" >13</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row12_col3" class="data row12 col3" >1</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row13" class="row_heading level0 row13" >12</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row13_col0" class="data row13 col0" >14</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row13_col1" class="data row13 col1" >308</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row13_col2" class="data row13 col2" >14</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row13_col3" class="data row13 col3" >22</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row13" class="row_heading level0 row13" >12</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row13_col0" class="data row13 col0" >14</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row13_col1" class="data row13 col1" >126</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row13_col2" class="data row13 col2" >14</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row13_col3" class="data row13 col3" >9</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row14" class="row_heading level0 row14" >13</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row14_col0" class="data row14 col0" >15</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row14_col1" class="data row14 col1" >30</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row14_col2" class="data row14 col2" >15</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row14_col3" class="data row14 col3" >2</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row14" class="row_heading level0 row14" >13</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row14_col0" class="data row14 col0" >16</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row14_col1" class="data row14 col1" >80</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row14_col2" class="data row14 col2" >16</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row14_col3" class="data row14 col3" >5</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row15" class="row_heading level0 row15" >14</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row15_col0" class="data row15 col0" >17</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row15_col1" class="data row15 col1" >34</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row15_col2" class="data row15 col2" >17</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row15_col3" class="data row15 col3" >2</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row15" class="row_heading level0 row15" >14</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row15_col0" class="data row15 col0" >18</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row15_col1" class="data row15 col1" >54</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row15_col2" class="data row15 col2" >18</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row15_col3" class="data row15 col3" >3</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row16" class="row_heading level0 row16" >15</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row16_col0" class="data row16 col0" >19</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row16_col1" class="data row16 col1" >19</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row16_col2" class="data row16 col2" >19</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row16_col3" class="data row16 col3" >1</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row16" class="row_heading level0 row16" >15</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row16_col0" class="data row16 col0" >19</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row16_col1" class="data row16 col1" >38</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row16_col2" class="data row16 col2" >19</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row16_col3" class="data row16 col3" >2</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row17" class="row_heading level0 row17" >16</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row17_col0" class="data row17 col0" >21</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row17_col1" class="data row17 col1" >63</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row17_col2" class="data row17 col2" >21</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row17_col3" class="data row17 col3" >3</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row17" class="row_heading level0 row17" >16</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row17_col0" class="data row17 col0" >20</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row17_col1" class="data row17 col1" >160</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row17_col2" class="data row17 col2" >20</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row17_col3" class="data row17 col3" >8</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row18" class="row_heading level0 row18" >17</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row18_col0" class="data row18 col0" >23</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row18_col1" class="data row18 col1" >46</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row18_col2" class="data row18 col2" >23</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row18_col3" class="data row18 col3" >2</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row18" class="row_heading level0 row18" >17</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row18_col0" class="data row18 col0" >21</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row18_col1" class="data row18 col1" >42</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row18_col2" class="data row18 col2" >21</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row18_col3" class="data row18 col3" >2</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row19" class="row_heading level0 row19" >18</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row19_col0" class="data row19 col0" >25</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row19_col1" class="data row19 col1" >25</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row19_col2" class="data row19 col2" >25</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row19_col3" class="data row19 col3" >1</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row19" class="row_heading level0 row19" >18</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row19_col0" class="data row19 col0" >24</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row19_col1" class="data row19 col1" >48</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row19_col2" class="data row19 col2" >24</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row19_col3" class="data row19 col3" >2</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row20" class="row_heading level0 row20" >19</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row20_col0" class="data row20 col0" >26</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row20_col1" class="data row20 col1" >26</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row20_col2" class="data row20 col2" >26</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row20_col3" class="data row20 col3" >1</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row20" class="row_heading level0 row20" >19</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row20_col0" class="data row20 col0" >25</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row20_col1" class="data row20 col1" >150</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row20_col2" class="data row20 col2" >25</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row20_col3" class="data row20 col3" >6</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row21" class="row_heading level0 row21" >20</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row21_col0" class="data row21 col0" >28</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row21_col1" class="data row21 col1" >84</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row21_col2" class="data row21 col2" >28</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row21_col3" class="data row21 col3" >3</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row21" class="row_heading level0 row21" >20</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row21_col0" class="data row21 col0" >27</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row21_col1" class="data row21 col1" >27</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row21_col2" class="data row21 col2" >27</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row21_col3" class="data row21 col3" >1</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row22" class="row_heading level0 row22" >21</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row22_col0" class="data row22 col0" >29</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row22_col1" class="data row22 col1" >29</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row22_col2" class="data row22 col2" >29</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row22_col3" class="data row22 col3" >1</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row22" class="row_heading level0 row22" >21</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row22_col0" class="data row22 col0" >28</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row22_col1" class="data row22 col1" >56</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row22_col2" class="data row22 col2" >28</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row22_col3" class="data row22 col3" >2</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row23" class="row_heading level0 row23" >22</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row23_col0" class="data row23 col0" >31</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row23_col1" class="data row23 col1" >62</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row23_col2" class="data row23 col2" >31</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row23_col3" class="data row23 col3" >2</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row23" class="row_heading level0 row23" >22</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row23_col0" class="data row23 col0" >29</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row23_col1" class="data row23 col1" >29</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row23_col2" class="data row23 col2" >29</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row23_col3" class="data row23 col3" >1</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row24" class="row_heading level0 row24" >23</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row24_col0" class="data row24 col0" >32</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row24_col1" class="data row24 col1" >64</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row24_col2" class="data row24 col2" >32</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row24_col3" class="data row24 col3" >2</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row24" class="row_heading level0 row24" >23</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row24_col0" class="data row24 col0" >30</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row24_col1" class="data row24 col1" >60</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row24_col2" class="data row24 col2" >30</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row24_col3" class="data row24 col3" >2</td>
             </tr>
             <tr>
-                        <th id="T_d45fac3e_e933_11ea_8040_acde48001122level0_row25" class="row_heading level0 row25" >24</th>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row25_col0" class="data row25 col0" >36</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row25_col1" class="data row25 col1" >36</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row25_col2" class="data row25 col2" >36</td>
-                        <td id="T_d45fac3e_e933_11ea_8040_acde48001122row25_col3" class="data row25 col3" >1</td>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row25" class="row_heading level0 row25" >24</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row25_col0" class="data row25 col0" >42</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row25_col1" class="data row25 col1" >378</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row25_col2" class="data row25 col2" >42</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row25_col3" class="data row25 col3" >9</td>
+            </tr>
+            <tr>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row26" class="row_heading level0 row26" >25</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row26_col0" class="data row26 col0" >143</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row26_col1" class="data row26 col1" >143</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row26_col2" class="data row26 col2" >143</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row26_col3" class="data row26 col3" >1</td>
+            </tr>
+            <tr>
+                        <th id="T_d0185830_e9b8_11ea_b973_acde48001122level0_row27" class="row_heading level0 row27" >26</th>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row27_col0" class="data row27 col0" >171</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row27_col1" class="data row27 col1" >171</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row27_col2" class="data row27 col2" >171</td>
+                        <td id="T_d0185830_e9b8_11ea_b973_acde48001122row27_col3" class="data row27 col3" >1</td>
             </tr>
     </tbody></table>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Nombre d'index récuperé</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>9397225</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Nombre d'index a trouver</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>9421163</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Pourcentage de probable trouvé</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.9975</pre>
 </div>
 
 </div>
@@ -13639,7 +13787,7 @@ div#notebook {
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: fe9fcb5a-b46b-4c36-bca2-3288cfec993d
+<pre>Execution ID: 2373121f-cb23-44bf-817b-c2e62acab2ec
 </pre>
 </div>
 </div>
@@ -13674,127 +13822,137 @@ div#notebook {
     <tr>
       <th>0</th>
       <td>1</td>
-      <td>[2, 2, 2, 2, 8, 11, 29, 62, 62, 65, 71, 83, 83, 92, 146]</td>
+      <td>[3019, 3021, 3021, 3021, 3451, 4315, 8851, 15007, 15496, 15659, 16511, 20475, 20493, 21463, 32767]</td>
     </tr>
     <tr>
       <th>1</th>
       <td>2</td>
-      <td>[2, 2, 2, 8, 8, 11, 39, 83, 83, 89, 89, 91, 92, 127, 146]</td>
+      <td>[3021, 3345, 3345, 3345, 3451, 18007, 18391, 19016, 19031, 19071, 20991, 23408, 23875, 24865, 30683]</td>
     </tr>
     <tr>
       <th>2</th>
       <td>3</td>
-      <td>[2, 3, 11, 11, 83, 119, 125, 146, 146, 146, 146, 146, 146, 146, 147]</td>
+      <td>[1561, 6426, 13227, 17989, 19015, 24363, 24793, 24848, 24859, 24865, 24867, 24869, 24905, 30213, 30699]</td>
     </tr>
     <tr>
       <th>3</th>
       <td>4</td>
-      <td>[2, 11, 11, 12, 91, 136, 146, 146, 146, 146, 146, 146, 146, 146, 152]</td>
+      <td>[18061, 19009, 19037, 20476, 20812, 24811, 25230, 26737, 26794, 27135, 27281, 27781, 29711, 30701, 32961]</td>
     </tr>
     <tr>
       <th>4</th>
       <td>5</td>
-      <td>[11, 12, 12, 12, 92, 120, 137, 146, 146, 146, 146, 146, 146, 146, 147]</td>
+      <td>[1512, 1620, 7398, 17990, 18549, 19342, 23826, 24793, 24847, 24847, 24869, 24869, 29653, 30673, 30683]</td>
     </tr>
     <tr>
       <th>5</th>
       <td>6</td>
-      <td>[2, 11, 11, 38, 83, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>[18480, 18529, 18534, 18587, 23880, 24867, 24895, 30216, 30216, 30629, 30679, 30679, 30679, 30701, 30753]</td>
     </tr>
     <tr>
       <th>6</th>
       <td>7</td>
-      <td>[3, 3, 3, 11, 92, 119, 119, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>[593, 593, 593, 13229, 19015, 24851, 24851, 24865, 24865, 24865, 24865, 24869, 24869, 24869, 24869]</td>
     </tr>
     <tr>
       <th>7</th>
       <td>8</td>
-      <td>[2, 2, 30, 30, 65, 92, 119, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>[5989, 5989, 5989, 17557, 18064, 19038, 19038, 23394, 23394, 23394, 23394, 24847, 24847, 30194, 30194]</td>
     </tr>
     <tr>
       <th>8</th>
       <td>9</td>
-      <td>[2, 2, 2, 92, 146, 146, 146, 146, 146, 146, 152, 152, 152, 152, 152]</td>
+      <td>[18060, 18065, 18066, 19009, 24847, 30679, 30682, 30683, 30683, 30683, 30683, 30683, 30737, 30737, 30737]</td>
     </tr>
     <tr>
       <th>9</th>
       <td>10</td>
-      <td>[2, 2, 2, 2, 11, 38, 56, 137, 137, 137, 137, 137, 137, 137, 137]</td>
+      <td>[19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015]</td>
     </tr>
     <tr>
       <th>10</th>
-      <td>11</td>
-      <td>[11, 11, 57, 57, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92]</td>
+      <td>12</td>
+      <td>[18043, 18043, 18043, 18065, 19016, 23879, 24869, 24869, 24869, 24869, 24869, 24905, 24905, 24905, 24905]</td>
     </tr>
     <tr>
       <th>11</th>
-      <td>12</td>
-      <td>[11, 11, 11, 56, 83, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138]</td>
+      <td>13</td>
+      <td>[18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045, 18045]</td>
     </tr>
     <tr>
       <th>12</th>
       <td>14</td>
-      <td>[119, 119, 119, 119, 119, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>[18529, 19019, 19019, 19069, 30673, 30673, 30673, 30673, 30673, 30673, 30673, 30673, 30673, 30673, 30673]</td>
     </tr>
     <tr>
       <th>13</th>
-      <td>15</td>
-      <td>[2, 2, 2, 2, 119, 119, 119, 119, 119, 119, 119, 119, 119, 119, 119]</td>
+      <td>16</td>
+      <td>[18874, 18874, 24924, 24924, 25192, 30697, 30701, 30701, 30701, 30701, 30701, 30701, 30701, 30701, 30701]</td>
     </tr>
     <tr>
       <th>14</th>
-      <td>17</td>
-      <td>[92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92]</td>
+      <td>18</td>
+      <td>[24847, 24847, 24847, 24847, 24865, 30215, 30215, 30215, 30215, 30215, 30215, 30215, 30215, 30215, 30215]</td>
     </tr>
     <tr>
       <th>15</th>
       <td>19</td>
-      <td>[83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83]</td>
+      <td>[593, 593, 593, 593, 12579, 12579, 12579, 12579, 12579, 12579, 12579, 12579, 12579, 12579, 12579]</td>
     </tr>
     <tr>
       <th>16</th>
-      <td>21</td>
-      <td>[2, 2, 2, 2, 62, 83, 83, 83, 83, 83, 83, 83, 83, 83, 83]</td>
+      <td>20</td>
+      <td>[18043, 23880, 23880, 23930, 24841, 30679, 30679, 30679, 30679, 30679, 31025, 31025, 31025, 31025, 31025]</td>
     </tr>
     <tr>
       <th>17</th>
-      <td>23</td>
-      <td>[146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>21</td>
+      <td>[18044, 18044, 18044, 18044, 19019, 19019, 19019, 19019, 19019, 19019, 19019, 19019, 19019, 19019, 19019]</td>
     </tr>
     <tr>
       <th>18</th>
-      <td>25</td>
-      <td>[146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>24</td>
+      <td>[24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851, 24851]</td>
     </tr>
     <tr>
       <th>19</th>
-      <td>26</td>
-      <td>[146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>25</td>
+      <td>[24841, 24841, 24842, 24842, 24847, 24848, 24848, 24848, 24848, 24848, 24848, 24848, 24848, 24848, 24848]</td>
     </tr>
     <tr>
       <th>20</th>
-      <td>28</td>
-      <td>[12, 12, 12, 12, 12, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>27</td>
+      <td>[25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191, 25191]</td>
     </tr>
     <tr>
       <th>21</th>
-      <td>29</td>
-      <td>[38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38]</td>
+      <td>28</td>
+      <td>[1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615, 1615]</td>
     </tr>
     <tr>
       <th>22</th>
-      <td>31</td>
-      <td>[65, 65, 65, 65, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>29</td>
+      <td>[7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397, 7397]</td>
     </tr>
     <tr>
       <th>23</th>
-      <td>32</td>
-      <td>[146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146]</td>
+      <td>30</td>
+      <td>[19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015, 19015]</td>
     </tr>
     <tr>
       <th>24</th>
-      <td>36</td>
-      <td>[38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38]</td>
+      <td>42</td>
+      <td>[30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679, 30679]</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>143</td>
+      <td>[18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047]</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>171</td>
+      <td>[18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047, 18047]</td>
     </tr>
   </tbody>
 </table>
@@ -13807,6 +13965,14 @@ div#notebook {
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Prenons par exemple, le rank 32897, qui correspond a la règle suivante:</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 
 <div class="output_wrapper">
@@ -13815,7 +13981,7 @@ div#notebook {
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: 52bad094-00a9-4b9d-a25b-c948c31c1445
+<pre>Execution ID: 755eb8f0-d8a9-4d5d-a88c-c08b0601913d
 </pre>
 </div>
 </div>
@@ -13843,20 +14009,911 @@ div#notebook {
     <tr style="text-align: right;">
       <th></th>
       <th>status_cas</th>
+      <th>index_id_duplicate</th>
       <th>test_list_num_voie</th>
+      <th>test_siren_insee_siren_inpi</th>
       <th>test_siege</th>
       <th>test_enseigne</th>
+      <th>test_distance_cosine</th>
+      <th>test_distance_levhenstein</th>
+      <th>test_date</th>
+      <th>test_status_admin</th>
       <th>rank</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>CAS_7</td>
+      <td>CAS_6</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>32897</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Ci dessous, un ensemble de lignes correspondant a la règle 32897</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: 000a9117-32bb-40b9-9679-caa29d1963ee
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>min_rank</th>
+      <th>row_id</th>
+      <th>index_id</th>
+      <th>count_index</th>
+      <th>sequence_id</th>
+      <th>siren</th>
+      <th>siret</th>
+      <th>list_inpi</th>
+      <th>lenght_list_inpi</th>
+      <th>list_insee</th>
+      <th>lenght_list_insee</th>
+      <th>inpi_except</th>
+      <th>insee_except</th>
+      <th>intersection</th>
+      <th>union_</th>
+      <th>pct_intersection</th>
+      <th>len_inpi_except</th>
+      <th>len_insee_except</th>
+      <th>status_cas</th>
+      <th>unzip_inpi</th>
+      <th>unzip_insee</th>
+      <th>max_cosine_distance</th>
+      <th>test_distance_cosine</th>
+      <th>levenshtein_distance</th>
+      <th>test_distance_levhenstein</th>
+      <th>count_initial_insee</th>
+      <th>count_inpi_siren_siret</th>
+      <th>count_inpi_siren_sequence</th>
+      <th>count_inpi_sequence_siret</th>
+      <th>count_inpi_sequence_stat_cas_siret</th>
+      <th>count_inpi_index_id_siret</th>
+      <th>count_inpi_index_id_stat_cas_siret</th>
+      <th>count_inpi_index_id_stat_cas</th>
+      <th>index_id_duplicate</th>
+      <th>test_sequence_siret</th>
+      <th>test_index_siret</th>
+      <th>test_siren_insee_siren_inpi</th>
+      <th>test_sequence_siret_many_cas</th>
+      <th>list_numero_voie_matching_inpi</th>
+      <th>list_numero_voie_matching_insee</th>
+      <th>intersection_numero_voie</th>
+      <th>union_numero_voie</th>
+      <th>test_list_num_voie</th>
+      <th>datecreationetablissement</th>
+      <th>date_debut_activite</th>
+      <th>test_date</th>
+      <th>etatadministratifetablissement</th>
+      <th>status_admin</th>
+      <th>test_status_admin</th>
+      <th>etablissementsiege</th>
+      <th>status_ets</th>
+      <th>test_siege</th>
+      <th>codecommuneetablissement</th>
+      <th>code_commune</th>
+      <th>test_code_commune</th>
+      <th>codepostaletablissement</th>
+      <th>code_postal_matching</th>
+      <th>numerovoieetablissement</th>
+      <th>numero_voie_matching</th>
+      <th>test_numero_voie</th>
+      <th>typevoieetablissement</th>
+      <th>type_voie_matching</th>
+      <th>test_type_voie</th>
+      <th>test_adresse_cas_1_3_4</th>
+      <th>index_id_dup_has_cas_1_3_4</th>
+      <th>test_duplicates_is_in_cas_1_3_4</th>
+      <th>enseigne</th>
+      <th>enseigne1etablissement</th>
+      <th>enseigne2etablissement</th>
+      <th>enseigne3etablissement</th>
+      <th>test_enseigne</th>
+      <th>key_except_to_test</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>32897</td>
+      <td>2634015</td>
+      <td>5840905</td>
+      <td>1</td>
+      <td>2611852</td>
+      <td>434367884</td>
+      <td>43436788400021</td>
+      <td>[ROUTE, NAPOLLON, RN]</td>
+      <td>3</td>
+      <td>[ROUTE, NATIONALE, RTE, NAPOLLON]</td>
+      <td>4</td>
+      <td>[RN]</td>
+      <td>[NATIONALE, RTE]</td>
+      <td>2.0</td>
+      <td>5.0</td>
+      <td>0.40</td>
+      <td>1</td>
+      <td>2</td>
+      <td>CAS_6</td>
+      <td>RN</td>
+      <td>NATIONALE</td>
+      <td>0.710957</td>
+      <td>True</td>
+      <td>8</td>
+      <td>False</td>
+      <td>3</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[96]</td>
+      <td>[96]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2008-03-01 00:00:00.000</td>
+      <td>2001-01-15 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>13005</td>
+      <td>13005</td>
+      <td>True</td>
+      <td>13400</td>
+      <td>13400</td>
+      <td>NaN</td>
+      <td>96</td>
+      <td>NaN</td>
+      <td>RTE</td>
+      <td>RTE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NEGO'S AUTOS</td>
+      <td>NEGO'S AUTOS</td>
+      <td>NaN</td>
       <td>NaN</td>
       <td>True</td>
+      <td>[{field0=RN, field1=[NATIONALE, RTE]}]</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>32897</td>
+      <td>1210235</td>
+      <td>1413347</td>
+      <td>1</td>
+      <td>507292</td>
+      <td>331902064</td>
+      <td>33190206400020</td>
+      <td>[AVENUE, EME, RI]</td>
+      <td>3</td>
+      <td>[AVENUE, EME, REG, INFANTERIE]</td>
+      <td>4</td>
+      <td>[RI]</td>
+      <td>[REG, INFANTERIE]</td>
+      <td>2.0</td>
+      <td>5.0</td>
+      <td>0.40</td>
+      <td>1</td>
+      <td>2</td>
+      <td>CAS_6</td>
+      <td>RI</td>
+      <td>INFANTERIE</td>
+      <td>0.638259</td>
+      <td>True</td>
+      <td>8</td>
+      <td>False</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[70, 11]</td>
+      <td>[70, 11]</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>True</td>
+      <td>2005-07-18 00:00:00.000</td>
+      <td>1985-04-01 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>82121</td>
+      <td>82121</td>
+      <td>True</td>
+      <td>82000</td>
+      <td>82000</td>
+      <td>70.0</td>
+      <td>70</td>
+      <td>True</td>
+      <td>AV</td>
+      <td>AV</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
       <td>NaN</td>
-      <td>146</td>
+      <td>PHARMACIE DU 11EME</td>
+      <td>PHARMACIE DU 11EME</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=RI, field1=[REG, INFANTERIE]}]</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>32897</td>
+      <td>4121777</td>
+      <td>6344320</td>
+      <td>1</td>
+      <td>5230804</td>
+      <td>529123374</td>
+      <td>52912337400033</td>
+      <td>[RUE, HENRI, ANTOINE, MAURRAS, IMM, NEREIS, ZI, SAUMATY, SEON]</td>
+      <td>9</td>
+      <td>[RUE, HENRI, ANTOINE, MAURRAS, IMMEUBLE, NEREIS, Z, I, SAUMATY, SEON]</td>
+      <td>10</td>
+      <td>[IMM, ZI]</td>
+      <td>[IMMEUBLE, Z, I]</td>
+      <td>7.0</td>
+      <td>12.0</td>
+      <td>0.58</td>
+      <td>2</td>
+      <td>3</td>
+      <td>CAS_6</td>
+      <td>IMM</td>
+      <td>IMMEUBLE</td>
+      <td>0.818024</td>
+      <td>True</td>
+      <td>5</td>
+      <td>False</td>
+      <td>4</td>
+      <td>3</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[4]</td>
+      <td>[4]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2011-12-01 00:00:00.000</td>
+      <td>2010-12-01 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>13216</td>
+      <td>13216</td>
+      <td>True</td>
+      <td>13016</td>
+      <td>13016</td>
+      <td>4.0</td>
+      <td>4</td>
+      <td>True</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>P.I.B SOLUTIONS</td>
+      <td>P.I.B SOLUTIONS</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=IMM, field1=[IMMEUBLE, Z, I]}, {field0=ZI, field1=[IMMEUBLE, Z, I]}]</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32897</td>
+      <td>4528485</td>
+      <td>5920480</td>
+      <td>1</td>
+      <td>3073440</td>
+      <td>448334144</td>
+      <td>44833414400020</td>
+      <td>[RUE, FER, A, CHEVAL, BATIMENT, B, ZI, MIRANDE]</td>
+      <td>8</td>
+      <td>[RUE, FER, A, CHEVAL, BAT, B, Z, I, MIRANDE]</td>
+      <td>9</td>
+      <td>[BATIMENT, ZI]</td>
+      <td>[BAT, Z, I]</td>
+      <td>6.0</td>
+      <td>11.0</td>
+      <td>0.55</td>
+      <td>2</td>
+      <td>3</td>
+      <td>CAS_6</td>
+      <td>BATIMENT</td>
+      <td>BAT</td>
+      <td>0.732788</td>
+      <td>True</td>
+      <td>5</td>
+      <td>False</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[3]</td>
+      <td>[3]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2013-02-06 00:00:00.000</td>
+      <td>2003-05-02 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>66172</td>
+      <td>66172</td>
+      <td>True</td>
+      <td>66240</td>
+      <td>66240</td>
+      <td>3.0</td>
+      <td>3</td>
+      <td>True</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>SANI-CLIM</td>
+      <td>SANI-CLIM</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=BATIMENT, field1=[BAT, Z, I]}, {field0=ZI, field1=[BAT, Z, I]}]</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>32897</td>
+      <td>8469463</td>
+      <td>6090798</td>
+      <td>1</td>
+      <td>3840118</td>
+      <td>489386755</td>
+      <td>48938675500024</td>
+      <td>[CENTRE, COMMERCIAL, RN]</td>
+      <td>3</td>
+      <td>[ROUTE, NATIONALE, CENTRE, CCIAL]</td>
+      <td>4</td>
+      <td>[COMMERCIAL, RN]</td>
+      <td>[ROUTE, NATIONALE, CCIAL]</td>
+      <td>1.0</td>
+      <td>6.0</td>
+      <td>0.17</td>
+      <td>2</td>
+      <td>3</td>
+      <td>CAS_6</td>
+      <td>COMMERCIAL</td>
+      <td>CCIAL</td>
+      <td>0.777006</td>
+      <td>True</td>
+      <td>5</td>
+      <td>False</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[20]</td>
+      <td>[20]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>1900-01-01 00:00:00.000</td>
+      <td>2006-08-08 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>91665</td>
+      <td>91665</td>
+      <td>True</td>
+      <td>91620</td>
+      <td>91620</td>
+      <td>NaN</td>
+      <td>20</td>
+      <td>NaN</td>
+      <td>RTE</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>BRAM'S CAFE</td>
+      <td>BRAM'S CAFE</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=COMMERCIAL, field1=[ROUTE, NATIONALE, CCIAL]}, {field0=RN, field1=[ROUTE, NATIONALE, CCIAL]}]</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>32897</td>
+      <td>10457807</td>
+      <td>9727716</td>
+      <td>1</td>
+      <td>5854522</td>
+      <td>751023714</td>
+      <td>75102371400023</td>
+      <td>[RUE, SAINTE, APPOLINE]</td>
+      <td>3</td>
+      <td>[RUE, SAINTE, APOLLINE, A]</td>
+      <td>4</td>
+      <td>[APPOLINE]</td>
+      <td>[APOLLINE, A]</td>
+      <td>2.0</td>
+      <td>5.0</td>
+      <td>0.40</td>
+      <td>1</td>
+      <td>2</td>
+      <td>CAS_6</td>
+      <td>APPOLINE</td>
+      <td>APOLLINE</td>
+      <td>0.933238</td>
+      <td>True</td>
+      <td>2</td>
+      <td>False</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[7, 9]</td>
+      <td>[7, 9]</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>True</td>
+      <td>2012-11-20 00:00:00.000</td>
+      <td>2012-03-01 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>75103</td>
+      <td>75103</td>
+      <td>True</td>
+      <td>75003</td>
+      <td>75003</td>
+      <td>7.0</td>
+      <td>7</td>
+      <td>True</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>MAGIC AFRIQUE</td>
+      <td>MAGIC AFRIQUE</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=APPOLINE, field1=[APOLLINE, A]}]</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>32897</td>
+      <td>29679</td>
+      <td>2852823</td>
+      <td>1</td>
+      <td>2155738</td>
+      <td>419223110</td>
+      <td>41922311000034</td>
+      <td>[ALLEE, AUGUSTE, BERNARD, ZONE, GRANGES, PRES, GRANDE, ROUTE]</td>
+      <td>8</td>
+      <td>[ALLEE, AUGUSTE, BERNARD, LD, PRES, GRDE, RTE, DIT, ZONE, GRANG]</td>
+      <td>10</td>
+      <td>[GRANGES, GRANDE, ROUTE]</td>
+      <td>[LD, GRDE, RTE, DIT, GRANG]</td>
+      <td>5.0</td>
+      <td>13.0</td>
+      <td>0.38</td>
+      <td>3</td>
+      <td>5</td>
+      <td>CAS_6</td>
+      <td>ROUTE</td>
+      <td>RTE</td>
+      <td>0.777830</td>
+      <td>True</td>
+      <td>2</td>
+      <td>False</td>
+      <td>3</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[1]</td>
+      <td>[1]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2016-08-01 00:00:00.000</td>
+      <td>1999-01-26 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>42147</td>
+      <td>42147</td>
+      <td>True</td>
+      <td>42600</td>
+      <td>42600</td>
+      <td>1.0</td>
+      <td>1</td>
+      <td>True</td>
+      <td>ALL</td>
+      <td>ALL</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>PCASH</td>
+      <td>PCASH</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=GRANGES, field1=[LD, GRDE, RTE, DIT, GRANG]}, {field0=GRANDE, field1=[LD, GRDE, RTE, DIT, GRANG]}, {field0=ROUTE, field1=[LD, GRDE, RTE, DIT, GRANG]}]</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>32897</td>
+      <td>2300844</td>
+      <td>2797133</td>
+      <td>1</td>
+      <td>2761775</td>
+      <td>439939661</td>
+      <td>43993966100021</td>
+      <td>[BOULEVARD, COURCELLES, R, MIROMESNIL]</td>
+      <td>4</td>
+      <td>[RUE, MIROMESNIL, BD, COURCELLES, A, L, ANGLE]</td>
+      <td>7</td>
+      <td>[BOULEVARD, R]</td>
+      <td>[RUE, BD, A, L, ANGLE]</td>
+      <td>2.0</td>
+      <td>9.0</td>
+      <td>0.22</td>
+      <td>2</td>
+      <td>5</td>
+      <td>CAS_6</td>
+      <td>BOULEVARD</td>
+      <td>BD</td>
+      <td>0.769106</td>
+      <td>True</td>
+      <td>7</td>
+      <td>False</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[13, 110]</td>
+      <td>[110, 13]</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>True</td>
+      <td>2011-02-01 00:00:00.000</td>
+      <td>2002-01-01 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>75108</td>
+      <td>75108</td>
+      <td>True</td>
+      <td>75008</td>
+      <td>75008</td>
+      <td>110.0</td>
+      <td>13</td>
+      <td>False</td>
+      <td>RUE</td>
+      <td>BD</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>LE ZINC VILLIERS</td>
+      <td>LE ZINC VILLIERS</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=BOULEVARD, field1=[RUE, BD, A, L, ANGLE]}, {field0=R, field1=[RUE, BD, A, L, ANGLE]}]</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>32897</td>
+      <td>5209942</td>
+      <td>5179878</td>
+      <td>1</td>
+      <td>1982073</td>
+      <td>411872898</td>
+      <td>41187289800050</td>
+      <td>[HALLES, ETALS, NUMERO]</td>
+      <td>3</td>
+      <td>[PLACE, PIE, HALLES, ETALS, N]</td>
+      <td>5</td>
+      <td>[NUMERO]</td>
+      <td>[PLACE, PIE, N]</td>
+      <td>2.0</td>
+      <td>6.0</td>
+      <td>0.33</td>
+      <td>1</td>
+      <td>3</td>
+      <td>CAS_6</td>
+      <td>NUMERO</td>
+      <td>N</td>
+      <td>0.845188</td>
+      <td>True</td>
+      <td>5</td>
+      <td>False</td>
+      <td>5</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[245, 146, 247]</td>
+      <td>[245, 146, 247]</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>True</td>
+      <td>2011-08-24 00:00:00.000</td>
+      <td>2007-02-09 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>84007</td>
+      <td>84007</td>
+      <td>True</td>
+      <td>84000</td>
+      <td>84000</td>
+      <td>NaN</td>
+      <td>245</td>
+      <td>NaN</td>
+      <td>PL</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>LES DELICES DE BERTRAND</td>
+      <td>LES DELICES DE BERTRAND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=NUMERO, field1=[PLACE, PIE, N]}]</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>32897</td>
+      <td>3974228</td>
+      <td>2046509</td>
+      <td>1</td>
+      <td>887694</td>
+      <td>349690354</td>
+      <td>34969035400023</td>
+      <td>[RUE, EME, REGIMENT, D, AVIATION]</td>
+      <td>5</td>
+      <td>[RUE, E, REGIMENT, D, AVIATION, PARC, CHENE]</td>
+      <td>7</td>
+      <td>[EME]</td>
+      <td>[E, PARC, CHENE]</td>
+      <td>4.0</td>
+      <td>8.0</td>
+      <td>0.50</td>
+      <td>1</td>
+      <td>3</td>
+      <td>CAS_6</td>
+      <td>EME</td>
+      <td>E</td>
+      <td>0.612311</td>
+      <td>True</td>
+      <td>2</td>
+      <td>False</td>
+      <td>5</td>
+      <td>3</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[35]</td>
+      <td>[35]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>1991-11-01 00:00:00.000</td>
+      <td>1991-11-12 00:00:00.000</td>
+      <td>False</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>69029</td>
+      <td>69029</td>
+      <td>True</td>
+      <td>69500</td>
+      <td>69500</td>
+      <td>NaN</td>
+      <td>35</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>DELCOM</td>
+      <td>DELCOM</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>True</td>
+      <td>[{field0=EME, field1=[E, PARC, CHENE]}]</td>
     </tr>
   </tbody>
 </table>
@@ -13884,7 +14941,7 @@ div#notebook {
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: 3a6dcd66-866c-40e9-91da-032b23cd05c2
+<pre>Execution ID: d3a20a3f-27db-4a18-97d8-bc1ecd720072
 </pre>
 </div>
 </div>
@@ -13894,99 +14951,2071 @@ div#notebook {
 
 <div class="output_html rendered_html output_subarea output_execute_result">
 <style  type="text/css" >
-#T_03461144_e936_11ea_8040_acde48001122row0_col1{
+#T_84d8d1a0_e9b9_11ea_b973_acde48001122row0_col1{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#228B22 100.0%, transparent 100.0%);
-        }#T_03461144_e936_11ea_8040_acde48001122row0_col2,#T_03461144_e936_11ea_8040_acde48001122row4_col1{
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row0_col2,#T_84d8d1a0_e9b9_11ea_b973_acde48001122row4_col1{
             width:  10em;
              height:  80%;
-        }#T_03461144_e936_11ea_8040_acde48001122row1_col1{
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row1_col1{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#228B22 2.5%, transparent 2.5%);
-        }#T_03461144_e936_11ea_8040_acde48001122row1_col2{
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row1_col2{
             width:  10em;
              height:  80%;
-            background:  linear-gradient(90deg,#d65f5f 17.1%, transparent 17.1%);
-        }#T_03461144_e936_11ea_8040_acde48001122row2_col1{
+            background:  linear-gradient(90deg,#d65f5f 17.2%, transparent 17.2%);
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row2_col1{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#228B22 4.3%, transparent 4.3%);
-        }#T_03461144_e936_11ea_8040_acde48001122row2_col2{
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row2_col2{
             width:  10em;
              height:  80%;
-            background:  linear-gradient(90deg,#d65f5f 41.2%, transparent 41.2%);
-        }#T_03461144_e936_11ea_8040_acde48001122row3_col1{
+            background:  linear-gradient(90deg,#d65f5f 41.3%, transparent 41.3%);
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row3_col1{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#228B22 8.5%, transparent 8.5%);
-        }#T_03461144_e936_11ea_8040_acde48001122row3_col2{
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row3_col2{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#d65f5f 81.6%, transparent 81.6%);
-        }#T_03461144_e936_11ea_8040_acde48001122row4_col2{
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row4_col2{
             width:  10em;
              height:  80%;
-            background:  linear-gradient(90deg,#d65f5f 89.0%, transparent 89.0%);
-        }#T_03461144_e936_11ea_8040_acde48001122row5_col1{
+            background:  linear-gradient(90deg,#d65f5f 88.9%, transparent 88.9%);
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row5_col1{
             width:  10em;
              height:  80%;
-            background:  linear-gradient(90deg,#228B22 0.9%, transparent 0.9%);
-        }#T_03461144_e936_11ea_8040_acde48001122row5_col2{
+            background:  linear-gradient(90deg,#228B22 1.0%, transparent 1.0%);
+        }#T_84d8d1a0_e9b9_11ea_b973_acde48001122row5_col2{
             width:  10em;
              height:  80%;
             background:  linear-gradient(90deg,#d65f5f 100.0%, transparent 100.0%);
-        }</style><table id="T_03461144_e936_11ea_8040_acde48001122" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" >status_cas</th>        <th class="col_heading level0 col1" >nb_unique</th>        <th class="col_heading level0 col2" >cumsum</th>        <th class="col_heading level0 col3" >pct_total</th>        <th class="col_heading level0 col4" >pct_total_cum</th>    </tr></thead><tbody>
+        }</style><table id="T_84d8d1a0_e9b9_11ea_b973_acde48001122" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" >status_cas</th>        <th class="col_heading level0 col1" >nb_unique</th>        <th class="col_heading level0 col2" >cumsum</th>        <th class="col_heading level0 col3" >pct_total</th>        <th class="col_heading level0 col4" >pct_total_cum</th>    </tr></thead><tbody>
                 <tr>
-                        <th id="T_03461144_e936_11ea_8040_acde48001122level0_row0" class="row_heading level0 row0" >0</th>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row0_col0" class="data row0 col0" >CAS_1</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row0_col1" class="data row0 col1" >7493623</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row0_col2" class="data row0 col2" >7493623</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row0_col3" class="data row0 col3" >79.74%</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row0_col4" class="data row0 col4" >79.74%</td>
+                        <th id="T_84d8d1a0_e9b9_11ea_b973_acde48001122level0_row0" class="row_heading level0 row0" >0</th>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row0_col0" class="data row0 col0" >CAS_1</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row0_col1" class="data row0 col1" >7496562</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row0_col2" class="data row0 col2" >7496562</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row0_col3" class="data row0 col3" >79.77%</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row0_col4" class="data row0 col4" >79.77%</td>
             </tr>
             <tr>
-                        <th id="T_03461144_e936_11ea_8040_acde48001122level0_row1" class="row_heading level0 row1" >1</th>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row1_col0" class="data row1 col0" >CAS_3</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row1_col1" class="data row1 col1" >326180</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row1_col2" class="data row1 col2" >7819803</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row1_col3" class="data row1 col3" >3.47%</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row1_col4" class="data row1 col4" >83.21%</td>
+                        <th id="T_84d8d1a0_e9b9_11ea_b973_acde48001122level0_row1" class="row_heading level0 row1" >1</th>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row1_col0" class="data row1 col0" >CAS_3</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row1_col1" class="data row1 col1" >326518</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row1_col2" class="data row1 col2" >7823080</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row1_col3" class="data row1 col3" >3.47%</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row1_col4" class="data row1 col4" >83.25%</td>
             </tr>
             <tr>
-                        <th id="T_03461144_e936_11ea_8040_acde48001122level0_row2" class="row_heading level0 row2" >2</th>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row2_col0" class="data row2 col0" >CAS_4</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row2_col1" class="data row2 col1" >457789</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row2_col2" class="data row2 col2" >8277592</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row2_col3" class="data row2 col3" >4.87%</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row2_col4" class="data row2 col4" >88.08%</td>
+                        <th id="T_84d8d1a0_e9b9_11ea_b973_acde48001122level0_row2" class="row_heading level0 row2" >2</th>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row2_col0" class="data row2 col0" >CAS_4</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row2_col1" class="data row2 col1" >458261</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row2_col2" class="data row2 col2" >8281341</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row2_col3" class="data row2 col3" >4.88%</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row2_col4" class="data row2 col4" >88.13%</td>
             </tr>
             <tr>
-                        <th id="T_03461144_e936_11ea_8040_acde48001122level0_row3" class="row_heading level0 row3" >3</th>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row3_col0" class="data row3 col0" >CAS_5</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row3_col1" class="data row3 col1" >769199</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row3_col2" class="data row3 col2" >9046791</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row3_col3" class="data row3 col3" >8.18%</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row3_col4" class="data row3 col4" >96.26%</td>
+                        <th id="T_84d8d1a0_e9b9_11ea_b973_acde48001122level0_row3" class="row_heading level0 row3" >3</th>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row3_col0" class="data row3 col0" >CAS_5</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row3_col1" class="data row3 col1" >765832</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row3_col2" class="data row3 col2" >9047173</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row3_col3" class="data row3 col3" >8.15%</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row3_col4" class="data row3 col4" >96.27%</td>
             </tr>
             <tr>
-                        <th id="T_03461144_e936_11ea_8040_acde48001122level0_row4" class="row_heading level0 row4" >4</th>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row4_col0" class="data row4 col0" >CAS_6</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row4_col1" class="data row4 col1" >141300</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row4_col2" class="data row4 col2" >9188091</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row4_col3" class="data row4 col3" >1.50%</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row4_col4" class="data row4 col4" >97.77%</td>
+                        <th id="T_84d8d1a0_e9b9_11ea_b973_acde48001122level0_row4" class="row_heading level0 row4" >4</th>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row4_col0" class="data row4 col0" >CAS_6</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row4_col1" class="data row4 col1" >139140</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row4_col2" class="data row4 col2" >9186313</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row4_col3" class="data row4 col3" >1.48%</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row4_col4" class="data row4 col4" >97.76%</td>
             </tr>
             <tr>
-                        <th id="T_03461144_e936_11ea_8040_acde48001122level0_row5" class="row_heading level0 row5" >5</th>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row5_col0" class="data row5 col0" >CAS_7</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row5_col1" class="data row5 col1" >209912</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row5_col2" class="data row5 col2" >9398003</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row5_col3" class="data row5 col3" >2.23%</td>
-                        <td id="T_03461144_e936_11ea_8040_acde48001122row5_col4" class="data row5 col4" >100.00%</td>
+                        <th id="T_84d8d1a0_e9b9_11ea_b973_acde48001122level0_row5" class="row_heading level0 row5" >5</th>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row5_col0" class="data row5 col0" >CAS_7</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row5_col1" class="data row5 col1" >210912</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row5_col2" class="data row5 col2" >9397225</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row5_col3" class="data row5 col3" >2.24%</td>
+                        <td id="T_84d8d1a0_e9b9_11ea_b973_acde48001122row5_col4" class="data row5 col4" >100.00%</td>
             </tr>
     </tbody></table>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Exemple-doublons">Exemple doublons<a class="anchor-link" href="#Exemple-doublons">&#182;</a></h2><p>Il reste encore des doublons. C'est le cas lorsque le test sur la distance retourne le même resultat pour toutes les lignes.</p>
+<p>Une des possibilités serait de récupérer la valeur la plus élevée de <code>pct_intersection</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: d90ff6ee-77a5-444c-9b8e-1bfcd66c0766
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>min_rank</th>
+      <th>row_id</th>
+      <th>index_id</th>
+      <th>count_index</th>
+      <th>sequence_id</th>
+      <th>siren</th>
+      <th>siret</th>
+      <th>list_inpi</th>
+      <th>lenght_list_inpi</th>
+      <th>list_insee</th>
+      <th>lenght_list_insee</th>
+      <th>inpi_except</th>
+      <th>insee_except</th>
+      <th>intersection</th>
+      <th>union_</th>
+      <th>pct_intersection</th>
+      <th>len_inpi_except</th>
+      <th>len_insee_except</th>
+      <th>status_cas</th>
+      <th>unzip_inpi</th>
+      <th>unzip_insee</th>
+      <th>max_cosine_distance</th>
+      <th>test_distance_cosine</th>
+      <th>levenshtein_distance</th>
+      <th>test_distance_levhenstein</th>
+      <th>count_initial_insee</th>
+      <th>count_inpi_siren_siret</th>
+      <th>count_inpi_siren_sequence</th>
+      <th>count_inpi_sequence_siret</th>
+      <th>count_inpi_sequence_stat_cas_siret</th>
+      <th>count_inpi_index_id_siret</th>
+      <th>count_inpi_index_id_stat_cas_siret</th>
+      <th>count_inpi_index_id_stat_cas</th>
+      <th>index_id_duplicate</th>
+      <th>test_sequence_siret</th>
+      <th>test_index_siret</th>
+      <th>test_siren_insee_siren_inpi</th>
+      <th>test_sequence_siret_many_cas</th>
+      <th>list_numero_voie_matching_inpi</th>
+      <th>list_numero_voie_matching_insee</th>
+      <th>intersection_numero_voie</th>
+      <th>union_numero_voie</th>
+      <th>test_list_num_voie</th>
+      <th>datecreationetablissement</th>
+      <th>date_debut_activite</th>
+      <th>test_date</th>
+      <th>etatadministratifetablissement</th>
+      <th>status_admin</th>
+      <th>test_status_admin</th>
+      <th>etablissementsiege</th>
+      <th>status_ets</th>
+      <th>test_siege</th>
+      <th>codecommuneetablissement</th>
+      <th>code_commune</th>
+      <th>test_code_commune</th>
+      <th>codepostaletablissement</th>
+      <th>code_postal_matching</th>
+      <th>numerovoieetablissement</th>
+      <th>numero_voie_matching</th>
+      <th>test_numero_voie</th>
+      <th>typevoieetablissement</th>
+      <th>type_voie_matching</th>
+      <th>test_type_voie</th>
+      <th>test_adresse_cas_1_3_4</th>
+      <th>index_id_dup_has_cas_1_3_4</th>
+      <th>test_duplicates_is_in_cas_1_3_4</th>
+      <th>enseigne</th>
+      <th>enseigne1etablissement</th>
+      <th>enseigne2etablissement</th>
+      <th>enseigne3etablissement</th>
+      <th>test_enseigne</th>
+      <th>key_except_to_test</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>19015</td>
+      <td>6316961</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700261</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, FRERES, ROSNY, ECOLE, D, ALEMBERT]</td>
+      <td>6</td>
+      <td>[ATHENES, MAT, J, AMADE]</td>
+      <td>[FRERES, ROSNY, ECOLE, ALEMBERT]</td>
+      <td>2.0</td>
+      <td>10.0</td>
+      <td>0.20</td>
+      <td>4</td>
+      <td>4</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=ATHENES, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}, {field0=MAT, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}, {field0=J, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}, {field0=AMADE, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}]</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>19015</td>
+      <td>6316961</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700261</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, FRERES, ROSNY, ECOLE, D, ALEMBERT]</td>
+      <td>6</td>
+      <td>[ATHENES, MAT, J, AMADE]</td>
+      <td>[FRERES, ROSNY, ECOLE, ALEMBERT]</td>
+      <td>2.0</td>
+      <td>10.0</td>
+      <td>0.20</td>
+      <td>4</td>
+      <td>4</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=ATHENES, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}, {field0=MAT, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}, {field0=J, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}, {field0=AMADE, field1=[FRERES, ROSNY, ECOLE, ALEMBERT]}]</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>19015</td>
+      <td>6316960</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700279</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]</td>
+      <td>6</td>
+      <td>[D, ATHENES, MAT, J, AMADE]</td>
+      <td>[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]</td>
+      <td>1.0</td>
+      <td>11.0</td>
+      <td>0.09</td>
+      <td>5</td>
+      <td>5</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=D, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=ATHENES, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=MAT, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=J, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=AMADE, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}]</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>19015</td>
+      <td>6316960</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700279</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]</td>
+      <td>6</td>
+      <td>[D, ATHENES, MAT, J, AMADE]</td>
+      <td>[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]</td>
+      <td>1.0</td>
+      <td>11.0</td>
+      <td>0.09</td>
+      <td>5</td>
+      <td>5</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=D, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=ATHENES, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=MAT, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=J, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}, {field0=AMADE, field1=[PAUL, VALERY, ECOLE, PIERRE, COUBERTIN]}]</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>19015</td>
+      <td>6316982</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700147</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[AVENUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE]</td>
+      <td>[AVENUE]</td>
+      <td>5.0</td>
+      <td>7.0</td>
+      <td>0.71</td>
+      <td>1</td>
+      <td>1</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>AV</td>
+      <td>RUE</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=RUE, field1=[AVENUE]}]</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>19015</td>
+      <td>6316982</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700147</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[AVENUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE]</td>
+      <td>[AVENUE]</td>
+      <td>5.0</td>
+      <td>7.0</td>
+      <td>0.71</td>
+      <td>1</td>
+      <td>1</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>AV</td>
+      <td>RUE</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=RUE, field1=[AVENUE]}]</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>19015</td>
+      <td>6316965</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700204</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, ISIDORE, HONDRAT, ECOLE, PONT, NEUF]</td>
+      <td>6</td>
+      <td>[D, ATHENES, MAT, J, AMADE]</td>
+      <td>[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]</td>
+      <td>1.0</td>
+      <td>11.0</td>
+      <td>0.09</td>
+      <td>5</td>
+      <td>5</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=D, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=ATHENES, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=MAT, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=J, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=AMADE, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}]</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>19015</td>
+      <td>6316965</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700204</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, ISIDORE, HONDRAT, ECOLE, PONT, NEUF]</td>
+      <td>6</td>
+      <td>[D, ATHENES, MAT, J, AMADE]</td>
+      <td>[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]</td>
+      <td>1.0</td>
+      <td>11.0</td>
+      <td>0.09</td>
+      <td>5</td>
+      <td>5</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=D, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=ATHENES, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=MAT, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=J, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}, {field0=AMADE, field1=[ISIDORE, HONDRAT, ECOLE, PONT, NEUF]}]</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>19015</td>
+      <td>6316968</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700162</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]</td>
+      <td>6</td>
+      <td>[D, ATHENES, MAT, J, AMADE]</td>
+      <td>[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]</td>
+      <td>1.0</td>
+      <td>11.0</td>
+      <td>0.09</td>
+      <td>5</td>
+      <td>5</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=D, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=ATHENES, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=MAT, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=J, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=AMADE, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}]</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>19015</td>
+      <td>6316968</td>
+      <td>6894126</td>
+      <td>10</td>
+      <td>5086610</td>
+      <td>523631497</td>
+      <td>52363149700162</td>
+      <td>[RUE, D, ATHENES, MAT, J, AMADE]</td>
+      <td>6</td>
+      <td>[RUE, MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]</td>
+      <td>6</td>
+      <td>[D, ATHENES, MAT, J, AMADE]</td>
+      <td>[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]</td>
+      <td>1.0</td>
+      <td>11.0</td>
+      <td>0.09</td>
+      <td>5</td>
+      <td>5</td>
+      <td>CAS_5</td>
+      <td>MAT</td>
+      <td>GS</td>
+      <td>0.700185</td>
+      <td>True</td>
+      <td>3</td>
+      <td>False</td>
+      <td>33</td>
+      <td>28</td>
+      <td>32</td>
+      <td>17</td>
+      <td>5</td>
+      <td>17</td>
+      <td>5</td>
+      <td>3</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>2012-03-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>66136</td>
+      <td>66136</td>
+      <td>True</td>
+      <td>66000</td>
+      <td>66000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>TO_FIND</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>[{field0=D, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=ATHENES, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=MAT, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=J, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}, {field0=AMADE, field1=[MADAME, SEVIGNE, PISCINE, CHAMPS, MARS]}]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>D'autres possibilités de doublons sont dues a des erreurs de préparation de la donnée.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: 8e253bc7-3fdc-4115-9827-5b32be40ea82
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>min_rank</th>
+      <th>row_id</th>
+      <th>index_id</th>
+      <th>count_index</th>
+      <th>sequence_id</th>
+      <th>siren</th>
+      <th>siret</th>
+      <th>list_inpi</th>
+      <th>lenght_list_inpi</th>
+      <th>list_insee</th>
+      <th>lenght_list_insee</th>
+      <th>inpi_except</th>
+      <th>insee_except</th>
+      <th>intersection</th>
+      <th>union_</th>
+      <th>pct_intersection</th>
+      <th>len_inpi_except</th>
+      <th>len_insee_except</th>
+      <th>status_cas</th>
+      <th>unzip_inpi</th>
+      <th>unzip_insee</th>
+      <th>max_cosine_distance</th>
+      <th>test_distance_cosine</th>
+      <th>levenshtein_distance</th>
+      <th>test_distance_levhenstein</th>
+      <th>count_initial_insee</th>
+      <th>count_inpi_siren_siret</th>
+      <th>count_inpi_siren_sequence</th>
+      <th>count_inpi_sequence_siret</th>
+      <th>count_inpi_sequence_stat_cas_siret</th>
+      <th>count_inpi_index_id_siret</th>
+      <th>count_inpi_index_id_stat_cas_siret</th>
+      <th>count_inpi_index_id_stat_cas</th>
+      <th>index_id_duplicate</th>
+      <th>test_sequence_siret</th>
+      <th>test_index_siret</th>
+      <th>test_siren_insee_siren_inpi</th>
+      <th>test_sequence_siret_many_cas</th>
+      <th>list_numero_voie_matching_inpi</th>
+      <th>list_numero_voie_matching_insee</th>
+      <th>intersection_numero_voie</th>
+      <th>union_numero_voie</th>
+      <th>test_list_num_voie</th>
+      <th>datecreationetablissement</th>
+      <th>date_debut_activite</th>
+      <th>test_date</th>
+      <th>etatadministratifetablissement</th>
+      <th>status_admin</th>
+      <th>test_status_admin</th>
+      <th>etablissementsiege</th>
+      <th>status_ets</th>
+      <th>test_siege</th>
+      <th>codecommuneetablissement</th>
+      <th>code_commune</th>
+      <th>test_code_commune</th>
+      <th>codepostaletablissement</th>
+      <th>code_postal_matching</th>
+      <th>numerovoieetablissement</th>
+      <th>numero_voie_matching</th>
+      <th>test_numero_voie</th>
+      <th>typevoieetablissement</th>
+      <th>type_voie_matching</th>
+      <th>test_type_voie</th>
+      <th>test_adresse_cas_1_3_4</th>
+      <th>index_id_dup_has_cas_1_3_4</th>
+      <th>test_duplicates_is_in_cas_1_3_4</th>
+      <th>enseigne</th>
+      <th>enseigne1etablissement</th>
+      <th>enseigne2etablissement</th>
+      <th>enseigne3etablissement</th>
+      <th>test_enseigne</th>
+      <th>key_except_to_test</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1075</td>
+      <td>928046</td>
+      <td>434</td>
+      <td>2</td>
+      <td>9015729</td>
+      <td>844749614</td>
+      <td>84474961400021</td>
+      <td>[RUE, NOEL, MACHET]</td>
+      <td>3</td>
+      <td>[RUE, NOEL, MACHET]</td>
+      <td>3</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>1.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>CAS_1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2018-12-17 00:00:00.000</td>
+      <td>2018-12-17 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>73304</td>
+      <td>73304</td>
+      <td>True</td>
+      <td>73150</td>
+      <td>73150</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>TO_KEEP</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1075</td>
+      <td>928045</td>
+      <td>434</td>
+      <td>2</td>
+      <td>9015729</td>
+      <td>844749614</td>
+      <td>84474961400039</td>
+      <td>[RUE, NOEL, MACHET]</td>
+      <td>3</td>
+      <td>[RUE, NOEL, MACHET]</td>
+      <td>3</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>1.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>CAS_1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2018-12-17 00:00:00.000</td>
+      <td>2018-12-17 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>73304</td>
+      <td>73304</td>
+      <td>True</td>
+      <td>73150</td>
+      <td>73150</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>TO_KEEP</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3345</td>
+      <td>1107792</td>
+      <td>1265</td>
+      <td>2</td>
+      <td>9090868</td>
+      <td>847918893</td>
+      <td>84791889300011</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>1.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>CAS_1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>[10]</td>
+      <td>[10]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2019-01-30 00:00:00.000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>75108</td>
+      <td>75108</td>
+      <td>True</td>
+      <td>75008</td>
+      <td>75008</td>
+      <td>10.0</td>
+      <td>10.0</td>
+      <td>True</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3345</td>
+      <td>1107791</td>
+      <td>1265</td>
+      <td>2</td>
+      <td>9090868</td>
+      <td>847918893</td>
+      <td>84791889300011</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>1.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>CAS_1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>[10]</td>
+      <td>[10]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2019-01-30 00:00:00.000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>75108</td>
+      <td>75108</td>
+      <td>True</td>
+      <td>75008</td>
+      <td>75008</td>
+      <td>10.0</td>
+      <td>10.0</td>
+      <td>True</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>3345</td>
+      <td>1107790</td>
+      <td>1266</td>
+      <td>2</td>
+      <td>9090868</td>
+      <td>847918893</td>
+      <td>84791889300011</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>1.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>CAS_1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>[10]</td>
+      <td>[10]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2019-01-30 00:00:00.000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>75108</td>
+      <td>75108</td>
+      <td>True</td>
+      <td>75008</td>
+      <td>75008</td>
+      <td>10.0</td>
+      <td>10.0</td>
+      <td>True</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>3345</td>
+      <td>1107789</td>
+      <td>1266</td>
+      <td>2</td>
+      <td>9090868</td>
+      <td>847918893</td>
+      <td>84791889300011</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>[RUE, PENTHIEVRE]</td>
+      <td>2</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>1.00</td>
+      <td>0</td>
+      <td>0</td>
+      <td>CAS_1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>[10]</td>
+      <td>[10]</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>True</td>
+      <td>2019-01-30 00:00:00.000</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>75108</td>
+      <td>75108</td>
+      <td>True</td>
+      <td>75008</td>
+      <td>75008</td>
+      <td>10.0</td>
+      <td>10.0</td>
+      <td>True</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>True</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>15169</td>
+      <td>337689</td>
+      <td>1844</td>
+      <td>2</td>
+      <td>8980205</td>
+      <td>844259390</td>
+      <td>84425939000376</td>
+      <td>[LIEU, DIT, NID, CHIEN, AH, _, CHEMIN, SAINT, OMER]</td>
+      <td>9</td>
+      <td>[CHEMIN, SAINT, OMER, LIEU, DIT, NID, CHIEN, AH]</td>
+      <td>8</td>
+      <td>[_]</td>
+      <td>NaN</td>
+      <td>8.0</td>
+      <td>9.0</td>
+      <td>0.89</td>
+      <td>1</td>
+      <td>0</td>
+      <td>CAS_4</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>51</td>
+      <td>47</td>
+      <td>46</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[117, 1046]</td>
+      <td>[1046, 117]</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>True</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>14656</td>
+      <td>14656</td>
+      <td>True</td>
+      <td>14570</td>
+      <td>14570</td>
+      <td>1046.0</td>
+      <td>117.0</td>
+      <td>False</td>
+      <td>CHE</td>
+      <td>LD</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1418.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>15169</td>
+      <td>337688</td>
+      <td>1844</td>
+      <td>2</td>
+      <td>8980205</td>
+      <td>844259390</td>
+      <td>84425939000376</td>
+      <td>[LIEU, DIT, NID, CHIEN, AH, _, CHEMIN, SAINT, OMER]</td>
+      <td>9</td>
+      <td>[CHEMIN, SAINT, OMER, LIEU, DIT, NID, CHIEN, AH]</td>
+      <td>8</td>
+      <td>[_]</td>
+      <td>NaN</td>
+      <td>8.0</td>
+      <td>9.0</td>
+      <td>0.89</td>
+      <td>1</td>
+      <td>0</td>
+      <td>CAS_4</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>51</td>
+      <td>47</td>
+      <td>46</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[117, 1046]</td>
+      <td>[1046, 117]</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>True</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>14656</td>
+      <td>14656</td>
+      <td>True</td>
+      <td>14570</td>
+      <td>14570</td>
+      <td>1046.0</td>
+      <td>117.0</td>
+      <td>False</td>
+      <td>CHE</td>
+      <td>LD</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1418.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>15169</td>
+      <td>337686</td>
+      <td>1845</td>
+      <td>2</td>
+      <td>8980205</td>
+      <td>844259390</td>
+      <td>84425939000376</td>
+      <td>[LIEU, DIT, NID, CHIEN, AH, _, CHEMIN, SAINT, OMER]</td>
+      <td>9</td>
+      <td>[CHEMIN, SAINT, OMER, LIEU, DIT, NID, CHIEN, AH]</td>
+      <td>8</td>
+      <td>[_]</td>
+      <td>NaN</td>
+      <td>8.0</td>
+      <td>9.0</td>
+      <td>0.89</td>
+      <td>1</td>
+      <td>0</td>
+      <td>CAS_4</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>51</td>
+      <td>47</td>
+      <td>46</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[117, 1046]</td>
+      <td>[1046, 117]</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>True</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>14656</td>
+      <td>14656</td>
+      <td>True</td>
+      <td>14570</td>
+      <td>14570</td>
+      <td>1046.0</td>
+      <td>117.0</td>
+      <td>False</td>
+      <td>CHE</td>
+      <td>LD</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1418.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>15169</td>
+      <td>337687</td>
+      <td>1845</td>
+      <td>2</td>
+      <td>8980205</td>
+      <td>844259390</td>
+      <td>84425939000376</td>
+      <td>[LIEU, DIT, NID, CHIEN, AH, _, CHEMIN, SAINT, OMER]</td>
+      <td>9</td>
+      <td>[CHEMIN, SAINT, OMER, LIEU, DIT, NID, CHIEN, AH]</td>
+      <td>8</td>
+      <td>[_]</td>
+      <td>NaN</td>
+      <td>8.0</td>
+      <td>9.0</td>
+      <td>0.89</td>
+      <td>1</td>
+      <td>0</td>
+      <td>CAS_4</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>51</td>
+      <td>47</td>
+      <td>46</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>[117, 1046]</td>
+      <td>[1046, 117]</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>True</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>2019-09-12 00:00:00.000</td>
+      <td>True</td>
+      <td>A</td>
+      <td>A</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>14656</td>
+      <td>14656</td>
+      <td>True</td>
+      <td>14570</td>
+      <td>14570</td>
+      <td>1046.0</td>
+      <td>117.0</td>
+      <td>False</td>
+      <td>CHE</td>
+      <td>LD</td>
+      <td>False</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1418.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>C'est le cas pour le siren 847918893. Il y a deux lignes pour la même date de transmission. Il aurait fallu prendre uniquement la dernière ligne.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: 8f3a3f51-df97-421f-88ca-5d25aefb0300
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>index_id</th>
+      <th>sequence_id</th>
+      <th>siren</th>
+      <th>code_greffe</th>
+      <th>nom_greffe</th>
+      <th>numero_gestion</th>
+      <th>id_etablissement</th>
+      <th>status</th>
+      <th>origin</th>
+      <th>date_greffe</th>
+      <th>file_timestamp</th>
+      <th>libelle_evt</th>
+      <th>last_libele_evt</th>
+      <th>status_admin</th>
+      <th>type</th>
+      <th>status_ets</th>
+      <th>siège_pm</th>
+      <th>rcs_registre</th>
+      <th>adresse_ligne1</th>
+      <th>adresse_ligne2</th>
+      <th>adresse_ligne3</th>
+      <th>adresse_reconstituee_inpi</th>
+      <th>adresse_regex_inpi</th>
+      <th>adresse_distance_inpi</th>
+      <th>list_numero_voie_matching_inpi</th>
+      <th>numero_voie_matching</th>
+      <th>voie_clean</th>
+      <th>type_voie_matching</th>
+      <th>code_postal</th>
+      <th>code_postal_matching</th>
+      <th>ville</th>
+      <th>ville_matching</th>
+      <th>code_commune</th>
+      <th>pays</th>
+      <th>domiciliataire_nom</th>
+      <th>domiciliataire_siren</th>
+      <th>domiciliataire_greffe</th>
+      <th>domiciliataire_complément</th>
+      <th>siege_domicile_représentant</th>
+      <th>nom_commercial</th>
+      <th>enseigne</th>
+      <th>activité_ambulante</th>
+      <th>activité_saisonnière</th>
+      <th>activité_non_sédentaire</th>
+      <th>date_début_activité</th>
+      <th>activité</th>
+      <th>origine_fonds</th>
+      <th>origine_fonds_info</th>
+      <th>type_exploitation</th>
+      <th>csv_source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1265</td>
+      <td>9090868</td>
+      <td>847918893</td>
+      <td>7501</td>
+      <td>Paris</td>
+      <td>2019B03224</td>
+      <td>2</td>
+      <td>NaN</td>
+      <td>EVT</td>
+      <td>2019-02-04 00:00:00.000</td>
+      <td>2019-02-05 21:28:05.000</td>
+      <td>Modifications relatives à un établissement</td>
+      <td>Modifications relatives à un établissement</td>
+      <td>A</td>
+      <td>PRI</td>
+      <td>False</td>
+      <td>France</td>
+      <td>Paris</td>
+      <td>10 rue de Penthièvre</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>10 RUE DE PENTHIEVRE</td>
+      <td>(?:^|(?&lt;= ))(RUE|PENTHIEVRE)(?:(?= )|$)</td>
+      <td>RUE PENTHIEVRE</td>
+      <td>[10]</td>
+      <td>10</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>75008</td>
+      <td>75008</td>
+      <td>Paris</td>
+      <td>PARIS</td>
+      <td>75108</td>
+      <td>France</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>Non</td>
+      <td>Non</td>
+      <td>Non</td>
+      <td>30/01/2019</td>
+      <td>Organisation d'événements (sauf activités réglementées).</td>
+      <td>Création</td>
+      <td>NaN</td>
+      <td>Exploitation directe</td>
+      <td>7501_408_20190205_212805_9_ets_nouveau_modifie_EVT.csv</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1265</td>
+      <td>9090868</td>
+      <td>847918893</td>
+      <td>7501</td>
+      <td>Paris</td>
+      <td>2019B03224</td>
+      <td>2</td>
+      <td>NaN</td>
+      <td>EVT</td>
+      <td>2019-02-04 00:00:00.000</td>
+      <td>2019-02-05 21:28:05.000</td>
+      <td>Modifications relatives à un établissement</td>
+      <td>Etablissement ouvert</td>
+      <td>A</td>
+      <td>PRI</td>
+      <td>False</td>
+      <td>France</td>
+      <td>Paris</td>
+      <td>10 rue de Penthièvre</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>10 RUE DE PENTHIEVRE</td>
+      <td>(?:^|(?&lt;= ))(RUE|PENTHIEVRE)(?:(?= )|$)</td>
+      <td>RUE PENTHIEVRE</td>
+      <td>[10]</td>
+      <td>10</td>
+      <td>RUE</td>
+      <td>RUE</td>
+      <td>75008</td>
+      <td>75008</td>
+      <td>Paris</td>
+      <td>PARIS</td>
+      <td>75108</td>
+      <td>France</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>Non</td>
+      <td>Non</td>
+      <td>Non</td>
+      <td>30/01/2019</td>
+      <td>Organisation d'événements (sauf activités réglementées).</td>
+      <td>Création</td>
+      <td>NaN</td>
+      <td>Exploitation directe</td>
+      <td>7501_408_20190205_212805_9_ets_nouveau_modifie_EVT.csv</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 </div>
 
 </div>
@@ -14009,6 +17038,21 @@ div#notebook {
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Report Available at this adress:
+ /Users/thomas/Google Drive/Projects/GitHub/Repositories/InseeInpi_matching/Notebooks_matching/Data_preprocessed/programme_matching/02_siretisation/Reports/10_rank_technique_siretisation.html
+</pre>
+</div>
+</div>
+
+</div>
+</div>
 
 </div>
     </div>
