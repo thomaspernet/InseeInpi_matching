@@ -13077,13 +13077,36 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Test-nombre-lignes-siretise">Test nombre lignes siretise<a class="anchor-link" href="#Test-nombre-lignes-siretise">&#182;</a></h1><p>Copy paste from Coda to fill the information</p>
+<h1 id="Creation-table-distance-word2vec-et-merge-table-ets-inpi-insee-cas">Creation table distance word2vec et merge table ets inpi insee cas<a class="anchor-link" href="#Creation-table-distance-word2vec-et-merge-table-ets-inpi-insee-cas">&#182;</a></h1><p>Copy paste from Coda to fill the information</p>
 <h2 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h2><ul>
-<li><p>Lors de <a href="https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-ETS-version-3_su0VF">l’US 7: Test nombre lignes siretise avec nouvelles regles de gestion</a>, nous avons créé une table avec l’ensemble des possibilités de tests, trié par ordre de préférence.</p>
+<li><p>Création d’une table avec un rank qui récapitule par ordre de préférence les relations entre les tests. Pour cela, on va utiliser 4 variables:</p>
 <ul>
-<li><p>Toutefois, il manque deux variables:</p>
+<li>status_cas </li>
+<li>index_id_duplicate </li>
+<li>test_ligne_num_voie </li>
+<li>test_siege </li>
+<li>test_enseigne<ul>
+<li>Un produit cartésien va être réalisé sur l’ensemble de ses tests pour avoir une matrice avec 162 cas possibles triés par ordre de préférence</li>
+</ul>
+</li>
+<li>test_siren_insee_siren_inpi<ul>
+<li>count_inpi_siren_sequence,<ul>
+<li>Pour un siren donné, combien de séquence (etb au sens de l’INPI) possible. Si → 3, cela signifie que pour un même siren, il y a 3 établissements au sens de l’INPI</li>
+<li>count_initial_insee = count_inpi_siren_siret THEN 'True' ELSE 'False'</li>
+<li>Si la variable est ‘True’ alors tous les établissements ont été trouvé    </li>
+</ul>
+</li>
+<li>test_distance_cosine </li>
+<li>test_distance_levhenstein </li>
+</ul>
+</li>
+<li><p>La création de la table ets_inpi_insee_cases doit contenir les variables suivantes:</p>
 <ul>
-<li>max_distance_cosine</li>
+<li>Rank: </li>
+<li><p>ordre chronologique des tests. 1 étant le meilleur des cas, car tous les tests ont été réussi.</p>
+</li>
+<li><p>max_distance_cosine</p>
+</li>
 <li>test_distance_costine:<ul>
 <li>test si la distance max est supérieur a .6</li>
 </ul>
@@ -13095,6 +13118,8 @@ div#notebook {
 </li>
 </ul>
 </li>
+</ul>
+<ul>
 <li><p>Dans cette US, nous allons créer ses deux variables et les ajouter à la table ets_inpi_insee_cases. Une nouvelle table sera créé, appelée ets_inpi_insee_cases_distance . Les nouvelles variables a ajouter sont les suivantes:</p>
 </li>
 <li><p>unzip_inpi,</p>
@@ -13236,6 +13261,215 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Tests-index-a-dedoublonn&#233;">Tests index a dedoublonn&#233;<a class="anchor-link" href="#Tests-index-a-dedoublonn&#233;">&#182;</a></h2><p>Pour faciliter la discrimination des doublons et éviter d'écrire d'innombrable lignes, nous avons créé une table regroupement l'ensemble des tests selon un ordre de préférence. Il y a 4 variables qui, en l'état, peuvent être utilisées pour filtrer les doublons</p>
+<ul>
+<li><code>status_cas</code></li>
+<li><code>test_ligne_num_voie</code></li>
+<li><code>test_siege</code></li>
+<li><code>test_enseigne</code></li>
+</ul>
+<p>L'idée dans cette partie est de mergé la table des doublons avec une table contenant tous les tests, par ordre de préférence. Chacun des index va être matché selon cette table, puis, le rank minimum va être gardé. Le rank minimum étant le quadruplet le plus contraignant selon les variables citées précédement. Par exemple, le quadruplet le plus contraignant est : CAS_1  (status_cas),True(test_list_num_voie),  True(test_siege),   True (test_enseigne) puis le second est  CAS_1  (status_cas),True(test_list_num_voie),  True(test_siege),   NULL (test_enseigne). Ainsi de suite. Au total, il y a 162 possibilitées.</p>
+<p>L'idée générale pour dédoublonner les lignes est de prendre le rank du test minimum, c'est a dire celui qui satisfait le plus de conditions.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: 73ba0779-dc30-4d0c-ad7e-a636e7d7330e
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;QueryExecutionId&#39;: &#39;73ba0779-dc30-4d0c-ad7e-a636e7d7330e&#39;,
+ &#39;ResponseMetadata&#39;: {&#39;RequestId&#39;: &#39;fa25ee3c-58d5-4a08-95d1-326902af8095&#39;,
+  &#39;HTTPStatusCode&#39;: 200,
+  &#39;HTTPHeaders&#39;: {&#39;content-type&#39;: &#39;application/x-amz-json-1.1&#39;,
+   &#39;date&#39;: &#39;Sat, 29 Aug 2020 05:26:37 GMT&#39;,
+   &#39;x-amzn-requestid&#39;: &#39;fa25ee3c-58d5-4a08-95d1-326902af8095&#39;,
+   &#39;content-length&#39;: &#39;59&#39;,
+   &#39;connection&#39;: &#39;keep-alive&#39;},
+  &#39;RetryAttempts&#39;: 0}}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>status_cas</th>
+      <th>index_id_duplicate</th>
+      <th>test_list_num_voie</th>
+      <th>test_siren_insee_siren_inpi</th>
+      <th>test_siege</th>
+      <th>test_enseigne</th>
+      <th>test_distance_cosine</th>
+      <th>test_distance_levhenstein</th>
+      <th>test_date</th>
+      <th>test_status_admin</th>
+      <th>rank</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>CAS_1</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>CAS_1</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>FALSE</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>CAS_1</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>NULL</td>
+      <td>TRUE</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>CAS_1</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>NULL</td>
+      <td>FALSE</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>CAS_1</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>TRUE</td>
+      <td>FALSE</td>
+      <td>TRUE</td>
+      <td>5</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(34992, 11)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: eaf3db6a-062d-4d2e-82b9-964574159a6d
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Creation-tables">Creation tables<a class="anchor-link" href="#Creation-tables">&#182;</a></h1><h2 id="Steps">Steps<a class="anchor-link" href="#Steps">&#182;</a></h2><ul>
 <li>Filtrer les cas 5 à 7. </li>
 <li>créer deux colonnes avec le pseudo-produit cartésien (table INPI vers table INSEE). Autrement dit, on ne souhaite pas comparer les mots au sein de la même liste, mais entre les listes. <ul>
@@ -13251,6 +13485,9 @@ div#notebook {
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -13274,232 +13511,14 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: f6932422-74fd-4030-bcdc-9b59762cdf96
-</pre>
 </div>
-</div>
-
-<div class="output_area">
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>_col0</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>[0.2806538900725382, 0.5751953124999999, 0.6574740276820031, 0.7297363281249999, 0.7598259801933391, 0.7778301174942299, 0.8130356728432884, 0.866083785958947, 0.9206936860821984]</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
+<div class="cell border-box-sizing code_cell rendered">
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: 51830338-255f-4a34-b385-d2b167ea0d78
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>test_distance_costine</th>
-      <th>_col1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>False</td>
-      <td>697140</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>True</td>
-      <td>603253</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: afca0ac3-c9fb-4406-8d39-cb72e14612b4
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>_col0</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>[2, 4, 4, 5, 6, 6, 7, 9, 11]</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Execution ID: 2fff6e9c-371f-4531-90f7-28a9dfdf828e
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>test_levhenstein</th>
-      <th>_col1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>False</td>
-      <td>1128605</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>True</td>
-      <td>171788</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
@@ -13511,6 +13530,91 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: faaa7a08-54c2-48fa-b851-b231982c6815
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;QueryExecutionId&#39;: &#39;faaa7a08-54c2-48fa-b851-b231982c6815&#39;,
+ &#39;ResponseMetadata&#39;: {&#39;RequestId&#39;: &#39;1310cbd8-67dc-4370-a4f0-930da624c3f9&#39;,
+  &#39;HTTPStatusCode&#39;: 200,
+  &#39;HTTPHeaders&#39;: {&#39;content-type&#39;: &#39;application/x-amz-json-1.1&#39;,
+   &#39;date&#39;: &#39;Sat, 29 Aug 2020 05:27:04 GMT&#39;,
+   &#39;x-amzn-requestid&#39;: &#39;1310cbd8-67dc-4370-a4f0-930da624c3f9&#39;,
+   &#39;content-length&#39;: &#39;59&#39;,
+   &#39;connection&#39;: &#39;keep-alive&#39;},
+  &#39;RetryAttempts&#39;: 0}}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Execution ID: 2825318d-0df3-4926-b4e9-58144f25930f
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Analyse">Analyse<a class="anchor-link" href="#Analyse">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Count-nombre-lignes--&amp;-index">Count nombre lignes  &amp; index<a class="anchor-link" href="#Count-nombre-lignes--&amp;-index">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Le nombre de lignes est de:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Le nombre d'index est de</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
