@@ -147,6 +147,17 @@ pd.set_option('display.max_columns', None)
 
 ```python
 query = """
+DROP TABLE `inpi.ets_inpi_insee_cases_rank`;
+"""
+s3.run_query(
+        query=query,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+```
+
+```python
+query = """
 CREATE TABLE inpi.ets_inpi_insee_cases_rank
 WITH (
   format='PARQUET'
@@ -433,6 +444,24 @@ pd.concat([
 )
 ```
 
+Nombre d'index récuperé
+
+```python
+9397225
+```
+
+Nombre d'index a trouver
+
+```python
+9421163
+```
+
+Pourcentage de probable trouvé
+
+```python
+round(9397225 / 9421163, 4)
+```
+
 ## Analyse des ranks
 
 ```python
@@ -458,17 +487,37 @@ s3.run_query(
         )
 ```
 
+Prenons par exemple, le rank 32897, qui correspond a la règle suivante:
+
 ```python
 query ="""
 SELECT *
 FROM regles_tests 
-WHERE rank = 146
+WHERE rank = 32897
 """
 s3.run_query(
             query=query,
             database='inpi',
             s3_output='INPI/sql_output',
       filename = 'rules', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+Ci dessous, un ensemble de lignes correspondant a la règle 32897
+
+```python
+query ="""
+SELECT * 
+FROM ets_inpi_insee_cases_rank 
+WHERE min_rank = 32897
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'rules_32897', ## Add filename to print dataframe
       destination_key = None ### Add destination key if need to copy output
         )
 ```
@@ -505,6 +554,65 @@ cumsum = lambda x: x['nb_unique'].cumsum(),
     .bar(subset= ['nb_unique'],
                        color='#228B22')
 )
+```
+
+## Exemple doublons
+
+Il reste encore des doublons. C'est le cas lorsque le test sur la distance retourne le même resultat pour toutes les lignes. 
+
+Une des possibilités serait de récupérer la valeur la plus élevée de `pct_intersection`. 
+
+```python
+query ="""
+SELECT * 
+FROM ets_inpi_insee_cases_rank 
+WHERE count_index = 10
+ORDER BY min_rank
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'count_index_10', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+D'autres possibilités de doublons sont dues a des erreurs de préparation de la donnée. 
+
+```python
+query = """
+SELECT * 
+FROM ets_inpi_insee_cases_rank 
+WHERE count_index = 2
+ORDER BY index_id, min_rank
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'count_index_2', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+C'est le cas pour le siren 847918893. Il y a deux lignes pour la même date de transmission. Il aurait fallu prendre uniquement la dernière ligne.
+
+```python
+query = """
+SELECT *
+FROM ets_final_sql 
+WHERE index_id = 1265
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'issue_siren_847918893', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
 ```
 
 # Generation report
