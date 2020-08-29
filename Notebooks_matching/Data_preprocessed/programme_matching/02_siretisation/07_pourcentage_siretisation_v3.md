@@ -426,42 +426,42 @@ FROM
         AND (
           intersection_numero_voie IS NOT NULL 
           OR union_numero_voie IS NOT NULL
-        ) THEN 'True' WHEN (
+        ) THEN 'TRUE' WHEN (
           intersection_numero_voie IS NULL 
           OR union_numero_voie IS NULL
-        ) THEN 'NULL' ELSE 'False' END AS test_list_num_voie, 
+        ) THEN 'NULL' ELSE 'FALSE' END AS test_list_num_voie, 
         datecreationetablissement, 
         date_debut_activite, 
-        CASE WHEN datecreationetablissement = date_debut_activite THEN 'True' WHEN datecreationetablissement IS NULL 
+        CASE WHEN datecreationetablissement = date_debut_activite THEN 'TRUE' WHEN datecreationetablissement IS NULL 
         OR date_debut_activite IS NULL THEN 'NULL' --WHEN datecreationetablissement = '' 
-        ELSE 'False' END AS test_date, 
+        ELSE 'FALSE' END AS test_date, 
         etatadministratifetablissement, 
         status_admin, 
-        CASE WHEN etatadministratifetablissement = status_admin THEN 'True' WHEN etatadministratifetablissement IS NULL 
+        CASE WHEN etatadministratifetablissement = status_admin THEN 'TRUE' WHEN etatadministratifetablissement IS NULL 
         OR status_admin IS NULL THEN 'NULL' WHEN etatadministratifetablissement = '' 
-        OR status_admin = '' THEN 'NULL' ELSE 'False' END AS test_status_admin, 
+        OR status_admin = '' THEN 'NULL' ELSE 'FALSE' END AS test_status_admin, 
         etablissementsiege, 
         status_ets, 
-        CASE WHEN etablissementsiege = status_ets THEN 'True' WHEN etablissementsiege IS NULL 
+        CASE WHEN etablissementsiege = status_ets THEN 'TRUE' WHEN etablissementsiege IS NULL 
         OR status_ets IS NULL THEN 'NULL' WHEN etablissementsiege = '' 
-        OR status_ets = '' THEN 'NULL' ELSE 'False' END AS test_siege, 
+        OR status_ets = '' THEN 'NULL' ELSE 'FALSE' END AS test_siege, 
         codecommuneetablissement, 
         code_commune, 
-        CASE WHEN codecommuneetablissement = code_commune THEN 'True' WHEN codecommuneetablissement IS NULL 
+        CASE WHEN codecommuneetablissement = code_commune THEN 'TRUE' WHEN codecommuneetablissement IS NULL 
         OR code_commune IS NULL THEN 'NULL' WHEN codecommuneetablissement = '' 
-        OR code_commune = '' THEN 'NULL' ELSE 'False' END AS test_code_commune, 
+        OR code_commune = '' THEN 'NULL' ELSE 'FALSE' END AS test_code_commune, 
         codepostaletablissement, 
         code_postal_matching, 
         numerovoieetablissement, 
         numero_voie_matching, 
-        CASE WHEN numerovoieetablissement = numero_voie_matching THEN 'True' WHEN numerovoieetablissement IS NULL 
+        CASE WHEN numerovoieetablissement = numero_voie_matching THEN 'TRUE' WHEN numerovoieetablissement IS NULL 
         OR numero_voie_matching IS NULL THEN 'NULL' WHEN numerovoieetablissement = '' 
-        OR numero_voie_matching = '' THEN 'NULL' ELSE 'False' END AS test_numero_voie, 
+        OR numero_voie_matching = '' THEN 'NULL' ELSE 'FALSE' END AS test_numero_voie, 
         typevoieetablissement, 
         type_voie_matching, 
-        CASE WHEN typevoieetablissement = type_voie_matching THEN 'True' WHEN typevoieetablissement IS NULL 
+        CASE WHEN typevoieetablissement = type_voie_matching THEN 'TRUE' WHEN typevoieetablissement IS NULL 
         OR type_voie_matching IS NULL THEN 'NULL' WHEN typevoieetablissement = '' 
-        OR type_voie_matching = '' THEN 'NULL' ELSE 'False' END AS test_type_voie, 
+        OR type_voie_matching = '' THEN 'NULL' ELSE 'FALSE' END AS test_type_voie, 
         CASE WHEN cardinality(list_inpi) = 0 THEN NULL ELSE list_inpi END as list_inpi, 
         lenght_list_inpi, 
         CASE WHEN cardinality(list_insee) = 0 THEN NULL ELSE list_insee END as list_insee, 
@@ -488,7 +488,7 @@ FROM
         enseigne1etablissement, 
         enseigne2etablissement, 
         enseigne3etablissement, 
-        CASE WHEN cardinality(test) = 0 THEN 'NULL' WHEN enseigne = '' THEN 'NULL' WHEN temp_test_enseigne = TRUE THEN 'True' ELSE 'False' END AS test_enseigne 
+        CASE WHEN cardinality(test) = 0 THEN 'NULL' WHEN enseigne = '' THEN 'NULL' WHEN temp_test_enseigne = TRUE THEN 'TRUE' ELSE 'FALSE' END AS test_enseigne 
       FROM 
         test_proba
       
@@ -500,9 +500,9 @@ FROM
         SELECT *,
         CASE WHEN status_cas = 'CAS_1' OR
         status_cas = 'CAS_3' OR 
-        status_cas = 'CAS_4' THEN 'True' ELSE 'False' END AS test_adresse_cas_1_3_4 
+        status_cas = 'CAS_4' THEN 'TRUE' ELSE 'FALSE' END AS test_adresse_cas_1_3_4 
         FROM test_rules
-        WHERE test_list_num_voie != 'False' and status_cas != 'CAS_2'
+        WHERE test_list_num_voie != 'FALSE' and status_cas != 'CAS_2'
         )
     
     SELECT 
@@ -521,12 +521,12 @@ FROM
       count_inpi_index_id_siret,
       count_inpi_index_id_stat_cas_siret,
       count_inpi_index_id_stat_cas,
-      CASE WHEN count_inpi_index_id_siret > 1 THEN 'True' ELSE 'False' END AS index_id_duplicate,
-      CASE WHEN count_inpi_sequence_siret = 1 THEN 'True' ELSE 'False' END AS test_sequence_siret,
-      CASE WHEN count_inpi_index_id_stat_cas_siret = 1 THEN 'True' ELSE 'False' END AS test_index_siret,
-      CASE WHEN count_initial_insee = count_inpi_siren_siret THEN 'True' ELSE 'False' END AS test_siren_insee_siren_inpi, 
+      CASE WHEN count_inpi_index_id_siret > 1 THEN 'TRUE' ELSE 'FALSE' END AS index_id_duplicate,
+      CASE WHEN count_inpi_sequence_siret = 1 THEN 'TRUE' ELSE 'FALSE' END AS test_sequence_siret,
+      CASE WHEN count_inpi_index_id_stat_cas_siret = 1 THEN 'TRUE' ELSE 'FALSE' END AS test_index_siret,
+      CASE WHEN count_initial_insee = count_inpi_siren_siret THEN 'TRUE' ELSE 'FALSE' END AS test_siren_insee_siren_inpi, 
     
-      CASE WHEN count_inpi_sequence_siret = count_inpi_sequence_stat_cas_siret THEN 'True' ELSE 'False' END AS test_sequence_siret_many_cas,
+      CASE WHEN count_inpi_sequence_siret = count_inpi_sequence_stat_cas_siret THEN 'TRUE' ELSE 'FALSE' END AS test_sequence_siret_many_cas,
     
       list_numero_voie_matching_inpi, 
       list_numero_voie_matching_insee, 
@@ -568,8 +568,8 @@ FROM
       test_adresse_cas_1_3_4,
       index_id_dup_has_cas_1_3_4,
       CASE
-      WHEN test_adresse_cas_1_3_4 = 'True' AND index_id_dup_has_cas_1_3_4 = 'True' AND count_inpi_index_id_siret > 1 THEN 'TO_KEEP' 
-      WHEN test_adresse_cas_1_3_4 = 'False' AND index_id_dup_has_cas_1_3_4 = 'True' AND count_inpi_index_id_siret > 1 THEN 'TO_REMOVE'
+      WHEN test_adresse_cas_1_3_4 = 'TRUE' AND index_id_dup_has_cas_1_3_4 = 'TRUE' AND count_inpi_index_id_siret > 1 THEN 'TO_KEEP' 
+      WHEN test_adresse_cas_1_3_4 = 'FALSE' AND index_id_dup_has_cas_1_3_4 = 'TRUE' AND count_inpi_index_id_siret > 1 THEN 'TO_REMOVE'
       WHEN count_inpi_index_id_siret = 1 THEN 'NULL'
       ELSE 'TO_FIND' END AS test_duplicates_is_in_cas_1_3_4,
       enseigne, 
