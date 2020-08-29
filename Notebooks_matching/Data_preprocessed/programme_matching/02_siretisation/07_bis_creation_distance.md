@@ -13,19 +13,24 @@ jupyter:
     name: python3
 ---
 
-# Test nombre lignes siretise
+# Creation table distance word2vec et merge table ets inpi insee cas 
 
 Copy paste from Coda to fill the information
 
 ## Objective(s)
 
 * Création d’une table avec un rank qui récapitule par ordre de préférence les relations entre les tests. Pour cela, on va utiliser 4 variables:
-        * - status_cas 
-        * index_id_duplicate 
-        * - test_ligne_num_voie 
-        * - test_siege 
-        * - test_enseigne
-            * Un produit cartésien va être réalisé sur l’ensemble de ses tests pour avoir une matrice avec 162 cas possibles triés par ordre de préférence
+     *  status_cas 
+     * index_id_duplicate 
+     *  test_ligne_num_voie 
+     *  test_siege 
+     *  test_enseigne
+         * Un produit cartésien va être réalisé sur l’ensemble de ses tests pour avoir une matrice avec 162 cas possibles triés par ordre de préférence
+     * test_siren_insee_siren_inpi
+      *  count_inpi_siren_sequence,
+        * Pour un siren donné, combien de séquence (etb au sens de l’INPI) possible. Si → 3, cela signifie que pour un même siren, il y a 3 établissements au sens de l’INPI
+        * count_initial_insee = count_inpi_siren_siret THEN 'True' ELSE 'False'
+        * Si la variable est ‘True’ alors tous les établissements ont été trouvé    
     * test_distance_cosine 
     * test_distance_levhenstein 
      * La création de la table ets_inpi_insee_cases doit contenir les variables suivantes:
@@ -186,30 +191,50 @@ L'idée dans cette partie est de mergé la table des doublons avec une table con
 L'idée générale pour dédoublonner les lignes est de prendre le rank du test minimum, c'est a dire celui qui satisfait le plus de conditions. 
 
 ```python
+query = """
+DROP TABLE `regles_tests`;
+"""
+s3.run_query(
+        query=query,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+```
+
+```python
 status_cas = ['CAS_1','CAS_3','CAS_4', 'CAS_5','CAS_7', 'CAS_6']
-index_id_duplicate = ['True', 'False']
-test_list_num_voie = ['True', 'NULL', 'False']
-test_siege = ['True','NULL','False']
-test_enseigne =  ['True','NULL', 'False']
+index_id_duplicate = ['TRUE', 'FALSE']
+test_list_num_voie = ['TRUE', 'NULL', 'FALSE']
+test_siege = ['TRUE','NULL','FALSE']
+test_enseigne =  ['TRUE','NULL', 'FALSE']
+test_siren_insee_siren_inpi = ['TRUE', 'FALSE']
 test_distance_cosine = ['TRUE', 'FALSE', 'NULL']
-test_distance_levhtenstein = ['TRUE', 'FALSE', 'NULL']
+test_distance_levhenstein = ['TRUE', 'FALSE', 'NULL']
+test_date = ['TRUE','NULL','FALSE']
+test_status_admin = ['TRUE', 'FALSE']
 
 index = pd.MultiIndex.from_product([
     status_cas,
     index_id_duplicate,
     test_list_num_voie,
+    test_siren_insee_siren_inpi,
     test_siege,
     test_enseigne,
     test_distance_cosine,
-    test_distance_levhtenstein
+    test_distance_levhenstein,
+    test_date,
+    test_status_admin
 ],
                                    names = ["status_cas",
                                             'index_id_duplicate',
                                             "test_list_num_voie",
+                                            "test_siren_insee_siren_inpi",
                                            'test_siege', 
                                            'test_enseigne',
                                            'test_distance_cosine',
-                                           'test_distance_levhtenstein'])
+                                           'test_distance_levhenstein',
+                                           'test_date',
+                                           'test_status_admin'])
 
 df_ = (pd.DataFrame(index = index)
        .reset_index()
@@ -233,10 +258,13 @@ CREATE EXTERNAL TABLE IF NOT EXISTS inpi.REGLES_TESTS (
 `status_cas`                     string,
 `index_id_duplicate`                     string,
 `test_list_num_voie`                     string,
+`test_siren_insee_siren_inpi`                     string,
 `test_siege`                     string,
 `test_enseigne`                     string,
 `test_distance_cosine`                     string,
-`test_distance_levhtenstein`                     string,
+`test_distance_levhenstein`                     string,
+`test_date`                     string,
+`test_status_admin`                     string,
 `rank`                     integer
 
     )
@@ -267,6 +295,17 @@ output = s3.run_query(
 - Calcul de la Cosine distance maximum par group `index_id`
 - Recupération de la combinaison maximum par group
 - Création de la table `ets_inpi_insee_word2vec` pour analyse
+
+```python
+query = """
+DROP TABLE `inpi.ets_inpi_distance_max_word2vec`;
+"""
+s3.run_query(
+        query=query,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+```
 
 ```python
 query = """
@@ -432,10 +471,10 @@ FROM
       unzip_inpi, 
       unzip_insee, 
       max_cosine_distance,
-      CASE WHEN max_cosine_distance >= .6 THEN 'True' ELSE 'False' END AS test_distance_costine,
+      CASE WHEN max_cosine_distance >= .6 THEN 'TRUE' ELSE 'FALSE' END AS test_distance_cosine,
       test as key_except_to_test,
       levenshtein_distance(unzip_inpi, unzip_insee) AS levenshtein_distance,
-      CASE WHEN levenshtein_distance(unzip_inpi, unzip_insee) <=1  THEN 'True' ELSE 'False' END AS test_levhenstein
+      CASE WHEN levenshtein_distance(unzip_inpi, unzip_insee) <=1  THEN 'TRUE' ELSE 'FALSE' END AS test_distance_levhenstein
     
     FROM 
       dataset 
@@ -567,6 +606,17 @@ s3.run_query(
 
 ```python
 query = """
+DROP TABLE `inpi.ets_inpi_insee_cases_distance`;
+"""
+s3.run_query(
+        query=query,
+        database='inpi',
+        s3_output='INPI/sql_output'
+    )
+```
+
+```python
+query = """
 CREATE TABLE inpi.ets_inpi_insee_cases_distance
 WITH (
   format='PARQUET'
@@ -593,10 +643,10 @@ SELECT
   unzip_inpi,
   unzip_insee,
   max_cosine_distance,
-  CASE WHEN test_distance_costine IS NULL THEN 'NULL' ELSE test_distance_costine END AS test_distance_costine,
+  CASE WHEN test_distance_cosine IS NULL THEN 'NULL' ELSE test_distance_cosine END AS test_distance_cosine,
   -- test_distance_costine,
   levenshtein_distance,
-  CASE WHEN test_levhenstein IS NULL THEN 'NULL' ELSE test_levhenstein END AS test_levhenstein,
+  CASE WHEN test_distance_levhenstein IS NULL THEN 'NULL' ELSE test_distance_levhenstein END AS test_distance_levhenstein,
   -- test_levhenstein, 
   count_initial_insee, 
   count_inpi_siren_siret, 
@@ -673,10 +723,10 @@ SELECT
   unzip_inpi,
   unzip_insee,
   max_cosine_distance,
-  tb_distance.test_distance_costine as test_distance_cosine,
+  tb_distance.test_distance_cosine,
   -- test_distance_costine,
   levenshtein_distance,
-  tb_distance.test_levhenstein as test_distance_levhenstein,
+  tb_distance.test_distance_levhenstein,
   -- test_levhenstein, 
   count_initial_insee, 
   count_inpi_siren_siret, 
@@ -689,7 +739,7 @@ SELECT
   tb_distance.index_id_duplicate, 
   test_sequence_siret, 
   test_index_siret, 
-  test_siren_insee_siren_inpi, 
+  tb_distance.test_siren_insee_siren_inpi, 
   test_sequence_siret_many_cas, 
   list_numero_voie_matching_inpi, 
   list_numero_voie_matching_insee, 
@@ -698,10 +748,10 @@ SELECT
   tb_distance.test_list_num_voie, 
   datecreationetablissement, 
   date_debut_activite, 
-  test_date, 
+  tb_distance.test_date, 
   etatadministratifetablissement, 
   status_admin, 
-  test_status_admin, 
+  tb_distance.test_status_admin, 
   etablissementsiege, 
   status_ets, 
   tb_distance.test_siege, 
@@ -732,11 +782,15 @@ LEFT JOIN regles_tests
   AND tb_distance.index_id_duplicate = regles_tests.index_id_duplicate 
   
   AND tb_distance.test_list_num_voie = regles_tests.test_list_num_voie 
+  AND tb_distance.test_siren_insee_siren_inpi = regles_tests.test_siren_insee_siren_inpi
   AND tb_distance.test_siege = regles_tests.test_siege 
   AND tb_distance.test_enseigne = regles_tests.test_enseigne
   
-  AND tb_distance.test_distance_costine = regles_tests.test_distance_cosine 
-  AND tb_distance.test_levhenstein = regles_tests.test_distance_levhtenstein
+  AND tb_distance.test_distance_cosine = regles_tests.test_distance_cosine 
+  AND tb_distance.test_distance_levhenstein = regles_tests.test_distance_levhenstein
+  
+  AND tb_distance.test_date = regles_tests.test_date 
+  AND tb_distance.test_status_admin = regles_tests.test_status_admin
 """
 ```
 
@@ -748,6 +802,48 @@ output = s3.run_query(
   filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+```
+
+# Analyse
+
+
+## Count nombre lignes  & index
+
+
+Le nombre de lignes est de:
+
+```python
+query = """
+SELECT COUNT(*)
+FROM ets_inpi_insee_cases_distance 
+"""
+
+output = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'cnt_nb_lignes_rank', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+output
+```
+
+Le nombre d'index est de 
+
+```python
+query = """
+SELECT COUNT(distinct(index_id))
+FROM ets_inpi_insee_cases_distance 
+"""
+
+output = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'cnt_nb_index_rank', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+output
 ```
 
 # Generation report
