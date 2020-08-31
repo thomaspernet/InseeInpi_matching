@@ -24,6 +24,32 @@ Copy paste from Coda to fill the information
   * Différentes règles supplémentaires sont a prendre en considérations:
     * Le join doit etre INNER  → inutile de dédoublonner des siren non matché
     * le status IGNORE doit être filtré
+  * La nouvelle table doit contenir les variables suivantes: 
+    *  index_id, 
+    *     sequence_id, 
+    *     count_initial_insee, 
+    *     ets_inpi_sql.siren, 
+    *     siret, 
+    *     datecreationetablissement, 
+    *     "date_début_activité", 
+    *     etatadministratifetablissement, 
+    *     status_admin, 
+    *     etablissementsiege, 
+    *     status_ets, 
+    *     adresse_distance_inpi, 
+    *     adresse_distance_insee, 
+    *     list_numero_voie_matching_inpi, 
+    *     list_numero_voie_matching_insee, 
+    *     typevoieetablissement, 
+    *     type_voie_matching, 
+    *     ets_inpi_sql.code_postal_matching, 
+    *     ets_inpi_sql.ville_matching, 
+    *     codecommuneetablissement, 
+    *     code_commune, 
+    *     enseigne, 
+    *     enseigne1etablissement, 
+    *     enseigne2etablissement, 
+    *     enseigne3etablissement
 
 ## Metadata 
 
@@ -77,7 +103,7 @@ If link from the internet, save it to the cloud first
       * Database: siretisation
       * Tables (Add name new table): ets_insee_inpi 
       * List new tables
-      * * ets_insee_inpi 
+      *  ets_insee_inpi 
 
 ## Things to know (Steps, Attention points or new flow of information)
 
@@ -100,13 +126,13 @@ import seaborn as sns
 import os, shutil
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent.parent)
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-
-name_credential = 'XXX_credentials.csv'
-region = ''
-bucket = ''
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python
@@ -129,21 +155,117 @@ if pandas_setting:
 
 ## Steps
 
+- Merger la table `` avec `` 
+    - utiliser `inner join`
+- Filtrer lorsque statut est différent de 'IGNORE'
+
 ```python
-s3_output = 'XX'
-database = ''
+s3_output = 'inpi/sql_output'
+database = 'inpi'
 ```
 
 ```python
 query = """
+CREATE TABLE siretisation.ets_insee_inpi 
+WITH (
+  format='PARQUET'
+) AS
+ SELECT 
+    index_id, 
+    sequence_id, 
+    count_initial_insee, 
+    ets_inpi_sql.siren, 
+    siret, 
+    datecreationetablissement, 
+    "date_début_activité", 
+    etatadministratifetablissement, 
+    status_admin, 
+    etablissementsiege, 
+    status_ets, 
+    adresse_distance_inpi, 
+    adresse_distance_insee, 
+    list_numero_voie_matching_inpi, 
+    list_numero_voie_matching_insee, 
+    typevoieetablissement, 
+    type_voie_matching, 
+    ets_inpi_sql.code_postal_matching, 
+    ets_inpi_sql.ville_matching, 
+    codecommuneetablissement, 
+    code_commune, 
+    enseigne, 
+    enseigne1etablissement, 
+    enseigne2etablissement, 
+    enseigne3etablissement 
+  FROM 
+    siretisation.ets_inpi_sql 
+    INNER JOIN (
+      SELECT 
+        count_initial_insee, 
+        siren, 
+        siret, 
+        datecreationetablissement, 
+        etablissementsiege, 
+        etatadministratifetablissement, 
+        codepostaletablissement, 
+        codecommuneetablissement, 
+        ville_matching, 
+        list_numero_voie_matching_insee, 
+        numerovoieetablissement, 
+        typevoieetablissement, 
+        adresse_reconstituee_insee, 
+        adresse_distance_insee, 
+        enseigne1etablissement, 
+        enseigne2etablissement,
+        enseigne3etablissement 
+      FROM 
+        inpi.insee_final_sql
+    ) as insee ON ets_inpi_sql.siren = insee.siren 
+    AND ets_inpi_sql.ville_matching = insee.ville_matching 
+    AND ets_inpi_sql.code_postal_matching = insee.codepostaletablissement 
+  WHERE 
+    status != 'IGNORE'
 
 """
 
-output = s3.run_query(
+s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+### Validation
+
+1. Imprimer 10 lignes aléatoirement
+2. Compter le nombre d'observation
+
+```python
+query = """
+SELECT *
+FROM siretisation.ets_insee_inpi
+limit 10
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'exemple_siretisation', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query = """
+SELECT COUNT(*)
+FROM siretisation.ets_insee_inpi
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_siretisation', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
 ```
