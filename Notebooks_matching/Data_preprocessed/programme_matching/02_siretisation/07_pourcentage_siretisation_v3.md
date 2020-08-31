@@ -100,6 +100,8 @@ Objective(s)
     *   insee_except,
     *   intersection,
     *   union_
+    - index_id_max_intersection,
+    -  CASE WHEN pct_intersection = index_id_max_intersection THEN 'TRUE' ELSE 'FALSE' END AS test_pct_intersection,
     * status_cas:
       * Cas 1, 2,3,4,5,6,7
     * index_id_dup_has_cas_1_3_4
@@ -198,8 +200,8 @@ con = aws_connector.aws_instantiate(credential = path_cred,
 client= con.client_boto()
 s3 = service_s3.connect_S3(client = client,
                       bucket = 'calfdata', verbose = False) 
-athena = service_athena.connect_athena(client = client,
-                      bucket = 'calfdata') 
+#athena = service_athena.connect_athena(client = client,
+#                      bucket = 'calfdata') 
 ```
 
 ```python
@@ -225,7 +227,6 @@ if drop_table:
 ```python
 create_table = """
 
-/*match insee inpi 7 cas de figs*/
 CREATE TABLE inpi.ets_inpi_insee_cases WITH (format = 'PARQUET') AS 
 WITH test_proba AS (
   SELECT 
@@ -562,6 +563,8 @@ FROM
       intersection, 
       union_, 
       pct_intersection, 
+      index_id_max_intersection,
+      CASE WHEN pct_intersection = index_id_max_intersection THEN 'TRUE' ELSE 'FALSE' END AS test_pct_intersection,
       len_inpi_except, 
       len_insee_except, 
       test.status_cas, 
@@ -674,15 +677,20 @@ FROM
      GROUP BY index_id
      ) AS  is_index_id_dup_has_cas_1_3_4 ON test.index_id = is_index_id_dup_has_cas_1_3_4.index_id
    
-  -- LEFT JOIN regles_tests 
-  --ON  test.status_cas = regles_tests.status_cas 
-  --AND test.test_list_num_voie = regles_tests.test_list_num_voie 
-  --AND test.test_siege = regles_tests.test_siege 
-  --AND test.test_enseigne = regles_tests.test_enseigne    
+   
+  
+    LEFT JOIN (
+     SELECT 
+     index_id,
+     MAX(pct_intersection) AS index_id_max_intersection
+     FROM test
+     GROUP BY index_id
+     ) AS  is_index_id_index_id_max_intersection ON test.index_id = is_index_id_index_id_max_intersection.index_id
+   
   )
  )
 """
-output = athena.run_query(
+output = s3.run_query(
         query=create_table,
         database='inpi',
         s3_output='INPI/sql_output'
@@ -721,7 +729,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS inpi.index_20 (
      LOCATION 's3://calfdata/TEMP_ANALYSE_SIRETISATION/INDEX_20'
      TBLPROPERTIES ('has_encrypted_data'='false',
               'skip.header.line.count'='1');"""
-output = athena.run_query(
+output = s3.run_query(
         query=create_table,
         database='inpi',
         s3_output='INPI/sql_output'
@@ -761,7 +769,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS inpi.index_20_true (
      LOCATION 's3://calfdata/TEMP_ANALYSE_SIRETISATION/INDEX_20_TRUE'
      TBLPROPERTIES ('has_encrypted_data'='false',
               'skip.header.line.count'='1');"""
-output = athena.run_query(
+output = s3.run_query(
         query=create_table,
         database='inpi',
         s3_output='INPI/sql_output'
@@ -825,7 +833,7 @@ SELECT COUNT(DISTINCT(index_id))
 FROM ets_inpi_insee_cases 
 """
 
-output = athena.run_query(
+output = s3.run_query(
             query=query,
             database='inpi',
             s3_output='INPI/sql_output'
