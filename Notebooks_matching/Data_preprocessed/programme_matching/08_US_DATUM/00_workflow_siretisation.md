@@ -1328,6 +1328,22 @@ s3.run_query(
     )
 ```
 
+```python
+query = """
+SELECT * 
+FROM ets_inpi_insee_cases_distance 
+WHERE index_id_duplicate = 'FALSE' AND status_cas = 'CAS_6'
+ORDER BY index_id
+LIMIT 10
+"""
+s3.run_query(
+        query=query,
+        database='inpi',
+        s3_output='INPI/sql_output',
+    filename  = 'ex_ets_inpi_insee_cases'
+    )
+```
+
 ### Creation table finale
 
 - Afin de séparer les doublons, il suffit de récupérer le rank minimum par index. Celui ci va nous donner le meilleur des probables.
@@ -1697,6 +1713,51 @@ query ="""
 SELECT *
 FROM regles_tests 
 WHERE rank = 32141
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'rules', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query ="""
+SELECT *
+FROM regles_tests 
+WHERE rank = 1563
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'rules', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query ="""
+SELECT *
+FROM regles_tests 
+WHERE rank = 1888
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+      filename = 'rules', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query ="""
+SELECT *
+FROM regles_tests 
+WHERE rank =  21463
 """
 s3.run_query(
             query=query,
