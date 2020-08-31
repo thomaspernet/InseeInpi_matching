@@ -202,6 +202,7 @@ s3.run_query(
 ```
 
 ```python
+test_pct_intersection = ['TRUE', 'FALSE']
 status_cas = ['CAS_1','CAS_3','CAS_4', 'CAS_5','CAS_7', 'CAS_6']
 index_id_duplicate = ['TRUE', 'FALSE']
 test_list_num_voie = ['TRUE', 'NULL', 'FALSE']
@@ -214,6 +215,7 @@ test_date = ['TRUE','NULL','FALSE']
 test_status_admin = ['TRUE', 'FALSE']
 
 index = pd.MultiIndex.from_product([
+    test_pct_intersection,
     status_cas,
     index_id_duplicate,
     test_list_num_voie,
@@ -225,7 +227,9 @@ index = pd.MultiIndex.from_product([
     test_date,
     test_status_admin
 ],
-                                   names = ["status_cas",
+                                   names = [
+                                       'test_pct_intersection',
+                                       "status_cas",
                                             'index_id_duplicate',
                                             "test_list_num_voie",
                                             "test_siren_insee_siren_inpi",
@@ -255,6 +259,7 @@ s3.upload_file(file_to_upload = 'Regle_tests.csv',
 
 create_table = """
 CREATE EXTERNAL TABLE IF NOT EXISTS inpi.REGLES_TESTS (
+`test_pct_intersection`                     string,
 `status_cas`                     string,
 `index_id_duplicate`                     string,
 `test_list_num_voie`                     string,
@@ -281,6 +286,10 @@ output = s3.run_query(
         database='inpi',
         s3_output='INPI/sql_output'
     )
+```
+
+```python
+output
 ```
 
 # Creation tables
@@ -636,7 +645,9 @@ SELECT
   ets_inpi_insee_cases.insee_except, 
   intersection, 
   union_, 
-  pct_intersection, 
+  pct_intersection,
+  index_id_max_intersection,
+  test_pct_intersection,
   len_inpi_except, 
   len_insee_except, 
   status_cas,
@@ -716,7 +727,9 @@ SELECT
   insee_except, 
   intersection, 
   union_, 
-  pct_intersection, 
+  pct_intersection,
+  index_id_max_intersection,
+  tb_distance.test_pct_intersection,
   len_inpi_except, 
   len_insee_except, 
   tb_distance.status_cas,
@@ -777,7 +790,10 @@ SELECT
   key_except_to_test
 FROM tb_distance
 LEFT JOIN regles_tests 
-  ON  tb_distance.status_cas = regles_tests.status_cas 
+
+  ON  tb_distance.test_pct_intersection = regles_tests.test_pct_intersection
+
+  AND  tb_distance.status_cas = regles_tests.status_cas 
   
   AND tb_distance.index_id_duplicate = regles_tests.index_id_duplicate 
   
@@ -792,9 +808,6 @@ LEFT JOIN regles_tests
   AND tb_distance.test_date = regles_tests.test_date 
   AND tb_distance.test_status_admin = regles_tests.test_status_admin
 """
-```
-
-```python
 output = s3.run_query(
             query=query,
             database='inpi',
@@ -802,6 +815,7 @@ output = s3.run_query(
   filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+output
 ```
 
 # Analyse
