@@ -47,6 +47,7 @@ Copy paste from Coda to fill the information
     *     codecommuneetablissement, 
     *     code_commune, 
     *     enseigne, 
+    *      list_enseigne
     *     enseigne1etablissement, 
     *     enseigne2etablissement, 
     *     enseigne3etablissement
@@ -83,7 +84,7 @@ If link from the internet, save it to the cloud first
 
 1. Batch 1:
   * Select Provider: Athena
-  * Select table(s): ets_insee_inpi,ets_inpi_sql
+  * Select table(s): ets_insee_sql ,ets_inpi_sql
     * Select only tables created from the same notebook, else copy/paste selection to add new input tables
     * If table(s) does not exist, add them: Add New Table
     * Information:
@@ -92,9 +93,9 @@ If link from the internet, save it to the cloud first
         * Code: eu-west-3
       * Database: inpi
       * Notebook construction file: 
-        *  https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md
+        * https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md
         * [05_nettoyage_enseigne_inpi](https://github.com/thomaspernet/InseeInpi_matching/blob/master/01_Data_preprocessing/Data_preprocessed/programme_matching/01_preparation/05_nettoyage_enseigne_inpi.md)
-    
+
 ## Destination Output/Delivery
 
   * AWS
@@ -166,6 +167,19 @@ database = 'inpi'
 
 ```python
 query = """
+DROP TABLE `ets_insee_inpi`;
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query = """
 CREATE TABLE siretisation.ets_insee_inpi 
 WITH (
   format='PARQUET'
@@ -193,6 +207,7 @@ WITH (
     codecommuneetablissement, 
     code_commune, 
     enseigne, 
+    list_enseigne,
     enseigne1etablissement, 
     enseigne2etablissement, 
     enseigne3etablissement 
@@ -214,11 +229,12 @@ WITH (
         typevoieetablissement, 
         adresse_reconstituee_insee, 
         adresse_distance_insee, 
+        list_enseigne,
         enseigne1etablissement, 
         enseigne2etablissement,
         enseigne3etablissement 
       FROM 
-        inpi.insee_final_sql
+        siretisation.ets_insee_sql
     ) as insee ON ets_inpi_sql.siren = insee.siren 
     AND ets_inpi_sql.ville_matching = insee.ville_matching 
     AND ets_inpi_sql.code_postal_matching = insee.codepostaletablissement 
