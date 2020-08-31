@@ -179,6 +179,8 @@ min_rank,
   intersection, 
   union_, 
   pct_intersection, 
+  index_id_max_intersection,
+  test_pct_intersection,
   len_inpi_except, 
   len_insee_except, 
   status_cas,
@@ -260,7 +262,9 @@ ets_inpi_insee_cases_distance.rank = tb_min_rank.min_rank
   insee_except, 
   intersection, 
   union_, 
-  pct_intersection, 
+  pct_intersection,
+  index_id_max_intersection,
+  test_pct_intersection,
   len_inpi_except, 
   len_insee_except, 
   status_cas,
@@ -333,6 +337,10 @@ output = s3.run_query(
   filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+```
+
+```python
+output
 ```
 
 # Analyse
@@ -447,7 +455,7 @@ pd.concat([
 Nombre d'index récuperé
 
 ```python
-9397225
+9385293
 ```
 
 Nombre d'index a trouver
