@@ -29,7 +29,7 @@ Copy paste from Coda to fill the information
 * Epic: Epic 5
 * US: US 7
 * Date Begin: 8/31/2020
-* Duration Task: 0
+* Duration Task: 1
 * Status:  
 * Source URL:[US 07 Preparation siretisation](https://coda.io/d/_dCtnoqIftTn/US-07-Preparation-siretisation_suFb9)
 * Task type:
@@ -98,13 +98,13 @@ import seaborn as sns
 import os, shutil
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent.parent)
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-
-name_credential = 'XXX_credentials.csv'
-region = ''
-bucket = ''
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python
@@ -123,25 +123,152 @@ if pandas_setting:
     pd.set_option('display.max_colwidth', None)
 ```
 
+<!-- #region -->
 # Creation tables
 
 ## Steps
 
+- Prendre la table  `ets_final_sql` de l'inpi
+- Nettoyer la variable `enseigne`:
+    - enlever les accents
+    - Mise en majuscule
+
+```
+REGEXP_REPLACE(
+      NORMALIZE(enseigne, NFD), 
+      '\pM', 
+      ''
+    ) AS enseigne
+```
+
+Mise a jour tableau des règles de nettoyage:
+
+
+| Table | Variables | Article | Digit | Debut/fin espace | Espace | Accent | Upper |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| INPI | adresse_regex_inpi | X | X | X | X | X | X |
+| INPI | adresse_distance_inpi | X | X | X | X | X | X |
+| INPI | adresse_reconstituee_inpi |  |  | X | X | X | X |
+|INPI| enseigne |  |  |  |  | X |X |
+| INSEE | adresse_reconstituee_insee |  |  | X | X | X | X |
+| INSEE | adresse_distance_insee | X | X | X | X | X | X |
+<!-- #endregion -->
+
 ```python
-s3_output = 'XX'
-database = ''
+s3_output = 'INPI/sql_output'
+database = 'inpi'
+```
+
+### Exemple INPUT / output
+
+```python
+query = """
+WITH data_ AS (
+SELECT index_id, enseigne
+FROM inpi.ets_final_sql 
+WHERE enseigne != ''
+
+)
+SELECT data_.index_id, data_.enseigne as input, output
+FROM data_
+INNER JOIN (
+  SELECT index_id, 
+  REGEXP_REPLACE(
+      NORMALIZE(enseigne, NFD), 
+      '\pM', 
+      ''
+    ) AS output
+            FROM 
+  data_
+            ) as tb_enseigne
+            ON data_.index_id = tb_enseigne.index_id
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'exemple_enseigne', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
 ```
 
 ```python
 query = """
+CREATE DATABASE IF NOT EXISTS siretisation
+  COMMENT 'DB avec tb pour la siretisation'
+  LOCATION 's3://calfdata/inpi/SIRETISATION/'
+""""
+```
 
+```python
+query ="""
+DROP TABLE `siretisation.ets_inpi_sql`;
 """
-
-output = s3.run_query(
+s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query = """
+CREATE TABLE siretisation.ets_inpi_sql
+WITH (
+  format='PARQUET'
+) AS
+SELECT index_id, sequence_id, siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, status, origin, date_greffe, file_timestamp, libelle_evt, last_libele_evt, status_admin, type, status_ets, "siège_pm", rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, adresse_reconstituee_inpi, adresse_regex_inpi, adresse_distance_inpi, list_numero_voie_matching_inpi, numero_voie_matching, voie_clean, type_voie_matching, code_postal, code_postal_matching, ville, ville_matching, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, "domiciliataire_complément", "siege_domicile_représentant", nom_commercial, REGEXP_REPLACE(
+      NORMALIZE(enseigne, NFD), 
+      '\pM', 
+      ''
+    ) AS enseigne, "activité_ambulante" , "activité_saisonnière", "activité_non_sédentaire", "date_début_activité", "activité", origine_fonds, origine_fonds_info, type_exploitation, csv_source
+FROM inpi.ets_final_sql 
+"""
+
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+### Validation
+
+- Imprimer 10 lignes avec des enseignes différentes de null, avec deux colonnes, une colonne input et une colonne output
+
+```python
+query = """
+WITH data_ AS (
+SELECT index_id, enseigne
+FROM siretisation.ets_inpi_sql
+WHERE enseigne != ''
+
+)
+SELECT data_.index_id, data_.enseigne as input, output
+FROM data_
+INNER JOIN (
+  SELECT index_id, 
+  REGEXP_REPLACE(
+      NORMALIZE(enseigne, NFD), 
+      '\pM', 
+      ''
+    ) AS output
+            FROM 
+  data_
+            ) as tb_enseigne
+            ON data_.index_id = tb_enseigne.index_id
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'exemple_enseigne', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
 ```
