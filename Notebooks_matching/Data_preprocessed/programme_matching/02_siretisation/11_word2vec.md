@@ -94,7 +94,9 @@ If link from the internet, save it to the cloud first
 
       - Region: Europe (Paris)
         - Database: inpi
-        - Tables (Add name new table): ets_inpi_insee_rank_word2vec
+        - Tables (Add name new table): 
+                  * ets_inpi_insee_rank_word2vec
+                  * ets_inpi_insee_rank_word2vec_full
         - List new tables
         - ets_inpi_insee_rank_word2vec
 
@@ -130,8 +132,8 @@ path = os.getcwd()
 parent_path = str(Path(path).parent)
 path_cred = r"{}/credential_AWS.json".format(parent_path)
 
-region = ''
-bucket = ''
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python
@@ -142,9 +144,8 @@ s3 = service_s3.connect_S3(client = client,
                       bucket = bucket, verbose = False) 
 #athena = service_athena.connect_athena(client = client,
 #                      bucket = bucket) 
-region = 'XX'
-bucket = 'XX'
-s3_output = 'XX'
+
+s3_output = 'INPI/sql_output'
 ```
 
 ```python
@@ -165,8 +166,139 @@ query = """
 
 output = s3.run_query(
             query=query,
-            database='',
-            s3_output='',
+            database='inpi',
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+# Analyse
+
+Maintenant que nous avons récupérer les distances via le modèle de machine learning, nous allons pouvoir apprécier la distribution des distances. On peut aussi regarder dans quelle mesure, le modèle a des difficultés a trouver les relations. 
+
+Finalement, nous allons merger les résultats avec la table d'origine pour vérifier l'exactitude lorsque la distance est en dessous des .6. 
+
+```python
+pd.set_option('display.max_colwidth', None)
+```
+
+```python
+query = """
+SELECT approx_percentile(
+  max_cosine_distance, ARRAY[
+    0.25,
+    0.50,
+    0.60,
+    0.70,
+    0.75,
+    0.80,
+    0.85,
+    0.95,
+    0.99]
+  )
+  FROM ets_inpi_insee_rank_word2vec 
+"""
+
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output=s3_output,
+  filename = 'distribution_distance', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## Creation table Rank + distance
+
+```python
+query = """
+CREATE TABLE inpi.ets_inpi_insee_rank_word2vec_full
+WITH (
+  format='PARQUET'
+) AS
+SELECT 
+  ets_inpi_insee_cases_rank.index_id, 
+  min_rank, 
+  count_index, 
+  ets_inpi_insee_cases_rank.row_id, 
+  sequence_id, 
+  siren, 
+  siret,
+   list_inpi, 
+  lenght_list_inpi, 
+  list_insee, 
+  lenght_list_insee, 
+  inpi_except, 
+  insee_except, 
+  max_cosine_distance, 
+  count_found, 
+  unzip_inpi,
+  unzip_insee, 
+  intersection, 
+  union_, 
+  pct_intersection, 
+  ets_inpi_insee_rank_word2vec.len_inpi_except, 
+  ets_inpi_insee_rank_word2vec.len_insee_except, 
+  ets_inpi_insee_rank_word2vec.status_cas,
+  count_initial_insee, 
+  count_inpi_siren_siret, 
+  count_inpi_siren_sequence, 
+  count_inpi_sequence_siret, 
+  count_inpi_sequence_stat_cas_siret, 
+  count_inpi_index_id_siret, 
+  count_inpi_index_id_stat_cas_siret, 
+  count_inpi_index_id_stat_cas, 
+  index_id_duplicate, 
+  test_sequence_siret, 
+  test_index_siret, 
+  test_siren_insee_siren_inpi, 
+  test_sequence_siret_many_cas, 
+  list_numero_voie_matching_inpi, 
+  list_numero_voie_matching_insee, 
+  intersection_numero_voie, 
+  union_numero_voie, 
+  test_list_num_voie, 
+  datecreationetablissement, 
+  date_debut_activite, 
+  test_date, 
+  etatadministratifetablissement, 
+  status_admin, 
+  test_status_admin, 
+  etablissementsiege, 
+  status_ets, 
+  test_siege, 
+  codecommuneetablissement, 
+  code_commune, 
+  test_code_commune, 
+  codepostaletablissement, 
+  code_postal_matching, 
+  numerovoieetablissement, 
+  numero_voie_matching, 
+  test_numero_voie, 
+  typevoieetablissement, 
+  type_voie_matching, 
+  test_type_voie, 
+  test_adresse_cas_1_3_4, 
+  index_id_dup_has_cas_1_3_4, 
+  test_duplicates_is_in_cas_1_3_4, 
+  enseigne, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement, 
+  test_enseigne 
+FROM 
+  ets_inpi_insee_cases_rank 
+  LEFT JOIN ets_inpi_insee_rank_word2vec ON ets_inpi_insee_cases_rank.index_id = ets_inpi_insee_rank_word2vec.index_id 
+
+"""
+```
+
+```python
+output = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output=s3_output,
   filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )

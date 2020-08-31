@@ -184,14 +184,13 @@ cm = sns.light_palette("green", as_cmap=True)
 pd.set_option('display.max_columns', None)
 ```
 
-# Creation tables
-
-La première étape consiste à créer la table `ets_inpi_insee_cases_filtered` qui filtre la table `ets_inpi_insee_cases` des lignes lorsque la variable `test_duplicates_is_in_cas_1_3_4` est différent de `'TO_REMOVE'`
+# Filtre table
 
 ## Steps
 
-- Creation de la table  `ets_inpi_insee_cases_filtered`
+- Création table temporaire
 - Compter le nombre d'observations
+- Filtre `ets_inpi_insee_cases_filtered` pour dédoublonner les index
 - Brève analyse des résultats des tests
 - Séparation des lignes
 
@@ -216,11 +215,11 @@ total_index = s3.run_query(
 total_index
 ```
 
-Le nombre d'observations est de:
+Le nombre d'index a trouver est de:
 
 ```python
 query = """
-SELECT COUNT(*) AS count_rows
+SELECT COUNT(DISTINCT(index_id)) AS count_rows
 FROM ets_inpi_insee_cases_filtered 
 WHERE index_id_duplicate = 'True' AND test_adresse_cas_1_3_4 ='True'
 """
@@ -234,7 +233,288 @@ total_index_filtre = s3.run_query(
 total_index_filtre
 ```
 
-### Brève analyse des résultats des tests
+Nombre de lignes
+
+```python
+query = """
+SELECT COUNT(*) AS count_rows
+FROM ets_inpi_insee_cases_filtered 
+WHERE index_id_duplicate = 'True' AND test_adresse_cas_1_3_4 ='True'
+"""
+s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output=s3_output,
+    filename = 'cas_1_count_ets_inpi_insee_cases_filtered_ligne',
+    destination_key = None
+        )
+```
+
+## Creation table
+
+Pour faciliter l'analyse, nous allons créer une table avec la variable `count_index` qui compte le nombre de lignes par index, car certaines lignes ont été purgé de doublons lors de la création de la table.
+
+Une deuxième variable est aussi ajoutée, `test_unique_index_id_cas_2` , qui indique si la ligne a un doublon ou non.
+
+```python
+create_table = """
+CREATE TABLE inpi.ets_inpi_insee_cases_filtered_cas_2
+WITH (
+  format='PARQUET'
+) AS
+WITH count_distinct_index_id AS(
+  SELECT *
+FROM (
+SELECT index_id,  COUNT(*) as count_index
+FROM ets_inpi_insee_cases_filtered 
+WHERE 
+
+  index_id_duplicate = 'True' AND 
+test_adresse_cas_1_3_4 ='True'
+GROUP BY index_id
+  ) 
+ORDER BY count_index DESC  
+  )
+  SELECT 
+  count_distinct_index_id.index_id,
+  count_index,
+  CASE WHEN count_index= 1 THEN 'True' ELSE 'False' END AS test_unique_index_id_cas_2,
+  row_id, sequence_id, siren, siret, count_initial_insee, count_inpi_siren_siret, count_inpi_siren_sequence, count_inpi_sequence_siret, count_inpi_sequence_stat_cas_siret, count_inpi_index_id_siret, count_inpi_index_id_stat_cas_siret, count_inpi_index_id_stat_cas, index_id_duplicate, test_sequence_siret, test_index_siret, test_siren_insee_siren_inpi, test_sequence_siret_many_cas, list_numero_voie_matching_inpi, list_numero_voie_matching_insee, intersection_numero_voie, union_numero_voie, test_list_num_voie, datecreationetablissement, date_debut_activite, test_date, etatadministratifetablissement, status_admin, test_status_admin, etablissementsiege, status_ets, test_siege, codecommuneetablissement, code_commune, test_code_commune, codepostaletablissement, code_postal_matching, numerovoieetablissement, numero_voie_matching, test_numero_voie, typevoieetablissement, type_voie_matching, test_type_voie, list_inpi, lenght_list_inpi, list_insee, lenght_list_insee, inpi_except, insee_except, intersection, union_, pct_intersection, len_inpi_except, len_insee_except, status_cas, test_adresse_cas_1_3_4, index_id_dup_has_cas_1_3_4, test_duplicates_is_in_cas_1_3_4, enseigne, enseigne1etablissement, enseigne2etablissement, enseigne3etablissement, test_enseigne
+  
+  FROM count_distinct_index_id
+  LEFT JOIN (
+    SELECT * 
+    FROM ets_inpi_insee_cases_filtered 
+WHERE index_id_duplicate = 'True' AND 
+test_adresse_cas_1_3_4 ='True'
+    ) as cas_2
+  ON count_distinct_index_id.index_id = cas_2.index_id
+  
+ 
+"""
+output = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output=s3_output,
+    filename = None,
+    destination_key = None
+        )
+```
+
+## Brève analyse des résultats des tests
+
+
+### Count nombre de doublons
+
+Desormais, nous avons des index qui ont été dédoublonné lors de la création de la table `ets_inpi_insee_cases_filtered`. A savoir, l'une des lignes doublonnée avait au moins un adresse appartenant au cas de figure 1, 3 ou 4.
+
+```python
+query = """
+SELECT count_index, COUNT(*) as nb_distinct
+FROM ets_inpi_insee_cases_filtered_cas_2
+WHERE index_id_duplicate = 'True' AND test_adresse_cas_1_3_4 ='True'
+GROUP BY count_index
+ORDER BY count_index
+"""
+
+tb = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+    filename = 'cas_2_nb_doublons_lignes',
+    destination_key = 'ANALYSE_POST_SIRETISATION'
+        )
+tb.style.bar(subset= ['nb_distinct'],color='#008000')
+```
+
+```python
+query = """
+SELECT count_index, COUNT(distinct(index_id)) as nb_distinct
+FROM ets_inpi_insee_cases_filtered_cas_2
+WHERE index_id_duplicate = 'True' AND test_adresse_cas_1_3_4 ='True'
+GROUP BY count_index
+ORDER BY count_index
+"""
+
+tb = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+    filename = 'cas_2_nb_doublons_index',
+    destination_key = 'ANALYSE_POST_SIRETISATION'
+        )
+tb.style.bar(subset= ['nb_distinct'],color='#008000')
+```
+
+Nous avons des doublons que nous nous avons pu retrouvé grâce a la variable `test_duplicates_is_in_cas_1_3_4`, c'est a dire qu'un des doublons appartient au cas de figure 1, 3 ou 4. Dans le tableau ci dessous, nous allons vérifier combien d'index sont impacté par cette règle. Il faut noter que ces cas de figure ont été filtré lors de la création de la table `ets_inpi_insee_cases_filtered` car le statut de la variable `test_duplicates_is_in_cas_1_3_4` était `TO_REMOVE`
+
+Sur les 117,587 index a trouver, 66,443 ont une adresse qui match parfaitement (cas 1,3,4). Dès lors, nous allons pouvoir vérifier les tests sur ses 66,443. Ses tests seront réalisés dans la seconde partie du notebook
+
+
+### Doublons status cas
+
+Parmis les 109088, 73685 appartiennent au cas de figure 1, a savoir tous les mots de l'adresse sont identiques.
+
+```python
+query = """
+SELECT status_cas,  COUNT(index_id) as count_index
+FROM ets_inpi_insee_cases_filtered_cas_2 
+WHERE test_unique_index_id_cas_2 = 'False'
+GROUP BY status_cas
+ORDER BY status_cas
+"""
+tb = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+    filename = 'cas_2_nb_doublons_index_by_cas',
+    destination_key = 'ANALYSE_POST_SIRETISATION'
+        )
+(tb
+ .set_index('status_cas')
+ .T
+ .assign(
+        total_row = lambda x : x.sum(axis = 1),
+    )
+)
+```
+
+```python
+query = """
+SELECT test_list_num_voie,  COUNT(index_id) as count_index
+FROM ets_inpi_insee_cases_filtered_cas_2 
+WHERE test_unique_index_id_cas_2 = 'False'
+GROUP BY test_list_num_voie
+ORDER BY test_list_num_voie
+"""
+tb = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+    filename = 'cas_2_nb_doublons_index_by_cas',
+    destination_key = 'ANALYSE_POST_SIRETISATION'
+        )
+(tb
+ .set_index('test_list_num_voie')
+ .T
+ .assign(
+        total_row = lambda x : x.sum(axis = 1),
+    )
+)
+```
+
+```python
+query = """
+SELECT status_cas, test_list_num_voie,  COUNT(index_id) as count_index
+FROM ets_inpi_insee_cases_filtered_cas_2 
+WHERE test_unique_index_id_cas_2 = 'False'
+GROUP BY status_cas,test_list_num_voie
+ORDER BY status_cas, test_list_num_voie
+"""
+tb = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+    filename = 'cas_2_nb_doublons_index_by_cas',
+    destination_key = 'ANALYSE_POST_SIRETISATION'
+        )
+(tb
+ .set_index(['status_cas', 'test_list_num_voie'])
+ .unstack(0)
+ .assign(
+        total_row = lambda x : x.sum(axis = 1),
+    )
+)
+```
+
+```python
+query = """
+SELECT status_cas, test_list_num_voie,test_siege,test_enseigne,  COUNT(index_id) as count_index
+FROM ets_inpi_insee_cases_filtered_cas_2 
+WHERE test_unique_index_id_cas_2 = 'False'
+GROUP BY status_cas, test_list_num_voie,test_siege,test_enseigne
+ORDER BY status_cas, test_list_num_voie DESC,test_siege DESC,test_enseigne DESC
+"""
+tb = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+    filename = 'cas_2_nb_doublons_index_by_cas',
+    destination_key = 'ANALYSE_POST_SIRETISATION'
+        )
+```
+
+```python
+import seaborn as sns
+
+cm = sns.light_palette("red", as_cmap=True)
+```
+
+```python
+(
+    tb
+    .set_index(['status_cas', 'test_list_num_voie','test_siege','test_enseigne'])
+    .unstack(0)
+    .assign(
+        total_row = lambda x : x.sum(axis = 1),
+    )
+    .style
+    .bar(subset= ['total_row'],color='#008000')
+    .background_gradient(cmap=cm, subset = ['count_index'])
+)
+```
+
+```python
+
+```
+
+```python
+
+```
+
+```python
+
+```
+
+```python
+query = """
+SELECT count_index, status_cas, test_list_num_voie,test_siege,test_enseigne, count(count_index) as nb_unique
+FROM (
+SELECT index_id, status_cas, test_list_num_voie,test_siege,test_enseigne,  COUNT(index_id) as count_index
+FROM ets_inpi_insee_cases_filtered_cas_2 
+WHERE test_unique_index_id_cas_2 = 'False'
+GROUP BY index_id, status_cas, test_list_num_voie,test_siege,test_enseigne
+ORDER BY status_cas, test_list_num_voie DESC,test_siege DESC,test_enseigne DESC
+  )
+  GROUP BY count_index, status_cas, test_list_num_voie,test_siege,test_enseigne
+  ORDER BY count_index, status_cas, test_list_num_voie DESC,test_siege DESC,test_enseigne DESC
+"""
+tb = s3.run_query(
+            query=query,
+            database='inpi',
+            s3_output='INPI/sql_output',
+    filename = 'cas_2_nb_doublons_index_by_cas',
+    destination_key = 'ANALYSE_POST_SIRETISATION'
+        )
+
+
+(tb
+ .set_index(['status_cas', 'test_list_num_voie','test_siege','test_enseigne', 'count_index'])
+ .unstack(0)
+ .assign(
+        total_row = lambda x : x.sum(axis = 1),
+    )
+ .fillna(0)
+ .assign(total_count_index = lambda x: x.groupby(['count_index'])['total_row'].transform("sum"))
+ .sort_values(by = 'count_index')
+ .style
+ .format("{:,.0f}")
+    .bar(subset= ['total_row'],color='#008000')
+    .background_gradient(cmap=cm, subset = ['nb_unique'])
+)
+```
+
+# Test index dédoublonnées
 
 ```python
 #top = """
@@ -256,9 +536,9 @@ bottom_2 = """
 -- {0}
 
 LEFT JOIN (
-    SELECT {0}  AS groups, COUNT(*) as cnt_{0}
-    FROM ets_inpi_insee_cases_filtered 
-    WHERE index_id_duplicate = 'True' AND test_adresse_cas_1_3_4 ='True'
+    SELECT {0}  AS groups, COUNT(DISTINCT(index_id)) as cnt_{0}
+    FROM ets_inpi_insee_cases_filtered_cas_2 
+    WHERE test_unique_index_id_cas_2 = 'True'
     GROUP BY {0}
     ) AS tb_{0}
   ON groups_true_false_null.groups = tb_{0}.groups
@@ -353,11 +633,19 @@ tb = s3.run_query(
 )
 ```
 
-Nous pouvons voir dans le tableau précédent qu'il y a 104,051 lignes qui ont plusieurs siret pour la même séquence. Une des explication possible est un déménagement de l'établissement sans fermeture coté greffe. En effet, un déménagement entraine automatiquement une nouvelle attribution de siret coté INSEE. Concernant l'INPI, le déménagement déclenche un événement de modification, et non une suppression. Dès lors, l'INSEE va indiquer la première adresse comme fermée alors que l'INPI va considérer les deux adresses comme étant ouvertes. 
+ Si dessous, deux exemples de cas de figure avec plusieurs adresses pour une même séquence.
 
-Une autre explication peut être le changement de nom de la rue. 
 
-Si dessous, deux exemples de cas de figure avec plusieurs adresses pour une même séquence.
+Analyse pour les cas ou les tests suivants sont validés:
+
+- `test_siege`
+- `status_admin`
+- `test_enseigne`
+- `test_index_siret` 
+
+```python
+
+```
 
 ```python
 pd.set_option('display.max_columns', None)
