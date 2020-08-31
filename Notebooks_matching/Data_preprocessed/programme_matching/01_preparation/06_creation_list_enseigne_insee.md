@@ -55,7 +55,7 @@ If link from the internet, save it to the cloud first
 
 1. Batch 1:
   * Select Provider: Athena
-  * Select table(s): ets_insee_inpi
+  * Select table(s): insee_final_sql
     * Select only tables created from the same notebook, else copy/paste selection to add new input tables
     * If table(s) does not exist, add them: Add New Table
     * Information:
@@ -64,7 +64,7 @@ If link from the internet, save it to the cloud first
         * Code: eu-west-3
       * Database: inpi
       * Notebook construction file: 
-        * * https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md
+        *  https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md
     
 ## Destination Output/Delivery
 
@@ -97,13 +97,13 @@ import seaborn as sns
 import os, shutil
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent.parent)
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-
-name_credential = 'XXX_credentials.csv'
-region = ''
-bucket = ''
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python
@@ -126,21 +126,244 @@ if pandas_setting:
 
 ## Steps
 
+- Concatener les variables
+    - `enseigne1etablissement`
+    - `enseigne2etablissement`
+    - `enseigne3etablissement`
+- Creation list
+- Exclusion des doublons (uniquement les mots distincts
+- Enlever les espaces de trop
+
 ```python
-s3_output = 'XX'
-database = ''
+s3_output = 'inpi/sql_output'
+database = 'inpi'
 ```
+
+## Exemple input/ouptup
 
 ```python
 query = """
+SELECT siret, enseigne1etablissement,enseigne2etablissement,enseigne3etablissement, array_remove(
+      array_distinct(
+        SPLIT(
+          concat(
+            enseigne1etablissement, ',', enseigne2etablissement, 
+            ',', enseigne3etablissement
+          ), 
+          ','
+        )
+      ), 
+      ''
+    ) as list_enseigne
+FROM inpi.insee_final_sql 
+WHERE 
+cardinality(array_remove(
+array_distinct(
+        SPLIT(
+          concat(
+            enseigne1etablissement, ',', enseigne2etablissement, 
+            ',', enseigne3etablissement
+          ), 
+          ','
+        )
+      ), 
+      ''
+    )) > 1
+LIMIT 10
 
 """
 
-output = s3.run_query(
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'Exemple_list_enseigne_insee', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## Creation table
+
+```python
+query = """
+CREATE TABLE siretisation.ets_insee_sql WITH (format = 'PARQUET') AS WITH tb AS (
+  SELECT 
+    *, 
+    array_remove(
+      array_distinct(
+        SPLIT(
+          concat(
+            enseigne1etablissement, ',', enseigne2etablissement, 
+            ',', enseigne3etablissement
+          ), 
+          ','
+        )
+      ), 
+      ''
+    ) as list_enseigne 
+  FROM 
+    inpi.insee_final_sql
+) 
+SELECT 
+  count_initial_insee, 
+  siren, 
+  siret, 
+  datecreationetablissement, 
+  etablissementsiege, 
+  etatadministratifetablissement, 
+  codepostaletablissement, 
+  codecommuneetablissement, 
+  libellecommuneetablissement, 
+  ville_matching, 
+  libellevoieetablissement, 
+  complementadresseetablissement, 
+  numerovoieetablissement, 
+  list_numero_voie_matching_insee, 
+  indicerepetitionetablissement_full, 
+  typevoieetablissement, 
+  voie_clean, 
+  adresse_reconstituee_insee, 
+  adresse_distance_insee, 
+  enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement, 
+  CASE WHEN cardinality(list_enseigne) = 0 THEN NULL ELSE list_enseigne END AS list_enseigne 
+FROM 
+  tb
+
+"""
+s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## Test Acceptance
+
+1. Compter le nombre le lignes par possibilité
+2. Afficher le top 10 des enseignes en terme de compte
+3. Imprimer lorsque la liste est égale a 1
+4. Imprimer lorsque la liste est égale a 2
+5. Imprimer lorsque la liste est égale a 4
+6. Imprimer lorsque la liste est égale a 10
+
+
+### 1. Compter le nombre le lignes par possibilité
+
+```python
+query = """
+SELECT CARDINALiTY(list_enseigne), COUNT(*) AS nb_obs
+FROM siretisation.ets_insee_sql 
+GROUP BY CARDINALiTY(list_enseigne)
+ORDER BY nb_obs DESC
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'count_enseigne_insee', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+### 2. Afficher le top 10 des enseignes en terme de compte
+
+```python
+query = """
+SELECT list_enseigne, COUNT(*) AS nb_obs
+FROM siretisation.ets_insee_sql 
+GROUP BY list_enseigne
+ORDER BY nb_obs DESC
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'count_top_enseigne_insee', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+### 3. Imprimer lorsque la liste est égale a 1
+
+```python
+query = """
+SELECT enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement,list_enseigne
+FROM siretisation.ets_insee_sql 
+WHERE CARDINALITY(list_enseigne) = 1
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'count_cardinalirty_1_enseigne_insee', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+### 4. Imprimer lorsque la liste est égale a 2
+
+```python
+query = """
+SELECT enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement,list_enseigne
+FROM siretisation.ets_insee_sql 
+WHERE CARDINALITY(list_enseigne) = 2
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'count_cardinalirty_2_enseigne_insee', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+### 5. Imprimer lorsque la liste est égale a 4
+
+```python
+query = """
+SELECT enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement,list_enseigne
+FROM siretisation.ets_insee_sql 
+WHERE CARDINALITY(list_enseigne) = 3
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'count_cardinalirty_3_enseigne_insee', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+### 6. Imprimer lorsque la liste est égale a 10
+
+```python
+query = """
+SELECT enseigne1etablissement, 
+  enseigne2etablissement, 
+  enseigne3etablissement,list_enseigne
+FROM siretisation.ets_insee_sql 
+WHERE CARDINALITY(list_enseigne) = 10
+LIMIT 10
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'count_cardinalirty_10_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
 ```
