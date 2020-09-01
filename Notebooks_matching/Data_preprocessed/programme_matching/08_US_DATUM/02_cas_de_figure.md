@@ -24,8 +24,16 @@ Copy paste from Coda to fill the information
   *  La variable status_cas  indique le cas de figure détecté entre l'adresse de l'INSEE et l'INPI. Il y a 5 possibilités au total:
     *   CAS_1: Les mots dans l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE
     *   CAS_2: Aucun des mots de l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE
-    *   CAS_3: Intersection parfaite mots INPI ou INSEE
-    *   CAS_4: Exception mots INPI ou INSEE
+    *   CAS_3: Cardinalite exception parfaite mots INPI ou INSEE
+    *   CAS_4: Cardinalite Exception mots INPI diffférente Cardinalite Exception mots INSEE
+    *   CAS_5: Cadrinalite exception insee est égal de 0 ou cardinalite exception inpi est égal de 0
+    *   CAS_6: CAS_NO_ADRESSE
+  * Creation variables supplémentaires
+      * `insee_except`: Liste de mots provenant de l'INSEE non contenue dans l'INPI
+      * `inpi_except`: Liste de mots provenant de l'INPI non contenue dans l'INSEE
+      * `intersection`: Nombre de mots en commun
+      * `union_`: Nombre de mots total entre les deux adresses
+      * `pct_intersection`: `intersection` / `union_`
 
 ## Metadata 
 
@@ -91,13 +99,13 @@ import seaborn as sns
 import os, shutil
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent.parent)
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-
-name_credential = 'XXX_credentials.csv'
-region = ''
-bucket = ''
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python
@@ -116,27 +124,586 @@ if pandas_setting:
     pd.set_option('display.max_colwidth', None)
 ```
 
-# Creation tables
-
-## Steps
+# Input/output
 
 ```python
-s3_output = 'XX'
-database = ''
+s3_output = 'inpi/sql_output'
+database = 'inpi'
 ```
 
 ```python
 query = """
+WITH create_var AS (
+SELECT 
+  siret,
+adresse_distance_insee, adresse_distance_inpi,
+array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+    array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    )/CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as pct_intersection
+
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+siret,
+adresse_distance_insee, adresse_distance_inpi,
+insee_except,
+inpi_except,
+intersection,
+union_,
+intersection / union_ as pct_intersection,
+CASE 
+WHEN intersection = union_ THEN 'CAS_1' 
+WHEN intersection = 0 THEN 'CAS_2'
+WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_3' 
+WHEN (CARDINALITY(insee_except) = 0 OR CARDINALITY(inpi_except) =0)  AND intersection != union_ AND intersection != 0 THEN 'CAS_5'
+WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_4'
+ELSE 'CAS_NO_ADRESSE'
+END AS status_cas
+    FROM create_var
+  )
+       SELECT *
+       FROM (SELECT * 
+             FROm test
+       WHERE status_cas = 'CAS_1'
+       LIMIT 1
+             )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_2'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_3'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_4'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_5'
+              LIMIT 1
+              )
+       ORDER BY status_cas
+       
+       )
 
 """
 
-output = s3.run_query(
+tb = s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+  filename = 'tb_exemple', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+pd.concat([
+
+pd.concat([
+tb[['siret', 'adresse_distance_insee', 'adresse_distance_inpi']]
+],keys=["Input"], axis = 1),
+pd.concat([
+tb[['insee_except', 'inpi_except', 'intersection', 'union_', 'pct_intersection','status_cas']]
+],keys=["Output"], axis = 1)
+], axis = 1
+)
+```
+
+# Test acceptance
+
+1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
+2. Compter le nombre de lignes par cas
+3. Compter le nombre d'index par cas
+4. Créer un tableau avec une ligne par cas
+
+
+## 1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
+
+```python
+query = """
+SELECT COUNT(*)
+FROM siretisation.ets_insee_inpi
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_ets_insee_inpi', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query = """
+WITH create_var AS (
+SELECT 
+  siret,
+adresse_distance_insee, adresse_distance_inpi,
+array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+    array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    )/CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as pct_intersection
+
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+siret,
+adresse_distance_insee, adresse_distance_inpi,
+insee_except,
+inpi_except,
+intersection,
+union_,
+intersection / union_ as pct_intersection,
+CASE 
+WHEN intersection = union_ THEN 'CAS_1' 
+WHEN intersection = 0 THEN 'CAS_2'
+WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_3' 
+WHEN (CARDINALITY(insee_except) = 0 OR CARDINALITY(inpi_except) =0)  AND intersection != union_ AND intersection != 0 THEN 'CAS_5'
+WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_4'
+ELSE 'CAS_NO_ADRESSE'
+END AS status_cas
+    FROM create_var
+  )
+       SELECT count(*)
+       FROM test
+       )
+       """
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_ets_insee_inpi_status_cas', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 2. Compter le nombre de lignes par cas
+
+```python
+query = """
+WITH create_var AS (
+SELECT 
+  siret,
+adresse_distance_insee, adresse_distance_inpi,
+array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+    array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    )/CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as pct_intersection
+
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+siret,
+adresse_distance_insee, adresse_distance_inpi,
+insee_except,
+inpi_except,
+intersection,
+union_,
+intersection / union_ as pct_intersection,
+CASE 
+WHEN intersection = union_ THEN 'CAS_1' 
+WHEN intersection = 0 THEN 'CAS_2'
+WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_3' 
+WHEN (CARDINALITY(insee_except) = 0 OR CARDINALITY(inpi_except) =0)  AND intersection != union_ AND intersection != 0 THEN 'CAS_5'
+WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_4'
+ELSE 'CAS_NO_ADRESSE'
+END AS status_cas
+    FROM create_var
+  )
+       SELECT status_cas, count(*)
+       FROM test
+       GROUP BY status_cas
+       ORDER BY status_cas
+       )
+       """
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_group_ets_insee_inpi_status_cas', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 3. Compter le nombre d'index par cas
+
+```python
+query = """
+WITH create_var AS (
+SELECT 
+  siret,index_id,
+adresse_distance_insee, adresse_distance_inpi,
+array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+    array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    )/CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as pct_intersection
+
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+siret,index_id,
+adresse_distance_insee, adresse_distance_inpi,
+insee_except,
+inpi_except,
+intersection,
+union_,
+intersection / union_ as pct_intersection,
+CASE 
+WHEN intersection = union_ THEN 'CAS_1' 
+WHEN intersection = 0 THEN 'CAS_2'
+WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_3' 
+WHEN (CARDINALITY(insee_except) = 0 OR CARDINALITY(inpi_except) =0)  AND intersection != union_ AND intersection != 0 THEN 'CAS_5'
+WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_4'
+ELSE 'CAS_NO_ADRESSE'
+END AS status_cas
+    FROM create_var
+  )
+       SELECT status_cas, count(DISTINCT(index_id))
+       FROM test
+       GROUP BY status_cas
+       ORDER BY status_cas
+       )
+       """
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_group_index_ts_insee_inpi_status_cas', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 4. Créer un tableau avec une ligne par cas
+
+```python
+query = """
+WITH create_var AS (
+SELECT 
+  siret,
+adresse_distance_insee, adresse_distance_inpi,
+array_distinct(
+      array_except(
+        split(adresse_distance_insee, ' '), 
+        split(adresse_distance_inpi, ' ')
+      )
+    ) as insee_except, 
+    array_distinct(
+      array_except(
+        split(adresse_distance_inpi, ' '), 
+        split(adresse_distance_insee, ' ')
+      )
+    ) as inpi_except, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_,
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    )/CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as pct_intersection
+
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+siret,
+adresse_distance_insee, adresse_distance_inpi,
+insee_except,
+inpi_except,
+intersection,
+union_,
+intersection / union_ as pct_intersection,
+CASE 
+WHEN intersection = union_ THEN 'CAS_1' 
+WHEN intersection = 0 THEN 'CAS_2'
+WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_3' 
+WHEN (CARDINALITY(insee_except) = 0 OR CARDINALITY(inpi_except) =0)  AND intersection != union_ AND intersection != 0 THEN 'CAS_5'
+WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_4'
+ELSE 'CAS_NO_ADRESSE'
+END AS status_cas
+    FROM create_var
+  )
+       SELECT *
+       FROM (SELECT * 
+             FROm test
+       WHERE status_cas = 'CAS_1'
+       LIMIT 1
+             )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_2'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_3'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_4'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE status_cas = 'CAS_5'
+              LIMIT 1
+              )
+       ORDER BY status_cas
+       
+       )
+
+"""
+
+tb = s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'tb_exemple', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+pd.concat([
+
+pd.concat([
+tb[['siret', 'adresse_distance_insee', 'adresse_distance_inpi']]
+],keys=["Input"], axis = 1),
+pd.concat([
+tb[['insee_except', 'inpi_except', 'intersection', 'union_', 'pct_intersection','status_cas']]
+],keys=["Output"], axis = 1)
+], axis = 1
+)
 ```
 
 # Generation report
