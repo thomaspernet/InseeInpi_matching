@@ -33,7 +33,7 @@ Copy paste from Coda to fill the information
 * US: US 7
 * Date Begin: 9/1/2020
 * Duration Task: 0
-* Status:  
+* Status: active  
 * Source URL: [US 07 Preparation tables et variables tests](https://coda.io/d/_dCtnoqIftTn/US-07-Preparation-tables-et-variables-tests_suFb9)
 * Task type:
   * Jupyter Notebook
@@ -126,35 +126,249 @@ database = 'inpi'
 
 ```python
 query = """
+WITH tb_enseigne AS (
+SELECT 
+siret, 
+  index_id,
+enseigne,
+list_enseigne,
+contains(
+  list_enseigne,
+  enseigne
+  ) AS temp_test_enseigne 
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (
+  WITH test AS (
+  SELECT
+    siret,
+    index_id,
+enseigne,
+list_enseigne,
+CASE
+WHEN cardinality(list_enseigne) = 0 OR list_enseigne IS NULL OR enseigne = '' THEN 'NULL' 
+WHEN temp_test_enseigne = TRUE THEN 'TRUE'
+ELSE 'FALSE' END AS test_enseigne
+        
+FROM tb_enseigne
+       )
+       SELECT *
+       FROM (SELECT * 
+             FROm test
+       WHERE test_enseigne = 'TRUE'
+       LIMIT 1
+             )
+       UNION (SELECT *
+       FROM test
+       WHERE cardinality(list_enseigne) = 0
+              LIMIT 1
+              )
+      UNION (SELECT *
+       FROM test
+       WHERE list_enseigne IS NULL AND enseigne != ''
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE cardinality(list_enseigne) > 0 AND enseigne = ''
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE enseigne = ''
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE test_enseigne = 'FALSE'
+              LIMIT 1
+              )
+       ORDER BY test_enseigne DESC
+       )
 
 """
 
-output = s3.run_query(
+tb = s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+  filename = 'test_enseigne', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+
+pd.concat([
+
+pd.concat([
+tb[['siret', 'enseigne', 'list_enseigne']]
+],keys=["Input"], axis = 1),
+pd.concat([
+tb[['test_enseigne']]
+],keys=["Output"], axis = 1)
+], axis = 1
+)
 ```
 
 # Test acceptance
 
-1.
-2.
-3.
-4.
+1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
+2. Compter le nombre de lignes par test
+3. Compter le nombre d'index par test
+4. Créer un tableau avec une ligne par test
+
+
+## 1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
 
 ```python
 query = """
+SELECT COUNT(*)
+FROM siretisation.ets_insee_inpi
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_ets_insee_inpi', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 2. Compter le nombre de lignes par test
+
+```python
+query = """
+WITH tb_enseigne AS (
+SELECT 
+siret, 
+  index_id,
+enseigne,
+list_enseigne,
+contains(
+  list_enseigne,
+  enseigne
+  ) AS temp_test_enseigne 
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (
+  WITH test AS (
+  SELECT
+    siret,
+    index_id,
+enseigne,
+list_enseigne,
+CASE
+WHEN cardinality(list_enseigne) = 0 OR list_enseigne IS NULL OR enseigne = '' THEN 'NULL' 
+WHEN temp_test_enseigne = TRUE THEN 'TRUE'
+ELSE 'FALSE' END AS test_enseigne
+        
+FROM tb_enseigne
+       )
+       SELECT count(*)
+       FROM test
+       )
 
 """
 
-output = s3.run_query(
+s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+  filename = 'test_count_enseigne', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 3. Compter le nombre d'index par test
+
+```python
+query = """
+WITH tb_enseigne AS (
+SELECT 
+siret, 
+  index_id,
+enseigne,
+list_enseigne,
+contains(
+  list_enseigne,
+  enseigne
+  ) AS temp_test_enseigne 
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (
+  WITH test AS (
+  SELECT
+    siret,
+    index_id,
+enseigne,
+list_enseigne,
+CASE
+WHEN cardinality(list_enseigne) = 0 OR list_enseigne IS NULL OR enseigne = '' THEN 'NULL' 
+WHEN temp_test_enseigne = TRUE THEN 'TRUE'
+ELSE 'FALSE' END AS test_enseigne
+        
+FROM tb_enseigne
+       )
+       SELECT test_enseigne, count(*)
+       FROM test
+       GROUP BY test_enseigne
+       )
+
+"""
+
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'test_count_ligne_enseigne', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 4. Créer un tableau avec une ligne par test
+
+```python
+query = """
+WITH tb_enseigne AS (
+SELECT 
+siret, 
+  index_id,
+enseigne,
+list_enseigne,
+contains(
+  list_enseigne,
+  enseigne
+  ) AS temp_test_enseigne 
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (
+  WITH test AS (
+  SELECT
+    siret,
+    index_id,
+enseigne,
+list_enseigne,
+CASE
+WHEN cardinality(list_enseigne) = 0 OR list_enseigne IS NULL OR enseigne = '' THEN 'NULL' 
+WHEN temp_test_enseigne = TRUE THEN 'TRUE'
+ELSE 'FALSE' END AS test_enseigne
+        
+FROM tb_enseigne
+       )
+       SELECT test_enseigne, count(distinct(index_id))
+       FROM test
+       GROUP BY test_enseigne
+       )
+
+"""
+
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'test_count_ligne_enseigne', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
 ```
