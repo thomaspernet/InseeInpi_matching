@@ -250,7 +250,8 @@ tb = s3.run_query(
   filename = 'tb_exemple', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
-pd.concat([
+
+print(pd.concat([
 
 pd.concat([
 tb[['siret', 'adresse_distance_insee', 'adresse_distance_inpi']]
@@ -259,7 +260,8 @@ pd.concat([
 tb[['insee_except', 'inpi_except', 'intersection', 'union_', 'pct_intersection','status_cas']]
 ],keys=["Output"], axis = 1)
 ], axis = 1
-)
+).to_markdown()
+     )
 ```
 
 # Test acceptance
@@ -467,13 +469,13 @@ END AS status_cas
        ORDER BY status_cas
        )
        """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
   filename = 'count_group_ets_insee_inpi_status_cas', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown())
 ```
 
 ## 3. Compter le nombre d'index par cas
@@ -564,13 +566,13 @@ END AS status_cas
        ORDER BY status_cas
        )
        """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
   filename = 'count_group_index_ts_insee_inpi_status_cas', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown())
 ```
 
 ## 4. Créer un tableau avec une ligne par cas
@@ -694,7 +696,7 @@ tb = s3.run_query(
   filename = 'tb_exemple', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
-pd.concat([
+print(pd.concat([
 
 pd.concat([
 tb[['siret', 'adresse_distance_insee', 'adresse_distance_inpi']]
@@ -703,7 +705,7 @@ pd.concat([
 tb[['insee_except', 'inpi_except', 'intersection', 'union_', 'pct_intersection','status_cas']]
 ],keys=["Output"], axis = 1)
 ], axis = 1
-)
+).to_markdown())
 ```
 
 # Generation report

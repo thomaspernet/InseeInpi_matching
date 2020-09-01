@@ -184,13 +184,13 @@ INNER JOIN (
             ON data_.index_id = tb_enseigne.index_id
 LIMIT 10
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'exemple_enseigne', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown())
 ```
 
 ```python
@@ -199,9 +199,7 @@ CREATE DATABASE IF NOT EXISTS siretisation
   COMMENT 'DB avec tb pour la siretisation'
   LOCATION 's3://calfdata/inpi/SIRETISATION/'
 """"
-```
 
-```python
 query ="""
 DROP TABLE `siretisation.ets_inpi_sql`;
 """
@@ -212,6 +210,7 @@ s3.run_query(
   filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+
 ```
 
 ```python
@@ -264,13 +263,14 @@ INNER JOIN (
             ON data_.index_id = tb_enseigne.index_id
 LIMIT 10
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'exemple_enseigne', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 # Generation report
@@ -282,6 +282,17 @@ from notebook import notebookapp
 ```
 
 ```python
+
+```
+
+```python
+
+
+```python
+
+```
+
+
 def create_report(extension = "html", keep_code = False):
     """
     Create a report from the current notebook and save it in the 
@@ -339,6 +350,7 @@ def create_report(extension = "html", keep_code = False):
     #time.sleep(5)
     shutil.move(source_to_move, dest)
     print("Report Available at this adress:\n {}".format(dest))
+
 ```
 
 ```python

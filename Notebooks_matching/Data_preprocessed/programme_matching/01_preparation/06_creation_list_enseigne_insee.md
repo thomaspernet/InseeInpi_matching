@@ -173,13 +173,14 @@ LIMIT 10
 
 """
 
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'Exemple_list_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 ## Creation table
@@ -260,13 +261,14 @@ FROM siretisation.ets_insee_sql
 GROUP BY CARDINALiTY(list_enseigne)
 ORDER BY nb_obs DESC
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'count_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 ### 2. Afficher le top 10 des enseignes en terme de compte
@@ -279,13 +281,14 @@ GROUP BY list_enseigne
 ORDER BY nb_obs DESC
 LIMIT 10
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'count_top_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+         ).to_markdown()
+     )
 ```
 
 ### 3. Imprimer lorsque la liste est égale a 1
@@ -299,13 +302,14 @@ FROM siretisation.ets_insee_sql
 WHERE CARDINALITY(list_enseigne) = 1
 LIMIT 10
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'count_cardinalirty_1_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 ### 4. Imprimer lorsque la liste est égale a 2
@@ -319,13 +323,14 @@ FROM siretisation.ets_insee_sql
 WHERE CARDINALITY(list_enseigne) = 2
 LIMIT 10
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'count_cardinalirty_2_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 ### 5. Imprimer lorsque la liste est égale a 4
@@ -339,13 +344,14 @@ FROM siretisation.ets_insee_sql
 WHERE CARDINALITY(list_enseigne) = 3
 LIMIT 10
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'count_cardinalirty_3_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 ### 6. Imprimer lorsque la liste est égale a 10
@@ -359,13 +365,14 @@ FROM siretisation.ets_insee_sql
 WHERE CARDINALITY(list_enseigne) = 10
 LIMIT 10
 """
-s3.run_query(
+print(s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
   filename = 'count_cardinalirty_10_enseigne_insee', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 # Generation report

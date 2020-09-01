@@ -530,11 +530,7 @@ tb = s3.run_query(
 ```
 
 ```python
-tb
-```
-
-```python
-pd.concat([
+print(pd.concat([
 
 pd.concat([
 tb[['siret', 'datecreationetablissement', 'date_début_activité',
@@ -551,7 +547,8 @@ tb[['test_date','test_index_id_duplicate', 'test_siege',
     'test_siren_insee_siren_inpi', 'test_status_admin', 'test_pct_intersection']]
 ],keys=["Output"], axis = 1)
 ], axis = 1
-)
+).to_markdown()
+     )
 ```
 
 # Test acceptance
@@ -632,13 +629,14 @@ for i, value in enumerate(groups):
         top_2 += ' cnt_{}, '.format(value)
 
 query = top +top_2 +top_3 + middle_2
-s3.run_query(
+print(s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
   filename = 'count_ets_insee_inpicase_groups', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 ## 3. Compter le nombre d'index par test
@@ -681,13 +679,14 @@ for i, value in enumerate(groups):
         top_2 += ' cnt_{}, '.format(value)
 
 query = top +top_2 +top_3 + middle_2
-s3.run_query(
+print(s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
   filename = 'count_distinct_ets_insee_inpicase_groups', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 ## 4. Créer un tableau avec une ligne par test
@@ -820,13 +819,14 @@ FROM siretisation.ets_insee_inpi_case
               ORDER BY test_date
 """
 
-s3.run_query(
+print(s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
   filename = 'exemple_other_test', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        )
+        ).to_markdown()
+     )
 ```
 
 # Generation report
