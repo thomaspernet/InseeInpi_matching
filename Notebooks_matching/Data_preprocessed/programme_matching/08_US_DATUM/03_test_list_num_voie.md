@@ -127,35 +127,299 @@ database = 'inpi'
 
 ```python
 query = """
+WITH tb_list AS (
+SELECT 
+siret, 
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection_numero_voie, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_numero_voie
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+  siret,
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CASE 
+WHEN intersection_numero_voie = union_numero_voie AND (intersection_numero_voie IS NOT NULL  OR union_numero_voie IS NOT NULL ) THEN 'TRUE' 
+WHEN (intersection_numero_voie IS NULL OR union_numero_voie IS NULL ) THEN 'NULL' 
+WHEN intersection_numero_voie >0 AND intersection_numero_voie != union_numero_voie THEN 'PARTIAL'
+ELSE 'FALSE' END AS test_list_num_voie
+        
+FROM tb_list
+       )
+       SELECT *
+       FROM (SELECT * 
+             FROm test
+       WHERE test_list_num_voie = 'TRUE'
+       LIMIT 1
+             )
+       UNION (SELECT *
+       FROM test
+       WHERE test_list_num_voie = 'PARTIAL'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE test_list_num_voie = 'NULL'
+              LIMIT 1
+              )
+       UNION (SELECT *
+       FROM test
+       WHERE test_list_num_voie = 'FALSE'
+              LIMIT 1
+              )
+       ORDER BY test_list_num_voie DESC
+       )
 
 """
 
-output = s3.run_query(
+tb = s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+  filename = 'test_list_num_voie', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+
+tb = s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'tb_exemple', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+pd.concat([
+
+pd.concat([
+tb[['siret', 'list_numero_voie_matching_inpi', 'list_numero_voie_matching_insee']]
+],keys=["Input"], axis = 1),
+pd.concat([
+tb[['test_list_num_voie']]
+],keys=["Output"], axis = 1)
+], axis = 1
+)
 ```
 
 # Test acceptance
 
-1.
-2.
-3.
-4.
+1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
+2. Compter le nombre de lignes par test
+3. Compter le nombre d'index par test
+4. Créer un tableau avec une ligne par test
+
+
+## 1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
 
 ```python
 query = """
+SELECT COUNT(*)
+FROM siretisation.ets_insee_inpi
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_ets_insee_inpi', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 2. Compter le nombre de lignes par test
+
+```python
+query = """
+WITH tb_list AS (
+SELECT 
+siret, 
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection_numero_voie, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_numero_voie
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+  siret,
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CASE 
+WHEN intersection_numero_voie = union_numero_voie AND (intersection_numero_voie IS NOT NULL  OR union_numero_voie IS NOT NULL ) THEN 'TRUE' 
+WHEN (intersection_numero_voie IS NULL OR union_numero_voie IS NULL ) THEN 'NULL' 
+WHEN intersection_numero_voie >0 AND intersection_numero_voie != union_numero_voie THEN 'PARTIAL'
+ELSE 'FALSE' END AS test_list_num_voie
+        
+FROM tb_list
+       )
+       SELECT COUNT(*)
+       FROM test
+       )
 
 """
-
-output = s3.run_query(
+s3.run_query(
             query=query,
-            database=database,
+            database='siretisation',
             s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+  filename = 'count_ets_insee_inpi_list_num', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 3. Compter le nombre d'index par test
+
+```python
+query = """
+WITH tb_list AS (
+SELECT 
+siret, 
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection_numero_voie, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_numero_voie
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+  siret,
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CASE 
+WHEN intersection_numero_voie = union_numero_voie AND (intersection_numero_voie IS NOT NULL  OR union_numero_voie IS NOT NULL ) THEN 'TRUE' 
+WHEN (intersection_numero_voie IS NULL OR union_numero_voie IS NULL ) THEN 'NULL' 
+WHEN intersection_numero_voie >0 AND intersection_numero_voie != union_numero_voie THEN 'PARTIAL'
+ELSE 'FALSE' END AS test_list_num_voie
+        
+FROM tb_list
+       )
+       SELECT test_list_num_voie, COUNT(*)
+       FROM test
+       GROUP BY test_list_num_voie
+       )
+
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_ligne_ets_insee_inpi_list_num', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 4. Créer un tableau avec une ligne par test
+
+```python
+query = """
+WITH tb_list AS (
+SELECT 
+siret, index_id,
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection_numero_voie, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            list_numero_voie_matching_inpi, 
+            list_numero_voie_matching_insee
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_numero_voie
+FROM siretisation.ets_insee_inpi 
+)
+SELECT  *
+FROM  (WITH test AS (
+  SELECT
+  siret,index_id,
+list_numero_voie_matching_inpi, 
+list_numero_voie_matching_insee,
+CASE 
+WHEN intersection_numero_voie = union_numero_voie AND (intersection_numero_voie IS NOT NULL  OR union_numero_voie IS NOT NULL ) THEN 'TRUE' 
+WHEN (intersection_numero_voie IS NULL OR union_numero_voie IS NULL ) THEN 'NULL' 
+WHEN intersection_numero_voie >0 AND intersection_numero_voie != union_numero_voie THEN 'PARTIAL'
+ELSE 'FALSE' END AS test_list_num_voie
+        
+FROM tb_list
+       )
+       SELECT test_list_num_voie, COUNT(DISTINCT(index_id))
+       FROM test
+       GROUP BY test_list_num_voie
+       )
+
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_index_ets_insee_inpi_list_num', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
 ```
