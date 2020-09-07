@@ -23,6 +23,7 @@ Les trois variables a créée sont les suivantes:
 - count_inpi_index_id_siret: nombre de siret possible par index
 - count_inpi_siren_siret: nombre de siret unique par siren
 - index_id_max_intersection: Pourcentage maximum de pct_intersection par index
+    - Creation de `pct_intersection` lors de l'US [3275](https://tree.taiga.io/project/olivierlubet-air/us/3275) -> `intersection / union_ as pct_intersection`
 
 ## Objective(s)
 
@@ -129,12 +130,102 @@ if pandas_setting:
 
 ```python
 s3_output = 'inpi/sql_output'
-database = 'inpi'
+database = 'siretisation'
 ```
 
 ```python
 query = """
-
+CREATE TABLE siretisation.temp_US_max
+WITH (
+  format='PARQUET'
+) AS
+WITH create_var AS (
+SELECT 
+siren,
+siret,
+index_id,
+CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as intersection, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as union_, 
+    CAST(
+      cardinality(
+        array_distinct(
+          array_intersect(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    )/ CAST(
+      cardinality(
+        array_distinct(
+          array_union(
+            split(adresse_distance_inpi, ' '), 
+            split(adresse_distance_insee, ' ')
+          )
+        )
+      ) AS DECIMAL(10, 2)
+    ) as pct_intersection
+    FROM siretisation.ets_insee_inpi
+)
+SELECT 
+create_var.siren,
+create_var.siret,
+create_var.index_id,
+count_inpi_index_id_siret,
+count_inpi_siren_siret,
+create_var.pct_intersection,
+index_id_max_intersection
+FROM 
+    create_var
+LEFT JOIN (
+          SELECT 
+            index_id, 
+            COUNT(
+              DISTINCT(siret)
+            ) AS count_inpi_index_id_siret 
+          FROM 
+            create_var 
+          GROUP BY 
+            index_id
+        ) AS count_rows_index_id_siret ON create_var.index_id = count_rows_index_id_siret.index_id 
+        LEFT JOIN (
+          SELECT 
+            siren, 
+            COUNT(
+              DISTINCT(siret)
+            ) AS count_inpi_siren_siret 
+          FROM 
+            create_var 
+          GROUP BY 
+            siren
+        ) AS count_rows_sequence ON create_var.siren = count_rows_sequence.siren 
+        LEFT JOIN (
+          SELECT 
+            index_id, 
+            MAX(pct_intersection) AS index_id_max_intersection 
+          FROM 
+            create_var 
+          GROUP BY 
+            index_id
+        ) AS is_index_id_index_id_max_intersection ON create_var.index_id = is_index_id_index_id_max_intersection.index_id
 """
 
 output = s3.run_query(
@@ -144,27 +235,377 @@ output = s3.run_query(
   filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+```
+
+```python
+query = """
+SELECT *
+FROM siretisation.temp_US_max
+LIMIT 10
+"""
+tb = s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = 'exemple_US_max', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+tb
+```
+
+```python
+print(tb.to_markdown())
 ```
 
 # Test acceptance
 
-1.
-2.
-3.
-4.
+1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
+2. Compter le nombre de lignes par possibilité pour `count_inpi_index_id_siret` et `count_inpi_siren_siret` -> TOP 10
+3. Donner la distribution de  `pct_intersection` et `index_id_max_intersection`
+    - distribution -> 0.1,0.25,0.5,0.75,0.8,0.95
+4. Donner la distribution de `pct_intersection` par possibilité pour `count_inpi_index_id_siret` et `count_inpi_siren_siret`
+    - distribution -> 0.1,0.25,0.5,0.75,0.8,0.95
+    - TOP 10
+    - BOTTOM 10
+5. Donner la distribution de `index_id_max_intersection` par possibilité pour `count_inpi_index_id_siret` et `count_inpi_siren_siret`
+    - distribution -> 0.1,0.25,0.5,0.75,0.8,0.95
+    - TOP 10
+    - BOTTOM 10
+
+
+## 1. Vérifier que le nombre de lignes est indentique avant et après la création des variables
 
 ```python
 query = """
-
+SELECT COUNT(*)
+FROM siretisation.temp_US_max
 """
-
-output = s3.run_query(
+s3.run_query(
             query=query,
-            database=database,
+            database='siretisation',
             s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+  filename = 'count_ets_insee_inpi', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+```
+
+```python
+query = """
+SELECT COUNT(*)
+FROM siretisation.temp_US_max
+"""
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'count_ets_insee_inpi', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+## 2. Compter le nombre de lignes par possibilité pour `count_inpi_index_id_siret` et `count_inpi_siren_siret`
+
+
+`count_inpi_index_id_siret`
+
+```python
+query = """
+SELECT count_inpi_index_id_siret, COUNT(*) as cnt_count_inpi_index_id_siret
+FROM siretisation.temp_us_max  
+GROUP BY count_inpi_index_id_siret
+ORDER BY cnt_count_inpi_index_id_siret DESC
+LIMIT 10
+"""
+tb = s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'cnt_count_inpi_index_id_siret', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+tb
+```
+
+```python
+print(tb.to_markdown())
+```
+
+`count_inpi_siren_siret`
+
+```python
+query = """
+SELECT count_inpi_siren_siret, COUNT(*) as cnt_count_inpi_siren_siret
+FROM siretisation.temp_us_max  
+GROUP BY count_inpi_siren_siret
+ORDER BY cnt_count_inpi_siren_siret DESC
+LIMIT 10
+"""
+tb = s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'cnt_count_inpi_siren_siret', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+tb
+```
+
+```python
+print(tb.to_markdown())
+```
+
+## 3. Donner la distribution de  `pct_intersection` et `index_id_max_intersection`
+    
+- distribution -> 0.1,0.25,0.5,0.75,0.8,0.95
+
+
+ `pct_intersection`
+
+```python
+query = """
+SELECT approx_percentile(
+  pct_intersection,
+  ARRAY[0.1,0.25,0.5,0.75,0.8,0.95]) AS nest
+FROM temp_us_max  
+    """
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'dist_pct_intersection', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+`index_id_max_intersection`
+
+```python
+query = """
+SELECT approx_percentile(
+  index_id_max_intersection,
+  ARRAY[0.1,0.25,0.5,0.75,0.8,0.95]) AS nest
+FROM temp_us_max  
+    """
+s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'dist_max_pct_intersection', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+<!-- #region -->
+## 4. Donner la distribution de `pct_intersection` par possibilité pour `count_inpi_index_id_siret` et `count_inpi_siren_siret`
+
+
+- distribution -> 0.1,0.25,0.5,0.75,0.8,0.95
+- TOP 10
+- BOTTOM 10
+<!-- #endregion -->
+
+`count_inpi_index_id_siret`
+
+```python
+query = """
+WITH dataset AS (
+  
+  SELECT 
+  count_inpi_index_id_siret,
+  MAP(
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],
+    approx_percentile(
+      pct_intersection,
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
+    ) AS nest
+    FROM temp_us_max 
+    GROUP BY count_inpi_index_id_siret
+    ) 
+    
+    SELECT 
+    count_inpi_index_id_siret,
+    pct, 
+    value AS  pct_intersection
+    FROM dataset
+    CROSS JOIN UNNEST(nest) as t(pct, value)
+"""
+output = s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'pct_count_inpi_index_id_siret', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+tb= output.set_index(['count_inpi_index_id_siret', 'pct']).unstack(-1).head(10)
+```
+
+```python
+print(tb.to_markdown())
+```
+
+```python
+tb = output.set_index(['count_inpi_index_id_siret', 'pct']).unstack(-1).tail(10)
+tb
+```
+
+```python
+print(tb.to_markdown())
+```
+
+`count_inpi_siren_siret`
+
+```python
+query = """
+WITH dataset AS (
+  
+  SELECT 
+  count_inpi_siren_siret,
+  MAP(
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],
+    approx_percentile(
+      pct_intersection,
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
+    ) AS nest
+    FROM temp_us_max 
+    GROUP BY count_inpi_siren_siret
+    ) 
+    
+    SELECT 
+    count_inpi_siren_siret,
+    pct, 
+    value AS  pct_intersection
+    FROM dataset
+    CROSS JOIN UNNEST(nest) as t(pct, value)
+"""
+output = s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'pct_count_inpi_siren_siret', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+tb= output.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).head(10)
+tb
+```
+
+```python
+print(tb.to_markdown())
+```
+
+```python
+tb = output.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).tail(10)
+tb
+```
+
+```python
+print(tb.to_markdown())
+```
+
+## 5. Donner la distribution de `index_id_max_intersection` par possibilité pour `count_inpi_index_id_siret` et `count_inpi_siren_siret`
+
+- distribution -> 0.1,0.25,0.5,0.75,0.8,0.95
+- TOP 10
+- BOTTOM 10
+
+
+`count_inpi_index_id_siret`
+
+```python
+query = """
+WITH dataset AS (
+  
+  SELECT 
+  count_inpi_index_id_siret,
+  MAP(
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],
+    approx_percentile(
+      index_id_max_intersection,
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
+    ) AS nest
+    FROM temp_us_max 
+    GROUP BY count_inpi_index_id_siret
+    ) 
+    
+    SELECT 
+    count_inpi_index_id_siret,
+    pct, 
+    value AS  pct_intersection
+    FROM dataset
+    CROSS JOIN UNNEST(nest) as t(pct, value)
+"""
+output = s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'pct_count_inpi_index_id_siret', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+tb = output.set_index(['count_inpi_index_id_siret', 'pct']).unstack(-1).head(10)
+tb
+```
+
+```python
+print(tb.to_markdown())
+```
+
+```python
+tb = output.set_index(['count_inpi_index_id_siret', 'pct']).unstack(-1).tail(10)
+tb
+```
+
+```python
+print(tb.to_markdown())
+```
+
+`count_inpi_siren_siret`
+
+```python
+query = """
+WITH dataset AS (
+  
+  SELECT 
+  count_inpi_siren_siret,
+  MAP(
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],
+    approx_percentile(
+      index_id_max_intersection,
+    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
+    ) AS nest
+    FROM temp_us_max 
+    GROUP BY count_inpi_siren_siret
+    ) 
+    
+    SELECT 
+    count_inpi_siren_siret,
+    pct, 
+    value AS pct_intersection
+    FROM dataset
+    CROSS JOIN UNNEST(nest) as t(pct, value)
+"""
+output = s3.run_query(
+            query=query,
+            database='siretisation',
+            s3_output=s3_output,
+  filename = 'pct_count_inpi_siren_siret', ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+tboutput.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).head(10)
+```
+
+```python
+output.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).tail(10)
 ```
 
 # Generation report
