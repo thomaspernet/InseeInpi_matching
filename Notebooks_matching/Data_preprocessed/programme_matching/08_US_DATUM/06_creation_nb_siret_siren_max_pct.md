@@ -254,7 +254,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 # Test acceptance
@@ -327,7 +327,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 `count_inpi_siren_siret`
@@ -351,7 +351,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 ## 3. Donner la distribution de  `pct_intersection` et `index_id_max_intersection`
@@ -443,7 +443,7 @@ tb= output.set_index(['count_inpi_index_id_siret', 'pct']).unstack(-1).head(10)
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 ```python
@@ -452,7 +452,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 `count_inpi_siren_siret`
@@ -495,7 +495,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 ```python
@@ -504,7 +504,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 ## 5. Donner la distribution de `index_id_max_intersection` par possibilité pour `count_inpi_index_id_siret` et `count_inpi_siren_siret`
@@ -554,7 +554,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 ```python
@@ -563,7 +563,7 @@ tb
 ```
 
 ```python
-print(tb.to_markdown())
+#print(tb.to_markdown())
 ```
 
 `count_inpi_siren_siret`
@@ -601,11 +601,21 @@ output = s3.run_query(
 ```
 
 ```python
-tboutput.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).head(10)
+tb = output.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).head(10)
+tb
 ```
 
 ```python
-output.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).tail(10)
+#print(tb.to_markdown())
+```
+
+```python
+tb = output.set_index(['count_inpi_siren_siret', 'pct']).unstack(-1).tail(10)
+tb
+```
+
+```python
+#print(tb.to_markdown())
 ```
 
 # Generation report
