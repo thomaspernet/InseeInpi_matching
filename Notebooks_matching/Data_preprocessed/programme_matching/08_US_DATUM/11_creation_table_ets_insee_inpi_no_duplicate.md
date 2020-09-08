@@ -95,7 +95,7 @@ If link from the internet, save it to the cloud first
   1. Athena: 
       * Region: 
       * Database: 
-      * Tables (Add name new table): 
+      * Tables (Add name new table): ets_insee_inpi_no_duplicate
 
 ## Things to know (Steps, Attention points or new flow of information)
 

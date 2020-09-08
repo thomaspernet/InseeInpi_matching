@@ -447,7 +447,7 @@ s3.run_query(
         )
 ```
 
-### 2. Produit cartesien possibilité et liste poid
+### 2. Produit cartesien possibilité et liste poids
 
 Dans la seconde étape, nous allons "exploser" la clé-valeur afin de pouvoir attribuler la liste des poids aux mots de l'INPI et de l'INSEE.
 
@@ -947,5 +947,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python
-create_report(extension = "html", keep_code = False)
+create_report(extension = "html", keep_code = True)
 ```

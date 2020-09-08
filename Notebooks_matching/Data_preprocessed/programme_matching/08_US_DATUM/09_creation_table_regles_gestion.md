@@ -125,13 +125,13 @@ Les règles de gestion peuvent avoir les possibilités suivantes:
 
 - `test_pct_intersection` = ['TRUE', 'FALSE']
 - `status_cas` = ['CAS_1','CAS_3','CAS_4', 'CAS_5']
-- `index_id_duplicate` = ['TRUE', 'FALSE']
-- `test_list_num_voie` = ['TRUE', 'NULL', 'FALSE']
+- `test_index_id_duplicate` = ['TRUE', 'FALSE']
+- `test_list_num_voie` = ['TRUE','PARTIAL', 'NULL', 'FALSE']
 - `test_siege` = ['TRUE','NULL','FALSE']
 - `test_enseigne` =  ['TRUE','NULL', 'FALSE']
 - `test_siren_insee_siren_inpi` = ['TRUE', 'FALSE']
-- `test_distance_cosine` = ['TRUE', 'FALSE', 'NULL']
-- `test_distance_levhenstein` = ['TRUE', 'FALSE', 'NULL']
+- `test_similarite_exception_words` = ['TRUE', 'FALSE', 'NULL']
+- `test_distance_levhenstein_exception_words` = ['TRUE', 'FALSE', 'NULL']
 - `test_date` = ['TRUE','NULL','FALSE']
 - `test_status_admin` = ['TRUE', 'FALSE']
 
@@ -158,13 +158,13 @@ Nous utlisons Pandas pour créer la matrice. Il faut prendre le soin d'intégrer
 
 1. `test_pct_intersection `
 2. `status_cas `
-3. `index_id_duplicate `
+3. `test_index_id_duplicate `
 4. `test_list_num_voie `
 5. `test_siege `
 6. `test_enseigne `
 7. `test_siren_insee_siren_inpi `
-8. `test_distance_cosine `
-9. `test_distance_levhenstein `
+8. `test_similarite_exception_words `
+9. `test_distance_levhenstein_exception_words `
 10. `test_date `
 11. `test_status_admin `
 
@@ -172,40 +172,40 @@ Il en va de même pour le contenu des variables. L'ordre est très important.
 
 ```python
 test_pct_intersection = ['TRUE', 'FALSE']
-status_cas = ['CAS_1','CAS_3','CAS_4', 'CAS_5','CAS_7', 'CAS_6']
-index_id_duplicate = ['TRUE', 'FALSE']
-test_list_num_voie = ['TRUE', 'NULL', 'FALSE']
+status_cas = ['CAS_1','CAS_3','CAS_4', 'CAS_5']
+test_index_id_duplicate = ['TRUE', 'FALSE']
+test_list_num_voie = ['TRUE', 'PARTIAL','NULL', 'FALSE']
 test_siege = ['TRUE','NULL','FALSE']
 test_enseigne =  ['TRUE','NULL', 'FALSE']
 test_siren_insee_siren_inpi = ['TRUE', 'FALSE']
-test_distance_cosine = ['TRUE', 'FALSE', 'NULL']
-test_distance_levhenstein = ['TRUE', 'FALSE', 'NULL']
+test_similarite_exception_words = ['TRUE', 'FALSE', 'NULL']
+test_distance_levhenstein_exception_words = ['TRUE', 'FALSE', 'NULL']
 test_date = ['TRUE','NULL','FALSE']
 test_status_admin = ['TRUE', 'FALSE']
 
 index = pd.MultiIndex.from_product([
     test_pct_intersection,
     status_cas,
-    index_id_duplicate,
+    test_index_id_duplicate,
     test_list_num_voie,
     test_siren_insee_siren_inpi,
     test_siege,
     test_enseigne,
-    test_distance_cosine,
-    test_distance_levhenstein,
+    test_similarite_exception_words,
+    test_distance_levhenstein_exception_words,
     test_date,
     test_status_admin
 ],
                                    names = [
                                        'test_pct_intersection',
                                        "status_cas",
-                                            'index_id_duplicate',
+                                            'test_index_id_duplicate',
                                             "test_list_num_voie",
                                             "test_siren_insee_siren_inpi",
                                            'test_siege', 
                                            'test_enseigne',
-                                           'test_distance_cosine',
-                                           'test_distance_levhenstein',
+                                           'test_similarite_exception_words',
+                                           'test_distance_levhenstein_exception_words',
                                            'test_date',
                                            'test_status_admin'])
 
@@ -221,7 +221,7 @@ df_.head()
 print("Il y a environ {} règles de gestion".format(df_.shape[0]))
 ```
 
-Le csv se trouve dans le dossier [TEMP_ANALYSE_SIRETISATION/REGLES_TESTS]()
+Le csv se trouve dans le dossier [TEMP_ANALYSE_SIRETISATION/REGLES_TESTS](https://s3.console.aws.amazon.com/s3/buckets/calfdata/TEMP_ANALYSE_SIRETISATION/REGLES_TESTS)
 
 ```python
 df_.to_csv('Regle_tests.csv', index = False)
@@ -229,16 +229,16 @@ s3.upload_file(file_to_upload = 'Regle_tests.csv',
             destination_in_s3 = 'TEMP_ANALYSE_SIRETISATION/REGLES_TESTS')
 
 create_table = """
-CREATE EXTERNAL TABLE IF NOT EXISTS siretisation.REGLES_TESTS (
+CREATE EXTERNAL TABLE IF NOT EXISTS siretisation.rank_matrice_regles_gestion (
 `test_pct_intersection`                     string,
 `status_cas`                     string,
-`index_id_duplicate`                     string,
+`test_index_id_duplicate`                     string,
 `test_list_num_voie`                     string,
 `test_siren_insee_siren_inpi`                     string,
 `test_siege`                     string,
 `test_enseigne`                     string,
-`test_distance_cosine`                     string,
-`test_distance_levhenstein`                     string,
+`test_similarite_exception_words`                     string,
+`test_distance_levhenstein_exception_words`                     string,
 `test_date`                     string,
 `test_status_admin`                     string,
 `rank`                     integer
@@ -328,5 +328,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python
-create_report(extension = "html", keep_code = False)
+create_report(extension = "html", keep_code = True)
 ```

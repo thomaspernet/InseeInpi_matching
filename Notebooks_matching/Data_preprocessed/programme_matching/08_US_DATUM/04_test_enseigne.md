@@ -351,5 +351,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python
-create_report(extension = "html", keep_code = False)
+create_report(extension = "html", keep_code = True)
 ```

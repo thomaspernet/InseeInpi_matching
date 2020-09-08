@@ -147,7 +147,7 @@ if pandas_setting:
 
 ```python
 s3_output = 'inpi/sql_output'
-database = 'inpi'
+database = 'siretisation'
 ```
 
 ```python
