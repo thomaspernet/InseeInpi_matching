@@ -38,7 +38,6 @@ Copy paste from Coda to fill the information
   * test_pct_intersection
     - TRUE: Le pct_intersection est identique au maximum du pct_intersection par index 
     - FALSE: Le pct_intersection n'est identique au maximum du pct_intersection par index 
-
 ## Metadata 
 
 * Metadata parameters are available here: 
