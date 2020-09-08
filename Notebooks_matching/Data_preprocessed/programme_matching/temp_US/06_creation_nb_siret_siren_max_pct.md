@@ -23,12 +23,11 @@ Le tableau ci dessous indique l'ensemble des tests a réaliser ainsi que leur d�
 
 Lors de cette US, nous allons créer 3 variables qui vont permettre a la réalisation des tests `test_pct_intersection`,`test_index_id_duplicate` et `test_siren_insee_siren_inpi`. Les trois variables sont les suivantes:
 
-- `count_inpi_index_id_siret`: nombre de siret possible par `index_id`
+- `count_inpi_index_id_siret`: nombre de siret possible par index
 - `count_inpi_siren_siret`: nombre de siret unique par siren
 - `index_id_max_intersection`: Pourcentage maximum de pct_intersection par index
     - Creation de `pct_intersection` lors de l'US [3275](https://tree.taiga.io/project/olivierlubet-air/us/3275) -> `intersection / union_ as pct_intersection`
 * Il faut penser a garder la variable `row_id` 
-
 ## Objective(s)
 
 
@@ -141,29 +140,15 @@ database = 'siretisation'
 
 ```python
 query = """
-DROP TABLE siretisation.ets_insee_inpi_var_group_max;
-"""
-s3.run_query(
-            query=query,
-            database=database,
-            s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
-  destination_key = None ### Add destination key if need to copy output
-        )
-```
-
-```python
-query = """
-CREATE TABLE siretisation.ets_insee_inpi_var_group_max
+CREATE TABLE siretisation.temp_US_max
 WITH (
   format='PARQUET'
 ) AS
 WITH create_var AS (
 SELECT 
-row_id,
+siren,
+siret,
 index_id,
-siren, 
-siret, 
 CAST(
       cardinality(
         array_distinct(
@@ -206,10 +191,9 @@ CAST(
     FROM siretisation.ets_insee_inpi
 )
 SELECT 
-row_id,
-create_var.index_id,
 create_var.siren,
 create_var.siret,
+create_var.index_id,
 count_inpi_index_id_siret,
 count_inpi_siren_siret,
 create_var.pct_intersection,
@@ -249,7 +233,7 @@ LEFT JOIN (
         ) AS is_index_id_index_id_max_intersection ON create_var.index_id = is_index_id_index_id_max_intersection.index_id
 """
 
-s3.run_query(
+output = s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
@@ -261,7 +245,7 @@ s3.run_query(
 ```python
 query = """
 SELECT *
-FROM siretisation.ets_insee_inpi_var_group_max
+FROM siretisation.temp_US_max
 LIMIT 10
 """
 tb = s3.run_query(
@@ -299,7 +283,7 @@ tb
 ```python
 query = """
 SELECT COUNT(*)
-FROM siretisation.ets_insee_inpi_var_group_max
+FROM siretisation.temp_US_max
 """
 s3.run_query(
             query=query,
@@ -313,7 +297,7 @@ s3.run_query(
 ```python
 query = """
 SELECT COUNT(*)
-FROM siretisation.ets_insee_inpi_var_group_max
+FROM siretisation.temp_US_max
 """
 s3.run_query(
             query=query,
@@ -332,7 +316,7 @@ s3.run_query(
 ```python
 query = """
 SELECT count_inpi_index_id_siret, COUNT(*) as cnt_count_inpi_index_id_siret
-FROM siretisation.ets_insee_inpi_var_group_max
+FROM siretisation.temp_us_max  
 GROUP BY count_inpi_index_id_siret
 ORDER BY cnt_count_inpi_index_id_siret DESC
 LIMIT 10
@@ -356,7 +340,7 @@ tb
 ```python
 query = """
 SELECT count_inpi_siren_siret, COUNT(*) as cnt_count_inpi_siren_siret
-FROM siretisation.ets_insee_inpi_var_group_max 
+FROM siretisation.temp_us_max  
 GROUP BY count_inpi_siren_siret
 ORDER BY cnt_count_inpi_siren_siret DESC
 LIMIT 10
@@ -384,23 +368,10 @@ tb
 
 ```python
 query = """
-WITH dataset AS (
-  
-  SELECT 
-  MAP(
-    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],
-    approx_percentile(
-      pct_intersection,
-    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
-    ) AS nest
-    FROM siretisation.ets_insee_inpi_var_group_max 
-    ) 
-    
-    SELECT 
-    pct, 
-    value AS  pct_intersection
-    FROM dataset
-    CROSS JOIN UNNEST(nest) as t(pct, value)
+SELECT approx_percentile(
+  pct_intersection,
+  ARRAY[0.1,0.25,0.5,0.75,0.8,0.95]) AS nest
+FROM temp_us_max  
     """
 s3.run_query(
             query=query,
@@ -415,29 +386,16 @@ s3.run_query(
 
 ```python
 query = """
-WITH dataset AS (
-  
-  SELECT 
-  MAP(
-    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],
-    approx_percentile(
-      index_id_max_intersection,
-    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
-    ) AS nest
-    FROM siretisation.ets_insee_inpi_var_group_max 
-    ) 
-    
-    SELECT 
-    pct, 
-    value AS  index_id_max_intersection
-    FROM dataset
-    CROSS JOIN UNNEST(nest) as t(pct, value)
+SELECT approx_percentile(
+  index_id_max_intersection,
+  ARRAY[0.1,0.25,0.5,0.75,0.8,0.95]) AS nest
+FROM temp_us_max  
     """
 s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
-  filename = 'dist_pct_intersection', ## Add filename to print dataframe
+  filename = 'dist_max_pct_intersection', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
 ```
@@ -465,7 +423,7 @@ WITH dataset AS (
       pct_intersection,
     ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
     ) AS nest
-    FROM siretisation.ets_insee_inpi_var_group_max  
+    FROM temp_us_max 
     GROUP BY count_inpi_index_id_siret
     ) 
     
@@ -487,7 +445,6 @@ output = s3.run_query(
 
 ```python
 tb= output.set_index(['count_inpi_index_id_siret', 'pct']).unstack(-1).head(10)
-tb
 ```
 
 ```python
@@ -517,7 +474,7 @@ WITH dataset AS (
       pct_intersection,
     ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])
     ) AS nest
-    FROM siretisation.ets_insee_inpi_var_group_max 
+    FROM temp_us_max 
     GROUP BY count_inpi_siren_siret
     ) 
     
