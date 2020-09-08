@@ -24,7 +24,9 @@ Copy paste from Coda to fill the information
   * Différentes règles supplémentaires sont a prendre en considérations:
     * Le join doit etre INNER  → inutile de dédoublonner des siren non matché
     * le status IGNORE doit être filtré
+    - De plus, il faut ajouter le numéro de ligne, appelé `row_id`
   * La nouvelle table doit contenir les variables suivantes: 
+    * row_id
     *  index_id, 
     *     sequence_id, 
     *     count_initial_insee, 
@@ -167,7 +169,7 @@ database = 'inpi'
 
 ```python
 query = """
-DROP TABLE `ets_insee_inpi`;
+DROP TABLE `siretisation.ets_insee_inpi`;
 """
 s3.run_query(
             query=query,
@@ -185,6 +187,7 @@ WITH (
   format='PARQUET'
 ) AS
  SELECT 
+    ROW_NUMBER() OVER () AS row_id, 
     index_id, 
     sequence_id, 
     count_initial_insee, 
@@ -244,10 +247,10 @@ WITH (
 """
 
 s3.run_query(
-            query=query,
-            database=database,
-            s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+    query=query,
+    database=database,
+    s3_output=s3_output,
+    filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
 ```
