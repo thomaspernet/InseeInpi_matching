@@ -1,0 +1,332 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,md
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.2'
+      jupytext_version: 1.4.0
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+<!-- #region -->
+# Creation table ensemble regles de gestion
+
+Copy paste from Coda to fill the information
+
+## Objective(s)
+
+La siretisation repose sur une matrice de règles de gestion classée de manière ordonnée. Pour créer la matrice, il faut au préalable créer les variables nécéssaires à la création des tests. 
+
+- status_cas,
+- test_list_num_voie,
+- test_enseigne
+- test_pct_intersection
+- test_index_id_duplicate
+- test_siren_insee_siren_inpi
+- test_similarite_exception_words
+- test_distance_levhenstein_exception_words
+- test_date
+- test_siege
+- test_status_admin
+
+## Metadata 
+
+* Metadata parameters are available here: 
+* US Title: Creation table ensemble regles de gestion
+* Epic: Epic 8
+* US: US 8
+* Date Begin: 9/8/2020
+* Duration Task: 0
+* Status:  
+* Source URL: 
+* Task type:
+  * Jupyter Notebook
+* Users: :
+  * Thomas Pernet
+* Watchers:
+  * Thomas Pernet
+* Estimated Log points:
+  * One being a simple task, 15 a very difficult one
+  *  5
+* Task tag
+  *  #computation,#sql-query,#preparation-matrice-regles, #pandas, #cartesian-product
+* Toggl Tag
+  * #data-preparation
+  
+## Input Cloud Storage [AWS]
+
+If link from the internet, save it to the cloud first
+
+### Tables [AWS]
+
+    
+## Destination Output/Delivery
+
+1. AWS
+    1. Athena: 
+      * Region: Europe (Paris)
+      * Database: siretisation
+      * Tables (Add name new table): rank_matrice_regles_gestion
+      * List new tables
+      * rank_matrice_regles_gestion
+
+## Things to know (Steps, Attention points or new flow of information)
+
+### Sources of information  (meeting notes, Documentation, Query, URL)
+
+<!-- #endregion -->
+
+## Connexion serveur
+
+```python
+from awsPy.aws_authorization import aws_connector
+from awsPy.aws_athena import service_athena
+from awsPy.aws_s3 import service_s3
+from pathlib import Path
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import os, shutil
+
+path = os.getcwd()
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
+
+region = 'eu-west-3'
+bucket = 'calfdata'
+```
+
+```python
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = region)
+client= con.client_boto()
+s3 = service_s3.connect_S3(client = client,
+                      bucket = bucket, verbose = False) 
+```
+
+```python
+pandas_setting = True
+if pandas_setting:
+    cm = sns.light_palette("green", as_cmap=True)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_colwidth', None)
+```
+
+# Input/output
+
+Les règles de gestion peuvent avoir les possibilités suivantes:
+
+- `test_pct_intersection` = ['TRUE', 'FALSE']
+- `status_cas` = ['CAS_1','CAS_3','CAS_4', 'CAS_5']
+- `index_id_duplicate` = ['TRUE', 'FALSE']
+- `test_list_num_voie` = ['TRUE', 'NULL', 'FALSE']
+- `test_siege` = ['TRUE','NULL','FALSE']
+- `test_enseigne` =  ['TRUE','NULL', 'FALSE']
+- `test_siren_insee_siren_inpi` = ['TRUE', 'FALSE']
+- `test_distance_cosine` = ['TRUE', 'FALSE', 'NULL']
+- `test_distance_levhenstein` = ['TRUE', 'FALSE', 'NULL']
+- `test_date` = ['TRUE','NULL','FALSE']
+- `test_status_admin` = ['TRUE', 'FALSE']
+
+```python
+s3_output = 'inpi/sql_output'
+database = 'siretisation'
+```
+
+```python
+query = """
+DROP TABLE siretisation.rank_matrice_regles_gestion;
+"""
+
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+Nous utlisons Pandas pour créer la matrice. Il faut prendre le soin d'intégrer les variables dans l'ordre de préférence. A savoir:
+
+1. `test_pct_intersection `
+2. `status_cas `
+3. `index_id_duplicate `
+4. `test_list_num_voie `
+5. `test_siege `
+6. `test_enseigne `
+7. `test_siren_insee_siren_inpi `
+8. `test_distance_cosine `
+9. `test_distance_levhenstein `
+10. `test_date `
+11. `test_status_admin `
+
+Il en va de même pour le contenu des variables. L'ordre est très important.
+
+```python
+test_pct_intersection = ['TRUE', 'FALSE']
+status_cas = ['CAS_1','CAS_3','CAS_4', 'CAS_5','CAS_7', 'CAS_6']
+index_id_duplicate = ['TRUE', 'FALSE']
+test_list_num_voie = ['TRUE', 'NULL', 'FALSE']
+test_siege = ['TRUE','NULL','FALSE']
+test_enseigne =  ['TRUE','NULL', 'FALSE']
+test_siren_insee_siren_inpi = ['TRUE', 'FALSE']
+test_distance_cosine = ['TRUE', 'FALSE', 'NULL']
+test_distance_levhenstein = ['TRUE', 'FALSE', 'NULL']
+test_date = ['TRUE','NULL','FALSE']
+test_status_admin = ['TRUE', 'FALSE']
+
+index = pd.MultiIndex.from_product([
+    test_pct_intersection,
+    status_cas,
+    index_id_duplicate,
+    test_list_num_voie,
+    test_siren_insee_siren_inpi,
+    test_siege,
+    test_enseigne,
+    test_distance_cosine,
+    test_distance_levhenstein,
+    test_date,
+    test_status_admin
+],
+                                   names = [
+                                       'test_pct_intersection',
+                                       "status_cas",
+                                            'index_id_duplicate',
+                                            "test_list_num_voie",
+                                            "test_siren_insee_siren_inpi",
+                                           'test_siege', 
+                                           'test_enseigne',
+                                           'test_distance_cosine',
+                                           'test_distance_levhenstein',
+                                           'test_date',
+                                           'test_status_admin'])
+
+df_ = (pd.DataFrame(index = index)
+       .reset_index()
+       .assign(rank = lambda x: x.index + 1)
+       #.to_csv('Regle_tests.csv', index = False)
+      )
+df_.head()
+```
+
+```python
+print("Il y a environ {} règles de gestion".format(df_.shape[0]))
+```
+
+Le csv se trouve dans le dossier [TEMP_ANALYSE_SIRETISATION/REGLES_TESTS]()
+
+```python
+df_.to_csv('Regle_tests.csv', index = False)
+s3.upload_file(file_to_upload = 'Regle_tests.csv',
+            destination_in_s3 = 'TEMP_ANALYSE_SIRETISATION/REGLES_TESTS')
+
+create_table = """
+CREATE EXTERNAL TABLE IF NOT EXISTS siretisation.REGLES_TESTS (
+`test_pct_intersection`                     string,
+`status_cas`                     string,
+`index_id_duplicate`                     string,
+`test_list_num_voie`                     string,
+`test_siren_insee_siren_inpi`                     string,
+`test_siege`                     string,
+`test_enseigne`                     string,
+`test_distance_cosine`                     string,
+`test_distance_levhenstein`                     string,
+`test_date`                     string,
+`test_status_admin`                     string,
+`rank`                     integer
+
+    )
+     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+   'separatorChar' = ',',
+   'quoteChar' = '"'
+   )
+     LOCATION 's3://calfdata/TEMP_ANALYSE_SIRETISATION/REGLES_TESTS'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1');"""
+s3.run_query(
+        query=create_table,
+        database='siretisation',
+        s3_output='INPI/sql_output'
+    )
+```
+
+# Generation report
+
+```python
+import os, time, shutil, urllib, ipykernel, json
+from pathlib import Path
+from notebook import notebookapp
+```
+
+```python
+def create_report(extension = "html", keep_code = False):
+    """
+    Create a report from the current notebook and save it in the 
+    Report folder (Parent-> child directory)
+    
+    1. Exctract the current notbook name
+    2. Convert the Notebook 
+    3. Move the newly created report
+    
+    Args:
+    extension: string. Can be "html", "pdf", "md"
+    
+    
+    """
+    
+    ### Get notebook name
+    connection_file = os.path.basename(ipykernel.get_connection_file())
+    kernel_id = connection_file.split('-', 1)[0].split('.')[0]
+
+    for srv in notebookapp.list_running_servers():
+        try:
+            if srv['token']=='' and not srv['password']:  
+                req = urllib.request.urlopen(srv['url']+'api/sessions')
+            else:
+                req = urllib.request.urlopen(srv['url']+ \
+                                             'api/sessions?token=' + \
+                                             srv['token'])
+            sessions = json.load(req)
+            notebookname = sessions[0]['name']
+        except:
+            pass  
+    
+    sep = '.'
+    path = os.getcwd()
+    #parent_path = str(Path(path).parent)
+    
+    ### Path report
+    #path_report = "{}/Reports".format(parent_path)
+    #path_report = "{}/Reports".format(path)
+    
+    ### Path destination
+    name_no_extension = notebookname.split(sep, 1)[0]
+    source_to_move = name_no_extension +'.{}'.format(extension)
+    dest = os.path.join(path,'Reports', source_to_move)
+    
+    ### Generate notebook
+    if keep_code:
+        os.system('jupyter nbconvert --to {} {}'.format(
+    extension,notebookname))
+    else:
+        os.system('jupyter nbconvert --no-input --to {} {}'.format(
+    extension,notebookname))
+    
+    ### Move notebook to report folder
+    #time.sleep(5)
+    shutil.move(source_to_move, dest)
+    print("Report Available at this adress:\n {}".format(dest))
+```
+
+```python
+create_report(extension = "html", keep_code = False)
+```
