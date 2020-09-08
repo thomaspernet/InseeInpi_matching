@@ -21,7 +21,7 @@ Copy paste from Coda to fill the information
 
   *   La version 2 de la siretisation ne se résume plus a une prise en compte de quelques règles écrits pour dédoubler les lignes. Dans cette version, les tests représentent un ensemble cohérent et ordonné de règles gestion. 
   * Avant tout chose, nous devons lister puis créer ses tests à partir de la table ets_insee_inpi créer lors de l’US, [Creation table merge INSEE INPI filtree](https://coda.io/d/CreditAgricole_dCtnoqIftTn/US-07-Preparation-tables-et-variables-tests_suFb9). 
-  *  La variable status_cas  indique le cas de figure détecté entre l'adresse de l'INSEE et l'INPI. Il y a 5 possibilités au total:
+  *  La variable `status_cas`  indique le cas de figure détecté entre l'adresse de l'INSEE et l'INPI. Il y a 5 possibilités au total:
     *   CAS_1: Les mots dans l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE
     *   CAS_2: Aucun des mots de l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE
     *   CAS_3: Cardinalite exception parfaite mots INPI ou INSEE
@@ -34,6 +34,23 @@ Copy paste from Coda to fill the information
       * `intersection`: Nombre de mots en commun
       * `union_`: Nombre de mots total entre les deux adresses
       * `pct_intersection`: `intersection` / `union_`
+ * Il faut penser a garder la variable `row_id` 
+ 
+ Le tableau ci dessous indique l'ensemble des tests a réaliser ainsi que leur dépendence.
+ 
+ | Rang | Nom_variable                              | Dependence                                    | Notebook                           | Difficulte | Table_input                                                                                                                                                            | Variables_crees_US                                                                 | Possibilites                  |
+|------|-------------------------------------------|-----------------------------------------------|------------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|-------------------------------|
+| 1    | status_cas                                |                                               | 02_cas_de_figure                   | Moyen      | ets_insee_inpi_status_cas                                                                                                                                              | status_cas,intersection,pct_intersection,union_,inpi_except,insee_except           | CAS_1,CAS_2,CAS_3,CAS_4,CAS_5 |
+| 2    | test_list_num_voie                        | intersection_numero_voie,union_numero_voie    | 03_test_list_num_voie              | Moyen      | ets_insee_inpi_list_num_voie                                                                                                                                           | intersection_numero_voie,union_numero_voie                                         | FALSE,NULL,TRUE,PARTIAL       |
+| 3    | test_enseigne                             | list_enseigne,enseigne                        | 04_test_enseigne                   | Moyen      | ets_insee_inpi_list_enseigne                                                                                                                                           | list_enseigne_contain                                                              | FALSE,NULL,TRUE               |
+| 4    | test_pct_intersection                     | pct_intersection,index_id_max_intersection    | 06_creation_nb_siret_siren_max_pct | Facile     | ets_insee_inpi_var_group_max                                                                                                                                           | count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection         | FALSE,TRUE                    |
+| 4    | test_index_id_duplicate                   | count_inpi_index_id_siret                     | 06_creation_nb_siret_siren_max_pct | Facile     | ets_insee_inpi_var_group_max                                                                                                                                           | count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection         | FALSE,TRUE                    |
+| 4    | test_siren_insee_siren_inpi               | count_initial_insee,count_inpi_siren_siret    | 06_creation_nb_siret_siren_max_pct | Facile     | ets_insee_inpi_var_group_max                                                                                                                                           | count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection         | FALSE,TRUE                    |
+| 5    | test_similarite_exception_words           | max_cosine_distance                           | 08_calcul_cosine_levhenstein       | Difficile  | ets_insee_inpi_similarite_max_word2vec                                                                                                                                 | unzip_inpi,unzip_insee,max_cosine_distance,levenshtein_distance,key_except_to_test | FALSE,NULL,TRUE               |
+| 5    | test_distance_levhenstein_exception_words | levenshtein_distance                          | 08_calcul_cosine_levhenstein       | Difficile  | ets_insee_inpi_similarite_max_word2vec                                                                                                                                 | unzip_inpi,unzip_insee,max_cosine_distance,levenshtein_distance,key_except_to_test | FALSE,NULL,TRUE               |
+| 6    | test_date                                 | datecreationetablissement,date_debut_activite | 10_match_et_creation_regles.md     | Facile     | ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi |                                                                                    | FALSE,TRUE                    |
+| 6    | test_siege                                | status_ets,etablissementsiege                 | 10_match_et_creation_regles.md     | Facile     | ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi |                                                                                    | FALSE,TRUE,NULL               |
+| 6    | test_status_admin                         | etatadministratifetablissement,status_admin   | 10_match_et_creation_regles.md     | Facile     | ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi |                                                                                    | FALSE,NULL,TRUE               |
 
 ## Metadata 
 
@@ -79,6 +96,14 @@ If link from the internet, save it to the cloud first
         *  [01_merge_ets_insee_inpi](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/08_US_DATUM/01_merge_ets_insee_inpi.md)
     
 ## Destination Output/Delivery
+
+ 1. AWS
+    1. Athena: 
+      * Region: Europe (Paris)
+      * Database: siretisation
+      * Tables (Add name new table): ets_insee_inpi_status_cas
+      * List new tables
+      * ets_insee_inpi_status_cas
 
 ## Things to know (Steps, Attention points or new flow of information)
 
@@ -129,15 +154,35 @@ if pandas_setting:
 ```python
 s3_output = 'inpi/sql_output'
 database = 'inpi'
+
 ```
 
 ```python
 query = """
+DROP TABLE siretisation.ets_insee_inpi_status_cas;
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+create_table = """
+CREATE TABLE siretisation.ets_insee_inpi_status_cas
+WITH (
+  format='PARQUET'
+) AS
 WITH create_var AS (
-SELECT 
-  siret,
-adresse_distance_insee, adresse_distance_inpi,
-array_distinct(
+  SELECT 
+    row_id,
+    siret, 
+    adresse_distance_insee, 
+    adresse_distance_inpi, 
+    array_distinct(
       array_except(
         split(adresse_distance_insee, ' '), 
         split(adresse_distance_inpi, ' ')
@@ -168,7 +213,7 @@ array_distinct(
           )
         )
       ) AS DECIMAL(10, 2)
-    ) as union_,
+    ) as union_, 
     CAST(
       cardinality(
         array_distinct(
@@ -178,7 +223,7 @@ array_distinct(
           )
         )
       ) AS DECIMAL(10, 2)
-    )/CAST(
+    )/ CAST(
       cardinality(
         array_distinct(
           array_union(
@@ -187,59 +232,84 @@ array_distinct(
           )
         )
       ) AS DECIMAL(10, 2)
-    ) as pct_intersection
+    ) as pct_intersection 
+  FROM 
+    siretisation.ets_insee_inpi
+) 
 
-FROM siretisation.ets_insee_inpi 
-)
-SELECT  *
-FROM  (WITH test AS (
-  SELECT
-siret,
-adresse_distance_insee, adresse_distance_inpi,
-insee_except,
-inpi_except,
-intersection,
-union_,
-intersection / union_ as pct_intersection,
-CASE 
-WHEN intersection = union_ THEN 'CAS_1' 
-WHEN intersection = 0 THEN 'CAS_2'
-WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_3' 
-WHEN (CARDINALITY(insee_except) = 0 OR CARDINALITY(inpi_except) =0)  AND intersection != union_ AND intersection != 0 THEN 'CAS_5'
-WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except)  AND intersection != union_ AND intersection != union_ AND intersection != 0 THEN 'CAS_4'
-ELSE 'CAS_NO_ADRESSE'
-END AS status_cas
-    FROM create_var
-  )
-       SELECT *
+SELECT 
+  * 
+FROM 
+  (
+    WITH test AS (
+      SELECT 
+      row_id,
+        siret, 
+        adresse_distance_insee, 
+        adresse_distance_inpi, 
+        CASE WHEN cardinality(insee_except) = 0 THEN NULL ELSE insee_except END as insee_except,
+        CASE WHEN cardinality(inpi_except) = 0 THEN NULL ELSE inpi_except END as inpi_except,
+        intersection, 
+        union_, 
+        intersection / union_ as pct_intersection, 
+        CASE WHEN intersection = union_ THEN 'CAS_1' WHEN intersection = 0 THEN 'CAS_2' WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except) 
+        AND intersection != union_ 
+        AND intersection != union_ 
+        AND intersection != 0 THEN 'CAS_3' WHEN (
+          CARDINALITY(insee_except) = 0 
+          OR CARDINALITY(inpi_except) = 0
+        ) 
+        AND intersection != union_ 
+        AND intersection != 0 THEN 'CAS_5' WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except) 
+        AND intersection != union_ 
+        AND intersection != union_ 
+        AND intersection != 0 THEN 'CAS_4' ELSE 'CAS_NO_ADRESSE' END AS status_cas 
+      FROM 
+        create_var 
+    )
+    SELECT *
+    FROM test
+    )
+"""
+s3.run_query(
+            query=create_table,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+query = """
+SELECT *
        FROM (SELECT * 
-             FROm test
+             FROm siretisation.ets_insee_inpi_status_cas
        WHERE status_cas = 'CAS_1'
        LIMIT 1
              )
        UNION (SELECT *
-       FROM test
+       FROM siretisation.ets_insee_inpi_status_cas
        WHERE status_cas = 'CAS_2'
               LIMIT 1
               )
        UNION (SELECT *
-       FROM test
+       FROM siretisation.ets_insee_inpi_status_cas
        WHERE status_cas = 'CAS_3'
               LIMIT 1
               )
        UNION (SELECT *
-       FROM test
+       FROM siretisation.ets_insee_inpi_status_cas
        WHERE status_cas = 'CAS_4'
               LIMIT 1
               )
        UNION (SELECT *
-       FROM test
+       FROM siretisation.ets_insee_inpi_status_cas
        WHERE status_cas = 'CAS_5'
               LIMIT 1
               )
        ORDER BY status_cas
        
-       )
 
 """
 
@@ -251,7 +321,7 @@ tb = s3.run_query(
   destination_key = None ### Add destination key if need to copy output
         )
 
-print(pd.concat([
+tb = pd.concat([
 
 pd.concat([
 tb[['siret', 'adresse_distance_insee', 'adresse_distance_inpi']]
@@ -260,8 +330,9 @@ pd.concat([
 tb[['insee_except', 'inpi_except', 'intersection', 'union_', 'pct_intersection','status_cas']]
 ],keys=["Output"], axis = 1)
 ], axis = 1
-).to_markdown()
-     )
+)
+
+tb
 ```
 
 # Test acceptance
@@ -469,13 +540,13 @@ END AS status_cas
        ORDER BY status_cas
        )
        """
-print(s3.run_query(
+s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
   filename = 'count_group_ets_insee_inpi_status_cas', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        ).to_markdown())
+        )
 ```
 
 ## 3. Compter le nombre d'index par cas
@@ -566,13 +637,13 @@ END AS status_cas
        ORDER BY status_cas
        )
        """
-print(s3.run_query(
+s3.run_query(
             query=query,
             database='siretisation',
             s3_output=s3_output,
   filename = 'count_group_index_ts_insee_inpi_status_cas', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
-        ).to_markdown())
+        )
 ```
 
 ## 4. Créer un tableau avec une ligne par cas
@@ -696,7 +767,7 @@ tb = s3.run_query(
   filename = 'tb_exemple', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
-print(pd.concat([
+pd.concat([
 
 pd.concat([
 tb[['siret', 'adresse_distance_insee', 'adresse_distance_inpi']]
@@ -705,7 +776,7 @@ pd.concat([
 tb[['insee_except', 'inpi_except', 'intersection', 'union_', 'pct_intersection','status_cas']]
 ],keys=["Output"], axis = 1)
 ], axis = 1
-).to_markdown())
+)
 ```
 
 # Generation report
