@@ -13080,6 +13080,131 @@ div#notebook {
 <h1 id="Creation-variable-test_enseigne-a-effectuer-pour-dedoublonner-les-lignes">Creation variable test_enseigne a effectuer pour dedoublonner les lignes<a class="anchor-link" href="#Creation-variable-test_enseigne-a-effectuer-pour-dedoublonner-les-lignes">&#182;</a></h1><p>Copy paste from Coda to fill the information</p>
 <h2 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h2><p>La siretisation repose sur une matrice de règles de gestion classée de manière ordonnée. Pour créer la matrice, il faut au préalable créer les variables nécéssaires à la création des tests.</p>
 <p>Le tableau ci dessous indique l'ensemble des tests a réaliser ainsi que leur dépendence.</p>
+<table>
+<thead><tr>
+<th>Rang</th>
+<th>Nom_variable</th>
+<th>Dependence</th>
+<th>Notebook</th>
+<th>Difficulte</th>
+<th>Table_input</th>
+<th>Variables_crees_US</th>
+<th>Possibilites</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>status_cas</td>
+<td></td>
+<td>02_cas_de_figure</td>
+<td>Moyen</td>
+<td>ets_insee_inpi_status_cas</td>
+<td>status_cas,intersection,pct<em>intersection,union</em>,inpi_except,insee_except</td>
+<td>CAS_1,CAS_2,CAS_3,CAS_4,CAS_5</td>
+</tr>
+<tr>
+<td>2</td>
+<td>test_list_num_voie</td>
+<td>intersection_numero_voie,union_numero_voie</td>
+<td>03_test_list_num_voie</td>
+<td>Moyen</td>
+<td>ets_insee_inpi_list_num_voie</td>
+<td>intersection_numero_voie,union_numero_voie</td>
+<td>FALSE,NULL,TRUE,PARTIAL</td>
+</tr>
+<tr>
+<td>3</td>
+<td>test_enseigne</td>
+<td>list_enseigne,enseigne</td>
+<td>04_test_enseigne</td>
+<td>Moyen</td>
+<td>ets_insee_inpi_list_enseigne</td>
+<td>list_enseigne_contain</td>
+<td>FALSE,NULL,TRUE</td>
+</tr>
+<tr>
+<td>4</td>
+<td>test_pct_intersection</td>
+<td>pct_intersection,index_id_max_intersection</td>
+<td>06_creation_nb_siret_siren_max_pct</td>
+<td>Facile</td>
+<td>ets_insee_inpi_var_group_max</td>
+<td>count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection</td>
+<td>FALSE,TRUE</td>
+</tr>
+<tr>
+<td>4</td>
+<td>test_index_id_duplicate</td>
+<td>count_inpi_index_id_siret</td>
+<td>06_creation_nb_siret_siren_max_pct</td>
+<td>Facile</td>
+<td>ets_insee_inpi_var_group_max</td>
+<td>count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection</td>
+<td>FALSE,TRUE</td>
+</tr>
+<tr>
+<td>4</td>
+<td>test_siren_insee_siren_inpi</td>
+<td>count_initial_insee,count_inpi_siren_siret</td>
+<td>06_creation_nb_siret_siren_max_pct</td>
+<td>Facile</td>
+<td>ets_insee_inpi_var_group_max</td>
+<td>count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection</td>
+<td>FALSE,TRUE</td>
+</tr>
+<tr>
+<td>5</td>
+<td>test_similarite_exception_words</td>
+<td>max_cosine_distance</td>
+<td>08_calcul_cosine_levhenstein</td>
+<td>Difficile</td>
+<td>ets_insee_inpi_similarite_max_word2vec</td>
+<td>unzip_inpi,unzip_insee,max_cosine_distance,levenshtein_distance,key_except_to_test</td>
+<td>FALSE,NULL,TRUE</td>
+</tr>
+<tr>
+<td>5</td>
+<td>test_distance_levhenstein_exception_words</td>
+<td>levenshtein_distance</td>
+<td>08_calcul_cosine_levhenstein</td>
+<td>Difficile</td>
+<td>ets_insee_inpi_similarite_max_word2vec</td>
+<td>unzip_inpi,unzip_insee,max_cosine_distance,levenshtein_distance,key_except_to_test</td>
+<td>FALSE,NULL,TRUE</td>
+</tr>
+<tr>
+<td>6</td>
+<td>test_date</td>
+<td>datecreationetablissement,date_debut_activite</td>
+<td>10_match_et_creation_regles.md</td>
+<td>Facile</td>
+<td>ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi</td>
+<td></td>
+<td>FALSE,TRUE</td>
+</tr>
+<tr>
+<td>6</td>
+<td>test_siege</td>
+<td>status_ets,etablissementsiege</td>
+<td>10_match_et_creation_regles.md</td>
+<td>Facile</td>
+<td>ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi</td>
+<td></td>
+<td>FALSE,TRUE,NULL</td>
+</tr>
+<tr>
+<td>6</td>
+<td>test_status_admin</td>
+<td>etatadministratifetablissement,status_admin</td>
+<td>10_match_et_creation_regles.md</td>
+<td>Facile</td>
+<td>ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi</td>
+<td></td>
+<td>FALSE,NULL,TRUE</td>
+</tr>
+</tbody>
+</table>
 <p>Lors de cette US, nous allons créer 1 variable qui va permettre a la réalisation du test <code>test_enseigne</code>. La variable est la suivante:</p>
 <ul>
 <li><code>list_enseigne_contain</code>: Variable boolean indiquant si le string de la variable <code>enseigne</code> est contenu dans la liste <code>list_enseigne</code></li>
@@ -13176,12 +13301,66 @@ div#notebook {
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">awsPy.aws_authorization</span> <span class="kn">import</span> <span class="n">aws_connector</span>
+<span class="kn">from</span> <span class="nn">awsPy.aws_athena</span> <span class="kn">import</span> <span class="n">service_athena</span>
+<span class="kn">from</span> <span class="nn">awsPy.aws_s3</span> <span class="kn">import</span> <span class="n">service_s3</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">shutil</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+<span class="n">parent_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">path_cred</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/credential_AWS.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span>
+<span class="n">con</span> <span class="o">=</span> <span class="n">aws_connector</span><span class="o">.</span><span class="n">aws_instantiate</span><span class="p">(</span><span class="n">credential</span> <span class="o">=</span> <span class="n">path_cred</span><span class="p">,</span>
+                                       <span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;eu-west-3&#39;</span><span class="p">)</span>
+
+<span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;eu-west-3&#39;</span>
+<span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;calfdata&#39;</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">con</span> <span class="o">=</span> <span class="n">aws_connector</span><span class="o">.</span><span class="n">aws_instantiate</span><span class="p">(</span><span class="n">credential</span> <span class="o">=</span> <span class="n">path_cred</span><span class="p">,</span>
+                                       <span class="n">region</span> <span class="o">=</span> <span class="n">region</span><span class="p">)</span>
+<span class="n">client</span><span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">client_boto</span><span class="p">()</span>
+<span class="n">s3</span> <span class="o">=</span> <span class="n">service_s3</span><span class="o">.</span><span class="n">connect_S3</span><span class="p">(</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span><span class="p">,</span>
+                      <span class="n">bucket</span> <span class="o">=</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pandas_setting</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">if</span> <span class="n">pandas_setting</span><span class="p">:</span>
+    <span class="n">cm</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">light_palette</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">as_cmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_columns&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_colwidth&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
@@ -13192,44 +13371,267 @@ div#notebook {
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">s3_output</span> <span class="o">=</span> <span class="s1">&#39;inpi/sql_output&#39;</span>
+<span class="n">database</span> <span class="o">=</span> <span class="s1">&#39;inpi&#39;</span>
+</pre></div>
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 8, 10, 24, 51, 966000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 8, 10, 24, 53, 122000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;e613e808-71ba-4675-b98d-393f0502e282&#39;}</pre>
-</div>
-
-</div>
-
+    </div>
 </div>
 </div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">DROP TABLE siretisation.ets_insee_inpi_list_enseigne;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 <div class="output_wrapper">
 <div class="output">
 
+
 <div class="output_area">
+
+    <div class="prompt output_prompt">Out[5]:</div>
+
 
 
 
 <div class="output_text output_subarea output_execute_result">
 <pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 8, 10, 27, 58, 470000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 8, 10, 28, 5, 370000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;1529c2e9-9fad-499d-b1cb-6ae68bd1996d&#39;}</pre>
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 48, 41, 627000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 48, 42, 186000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;2a0d3a79-1d0e-45e6-ad01-074a3936aafe&#39;}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">CREATE TABLE siretisation.ets_insee_inpi_list_enseigne</span>
+<span class="s2">WITH (</span>
+<span class="s2">  format=&#39;PARQUET&#39;</span>
+<span class="s2">) AS</span>
+<span class="s2">SELECT </span>
+<span class="s2">row_id,</span>
+<span class="s2">siret, </span>
+<span class="s2">enseigne,</span>
+<span class="s2">list_enseigne,</span>
+<span class="s2">contains(</span>
+<span class="s2">  list_enseigne,</span>
+<span class="s2">  enseigne</span>
+<span class="s2">  ) AS list_enseigne_contain </span>
+<span class="s2">FROM siretisation.ets_insee_inpi</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[6]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 48, 42, 291000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 48, 47, 862000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;e20f53e2-badb-4d2b-a81f-b629cfc2cccf&#39;}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT * </span>
+<span class="s2">FROM siretisation.ets_insee_inpi_list_enseigne</span>
+<span class="s2">WHERE list_enseigne_contain IS NOT NULL</span>
+<span class="s2">LIMIT 10</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[7]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>row_id</th>
+      <th>siret</th>
+      <th>enseigne</th>
+      <th>list_enseigne</th>
+      <th>list_enseigne_contain</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>9981495</td>
+      <td>81806930400017</td>
+      <td>NaN</td>
+      <td>[GRAND FRAIS]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>9981496</td>
+      <td>81806930400017</td>
+      <td>GRAND FRAIS</td>
+      <td>[GRAND FRAIS]</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>9981526</td>
+      <td>44159532900059</td>
+      <td>NaN</td>
+      <td>[AU JARDIN DE CECILE]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>9981528</td>
+      <td>44159532900026</td>
+      <td>NaN</td>
+      <td>[INDIAN FOREST CHARTREUSE]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>9981530</td>
+      <td>44159532900059</td>
+      <td>INDIAN FOREST CHARTREUSE</td>
+      <td>[AU JARDIN DE CECILE]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>9981532</td>
+      <td>44159532900026</td>
+      <td>INDIAN FOREST CHARTREUSE</td>
+      <td>[INDIAN FOREST CHARTREUSE]</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>9981534</td>
+      <td>44159532900059</td>
+      <td>AU JARDIN DE CECILE</td>
+      <td>[AU JARDIN DE CECILE]</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>9981536</td>
+      <td>44159532900026</td>
+      <td>AU JARDIN DE CECILE</td>
+      <td>[INDIAN FOREST CHARTREUSE]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>9981540</td>
+      <td>44159580800029</td>
+      <td>NaN</td>
+      <td>[LA BOUTIQUE DE JACQUELINE]</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>9981542</td>
+      <td>44159580800037</td>
+      <td>NaN</td>
+      <td>[LA BOUTIQUE DE JACQUELINE]</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 </div>
 
 </div>
@@ -13244,7 +13646,7 @@ div#notebook {
 <h1 id="Test-acceptance">Test acceptance<a class="anchor-link" href="#Test-acceptance">&#182;</a></h1><ol>
 <li>Vérifier que le nombre de lignes est indentique avant et après la création des variables</li>
 <li>Compter le nombre de lignes pour <code>list_enseigne_contain</code></li>
-<li>Compter le nombre d'occurence selon la cardinalité de <code>list_enseigne</code></li>
+<li>Compter le nombre d'occurences selon la cardinalité de <code>list_enseigne</code></li>
 </ol>
 
 </div>
@@ -13258,11 +13660,35 @@ div#notebook {
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT COUNT(*)</span>
+<span class="s2">FROM siretisation.ets_insee_inpi_list_enseigne</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 <div class="output_wrapper">
 <div class="output">
 
+
 <div class="output_area">
+
+    <div class="prompt output_prompt">Out[8]:</div>
+
 
 
 <div class="output_html rendered_html output_subarea output_execute_result">
@@ -13304,11 +13730,36 @@ div#notebook {
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT COUNT(*)</span>
+<span class="s2">FROM siretisation.ets_insee_inpi_list_enseigne</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;test_count_enseigne&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 <div class="output_wrapper">
 <div class="output">
 
+
 <div class="output_area">
+
+    <div class="prompt output_prompt">Out[9]:</div>
+
 
 
 <div class="output_html rendered_html output_subarea output_execute_result">
@@ -13357,11 +13808,37 @@ div#notebook {
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT list_enseigne_contain, count(*) as cnt</span>
+<span class="s2">       FROM siretisation.ets_insee_inpi_list_enseigne</span>
+<span class="s2">       GROUP BY list_enseigne_contain</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;test_count_ligne_enseigne&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 <div class="output_wrapper">
 <div class="output">
 
+
 <div class="output_area">
+
+    <div class="prompt output_prompt">Out[10]:</div>
+
 
 
 <div class="output_html rendered_html output_subarea output_execute_result">
@@ -13417,16 +13894,43 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="3.-Compter-le-nombre-d'occurence-selon-la-cardinalit&#233;-de-list_enseigne">3. Compter le nombre d'occurence selon la cardinalit&#233; de <code>list_enseigne</code><a class="anchor-link" href="#3.-Compter-le-nombre-d'occurence-selon-la-cardinalit&#233;-de-list_enseigne">&#182;</a></h2>
+<h2 id="3.-Compter-le-nombre-d'occurences-selon-la-cardinalit&#233;-de-list_enseigne">3. Compter le nombre d'occurences selon la cardinalit&#233; de <code>list_enseigne</code><a class="anchor-link" href="#3.-Compter-le-nombre-d'occurences-selon-la-cardinalit&#233;-de-list_enseigne">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT CARDINALITY(list_enseigne) AS cardinality, COUNT(*) as cnt</span>
+<span class="s2">FROM &quot;siretisation&quot;.&quot;ets_insee_inpi_list_enseigne&quot;</span>
+<span class="s2">GROUP BY CARDINALITY(list_enseigne)</span>
+<span class="s2">ORDER BY cnt</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;cardinality&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 <div class="output_wrapper">
 <div class="output">
 
+
 <div class="output_area">
+
+    <div class="prompt output_prompt">Out[11]:</div>
+
 
 
 <div class="output_html rendered_html output_subarea output_execute_result">
@@ -13537,12 +14041,100 @@ div#notebook {
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">ipykernel</span><span class="o">,</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">notebook</span> <span class="kn">import</span> <span class="n">notebookapp</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_report</span><span class="p">(</span><span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span><span class="p">,</span> <span class="n">keep_code</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a report from the current notebook and save it in the </span>
+<span class="sd">    Report folder (Parent-&gt; child directory)</span>
+<span class="sd">    </span>
+<span class="sd">    1. Exctract the current notbook name</span>
+<span class="sd">    2. Convert the Notebook </span>
+<span class="sd">    3. Move the newly created report</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">    extension: string. Can be &quot;html&quot;, &quot;pdf&quot;, &quot;md&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1">### Get notebook name</span>
+    <span class="n">connection_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">ipykernel</span><span class="o">.</span><span class="n">get_connection_file</span><span class="p">())</span>
+    <span class="n">kernel_id</span> <span class="o">=</span> <span class="n">connection_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">srv</span> <span class="ow">in</span> <span class="n">notebookapp</span><span class="o">.</span><span class="n">list_running_servers</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">srv</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">srv</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]:</span>  
+                <span class="n">req</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">srv</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;api/sessions&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">req</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">srv</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="o">+</span> \
+                                             <span class="s1">&#39;api/sessions?token=&#39;</span> <span class="o">+</span> \
+                                             <span class="n">srv</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">])</span>
+            <span class="n">sessions</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+            <span class="n">notebookname</span> <span class="o">=</span> <span class="n">sessions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>  
+    
+    <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="c1">#parent_path = str(Path(path).parent)</span>
+    
+    <span class="c1">### Path report</span>
+    <span class="c1">#path_report = &quot;{}/Reports&quot;.format(parent_path)</span>
+    <span class="c1">#path_report = &quot;{}/Reports&quot;.format(path)</span>
+    
+    <span class="c1">### Path destination</span>
+    <span class="n">name_no_extension</span> <span class="o">=</span> <span class="n">notebookname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">source_to_move</span> <span class="o">=</span> <span class="n">name_no_extension</span> <span class="o">+</span><span class="s1">&#39;.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">extension</span><span class="p">)</span>
+    <span class="n">dest</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="s1">&#39;Reports&#39;</span><span class="p">,</span> <span class="n">source_to_move</span><span class="p">)</span>
+    
+    <span class="c1">### Generate notebook</span>
+    <span class="k">if</span> <span class="n">keep_code</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;jupyter nbconvert --to </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">extension</span><span class="p">,</span><span class="n">notebookname</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;jupyter nbconvert --no-input --to </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">extension</span><span class="p">,</span><span class="n">notebookname</span><span class="p">))</span>
+    
+    <span class="c1">### Move notebook to report folder</span>
+    <span class="c1">#time.sleep(5)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">source_to_move</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Report Available at this adress:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">create_report</span><span class="p">(</span><span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span><span class="p">,</span> <span class="n">keep_code</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
     </div>

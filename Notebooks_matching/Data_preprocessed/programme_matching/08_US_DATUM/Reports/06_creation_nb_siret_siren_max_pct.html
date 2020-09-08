@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>07_creation_table_poids_Word2Vec</title>
+<title>06_creation_nb_siret_siren_max_pct</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13077,8 +13077,8 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Cr&#233;ation-table-poids-obtenus-via-le-Word2Vec">Cr&#233;ation table poids obtenus via le Word2Vec<a class="anchor-link" href="#Cr&#233;ation-table-poids-obtenus-via-le-Word2Vec">&#182;</a></h1><p>Copy paste from Coda to fill the information</p>
-<h2 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h2><p>La siretisation repose sur une matrice de règles de gestion classée de manière ordonnée. Lors des US précédents, nous avons calculé 10 variables tests sur les 12. Voici les 10 tests calculés au préalable, avec leur dépendence:</p>
+<h1 id="Cr&#233;ation-variables--count-index,-count-siren-et-maximum-pct-intersection">Cr&#233;ation variables  count index, count siren et maximum pct intersection<a class="anchor-link" href="#Cr&#233;ation-variables--count-index,-count-siren-et-maximum-pct-intersection">&#182;</a></h1><h2 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h2><p>La siretisation repose sur une matrice de règles de gestion classée de manière ordonnée. Pour créer la matrice, il faut au préalable créer les variables nécéssaires à la création des tests.</p>
+<p>Le tableau ci dessous indique l'ensemble des tests a réaliser ainsi que leur dépendence.</p>
 <table>
 <thead><tr>
 <th>Rang</th>
@@ -13204,17 +13204,25 @@ div#notebook {
 </tr>
 </tbody>
 </table>
-<p>Il reste encore deux tests a calculer afin de pouvoir matcher avec la matrice des règles. Les deux règles manquantes sont <code>test_distance_cosine</code> et <code>test_distance_levhenstein</code>. Néanmoins, ses deux tests requièrent le calcul de deux variables, dont l'une d'elle <code>max_cosine_distance</code> dépend des résultats de l'algorithme de Word2Vec. C'est l'object de cette US.</p>
-<p>Dans cette US, nous allons calculer les poids permettants de mettre en avant la similarité entre deux mots. La similarité est calculé via le Word2Vec embedding.</p>
+<p>Lors de cette US, nous allons créer 3 variables qui vont permettre a la réalisation des tests <code>test_pct_intersection</code>,<code>test_index_id_duplicate</code> et <code>test_siren_insee_siren_inpi</code>. Les trois variables sont les suivantes:</p>
+<ul>
+<li><code>count_inpi_index_id_siret</code>: nombre de siret possible par <code>index_id</code></li>
+<li><code>count_inpi_siren_siret</code>: nombre de siret unique par siren</li>
+<li><code>index_id_max_intersection</code>: Pourcentage maximum de pct_intersection par index<ul>
+<li>Creation de <code>pct_intersection</code> lors de l'US <a href="https://tree.taiga.io/project/olivierlubet-air/us/3275">3275</a> -&gt; <code>intersection / union_ as pct_intersection</code></li>
+</ul>
+</li>
+<li>Il faut penser a garder la variable <code>row_id</code> </li>
+</ul>
 <h2 id="Metadata">Metadata<a class="anchor-link" href="#Metadata">&#182;</a></h2><ul>
 <li>Metadata parameters are available here: </li>
-<li>US Title: Création table poids obtenus via le Word2Vec</li>
+<li>US Title: Création variables  count index, count siren et maximum pct intersection</li>
 <li>Epic: Epic 5</li>
 <li>US: US 7</li>
-<li>Date Begin: 9/7/2020</li>
-<li>Duration Task: 1</li>
-<li>Status:  </li>
-<li>Source URL:US 07 Preparation tables et variables tests</li>
+<li>Date Begin: 9/1/2020</li>
+<li>Duration Task: 6</li>
+<li>Status: Active</li>
+<li>Source URL: <a href="https://coda.io/d/_dCtnoqIftTn/US-07-Preparation-tables-et-variables-tests_suFb9">US 07 Preparation tables et variables tests</a></li>
 <li>Task type:<ul>
 <li>Jupyter Notebook</li>
 </ul>
@@ -13229,11 +13237,11 @@ div#notebook {
 </li>
 <li>Estimated Log points:<ul>
 <li>One being a simple task, 15 a very difficult one</li>
-<li>7</li>
+<li>5</li>
 </ul>
 </li>
 <li>Task tag<ul>
-<li>#machine-learning,#word2vec,#siretisation,#sql-query,#similarite,#preparation-tableword3vec</li>
+<li>#sql-query,#regle-de-gestion,#preparation-nb-index,#preparation-nb-siren,"preparation-pct-max</li>
 </ul>
 </li>
 <li>Toggl Tag<ul>
@@ -13244,21 +13252,18 @@ div#notebook {
 <h2 id="Input-Cloud-Storage-[AWS]">Input Cloud Storage [AWS]<a class="anchor-link" href="#Input-Cloud-Storage-[AWS]">&#182;</a></h2><p>If link from the internet, save it to the cloud first</p>
 <h3 id="Tables-[AWS]">Tables [AWS]<a class="anchor-link" href="#Tables-[AWS]">&#182;</a></h3><ol>
 <li>Batch 1:<ul>
-<li>Select Provider: Athena</li>
-<li>Select table(s): ets_insee_inpi<ul>
+<li>Select Provider: </li>
+<li>Select table(s): <ul>
 <li>Select only tables created from the same notebook, else copy/paste selection to add new input tables</li>
 <li>If table(s) does not exist, add them: Add New Table</li>
 <li>Information:<ul>
 <li>Region: <ul>
-<li>NameEurope (Paris)</li>
-<li>Code: eu-west-3</li>
+<li>Name: </li>
+<li>Code: </li>
 </ul>
 </li>
-<li>Database: inpi</li>
-<li>Notebook construction file: <ul>
-<li><a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md</a></li>
-</ul>
-</li>
+<li>Database: </li>
+<li>Notebook construction file: </li>
 </ul>
 </li>
 </ul>
@@ -13266,23 +13271,27 @@ div#notebook {
 </ul>
 </li>
 </ol>
-<h2 id="Destination-Output/Delivery">Destination Output/Delivery<a class="anchor-link" href="#Destination-Output/Delivery">&#182;</a></h2><ul>
+<h2 id="Destination-Output/Delivery">Destination Output/Delivery<a class="anchor-link" href="#Destination-Output/Delivery">&#182;</a></h2><ol>
 <li>AWS<ol>
 <li>Athena: <ul>
 <li>Region: Europe (Paris)</li>
 <li>Database: siretisation</li>
-<li>Tables (Add name new table): list_pairs_mots_insee_inpi,weights_mots_insee_inpi_word2vec</li>
-<li>List new tables<ul>
-<li>list_pairs_mots_insee_inpi</li>
-<li>weights_mots_insee_inpi_word2vec</li>
-</ul>
-</li>
+<li>Tables (Add name new table): ets_insee_inpi_var_group_max</li>
+<li>List new tables</li>
+<li>ets_insee_inpi_var_group_max</li>
 </ul>
 </li>
 </ol>
 </li>
-</ul>
-<h2 id="Things-to-know-(Steps,-Attention-points-or-new-flow-of-information)">Things to know (Steps, Attention points or new flow of information)<a class="anchor-link" href="#Things-to-know-(Steps,-Attention-points-or-new-flow-of-information)">&#182;</a></h2><h3 id="Sources-of-information--(meeting-notes,-Documentation,-Query,-URL)">Sources of information  (meeting notes, Documentation, Query, URL)<a class="anchor-link" href="#Sources-of-information--(meeting-notes,-Documentation,-Query,-URL)">&#182;</a></h3>
+</ol>
+<h2 id="Things-to-know-(Steps,-Attention-points-or-new-flow-of-information)">Things to know (Steps, Attention points or new flow of information)<a class="anchor-link" href="#Things-to-know-(Steps,-Attention-points-or-new-flow-of-information)">&#182;</a></h2><h3 id="Sources-of-information--(meeting-notes,-Documentation,-Query,-URL)">Sources of information  (meeting notes, Documentation, Query, URL)<a class="anchor-link" href="#Sources-of-information--(meeting-notes,-Documentation,-Query,-URL)">&#182;</a></h3><p>Sources of information  (meeting notes, Documentation, Query, URL)</p>
+<ol>
+<li>Jupyter Notebook (Github Link)<ol>
+<li>md : <a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/08_US_DATUM/05_creation_table_cases.md#create-table">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/08_US_DATUM/05_creation_table_cases.md#create-table</a></li>
+</ol>
+</li>
+</ol>
+
 </div>
 </div>
 </div>
@@ -13359,9 +13368,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Input/output">Input/output<a class="anchor-link" href="#Input/output">&#182;</a></h1><p>Pour cacluler la similarité entre l'adresse de l'INSEE et de l'INPI, nous devons créer une liste de combinaison unique entre les deux adresses. Pour cela, nous utilisons les variables <code>adresse_distance_inpi</code> et <code>adresse_distance_insee</code> qui ont été, au préalable, néttoyée, puis nous les concatènons en prenant le soin d'enlever les mots redondants. Dit autrement, si deux mots sont présents dans les deux adresses, alors, nous n'en gardons qu'un seul.</p>
-<p>La table contient environ 2,836,384 combinaisons possibles.</p>
-
+<h1 id="Input/output">Input/output<a class="anchor-link" href="#Input/output">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -13385,36 +13392,15 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">/*Combinaison mots insee inpi*/</span>
-<span class="s2">CREATE TABLE siretisation.list_pairs_mots_insee_inpi</span>
-<span class="s2">WITH (</span>
-<span class="s2">  format=&#39;PARQUET&#39;</span>
-<span class="s2">) AS</span>
-<span class="s2">SELECT unique_combinaition,</span>
-<span class="s2">COUNT(*) AS CNT</span>
-<span class="s2">FROM (SELECT</span>
-<span class="s2">array_distinct(</span>
-<span class="s2">    concat(</span>
-<span class="s2">    array_distinct(</span>
-<span class="s2">      split(adresse_distance_inpi, &#39; &#39;)</span>
-<span class="s2">      ),</span>
-<span class="s2">    array_distinct(</span>
-<span class="s2">      split(adresse_distance_insee, &#39; &#39;)</span>
-<span class="s2">    )    )</span>
-<span class="s2">  ) unique_combinaition</span>
-<span class="s2">FROM siretisation.ets_insee_inpi </span>
-<span class="s2">      )</span>
-<span class="s2">      GROUP BY unique_combinaition</span>
+<span class="s2">DROP TABLE siretisation.ets_insee_inpi_var_group_max;</span>
 <span class="s2">&quot;&quot;&quot;</span>
-
-<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
             <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
   <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
-<span class="n">output</span>
 </pre></div>
 
     </div>
@@ -13433,11 +13419,10 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;FAILED&#39;,
-  &#39;StateChangeReason&#39;: &#34;SYNTAX_ERROR: line 1:1: Destination table &#39;awsdatacatalog.siretisation.list_pairs_mots_insee_inpi&#39; already exists. You may need to manually clean the data at location &#39;s3://calfdata/inpi/sql_output/tables/7ab0af48-5e47-478f-abb8-96201c2fa572&#39; before retrying. Athena will not delete data in your account.&#34;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 51, 26, 441000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 51, 26, 679000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;7ab0af48-5e47-478f-abb8-96201c2fa572&#39;}</pre>
+<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 49, 39, 314000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 49, 39, 853000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;4f5ec951-b011-4ba2-8d7d-db10ecad2624&#39;}</pre>
 </div>
 
 </div>
@@ -13445,49 +13430,6 @@ div#notebook {
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Calcul-model">Calcul model<a class="anchor-link" href="#Calcul-model">&#182;</a></h2><h3 id="What-Are-Word-Embeddings-for-Text?"><a href="https://machinelearningmastery.com/what-are-word-embeddings/">What Are Word Embeddings for Text?</a><a class="anchor-link" href="#What-Are-Word-Embeddings-for-Text?">&#182;</a></h3><ul>
-<li><p>by [[Jason Brownlee]]</p>
-</li>
-<li><p>A word embedding is a learned representation for text where words that have the same meaning have a similar representation</p>
-</li>
-<li><p>It is this approach to representing words and documents that may be considered one of the key breakthroughs of deep learning on challenging natural language processing problems.</p>
-<p>-&gt; One of the benefits of using dense and low-dimensional vectors is computational</p>
-</li>
-<li><p>The main benefit of the dense representations is generalization power</p>
-</li>
-<li>if we believe some features may provide similar clues, it is worthwhile to provide a representation that is able to capture these similarities</li>
-<li>Word embeddings are in fact a class of techniques where individual words are represented as real-valued vectors in a predefined vector space</li>
-<li>Each word is mapped to one vector and the vector values are learned in a way that resembles a neural network, and hence the technique is often lumped into the field of deep learning</li>
-<li>Key to the approach is the idea of using a dense distributed representation for each word</li>
-<li>Each word is represented by a real-valued vector, often tens or hundreds of dimensions. This is contrasted to the thousands or millions of dimensions required for sparse word representations, such as a one-hot encoding</li>
-<li>The distributed representation is learned based on the usage of words</li>
-<li>This allows words that are used in similar ways to result in having similar representations, naturally capturing their meaning</li>
-<li>This can be contrasted with the crisp but fragile representation in a bag of words model where, unless explicitly managed, different words have different representations, regardless of how they are used</li>
-</ul>
-<h2 id="Word-Embedding-Algorithms">Word Embedding Algorithms<a class="anchor-link" href="#Word-Embedding-Algorithms">&#182;</a></h2><ul>
-<li>Word embedding methods learn a real-valued vector representation for a predefined fixed sized vocabulary from a corpus of text</li>
-<li>The learning process is either joint with the neural network model on some task, such as document classification, or is an unsupervised process, using document statistics.</li>
-</ul>
-<h3 id="Word2Vec">Word2Vec<a class="anchor-link" href="#Word2Vec">&#182;</a></h3><ul>
-<li>Word2Vec is a statistical method for efficiently learning a standalone word embedding from a text corpus</li>
-<li>It was developed by Tomas Mikolov, et al. at Google in 2013 as a response to make the neural-network-based training of the embedding more efficient and since then has become the de facto standard for developing pre-trained word embedding</li>
-<li>Two different learning models were introduced that can be used as part of the word2vec approach to learn the word embedding; they are:<ul>
-<li>Continuous Bag-of-Words, or CBOW model </li>
-<li>Continuous Skip-Gram Model. </li>
-<li>The CBOW model learns the embedding by predicting the current word based on its context</li>
-<li>The continuous skip-gram model learns by predicting the surrounding words given a current word</li>
-<li>Both models are focused on learning about words given their local usage context, where the context is defined by a window of neighboring words</li>
-<li>The key benefit of the approach is that high-quality word embeddings can be learned efficiently (low space and time complexity), allowing larger embeddings to be learned (more dimensions) from much larger corpora of text (billions of words).</li>
-</ul>
-</li>
-</ul>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
@@ -13495,20 +13437,134 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT *</span>
-<span class="s2">FROM siretisation.list_pairs_mots_insee_inpi</span>
+<span class="s2">CREATE TABLE siretisation.ets_insee_inpi_var_group_max</span>
+<span class="s2">WITH (</span>
+<span class="s2">  format=&#39;PARQUET&#39;</span>
+<span class="s2">) AS</span>
+<span class="s2">WITH create_var AS (</span>
+<span class="s2">SELECT </span>
+<span class="s2">row_id,</span>
+<span class="s2">index_id,</span>
+<span class="s2">siren, </span>
+<span class="s2">siret, </span>
+<span class="s2">CAST(</span>
+<span class="s2">      cardinality(</span>
+<span class="s2">        array_distinct(</span>
+<span class="s2">          array_intersect(</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">          )</span>
+<span class="s2">        )</span>
+<span class="s2">      ) AS DECIMAL(10, 2)</span>
+<span class="s2">    ) as intersection, </span>
+<span class="s2">    CAST(</span>
+<span class="s2">      cardinality(</span>
+<span class="s2">        array_distinct(</span>
+<span class="s2">          array_union(</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">          )</span>
+<span class="s2">        )</span>
+<span class="s2">      ) AS DECIMAL(10, 2)</span>
+<span class="s2">    ) as union_, </span>
+<span class="s2">    CAST(</span>
+<span class="s2">      cardinality(</span>
+<span class="s2">        array_distinct(</span>
+<span class="s2">          array_intersect(</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">          )</span>
+<span class="s2">        )</span>
+<span class="s2">      ) AS DECIMAL(10, 2)</span>
+<span class="s2">    )/ CAST(</span>
+<span class="s2">      cardinality(</span>
+<span class="s2">        array_distinct(</span>
+<span class="s2">          array_union(</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">          )</span>
+<span class="s2">        )</span>
+<span class="s2">      ) AS DECIMAL(10, 2)</span>
+<span class="s2">    ) as pct_intersection</span>
+<span class="s2">    FROM siretisation.ets_insee_inpi</span>
+<span class="s2">)</span>
+<span class="s2">SELECT </span>
+<span class="s2">row_id,</span>
+<span class="s2">create_var.index_id,</span>
+<span class="s2">create_var.siren,</span>
+<span class="s2">create_var.siret,</span>
+<span class="s2">count_inpi_index_id_siret,</span>
+<span class="s2">count_inpi_siren_siret,</span>
+<span class="s2">create_var.pct_intersection,</span>
+<span class="s2">index_id_max_intersection</span>
+<span class="s2">FROM </span>
+<span class="s2">    create_var</span>
+<span class="s2">LEFT JOIN (</span>
+<span class="s2">          SELECT </span>
+<span class="s2">            index_id, </span>
+<span class="s2">            COUNT(</span>
+<span class="s2">              DISTINCT(siret)</span>
+<span class="s2">            ) AS count_inpi_index_id_siret </span>
+<span class="s2">          FROM </span>
+<span class="s2">            create_var </span>
+<span class="s2">          GROUP BY </span>
+<span class="s2">            index_id</span>
+<span class="s2">        ) AS count_rows_index_id_siret ON create_var.index_id = count_rows_index_id_siret.index_id </span>
+<span class="s2">        LEFT JOIN (</span>
+<span class="s2">          SELECT </span>
+<span class="s2">            siren, </span>
+<span class="s2">            COUNT(</span>
+<span class="s2">              DISTINCT(siret)</span>
+<span class="s2">            ) AS count_inpi_siren_siret </span>
+<span class="s2">          FROM </span>
+<span class="s2">            create_var </span>
+<span class="s2">          GROUP BY </span>
+<span class="s2">            siren</span>
+<span class="s2">        ) AS count_rows_sequence ON create_var.siren = count_rows_sequence.siren </span>
+<span class="s2">        LEFT JOIN (</span>
+<span class="s2">          SELECT </span>
+<span class="s2">            index_id, </span>
+<span class="s2">            MAX(pct_intersection) AS index_id_max_intersection </span>
+<span class="s2">          FROM </span>
+<span class="s2">            create_var </span>
+<span class="s2">          GROUP BY </span>
+<span class="s2">            index_id</span>
+<span class="s2">        ) AS is_index_id_index_id_max_intersection ON create_var.index_id = is_index_id_index_id_max_intersection.index_id</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="c1">### run query</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
-        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span><span class="p">,</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;list_pairs&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="c1">#destination_key = &#39;INPI/list_pairs_mots_insee_inpi&#39; ### Add destination key if need to copy output</span>
-    <span class="p">)</span>
+
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[6]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 49, 39, 955000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 8, 16, 49, 56, 825000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;14caf33c-7ad7-44de-89f8-0d4b1fbdb8a9&#39;}</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -13518,7 +13574,19 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">output</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cnt&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT *</span>
+<span class="s2">FROM siretisation.ets_insee_inpi_var_group_max</span>
+<span class="s2">LIMIT 10</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_US_max&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -13554,60 +13622,313 @@ div#notebook {
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>unique_combinaition</th>
-      <th>cnt</th>
+      <th>row_id</th>
+      <th>index_id</th>
+      <th>siren</th>
+      <th>siret</th>
+      <th>count_inpi_index_id_siret</th>
+      <th>count_inpi_siren_siret</th>
+      <th>pct_intersection</th>
+      <th>index_id_max_intersection</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>502305</th>
-      <td>[RUE, VICTOR, HUGO]</td>
-      <td>16152</td>
+      <th>0</th>
+      <td>6</td>
+      <td>144539</td>
+      <td>876350406</td>
+      <td>87635040600040</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>469482</th>
-      <td>[BOURG]</td>
-      <td>17364</td>
+      <th>1</th>
+      <td>7</td>
+      <td>144539</td>
+      <td>876350406</td>
+      <td>87635040600032</td>
+      <td>2</td>
+      <td>2</td>
+      <td>0.75</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>469449</th>
-      <td>[AVENUE, GENERAL, GAULLE]</td>
-      <td>18678</td>
+      <th>2</th>
+      <td>65</td>
+      <td>11112986</td>
+      <td>877525139</td>
+      <td>87752513900011</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>227409</th>
-      <td>[RUE, PARIS]</td>
-      <td>22539</td>
+      <th>3</th>
+      <td>79</td>
+      <td>5296955</td>
+      <td>877526293</td>
+      <td>87752629300015</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>538737</th>
-      <td>[AVENUE, JEAN, JAURES]</td>
-      <td>23467</td>
+      <th>4</th>
+      <td>129</td>
+      <td>5555293</td>
+      <td>877530147</td>
+      <td>87753014700017</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>367091</th>
-      <td>[AVENUE, REPUBLIQUE]</td>
-      <td>23964</td>
+      <th>5</th>
+      <td>164</td>
+      <td>2988007</td>
+      <td>877528620</td>
+      <td>87752862000017</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>227425</th>
-      <td>[RUE, JEAN, JAURES]</td>
-      <td>24128</td>
+      <th>6</th>
+      <td>166</td>
+      <td>6177853</td>
+      <td>877528620</td>
+      <td>87752862000017</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>480836</th>
-      <td>[]</td>
-      <td>27033</td>
+      <th>7</th>
+      <td>179</td>
+      <td>6823729</td>
+      <td>877529487</td>
+      <td>87752948700010</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>502291</th>
-      <td>[RUE, REPUBLIQUE]</td>
-      <td>33743</td>
+      <th>8</th>
+      <td>401</td>
+      <td>10695441</td>
+      <td>877577296</td>
+      <td>87757729600016</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>258668</th>
-      <td>[GRANDE, RUE]</td>
-      <td>38513</td>
+      <th>9</th>
+      <td>451</td>
+      <td>10695460</td>
+      <td>877582940</td>
+      <td>87758294000012</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0.75</td>
+      <td>0.75</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Test-acceptance">Test acceptance<a class="anchor-link" href="#Test-acceptance">&#182;</a></h1><ol>
+<li>Vérifier que le nombre de lignes est indentique avant et après la création des variables</li>
+<li>Compter le nombre de lignes par possibilité pour <code>count_inpi_index_id_siret</code> et <code>count_inpi_siren_siret</code> -&gt; TOP 10</li>
+<li>Donner la distribution de  <code>pct_intersection</code> et <code>index_id_max_intersection</code><ul>
+<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
+</ul>
+</li>
+<li>Donner la distribution de <code>pct_intersection</code> par possibilité pour <code>count_inpi_index_id_siret</code> et <code>count_inpi_siren_siret</code><ul>
+<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
+<li>TOP 10</li>
+<li>BOTTOM 10</li>
+</ul>
+</li>
+<li>Donner la distribution de <code>index_id_max_intersection</code> par possibilité pour <code>count_inpi_index_id_siret</code> et <code>count_inpi_siren_siret</code><ul>
+<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
+<li>TOP 10</li>
+<li>BOTTOM 10</li>
+</ul>
+</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="1.-V&#233;rifier-que-le-nombre-de-lignes-est-indentique-avant-et-apr&#232;s-la-cr&#233;ation-des-variables">1. V&#233;rifier que le nombre de lignes est indentique avant et apr&#232;s la cr&#233;ation des variables<a class="anchor-link" href="#1.-V&#233;rifier-que-le-nombre-de-lignes-est-indentique-avant-et-apr&#232;s-la-cr&#233;ation-des-variables">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT COUNT(*)</span>
+<span class="s2">FROM siretisation.ets_insee_inpi_var_group_max</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[9]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>_col0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>11650040</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT COUNT(*)</span>
+<span class="s2">FROM siretisation.ets_insee_inpi_var_group_max</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[10]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>_col0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>11650040</td>
     </tr>
   </tbody>
 </table>
@@ -13623,65 +13944,38 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Train-model">Train model<a class="anchor-link" href="#Train-model">&#182;</a></h2><p>Il y a plusieurs paramètres dans la librairie que nous allons utilisé, voici la configuration que nous allons prendre:</p>
-<ul>
-<li>size: (default 100) The number of dimensions of the embedding, e.g. the length of the dense vector to represent each token (word).</li>
-<li>window: (default 5) The maximum distance between a target word and words around the target word.</li>
-<li>min_count: (default 5) The minimum count of words to consider when training the model; words with an occurrence less than this count will be ignored.</li>
-<li>workers: (default 3) The number of threads to use while training.</li>
-<li>sg: (default 0 or CBOW) The training algorithm, either CBOW (0) or skip gram (1).</li>
-</ul>
+<h2 id="2.-Compter-le-nombre-de-lignes-par-possibilit&#233;-pour-count_inpi_index_id_siret-et-count_inpi_siren_siret">2. Compter le nombre de lignes par possibilit&#233; pour <code>count_inpi_index_id_siret</code> et <code>count_inpi_siren_siret</code><a class="anchor-link" href="#2.-Compter-le-nombre-de-lignes-par-possibilit&#233;-pour-count_inpi_index_id_siret-et-count_inpi_siren_siret">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>count_inpi_index_id_siret</code></p>
 
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">gensim.models</span> <span class="kn">import</span> <span class="n">Word2Vec</span>
-<span class="kn">import</span> <span class="nn">re</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">basic_clean</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[^\w\s]|[|]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_text</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s1">&#39;unique_combinaition&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">basic_clean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_text</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT count_inpi_index_id_siret, COUNT(*) as cnt_count_inpi_index_id_siret</span>
+<span class="s2">FROM siretisation.ets_insee_inpi_var_group_max</span>
+<span class="s2">GROUP BY count_inpi_index_id_siret</span>
+<span class="s2">ORDER BY cnt_count_inpi_index_id_siret DESC</span>
+<span class="s2">LIMIT 10</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;cnt_count_inpi_index_id_siret&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -13698,14 +13992,83 @@ div#notebook {
 
 
 
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-<div class="output_text output_subarea output_execute_result">
-<pre>0                          [BOULEVARD, ACIERIES, VILLAGE, AUTOMOBILES, RABATAU]
-1    [AVENUE, EME, RESIDENCE, FLEUR, MAI, SPAHIS, QUARTIER, ST, ROCH, DEUXIEME]
-2                               [PISCINE, RIBERAC, BIS, PLACE, CHARLES, GAULLE]
-3                                      [SAINT, HILAIRE, FLORENT, GRANDE, PIECE]
-4                                                                [FERME, GEOLE]
-Name: unique_combinaition, dtype: object</pre>
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count_inpi_index_id_siret</th>
+      <th>cnt_count_inpi_index_id_siret</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>8532907</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>2000038</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>506094</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>173836</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>77360</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6</td>
+      <td>43578</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>7</td>
+      <td>30562</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>8</td>
+      <td>24064</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>9</td>
+      <td>18396</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>10</td>
+      <td>15380</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 </div>
 
 </div>
@@ -13713,64 +14076,24 @@ Name: unique_combinaition, dtype: object</pre>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Pour le POC, nous utilisons les paramètres par défault</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%%time</span> 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Word2Vec</span><span class="p">(</span><span class="n">df_text</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-                 <span class="n">size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
-                 <span class="n">window</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-                 <span class="n">min_count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-                 <span class="n">sg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Wall time: 1min 44s
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Nous devons calculer la similarité entre les mots communs dans l'adresse INPI/INSEE, donc nous pouvons utiliser les poids du modèles et ensuite calculer la similarité avec la méthode du cosine.</p>
-<p>La librarie <code>gensim</code> permet d'exporter les poids en <code>.txt</code>. Toutefois, il n'est pas concevable de calculer l'ensembles des similarités entre toutes les occurences (environ 90.000), donc lors des traitements dans Athena, nous calculerons le cosines à la demande.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Sauvegarde l'ensemble des poids dans des colonnes</p>
+<p><code>count_inpi_siren_siret</code></p>
 
 </div>
 </div>
@@ -13780,10 +14103,118 @@ Name: unique_combinaition, dtype: object</pre>
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">wv</span><span class="o">.</span><span class="n">save_word2vec_format</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100.txt&#39;</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT count_inpi_siren_siret, COUNT(*) as cnt_count_inpi_siren_siret</span>
+<span class="s2">FROM siretisation.ets_insee_inpi_var_group_max </span>
+<span class="s2">GROUP BY count_inpi_siren_siret</span>
+<span class="s2">ORDER BY cnt_count_inpi_siren_siret DESC</span>
+<span class="s2">LIMIT 10</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;cnt_count_inpi_siren_siret&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[13]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count_inpi_siren_siret</th>
+      <th>cnt_count_inpi_siren_siret</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>7293996</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>2373894</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>683341</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>254195</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>119831</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6</td>
+      <td>66526</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>7</td>
+      <td>46628</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>10925</td>
+      <td>40195</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>8</td>
+      <td>31532</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>9</td>
+      <td>24909</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -13793,35 +14224,7 @@ Name: unique_combinaition, dtype: object</pre>
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">list_header</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Words&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">)))</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100.txt&#39;</span><span class="p">,</span>
-                            <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-                           <span class="n">header</span><span class="o">=</span> <span class="n">list_header</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_weights</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100_v2.csv&#39;</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>  
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
 </pre></div>
 
     </div>
@@ -13832,7 +14235,269 @@ Name: unique_combinaition, dtype: object</pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Le modèle se trouve à l'adresse suivante <a href="https://s3.console.aws.amazon.com/s3/buckets/calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V2?region=eu-west-3&amp;tab=overview">MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V2</a></p>
+<h2 id="3.-Donner-la-distribution-de--pct_intersection-et-index_id_max_intersection">3. Donner la distribution de  <code>pct_intersection</code> et <code>index_id_max_intersection</code><a class="anchor-link" href="#3.-Donner-la-distribution-de--pct_intersection-et-index_id_max_intersection">&#182;</a></h2><ul>
+<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>pct_intersection</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  </span>
+<span class="s2">  SELECT </span>
+<span class="s2">  MAP(</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
+<span class="s2">    approx_percentile(</span>
+<span class="s2">      pct_intersection,</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
+<span class="s2">    ) AS nest</span>
+<span class="s2">    FROM siretisation.ets_insee_inpi_var_group_max </span>
+<span class="s2">    ) </span>
+<span class="s2">    </span>
+<span class="s2">    SELECT </span>
+<span class="s2">    pct, </span>
+<span class="s2">    value AS  pct_intersection</span>
+<span class="s2">    FROM dataset</span>
+<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;dist_pct_intersection&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[15]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pct</th>
+      <th>pct_intersection</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.10</td>
+      <td>0.17</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.25</td>
+      <td>0.50</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.50</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.75</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.80</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.95</td>
+      <td>1.00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>index_id_max_intersection</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  </span>
+<span class="s2">  SELECT </span>
+<span class="s2">  MAP(</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
+<span class="s2">    approx_percentile(</span>
+<span class="s2">      index_id_max_intersection,</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
+<span class="s2">    ) AS nest</span>
+<span class="s2">    FROM siretisation.ets_insee_inpi_var_group_max </span>
+<span class="s2">    ) </span>
+<span class="s2">    </span>
+<span class="s2">    SELECT </span>
+<span class="s2">    pct, </span>
+<span class="s2">    value AS  index_id_max_intersection</span>
+<span class="s2">    FROM dataset</span>
+<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;dist_pct_intersection&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[16]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pct</th>
+      <th>index_id_max_intersection</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.10</td>
+      <td>0.5</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.25</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.50</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.75</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.80</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.95</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="4.-Donner-la-distribution-de-pct_intersection-par-possibilit&#233;-pour-count_inpi_index_id_siret-et-count_inpi_siren_siret">4. Donner la distribution de <code>pct_intersection</code> par possibilit&#233; pour <code>count_inpi_index_id_siret</code> et <code>count_inpi_siren_siret</code><a class="anchor-link" href="#4.-Donner-la-distribution-de-pct_intersection-par-possibilit&#233;-pour-count_inpi_index_id_siret-et-count_inpi_siren_siret">&#182;</a></h2><ul>
+<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
+<li>TOP 10</li>
+<li>BOTTOM 10</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>count_inpi_index_id_siret</code></p>
 
 </div>
 </div>
@@ -13842,60 +14507,207 @@ Name: unique_combinaition, dtype: object</pre>
 <div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">s3</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100_v2.csv&#39;</span><span class="p">,</span>
-               <span class="s1">&#39;MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V2&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  </span>
+<span class="s2">  SELECT </span>
+<span class="s2">  count_inpi_index_id_siret,</span>
+<span class="s2">  MAP(</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
+<span class="s2">    approx_percentile(</span>
+<span class="s2">      pct_intersection,</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
+<span class="s2">    ) AS nest</span>
+<span class="s2">    FROM siretisation.ets_insee_inpi_var_group_max  </span>
+<span class="s2">    GROUP BY count_inpi_index_id_siret</span>
+<span class="s2">    ) </span>
+<span class="s2">    </span>
+<span class="s2">    SELECT </span>
+<span class="s2">    count_inpi_index_id_siret,</span>
+<span class="s2">    pct, </span>
+<span class="s2">    value AS  pct_intersection</span>
+<span class="s2">    FROM dataset</span>
+<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;pct_count_inpi_index_id_siret&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Create-tables-weights">Create tables weights<a class="anchor-link" href="#Create-tables-weights">&#182;</a></h2><p>Athena ne peut pas créer des array float a partir de fichier csv, du coup on utilise la fonction concat. C'est une solution pour le poc.</p>
-<p>On créer une table temporaire qui contient l'ensemble des poids en colonnes list_mots_insee_inpi_word2vec_weights_temp puis on canct les colonnes dans la table list_mots_insee_inpi_word2vec_weights</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">top</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">CREATE EXTERNAL TABLE IF NOT EXISTS siretisation.weights_mots_insee_inpi_word2vec (</span>
-
-<span class="s2">`Words` string,</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">middle</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">99</span><span class="p">:</span>
-        <span class="n">middle</span> <span class="o">+=</span> <span class="s2">&quot;vec_</span><span class="si">{}</span><span class="s2"> float )&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">middle</span> <span class="o">+=</span> <span class="s2">&quot;vec_</span><span class="si">{}</span><span class="s2"> float,&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-<span class="n">bottom</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">ROW FORMAT SERDE &#39;org.apache.hadoop.hive.serde2.OpenCSVSerde&#39;</span>
-<span class="s2">    WITH SERDEPROPERTIES (</span>
-<span class="s2">   &#39;separatorChar&#39; = &#39;,&#39;,</span>
-<span class="s2">   &#39;quoteChar&#39; = &#39;&quot;&#39;</span>
-<span class="s2">   ) </span>
-<span class="s2">     LOCATION &#39;s3://calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V2&#39;</span>
-<span class="s2">     TBLPROPERTIES (&#39;has_encrypted_data&#39;=&#39;false&#39;,</span>
-<span class="s2">              &#39;skip.header.line.count&#39;=&#39;1&#39;);</span>
-<span class="s2">&quot;&quot;&quot;</span> 
-<span class="n">query</span> <span class="o">=</span> <span class="n">top</span> <span class="o">+</span> <span class="n">middle</span> <span class="o">+</span><span class="n">bottom</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
-        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span>
-    <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_index_id_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[18]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_index_id_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.0</td>
+      <td>0.09</td>
+      <td>0.56</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.25</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.22</td>
+      <td>0.86</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.20</td>
+      <td>0.60</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.20</td>
+      <td>0.50</td>
+      <td>0.75</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.17</td>
+      <td>0.44</td>
+      <td>0.67</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.17</td>
+      <td>0.33</td>
+      <td>0.50</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.13</td>
+      <td>0.33</td>
+      <td>0.50</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.13</td>
+      <td>0.33</td>
+      <td>0.36</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -13905,1201 +14717,10 @@ Name: unique_combinaition, dtype: object</pre>
 <div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT * FROM &quot;siretisation&quot;.&quot;weights_mots_insee_inpi_word2vec&quot; limit 10;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
-        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span><span class="p">,</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;weights&#39;</span>
-    <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[19]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>words</th>
-      <th>vec_0</th>
-      <th>vec_1</th>
-      <th>vec_2</th>
-      <th>vec_3</th>
-      <th>vec_4</th>
-      <th>vec_5</th>
-      <th>vec_6</th>
-      <th>vec_7</th>
-      <th>vec_8</th>
-      <th>vec_9</th>
-      <th>vec_10</th>
-      <th>vec_11</th>
-      <th>vec_12</th>
-      <th>vec_13</th>
-      <th>vec_14</th>
-      <th>vec_15</th>
-      <th>vec_16</th>
-      <th>vec_17</th>
-      <th>vec_18</th>
-      <th>vec_19</th>
-      <th>vec_20</th>
-      <th>vec_21</th>
-      <th>vec_22</th>
-      <th>vec_23</th>
-      <th>vec_24</th>
-      <th>vec_25</th>
-      <th>vec_26</th>
-      <th>vec_27</th>
-      <th>vec_28</th>
-      <th>vec_29</th>
-      <th>vec_30</th>
-      <th>vec_31</th>
-      <th>vec_32</th>
-      <th>vec_33</th>
-      <th>vec_34</th>
-      <th>vec_35</th>
-      <th>vec_36</th>
-      <th>vec_37</th>
-      <th>vec_38</th>
-      <th>vec_39</th>
-      <th>vec_40</th>
-      <th>vec_41</th>
-      <th>vec_42</th>
-      <th>vec_43</th>
-      <th>vec_44</th>
-      <th>vec_45</th>
-      <th>vec_46</th>
-      <th>vec_47</th>
-      <th>vec_48</th>
-      <th>vec_49</th>
-      <th>vec_50</th>
-      <th>vec_51</th>
-      <th>vec_52</th>
-      <th>vec_53</th>
-      <th>vec_54</th>
-      <th>vec_55</th>
-      <th>vec_56</th>
-      <th>vec_57</th>
-      <th>vec_58</th>
-      <th>vec_59</th>
-      <th>vec_60</th>
-      <th>vec_61</th>
-      <th>vec_62</th>
-      <th>vec_63</th>
-      <th>vec_64</th>
-      <th>vec_65</th>
-      <th>vec_66</th>
-      <th>vec_67</th>
-      <th>vec_68</th>
-      <th>vec_69</th>
-      <th>vec_70</th>
-      <th>vec_71</th>
-      <th>vec_72</th>
-      <th>vec_73</th>
-      <th>vec_74</th>
-      <th>vec_75</th>
-      <th>vec_76</th>
-      <th>vec_77</th>
-      <th>vec_78</th>
-      <th>vec_79</th>
-      <th>vec_80</th>
-      <th>vec_81</th>
-      <th>vec_82</th>
-      <th>vec_83</th>
-      <th>vec_84</th>
-      <th>vec_85</th>
-      <th>vec_86</th>
-      <th>vec_87</th>
-      <th>vec_88</th>
-      <th>vec_89</th>
-      <th>vec_90</th>
-      <th>vec_91</th>
-      <th>vec_92</th>
-      <th>vec_93</th>
-      <th>vec_94</th>
-      <th>vec_95</th>
-      <th>vec_96</th>
-      <th>vec_97</th>
-      <th>vec_98</th>
-      <th>vec_99</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>DOUTRELEAU</td>
-      <td>-0.026132</td>
-      <td>-0.010889</td>
-      <td>-0.032473</td>
-      <td>0.059826</td>
-      <td>-0.030980</td>
-      <td>0.080991</td>
-      <td>-0.000120</td>
-      <td>-0.053411</td>
-      <td>-0.087627</td>
-      <td>-0.013226</td>
-      <td>0.036255</td>
-      <td>-0.034997</td>
-      <td>0.048488</td>
-      <td>0.026667</td>
-      <td>0.012403</td>
-      <td>-0.050328</td>
-      <td>0.016382</td>
-      <td>-0.082216</td>
-      <td>0.007222</td>
-      <td>0.018097</td>
-      <td>0.145473</td>
-      <td>0.027729</td>
-      <td>0.036746</td>
-      <td>-0.007448</td>
-      <td>-0.019803</td>
-      <td>-0.082720</td>
-      <td>0.044373</td>
-      <td>-0.027278</td>
-      <td>-0.008955</td>
-      <td>-0.057189</td>
-      <td>0.104965</td>
-      <td>0.010834</td>
-      <td>0.087487</td>
-      <td>-0.013686</td>
-      <td>0.041348</td>
-      <td>0.004615</td>
-      <td>0.033564</td>
-      <td>0.069387</td>
-      <td>-0.033084</td>
-      <td>0.051824</td>
-      <td>0.062630</td>
-      <td>-0.021828</td>
-      <td>-0.034974</td>
-      <td>-0.068074</td>
-      <td>-0.045835</td>
-      <td>0.001363</td>
-      <td>0.031559</td>
-      <td>-0.033458</td>
-      <td>-0.059107</td>
-      <td>0.059995</td>
-      <td>0.002743</td>
-      <td>-0.005846</td>
-      <td>0.044039</td>
-      <td>0.024195</td>
-      <td>-0.027136</td>
-      <td>0.005776</td>
-      <td>0.062659</td>
-      <td>-0.027661</td>
-      <td>0.013521</td>
-      <td>-0.053474</td>
-      <td>0.009372</td>
-      <td>0.136980</td>
-      <td>-0.042479</td>
-      <td>0.016197</td>
-      <td>0.034274</td>
-      <td>-0.057603</td>
-      <td>-0.060018</td>
-      <td>0.053209</td>
-      <td>-0.030955</td>
-      <td>0.067786</td>
-      <td>-0.059621</td>
-      <td>0.034206</td>
-      <td>0.012956</td>
-      <td>-0.049542</td>
-      <td>-0.118800</td>
-      <td>-0.051752</td>
-      <td>-0.024670</td>
-      <td>0.002625</td>
-      <td>-0.024318</td>
-      <td>0.017567</td>
-      <td>-0.088506</td>
-      <td>0.048020</td>
-      <td>0.058950</td>
-      <td>0.005869</td>
-      <td>-0.013926</td>
-      <td>0.025276</td>
-      <td>0.063449</td>
-      <td>0.080256</td>
-      <td>-0.026274</td>
-      <td>-0.036670</td>
-      <td>0.027006</td>
-      <td>-0.011181</td>
-      <td>-0.027795</td>
-      <td>0.009470</td>
-      <td>-0.041556</td>
-      <td>-0.001952</td>
-      <td>0.027747</td>
-      <td>-0.030927</td>
-      <td>-0.091600</td>
-      <td>0.056873</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>BOUDERIEZ</td>
-      <td>0.023118</td>
-      <td>0.064848</td>
-      <td>-0.073779</td>
-      <td>-0.002849</td>
-      <td>-0.040049</td>
-      <td>0.040441</td>
-      <td>0.080513</td>
-      <td>-0.100977</td>
-      <td>-0.081182</td>
-      <td>-0.097453</td>
-      <td>0.096373</td>
-      <td>-0.131068</td>
-      <td>0.056222</td>
-      <td>0.119180</td>
-      <td>0.089546</td>
-      <td>0.036361</td>
-      <td>-0.111213</td>
-      <td>-0.150657</td>
-      <td>0.127758</td>
-      <td>0.026937</td>
-      <td>0.335948</td>
-      <td>0.085085</td>
-      <td>0.059315</td>
-      <td>0.065470</td>
-      <td>0.110209</td>
-      <td>-0.027618</td>
-      <td>-0.068818</td>
-      <td>-0.013440</td>
-      <td>-0.188212</td>
-      <td>0.013149</td>
-      <td>-0.038010</td>
-      <td>0.097716</td>
-      <td>0.107218</td>
-      <td>-0.081850</td>
-      <td>0.023572</td>
-      <td>-0.158322</td>
-      <td>0.047646</td>
-      <td>0.199930</td>
-      <td>-0.110828</td>
-      <td>0.117950</td>
-      <td>0.046087</td>
-      <td>0.030170</td>
-      <td>0.102344</td>
-      <td>-0.049979</td>
-      <td>0.039113</td>
-      <td>0.096025</td>
-      <td>-0.036941</td>
-      <td>0.016250</td>
-      <td>-0.029386</td>
-      <td>0.048194</td>
-      <td>-0.089783</td>
-      <td>-0.001889</td>
-      <td>0.110064</td>
-      <td>0.127164</td>
-      <td>0.077937</td>
-      <td>-0.162773</td>
-      <td>0.280151</td>
-      <td>0.046583</td>
-      <td>0.013610</td>
-      <td>-0.062894</td>
-      <td>0.004525</td>
-      <td>0.099145</td>
-      <td>0.045407</td>
-      <td>0.068658</td>
-      <td>0.275568</td>
-      <td>-0.122655</td>
-      <td>0.021536</td>
-      <td>0.000320</td>
-      <td>0.162035</td>
-      <td>0.092596</td>
-      <td>-0.065385</td>
-      <td>0.036206</td>
-      <td>0.108172</td>
-      <td>-0.081413</td>
-      <td>-0.161232</td>
-      <td>-0.012821</td>
-      <td>0.080202</td>
-      <td>0.126936</td>
-      <td>0.035610</td>
-      <td>0.051194</td>
-      <td>0.001701</td>
-      <td>0.274268</td>
-      <td>-0.060936</td>
-      <td>0.158509</td>
-      <td>0.029688</td>
-      <td>0.194945</td>
-      <td>0.016074</td>
-      <td>0.063053</td>
-      <td>0.001696</td>
-      <td>-0.080085</td>
-      <td>-0.016957</td>
-      <td>-0.152537</td>
-      <td>-0.085319</td>
-      <td>0.020638</td>
-      <td>-0.083133</td>
-      <td>0.022220</td>
-      <td>0.021032</td>
-      <td>-0.102518</td>
-      <td>0.025876</td>
-      <td>0.000794</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>OLAGNE</td>
-      <td>0.076247</td>
-      <td>-0.079973</td>
-      <td>-0.105701</td>
-      <td>-0.034261</td>
-      <td>-0.143613</td>
-      <td>-0.001851</td>
-      <td>-0.028794</td>
-      <td>-0.088657</td>
-      <td>-0.098295</td>
-      <td>-0.035708</td>
-      <td>0.070601</td>
-      <td>0.048108</td>
-      <td>0.067016</td>
-      <td>0.173262</td>
-      <td>0.065705</td>
-      <td>-0.011582</td>
-      <td>-0.023014</td>
-      <td>0.088785</td>
-      <td>0.045287</td>
-      <td>0.109451</td>
-      <td>0.007971</td>
-      <td>0.060060</td>
-      <td>-0.010091</td>
-      <td>0.047171</td>
-      <td>-0.039157</td>
-      <td>0.015362</td>
-      <td>0.108564</td>
-      <td>0.006055</td>
-      <td>-0.072919</td>
-      <td>-0.056270</td>
-      <td>0.165425</td>
-      <td>-0.063284</td>
-      <td>-0.043477</td>
-      <td>0.046635</td>
-      <td>-0.024636</td>
-      <td>0.125661</td>
-      <td>-0.017754</td>
-      <td>0.132822</td>
-      <td>-0.043964</td>
-      <td>-0.071379</td>
-      <td>0.020575</td>
-      <td>-0.031044</td>
-      <td>-0.096647</td>
-      <td>-0.029025</td>
-      <td>-0.028521</td>
-      <td>0.049468</td>
-      <td>-0.091156</td>
-      <td>-0.007665</td>
-      <td>-0.071641</td>
-      <td>0.167431</td>
-      <td>-0.026155</td>
-      <td>0.000588</td>
-      <td>0.064516</td>
-      <td>-0.050278</td>
-      <td>-0.005749</td>
-      <td>-0.019467</td>
-      <td>-0.022619</td>
-      <td>-0.106692</td>
-      <td>-0.033478</td>
-      <td>-0.065795</td>
-      <td>-0.170755</td>
-      <td>0.044081</td>
-      <td>-0.038417</td>
-      <td>0.000459</td>
-      <td>0.070909</td>
-      <td>-0.071354</td>
-      <td>-0.143049</td>
-      <td>0.014371</td>
-      <td>-0.101361</td>
-      <td>0.011177</td>
-      <td>-0.119538</td>
-      <td>-0.035230</td>
-      <td>-0.008689</td>
-      <td>-0.099743</td>
-      <td>-0.124880</td>
-      <td>0.002313</td>
-      <td>0.013054</td>
-      <td>0.036231</td>
-      <td>-0.013902</td>
-      <td>0.046047</td>
-      <td>-0.083505</td>
-      <td>-0.047219</td>
-      <td>-0.021468</td>
-      <td>-0.080987</td>
-      <td>-0.100553</td>
-      <td>0.071370</td>
-      <td>0.079315</td>
-      <td>0.212197</td>
-      <td>-0.000527</td>
-      <td>0.040265</td>
-      <td>-0.003678</td>
-      <td>-0.036631</td>
-      <td>0.073330</td>
-      <td>-0.007622</td>
-      <td>-0.051006</td>
-      <td>-0.094662</td>
-      <td>0.051484</td>
-      <td>-0.082223</td>
-      <td>-0.082938</td>
-      <td>0.041079</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>TOUZAIN</td>
-      <td>0.041241</td>
-      <td>0.062496</td>
-      <td>-0.044747</td>
-      <td>0.053878</td>
-      <td>-0.011131</td>
-      <td>0.059894</td>
-      <td>-0.009551</td>
-      <td>0.009505</td>
-      <td>-0.056935</td>
-      <td>0.043603</td>
-      <td>0.008932</td>
-      <td>-0.071002</td>
-      <td>0.002062</td>
-      <td>0.026864</td>
-      <td>0.034391</td>
-      <td>-0.052291</td>
-      <td>0.089702</td>
-      <td>-0.042730</td>
-      <td>0.080876</td>
-      <td>0.013442</td>
-      <td>0.077374</td>
-      <td>0.002300</td>
-      <td>0.034045</td>
-      <td>0.059658</td>
-      <td>0.045086</td>
-      <td>-0.018135</td>
-      <td>0.044205</td>
-      <td>-0.045964</td>
-      <td>0.006626</td>
-      <td>-0.025995</td>
-      <td>0.074466</td>
-      <td>0.005574</td>
-      <td>0.030409</td>
-      <td>-0.061415</td>
-      <td>0.092657</td>
-      <td>0.053223</td>
-      <td>-0.008730</td>
-      <td>0.005612</td>
-      <td>-0.066925</td>
-      <td>0.089621</td>
-      <td>0.040426</td>
-      <td>0.009950</td>
-      <td>0.014538</td>
-      <td>0.021876</td>
-      <td>0.006060</td>
-      <td>-0.073695</td>
-      <td>0.034966</td>
-      <td>-0.047059</td>
-      <td>-0.033874</td>
-      <td>0.022293</td>
-      <td>0.014087</td>
-      <td>-0.050737</td>
-      <td>0.075068</td>
-      <td>0.014742</td>
-      <td>-0.002561</td>
-      <td>-0.046992</td>
-      <td>0.128108</td>
-      <td>0.049661</td>
-      <td>-0.041579</td>
-      <td>0.007721</td>
-      <td>-0.004848</td>
-      <td>0.066518</td>
-      <td>0.001074</td>
-      <td>-0.050573</td>
-      <td>0.047314</td>
-      <td>0.011721</td>
-      <td>0.038757</td>
-      <td>0.010217</td>
-      <td>0.032456</td>
-      <td>0.028995</td>
-      <td>-0.036033</td>
-      <td>0.058617</td>
-      <td>-0.038509</td>
-      <td>-0.040463</td>
-      <td>-0.064479</td>
-      <td>-0.127819</td>
-      <td>-0.038025</td>
-      <td>-0.141276</td>
-      <td>-0.009929</td>
-      <td>0.006842</td>
-      <td>-0.043989</td>
-      <td>-0.034954</td>
-      <td>0.050431</td>
-      <td>0.043701</td>
-      <td>0.032831</td>
-      <td>0.027842</td>
-      <td>-0.008066</td>
-      <td>0.063180</td>
-      <td>-0.020199</td>
-      <td>0.062751</td>
-      <td>-0.011192</td>
-      <td>0.047470</td>
-      <td>-0.079980</td>
-      <td>-0.025868</td>
-      <td>0.003771</td>
-      <td>0.012553</td>
-      <td>0.040073</td>
-      <td>-0.046542</td>
-      <td>-0.033311</td>
-      <td>0.030659</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>VAUGADELAND</td>
-      <td>-0.006085</td>
-      <td>-0.004367</td>
-      <td>-0.061930</td>
-      <td>0.012277</td>
-      <td>-0.031091</td>
-      <td>0.084352</td>
-      <td>0.018121</td>
-      <td>-0.049062</td>
-      <td>-0.077199</td>
-      <td>0.025465</td>
-      <td>0.025115</td>
-      <td>-0.143987</td>
-      <td>0.022391</td>
-      <td>-0.006069</td>
-      <td>0.067131</td>
-      <td>-0.098602</td>
-      <td>-0.003615</td>
-      <td>-0.103770</td>
-      <td>0.052187</td>
-      <td>-0.098745</td>
-      <td>0.157200</td>
-      <td>-0.017943</td>
-      <td>0.047264</td>
-      <td>-0.075827</td>
-      <td>0.004712</td>
-      <td>-0.068395</td>
-      <td>0.010915</td>
-      <td>-0.046254</td>
-      <td>-0.034555</td>
-      <td>-0.012039</td>
-      <td>0.101371</td>
-      <td>0.107609</td>
-      <td>0.084516</td>
-      <td>-0.033719</td>
-      <td>0.168496</td>
-      <td>0.089601</td>
-      <td>0.012937</td>
-      <td>0.058957</td>
-      <td>-0.121341</td>
-      <td>0.141479</td>
-      <td>-0.001969</td>
-      <td>-0.048393</td>
-      <td>-0.074131</td>
-      <td>-0.062473</td>
-      <td>0.029840</td>
-      <td>-0.022434</td>
-      <td>0.023260</td>
-      <td>-0.027999</td>
-      <td>-0.061418</td>
-      <td>0.073311</td>
-      <td>-0.042492</td>
-      <td>-0.023876</td>
-      <td>0.066961</td>
-      <td>0.017494</td>
-      <td>-0.041786</td>
-      <td>-0.034962</td>
-      <td>0.057812</td>
-      <td>0.029793</td>
-      <td>-0.027010</td>
-      <td>-0.088280</td>
-      <td>-0.059674</td>
-      <td>0.206625</td>
-      <td>-0.018401</td>
-      <td>-0.051981</td>
-      <td>0.036339</td>
-      <td>-0.092891</td>
-      <td>-0.056361</td>
-      <td>0.040120</td>
-      <td>0.009934</td>
-      <td>0.082236</td>
-      <td>-0.012214</td>
-      <td>0.034118</td>
-      <td>0.055530</td>
-      <td>-0.071366</td>
-      <td>-0.162782</td>
-      <td>-0.096169</td>
-      <td>0.007802</td>
-      <td>-0.104934</td>
-      <td>-0.066606</td>
-      <td>0.013383</td>
-      <td>-0.132132</td>
-      <td>0.079193</td>
-      <td>0.025731</td>
-      <td>0.114127</td>
-      <td>-0.003619</td>
-      <td>0.024634</td>
-      <td>0.066705</td>
-      <td>0.164825</td>
-      <td>-0.088135</td>
-      <td>-0.016916</td>
-      <td>0.018057</td>
-      <td>0.054291</td>
-      <td>-0.063331</td>
-      <td>-0.038166</td>
-      <td>-0.069582</td>
-      <td>0.031805</td>
-      <td>0.020953</td>
-      <td>-0.033170</td>
-      <td>0.010852</td>
-      <td>0.149973</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>LONGUEFOSSE</td>
-      <td>0.006434</td>
-      <td>-0.049836</td>
-      <td>-0.039467</td>
-      <td>0.026701</td>
-      <td>-0.003735</td>
-      <td>0.101069</td>
-      <td>-0.019683</td>
-      <td>-0.044606</td>
-      <td>-0.053396</td>
-      <td>0.050615</td>
-      <td>-0.043230</td>
-      <td>0.014967</td>
-      <td>0.062451</td>
-      <td>0.031418</td>
-      <td>-0.009846</td>
-      <td>0.038299</td>
-      <td>-0.024797</td>
-      <td>0.001620</td>
-      <td>0.019547</td>
-      <td>0.042547</td>
-      <td>0.099416</td>
-      <td>0.043193</td>
-      <td>-0.012811</td>
-      <td>-0.057581</td>
-      <td>-0.059625</td>
-      <td>-0.079092</td>
-      <td>0.007730</td>
-      <td>-0.100814</td>
-      <td>-0.004158</td>
-      <td>-0.076890</td>
-      <td>0.043372</td>
-      <td>0.037939</td>
-      <td>0.057629</td>
-      <td>-0.085949</td>
-      <td>0.153228</td>
-      <td>0.004253</td>
-      <td>-0.047609</td>
-      <td>0.095127</td>
-      <td>-0.061253</td>
-      <td>0.013680</td>
-      <td>0.079130</td>
-      <td>-0.071925</td>
-      <td>0.004179</td>
-      <td>-0.085030</td>
-      <td>-0.028487</td>
-      <td>0.016413</td>
-      <td>-0.004576</td>
-      <td>-0.042612</td>
-      <td>-0.033623</td>
-      <td>0.052432</td>
-      <td>-0.041257</td>
-      <td>0.017642</td>
-      <td>0.002910</td>
-      <td>-0.078237</td>
-      <td>0.035588</td>
-      <td>-0.005403</td>
-      <td>0.053070</td>
-      <td>0.070284</td>
-      <td>0.006371</td>
-      <td>-0.038931</td>
-      <td>0.001771</td>
-      <td>0.129933</td>
-      <td>0.015354</td>
-      <td>-0.021271</td>
-      <td>0.012509</td>
-      <td>-0.071597</td>
-      <td>-0.054802</td>
-      <td>0.095358</td>
-      <td>-0.099323</td>
-      <td>0.021468</td>
-      <td>0.046780</td>
-      <td>0.061818</td>
-      <td>-0.011073</td>
-      <td>0.064946</td>
-      <td>-0.066399</td>
-      <td>-0.039154</td>
-      <td>0.033004</td>
-      <td>0.038781</td>
-      <td>-0.049059</td>
-      <td>-0.051070</td>
-      <td>-0.155769</td>
-      <td>0.014282</td>
-      <td>0.068676</td>
-      <td>0.054909</td>
-      <td>-0.001751</td>
-      <td>0.058784</td>
-      <td>-0.045584</td>
-      <td>0.059420</td>
-      <td>-0.010579</td>
-      <td>-0.019577</td>
-      <td>0.021479</td>
-      <td>-0.031780</td>
-      <td>-0.003856</td>
-      <td>0.054475</td>
-      <td>-0.034203</td>
-      <td>-0.003196</td>
-      <td>-0.024975</td>
-      <td>-0.056678</td>
-      <td>-0.037984</td>
-      <td>0.012314</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>LESIVY</td>
-      <td>0.011224</td>
-      <td>0.021073</td>
-      <td>-0.071101</td>
-      <td>0.009778</td>
-      <td>-0.063627</td>
-      <td>0.047086</td>
-      <td>0.000460</td>
-      <td>-0.035506</td>
-      <td>-0.098328</td>
-      <td>0.009678</td>
-      <td>0.002561</td>
-      <td>-0.059660</td>
-      <td>0.019510</td>
-      <td>-0.044176</td>
-      <td>0.026462</td>
-      <td>-0.005313</td>
-      <td>0.003503</td>
-      <td>-0.058766</td>
-      <td>0.026251</td>
-      <td>0.008231</td>
-      <td>0.092792</td>
-      <td>0.016625</td>
-      <td>0.035110</td>
-      <td>0.020389</td>
-      <td>-0.041321</td>
-      <td>-0.010918</td>
-      <td>0.016218</td>
-      <td>0.026775</td>
-      <td>-0.055652</td>
-      <td>-0.012049</td>
-      <td>0.066294</td>
-      <td>0.053907</td>
-      <td>0.061936</td>
-      <td>-0.057902</td>
-      <td>0.083663</td>
-      <td>0.038472</td>
-      <td>-0.005113</td>
-      <td>0.057187</td>
-      <td>-0.073458</td>
-      <td>0.100434</td>
-      <td>0.018202</td>
-      <td>0.012757</td>
-      <td>-0.035518</td>
-      <td>-0.065794</td>
-      <td>-0.036296</td>
-      <td>-0.051675</td>
-      <td>-0.014221</td>
-      <td>-0.043958</td>
-      <td>-0.105765</td>
-      <td>0.066968</td>
-      <td>0.005376</td>
-      <td>-0.083369</td>
-      <td>0.017093</td>
-      <td>-0.066226</td>
-      <td>-0.016543</td>
-      <td>0.007271</td>
-      <td>0.059737</td>
-      <td>-0.036838</td>
-      <td>0.002236</td>
-      <td>-0.062801</td>
-      <td>0.038789</td>
-      <td>0.107889</td>
-      <td>-0.066491</td>
-      <td>-0.055673</td>
-      <td>0.067872</td>
-      <td>-0.028443</td>
-      <td>-0.015451</td>
-      <td>0.088576</td>
-      <td>-0.004271</td>
-      <td>0.032118</td>
-      <td>-0.055656</td>
-      <td>0.050666</td>
-      <td>0.016302</td>
-      <td>-0.070426</td>
-      <td>-0.144102</td>
-      <td>-0.110628</td>
-      <td>-0.013699</td>
-      <td>0.015176</td>
-      <td>0.003888</td>
-      <td>0.001117</td>
-      <td>-0.064760</td>
-      <td>0.103582</td>
-      <td>0.001041</td>
-      <td>0.053212</td>
-      <td>0.017274</td>
-      <td>0.002936</td>
-      <td>0.031241</td>
-      <td>0.083022</td>
-      <td>-0.040099</td>
-      <td>-0.012047</td>
-      <td>-0.001123</td>
-      <td>-0.002461</td>
-      <td>-0.025327</td>
-      <td>0.048034</td>
-      <td>-0.023733</td>
-      <td>-0.051563</td>
-      <td>-0.020908</td>
-      <td>-0.071653</td>
-      <td>-0.029634</td>
-      <td>0.075035</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>JOPIC</td>
-      <td>-0.060900</td>
-      <td>-0.054663</td>
-      <td>-0.037839</td>
-      <td>-0.010149</td>
-      <td>-0.015900</td>
-      <td>0.136509</td>
-      <td>-0.024943</td>
-      <td>-0.057383</td>
-      <td>-0.177670</td>
-      <td>-0.021384</td>
-      <td>0.001442</td>
-      <td>-0.073962</td>
-      <td>0.027316</td>
-      <td>-0.125792</td>
-      <td>-0.047444</td>
-      <td>-0.043386</td>
-      <td>-0.036411</td>
-      <td>-0.068020</td>
-      <td>0.028182</td>
-      <td>0.024287</td>
-      <td>0.130560</td>
-      <td>0.008831</td>
-      <td>-0.013216</td>
-      <td>0.059709</td>
-      <td>-0.071877</td>
-      <td>-0.091976</td>
-      <td>0.061318</td>
-      <td>0.059346</td>
-      <td>-0.021359</td>
-      <td>-0.060442</td>
-      <td>0.099440</td>
-      <td>0.078786</td>
-      <td>0.065005</td>
-      <td>-0.069834</td>
-      <td>0.127756</td>
-      <td>0.031115</td>
-      <td>-0.040815</td>
-      <td>0.108530</td>
-      <td>-0.172455</td>
-      <td>0.107570</td>
-      <td>0.009225</td>
-      <td>0.029953</td>
-      <td>-0.099647</td>
-      <td>-0.049902</td>
-      <td>-0.086915</td>
-      <td>-0.089040</td>
-      <td>0.018129</td>
-      <td>-0.070185</td>
-      <td>-0.126849</td>
-      <td>0.120156</td>
-      <td>-0.038701</td>
-      <td>-0.007528</td>
-      <td>0.047746</td>
-      <td>-0.045762</td>
-      <td>-0.061644</td>
-      <td>-0.025617</td>
-      <td>0.108402</td>
-      <td>-0.017107</td>
-      <td>0.004456</td>
-      <td>-0.065571</td>
-      <td>0.019792</td>
-      <td>0.097400</td>
-      <td>-0.087266</td>
-      <td>-0.100798</td>
-      <td>0.152242</td>
-      <td>-0.047385</td>
-      <td>0.013925</td>
-      <td>0.038890</td>
-      <td>0.043500</td>
-      <td>-0.023948</td>
-      <td>-0.074992</td>
-      <td>0.053913</td>
-      <td>-0.012755</td>
-      <td>-0.095412</td>
-      <td>-0.128154</td>
-      <td>-0.106958</td>
-      <td>-0.077745</td>
-      <td>0.003116</td>
-      <td>0.029986</td>
-      <td>-0.094067</td>
-      <td>-0.143655</td>
-      <td>0.073016</td>
-      <td>0.082843</td>
-      <td>-0.013773</td>
-      <td>0.026919</td>
-      <td>0.006811</td>
-      <td>0.002657</td>
-      <td>0.055996</td>
-      <td>-0.072625</td>
-      <td>-0.031050</td>
-      <td>-0.015253</td>
-      <td>0.126815</td>
-      <td>-0.022167</td>
-      <td>0.006726</td>
-      <td>-0.007589</td>
-      <td>-0.032712</td>
-      <td>-0.027050</td>
-      <td>-0.120458</td>
-      <td>-0.047626</td>
-      <td>0.126026</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>GOURSOLLES</td>
-      <td>-0.006493</td>
-      <td>0.001580</td>
-      <td>-0.003863</td>
-      <td>0.028111</td>
-      <td>0.030045</td>
-      <td>0.042615</td>
-      <td>0.002134</td>
-      <td>-0.036274</td>
-      <td>-0.049385</td>
-      <td>0.051854</td>
-      <td>-0.001828</td>
-      <td>-0.077961</td>
-      <td>0.053593</td>
-      <td>0.027465</td>
-      <td>0.015271</td>
-      <td>-0.080954</td>
-      <td>0.036818</td>
-      <td>-0.087847</td>
-      <td>0.020436</td>
-      <td>-0.034358</td>
-      <td>0.104224</td>
-      <td>0.045065</td>
-      <td>0.002785</td>
-      <td>-0.058129</td>
-      <td>-0.004403</td>
-      <td>-0.028827</td>
-      <td>0.011050</td>
-      <td>-0.022610</td>
-      <td>0.009696</td>
-      <td>-0.017509</td>
-      <td>0.060109</td>
-      <td>0.055306</td>
-      <td>0.073237</td>
-      <td>-0.052795</td>
-      <td>0.100013</td>
-      <td>0.015169</td>
-      <td>0.063179</td>
-      <td>0.021267</td>
-      <td>-0.072801</td>
-      <td>0.097044</td>
-      <td>0.037676</td>
-      <td>-0.025319</td>
-      <td>-0.023559</td>
-      <td>-0.025544</td>
-      <td>0.013510</td>
-      <td>0.006363</td>
-      <td>0.026503</td>
-      <td>-0.022710</td>
-      <td>-0.028808</td>
-      <td>0.035577</td>
-      <td>-0.069642</td>
-      <td>-0.013452</td>
-      <td>0.030257</td>
-      <td>0.028989</td>
-      <td>-0.015458</td>
-      <td>-0.027892</td>
-      <td>0.034132</td>
-      <td>0.001393</td>
-      <td>0.012683</td>
-      <td>-0.056212</td>
-      <td>0.008492</td>
-      <td>0.138976</td>
-      <td>-0.058128</td>
-      <td>0.015367</td>
-      <td>0.033177</td>
-      <td>-0.083280</td>
-      <td>-0.002911</td>
-      <td>0.021296</td>
-      <td>-0.006672</td>
-      <td>0.040396</td>
-      <td>-0.048172</td>
-      <td>-0.001506</td>
-      <td>0.027846</td>
-      <td>-0.022419</td>
-      <td>-0.091635</td>
-      <td>-0.044287</td>
-      <td>0.007469</td>
-      <td>-0.071359</td>
-      <td>-0.034196</td>
-      <td>0.029889</td>
-      <td>-0.041779</td>
-      <td>0.012998</td>
-      <td>0.013978</td>
-      <td>0.057769</td>
-      <td>0.000252</td>
-      <td>0.056597</td>
-      <td>0.072070</td>
-      <td>0.118250</td>
-      <td>-0.061913</td>
-      <td>-0.059372</td>
-      <td>0.068231</td>
-      <td>0.037816</td>
-      <td>-0.030263</td>
-      <td>0.028879</td>
-      <td>-0.045167</td>
-      <td>0.003381</td>
-      <td>-0.021981</td>
-      <td>-0.057879</td>
-      <td>-0.076507</td>
-      <td>0.106655</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>MONINS</td>
-      <td>-0.017085</td>
-      <td>-0.009204</td>
-      <td>-0.017051</td>
-      <td>0.018324</td>
-      <td>-0.008303</td>
-      <td>0.016703</td>
-      <td>0.031806</td>
-      <td>-0.013468</td>
-      <td>-0.086210</td>
-      <td>0.027436</td>
-      <td>-0.015369</td>
-      <td>-0.088377</td>
-      <td>-0.000113</td>
-      <td>0.011935</td>
-      <td>0.002073</td>
-      <td>-0.054808</td>
-      <td>0.005586</td>
-      <td>-0.063400</td>
-      <td>0.064959</td>
-      <td>0.019205</td>
-      <td>0.007908</td>
-      <td>-0.021143</td>
-      <td>-0.001131</td>
-      <td>-0.009880</td>
-      <td>-0.010372</td>
-      <td>-0.004638</td>
-      <td>0.011914</td>
-      <td>0.018499</td>
-      <td>-0.009052</td>
-      <td>-0.015295</td>
-      <td>0.031729</td>
-      <td>0.008846</td>
-      <td>0.053885</td>
-      <td>-0.054824</td>
-      <td>0.037032</td>
-      <td>0.033848</td>
-      <td>0.023723</td>
-      <td>0.052624</td>
-      <td>-0.009130</td>
-      <td>0.072132</td>
-      <td>0.064406</td>
-      <td>-0.020229</td>
-      <td>-0.037828</td>
-      <td>-0.048176</td>
-      <td>-0.013601</td>
-      <td>0.002689</td>
-      <td>0.003016</td>
-      <td>0.008680</td>
-      <td>-0.066100</td>
-      <td>0.034216</td>
-      <td>-0.009995</td>
-      <td>-0.014994</td>
-      <td>0.019235</td>
-      <td>-0.034002</td>
-      <td>0.002366</td>
-      <td>-0.012718</td>
-      <td>0.027258</td>
-      <td>-0.027971</td>
-      <td>0.007551</td>
-      <td>-0.035711</td>
-      <td>-0.046338</td>
-      <td>0.116779</td>
-      <td>-0.030962</td>
-      <td>-0.000505</td>
-      <td>0.041005</td>
-      <td>-0.018872</td>
-      <td>-0.031401</td>
-      <td>0.020182</td>
-      <td>0.011998</td>
-      <td>0.051298</td>
-      <td>-0.066765</td>
-      <td>0.000243</td>
-      <td>0.021241</td>
-      <td>-0.072945</td>
-      <td>-0.079782</td>
-      <td>-0.042370</td>
-      <td>-0.033677</td>
-      <td>-0.069824</td>
-      <td>-0.028751</td>
-      <td>0.015913</td>
-      <td>-0.029092</td>
-      <td>0.042243</td>
-      <td>0.038201</td>
-      <td>0.038119</td>
-      <td>-0.004848</td>
-      <td>0.046294</td>
-      <td>0.048041</td>
-      <td>0.039174</td>
-      <td>0.011900</td>
-      <td>-0.018664</td>
-      <td>-0.038869</td>
-      <td>0.043312</td>
-      <td>-0.041671</td>
-      <td>-0.002247</td>
-      <td>-0.076073</td>
-      <td>0.008982</td>
-      <td>0.023217</td>
-      <td>-0.021840</td>
-      <td>-0.068339</td>
-      <td>0.093613</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -15109,53 +14730,8 @@ Name: unique_combinaition, dtype: object</pre>
 <div class="prompt input_prompt">In&nbsp;[20]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-
-<span class="s2">CREATE TABLE siretisation.list_weight_mots_insee_inpi_word2vec</span>
-<span class="s2">WITH (</span>
-<span class="s2">  format=&#39;PARQUET&#39;</span>
-<span class="s2">) AS</span>
-<span class="s2">SELECT words,</span>
-<span class="s2">CONCAT(</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">middle</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span><span class="mi">99</span><span class="p">:</span>
-        <span class="n">middle</span>  <span class="o">=</span> <span class="s2">&quot;ARRAY[vec_</span><span class="si">{}</span><span class="s2">]) as list_weights&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">middle</span>  <span class="o">=</span> <span class="s2">&quot;ARRAY[vec_</span><span class="si">{}</span><span class="s2">],&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="n">query</span> <span class="o">+=</span> <span class="n">middle</span>
-<span class="n">bottom</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">FROM &quot;siretisation&quot;.&quot;weights_mots_insee_inpi_word2vec&quot;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">query</span> <span class="o">+=</span> <span class="n">bottom</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;machine_learning&#39;</span><span class="p">,</span>
-        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span>
-    <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT * FROM &quot;siretisation&quot;.&quot;list_weight_mots_insee_inpi_word2vec&quot; limit 10;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
-        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span><span class="p">,</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;list_weights&#39;</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_index_id_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -15168,7 +14744,7 @@ Name: unique_combinaition, dtype: object</pre>
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[21]:</div>
+    <div class="prompt output_prompt">Out[20]:</div>
 
 
 
@@ -15183,33 +14759,129 @@ Name: unique_combinaition, dtype: object</pre>
         vertical-align: top;
     }
 
-    .dataframe thead th {
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
         text-align: right;
     }
 </style>
 <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
-      <th>words</th>
-      <th>list_weights</th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_index_id_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>ROCHASSON</td>
-      <td>[-0.15505515, 0.093883775, -0.033966012, 0.2534797, -0.06489318, 0.17946722, -0.054391373, 0.1016311, -0.16914685, 0.15937574, -0.04154642, 0.13341083, 0.15444687, 0.11288871, 0.031662054, -0.03529914, 0.14861926, -0.08413402, -0.13219091, -0.04097052, -0.10079224, -0.12634756, 0.12322913, -0.16285025, 0.16803114, 0.059177816, -0.09089909, 0.23779702, -0.050569154, 0.10448242, -0.18810362, 0.013763787, 0.07364392, -0.1560408, -0.09408261, 0.038302753, 0.03337482, 0.0054334085, 0.015338535, -0.22524305, -0.07768685, 0.047333047, 0.08550405, 0.19247411, -0.056106143, -0.11469632, 0.055166587, -0.1556934, 0.09193467, -0.052424625, 0.22873425, -0.09989267, 0.069525234, 0.16854934, -0.0995897, -0.10493309, 0.10701693, 0.16067299, 0.122143395, -0.19392642, -0.06129457, 0.05827555, 0.04654823, -0.19402282, 0.17169535, -0.0077373944, -0.08611253, 0.25907335, 0.11095033, 0.028004913, -0.05868213, 0.05519585, 0.2731603, 0.047333598, 0.016569557, -0.32400185, 0.23907462, -0.121745236, 0.027484305, -0.22236514, -0.05109907, 0.19931382, 0.0037267315, -0.26535425, 0.1311118, 0.17326622, -0.108341485, -0.064668395, 0.14913878, -0.07196956, -0.06652021, -0.14728852, 0.13347211, -0.01721949, -0.24913378, 0.057351574, 0.2052998, -0.13185878, 0.1686598, 0.11215024]</td>
+      <th>69</th>
+      <td>0.00</td>
+      <td>0.14</td>
+      <td>0.25</td>
+      <td>0.33</td>
+      <td>0.33</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>1</th>
-      <td>CHAZELAS</td>
-      <td>[-0.109636135, -0.006103641, -0.020040277, 0.25316262, 0.17592265, 0.0021767267, 0.21980242, -0.024480069, -0.14120255, 0.05474786, 0.027812812, 0.04513831, 0.029098026, 0.0030846673, -0.00539035, -0.09400612, 0.11184292, -0.01602443, 0.0115694525, 0.05249722, -0.187549, -0.10268482, 0.09660874, -0.10146321, 0.13509831, -0.08203639, -0.0629421, 0.17226475, -0.15483484, -0.16726069, -0.25711542, -0.078375034, 0.11044509, -0.16180228, 0.03683474, -0.031754546, 0.015964506, 0.057652254, -0.105912864, -0.2873093, -0.1873157, 0.052587498, 0.13631055, 0.3230033, 0.1565452, -0.07020149, 0.06384636, -0.30271593, 0.14033082, 0.13798465, 0.13022412, -0.17196886, -0.14510338, 0.24091557, -0.09998665, -0.1052452, 0.14813451, 0.13544735, 0.016420549, -0.12737694, -0.10318103, -0.16602415, 0.14094923, -0.2089594, 0.26379076, 0.26919323, -0.066454366, 0.3257606, 0.07683249, -0.1249642, -0.044172022, -0.09030118, 0.2537347, 0.10437621, -0.046535973, -0.39586705, -0.0021818948, -0.15096949, 0.10897314, -0.14621219, 0.15821601, 0.14773566, -0.075632796, -0.13970292, -0.046372198, 0.14502375, -0.059973612, -0.045822527, 0.10589532, -0.03682669, -0.02011218, -0.26233143, 0.01983468, 0.06380002, -0.29612628, 0.079973325, 0.100622535, -0.29357985, 0.15031388, -0.047712695]</td>
+      <th>73</th>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
-      <th>2</th>
-      <td>LEONEL</td>
-      <td>[0.22252406, 0.15130779, -0.04575958, -0.03778899, 0.050965697, 0.2528365, 0.018160814, -0.05288271, -0.3096865, 0.15462294, -0.10952012, 0.103372656, 0.1766996, 0.14707415, -0.40393823, -0.0045590955, -0.08265266, 0.15897411, -0.1957459, -0.034631956, -0.23276713, -0.08667215, 0.08821165, -0.046707783, 0.4971337, -0.11718625, -0.015904767, 0.15228818, -0.037390776, 0.13003631, 0.17405774, 0.32302254, 0.026345475, -0.1321597, -0.2566077, -0.02405712, -0.002467111, 0.052005704, -0.117853604, -0.051207546, -0.10167364, 0.15466388, 0.1607747, 0.21277027, 0.10131277, -0.16147445, 0.19742428, 0.32157636, 0.17883445, 0.1538676, 0.20712359, -0.15016088, 0.16003759, 0.024373092, -0.25615543, -0.1933014, -0.06807186, 0.017983167, 0.0093089435, -0.2014114, 0.013771088, 0.7058783, 0.10410591, -0.04987616, -0.03312663, 0.23713182, 0.04491722, 0.07384343, 0.19469029, 0.016708972, -0.16072538, -0.042086538, 0.3998515, -0.18968931, -0.39038587, -0.11685083, 0.11906388, -0.3684878, 0.040702224, 0.121342085, 0.011019275, 0.54542446, -0.03512373, -0.085705616, 0.25045523, 0.03258992, -0.113921486, -0.24779823, 0.0072337575, -0.15306129, -0.2715002, 0.2968101, 0.050990313, 0.40448356, -0.5213212, 0.19155724, 0.03948027, -0.07173173, 0.21267113, 0.027185535]</td>
+      <th>84</th>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.20</td>
+      <td>0.25</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>86</th>
+      <td>0.50</td>
+      <td>0.50</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>94</th>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>97</th>
+      <td>0.33</td>
+      <td>0.33</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>98</th>
+      <td>0.23</td>
+      <td>0.40</td>
+      <td>0.50</td>
+      <td>0.55</td>
+      <td>0.58</td>
+      <td>0.67</td>
+    </tr>
+    <tr>
+      <th>119</th>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.25</td>
+      <td>0.25</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>139</th>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.20</td>
+      <td>0.50</td>
+      <td>0.50</td>
+      <td>0.60</td>
+    </tr>
+    <tr>
+      <th>390</th>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.25</td>
+      <td>0.33</td>
+      <td>1.00</td>
     </tr>
   </tbody>
 </table>
@@ -15222,38 +14894,23 @@ Name: unique_combinaition, dtype: object</pre>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Test-acceptance/Analyse-du-mod&#232;le">Test acceptance/Analyse du mod&#232;le<a class="anchor-link" href="#Test-acceptance/Analyse-du-mod&#232;le">&#182;</a></h1><p>La librairie <code>gensim</code> a une fonction integrée pour calculer la similarité. Toutefois, nous devons cacluler le cosine manuelement dans Athena car il n'y a pas de fonction SQL prévue a cet effet.</p>
-<h2 id="Similarit&#233;---cosine">Similarit&#233; - cosine<a class="anchor-link" href="#Similarit&#233;---cosine">&#182;</a></h2><p>La fonction cosine se calcule de la facon suivante:</p>
-$$\frac{u \cdot v}{\|u\|_{2}\|v\|_{2}}$$<ul>
-<li>Source 1: Calcul cosine:<ul>
-<li><a href="https://en.wikipedia.org/wiki/Cosine_similarity">Cosine similarity</a></li>
-<li><a href="https://en.wikipedia.org/wiki/Magnitude_(mathematics">Magnitude (mathematics)</a>#Euclidean_vector_space)</li>
-<li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cosine.html">Scipy Cosine</a></li>
-</ul>
-</li>
-</ul>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
-</div>
-</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Dans ce notebook, nous allons expliquer comment calculer la distance de cosine en SQL, via les fonctions Presto</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ol>
-<li>Creation table exemple</li>
-</ol>
-<p>On va récupérer deux mots, RTE et ROUTE</p>
+<p><code>count_inpi_siren_siret</code></p>
 
 </div>
 </div>
@@ -15264,32 +14921,34 @@ $$\frac{u \cdot v}{\|u\|_{2}\|v\|_{2}}$$<ul>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">CREATE TABLE siretisation.exemple_cosine_sql</span>
-<span class="s2">WITH (</span>
-<span class="s2">  format=&#39;PARQUET&#39;</span>
-<span class="s2">) AS</span>
-<span class="s2">WITH db AS (</span>
-<span class="s2">SELECT &#39;PAIR&#39; AS pairs,words as words_1, list_weights as list_weights_1</span>
-<span class="s2">FROM list_weight_mots_insee_inpi_word2vec </span>
-<span class="s2">WHERE words = &#39;RTE&#39;</span>
-<span class="s2">)</span>
-<span class="s2">SELECT db.pairs, words_1,words_2, list_weights_1,list_weights_2</span>
-<span class="s2">FROM db</span>
-<span class="s2">LEFT JOIN (</span>
+<span class="s2">WITH dataset AS (</span>
 <span class="s2">  </span>
-<span class="s2">  SELECT &#39;PAIR&#39; AS pairs,words as words_2, list_weights as list_weights_2</span>
-<span class="s2">FROM list_weight_mots_insee_inpi_word2vec </span>
-<span class="s2">WHERE words = &#39;ROUTE&#39;</span>
-<span class="s2">  </span>
-<span class="s2">  ) AS tb_list2</span>
-<span class="s2">  ON db.pairs = tb_list2.pairs</span>
-
+<span class="s2">  SELECT </span>
+<span class="s2">  count_inpi_siren_siret,</span>
+<span class="s2">  MAP(</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
+<span class="s2">    approx_percentile(</span>
+<span class="s2">      pct_intersection,</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
+<span class="s2">    ) AS nest</span>
+<span class="s2">    FROM siretisation.ets_insee_inpi_var_group_max </span>
+<span class="s2">    GROUP BY count_inpi_siren_siret</span>
+<span class="s2">    ) </span>
+<span class="s2">    </span>
+<span class="s2">    SELECT </span>
+<span class="s2">    count_inpi_siren_siret,</span>
+<span class="s2">    pct, </span>
+<span class="s2">    value AS  pct_intersection</span>
+<span class="s2">    FROM dataset</span>
+<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
 <span class="s2">&quot;&quot;&quot;</span>
 <span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
-        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span>
-    <span class="p">)</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;pct_count_inpi_siren_siret&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
 </pre></div>
 
     </div>
@@ -15302,17 +14961,8 @@ $$\frac{u \cdot v}{\|u\|_{2}\|v\|_{2}}$$<ul>
 <div class="prompt input_prompt">In&nbsp;[23]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT * FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb_rte_route</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_rte_route&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb_rte_route</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_siren_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -15340,29 +14990,129 @@ $$\frac{u \cdot v}{\|u\|_{2}\|v\|_{2}}$$<ul>
         vertical-align: top;
     }
 
-    .dataframe thead th {
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
         text-align: right;
     }
 </style>
 <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
-      <th>pairs</th>
-      <th>words_1</th>
-      <th>words_2</th>
-      <th>list_weights_1</th>
-      <th>list_weights_2</th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_siren_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>PAIR</td>
-      <td>RTE</td>
-      <td>ROUTE</td>
-      <td>[-0.906287, 0.35330036, -0.45031732, -0.44005623, 0.4382724, 0.90547234, 0.2720212, 1.5743147, 2.2702737, 0.012816742, 0.11886748, 1.6181163, -1.5880803, 0.049638018, -1.0179683, -0.47134385, 2.8443403, -1.2850525, -0.37764302, 0.54929864, 2.277727, -0.9306328, -0.9771653, 1.8885164, -1.3320053, -1.0202668, -3.8396924, -1.6275727, 1.0053705, -0.19837037, 0.5501364, 0.3265179, -0.032989323, -2.5345073, 0.86746955, 0.18929328, 2.0648468, 0.8580351, 0.3278052, -0.5825579, -0.04941983, 0.9473246, -1.3866509, 2.189582, 1.9775363, -1.2988862, 1.2236702, -0.99055576, 1.9203395, 2.1116378, 1.078011, -1.1966137, -0.74431413, 0.2712173, 0.20042796, 0.16099955, 0.80259293, -2.8260934, -0.24784257, -0.9690624, 0.5863302, -0.0848784, -3.8474228, 0.6043199, 0.19716166, 0.48339006, 0.022308467, 2.9877596, -0.22003816, 0.5030187, 0.40742403, 2.3884847, 1.3377057, 0.03965891, 2.2390943, 2.4587617, -1.0826445, 1.3741084, 0.9702326, -1.0039244, -0.11839072, 1.4302572, 1.2645842, -0.99718225, 2.663692, -1.1477947, 0.7652534, -0.6031758, -0.17729475, -0.992262, 1.989643, -0.72117364, 0.0916418, 1.3735677, 0.35776773, 1.3185933, -1.0422467, -0.40227982, 1.9068569, 0.26661342]</td>
-      <td>[-0.2844909, 0.39486414, -0.29922548, 0.026530692, 1.2402308, 0.6849597, 0.22171415, 1.1757132, 1.6040323, -1.1198272, -0.8969306, 2.486966, -1.9380313, 0.26788518, 1.270719, 0.008989361, 2.015358, -0.995867, 0.28859442, -0.21244797, 1.8975848, 0.7015464, 0.15380877, 1.515052, -1.5326287, -1.0253289, -2.7549756, -0.81292415, 1.754881, 2.0618231, -0.164788, 0.9021463, 0.24025336, -0.8273677, 2.0715895, -0.5560104, 1.5273378, 0.5394673, -0.24066179, 0.012111424, 0.07375086, 0.6852015, -1.7510698, 0.930581, 1.0507412, -1.5666918, 1.6675467, -1.5944803, 1.7269504, 1.1746826, 1.7738193, -1.4851779, -0.4614606, 1.2705019, -0.47668794, -0.9183224, 1.0675664, -0.98648226, 0.3117699, 0.4450617, 1.1351311, -0.6601455, -2.7705634, 0.27910224, 0.5883243, 0.28529423, 0.8831947, 3.2832482, 0.21316877, 0.107157536, 1.0145535, 0.7118645, 0.62196463, -0.67991567, 1.9766676, 1.5993948, 0.5753832, 1.2972467, -0.85221344, 0.11414911, 1.6582446, 0.5911942, 1.1361358, 0.048497565, 1.8349174, -0.57384175, -0.2044813, -0.5567194, -1.3511335, -0.38534522, 2.1614444, -0.5642625, 0.59345967, 1.231725, 0.6929633, -0.06359955, 0.6900589, -0.15387042, 1.7884512, 0.70258224]</td>
+      <th>1</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.0</td>
+      <td>0.25</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.0</td>
+      <td>0.14</td>
+      <td>0.67</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.0</td>
+      <td>0.08</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.0</td>
+      <td>0.09</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0.0</td>
+      <td>0.11</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0.0</td>
+      <td>0.13</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0.0</td>
+      <td>0.13</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0.0</td>
+      <td>0.17</td>
+      <td>0.60</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>0.0</td>
+      <td>0.13</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
     </tr>
   </tbody>
 </table>
@@ -15375,63 +15125,26 @@ $$\frac{u \cdot v}{\|u\|_{2}\|v\|_{2}}$$<ul>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ol>
-<li>Calcul du nominateur </li>
-</ol>
-<p>Le nominateur est simplement le dot product entre la liste 1 et la liste 2:</p>
-$$u \cdot v$$<p>Pour rappel, le dot product s'effectue de la manière suivante: $a · b = ax × bx + ay × by$</p>
-<p>Le dot product doit, par définition, retourner un scalaire!</p>
-<p>Fonction presto:</p>
-<ul>
-<li><code>REDUCE</code>: <a href="https://prestodb.io/docs/0.172/functions/lambda.html#reduce">https://prestodb.io/docs/0.172/functions/lambda.html#reduce</a><ul>
-<li>Va permettre de sommer le produit x*y</li>
-</ul>
-</li>
-<li><code>zip_with</code>: <a href="https://prestodb.io/docs/0.172/functions/lambda.html#zip_with">https://prestodb.io/docs/0.172/functions/lambda.html#zip_with</a><ul>
-<li>Va permettre de calculer produit x*y</li>
-</ul>
-</li>
-</ul>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[24]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT </span>
-<span class="s2">pairs, words_1, words_2, </span>
-<span class="s2">REDUCE(</span>
-<span class="s2">              zip_with(</span>
-<span class="s2">                list_weights_1, </span>
-<span class="s2">                list_weights_2, </span>
-<span class="s2">                (x, y) -&gt; x * y</span>
-<span class="s2">              ), </span>
-<span class="s2">              CAST(</span>
-<span class="s2">                ROW(0.0) AS ROW(sum DOUBLE)</span>
-<span class="s2">              ), </span>
-<span class="s2">              (s, x) -&gt; CAST(</span>
-<span class="s2">                ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
-<span class="s2">              ), </span>
-<span class="s2">              s -&gt; s.sum</span>
-<span class="s2">            ) AS dot_product,</span>
-<span class="s2">            list_weights_1, list_weights_2</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
+</pre></div>
 
-<span class="s2">FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_dotproruct&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[25]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_siren_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -15444,7 +15157,7 @@ $$u \cdot v$$<p>Pour rappel, le dot product s'effectue de la manière suivante: 
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[24]:</div>
+    <div class="prompt output_prompt">Out[25]:</div>
 
 
 
@@ -15459,31 +15172,129 @@ $$u \cdot v$$<p>Pour rappel, le dot product s'effectue de la manière suivante: 
         vertical-align: top;
     }
 
-    .dataframe thead th {
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
         text-align: right;
     }
 </style>
 <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
-      <th>pairs</th>
-      <th>words_1</th>
-      <th>words_2</th>
-      <th>dot_product</th>
-      <th>list_weights_1</th>
-      <th>list_weights_2</th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_siren_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>PAIR</td>
-      <td>RTE</td>
-      <td>ROUTE</td>
-      <td>126.949244</td>
-      <td>[-0.906287, 0.35330036, -0.45031732, -0.44005623, 0.4382724, 0.90547234, 0.2720212, 1.5743147, 2.2702737, 0.012816742, 0.11886748, 1.6181163, -1.5880803, 0.049638018, -1.0179683, -0.47134385, 2.8443403, -1.2850525, -0.37764302, 0.54929864, 2.277727, -0.9306328, -0.9771653, 1.8885164, -1.3320053, -1.0202668, -3.8396924, -1.6275727, 1.0053705, -0.19837037, 0.5501364, 0.3265179, -0.032989323, -2.5345073, 0.86746955, 0.18929328, 2.0648468, 0.8580351, 0.3278052, -0.5825579, -0.04941983, 0.9473246, -1.3866509, 2.189582, 1.9775363, -1.2988862, 1.2236702, -0.99055576, 1.9203395, 2.1116378, 1.078011, -1.1966137, -0.74431413, 0.2712173, 0.20042796, 0.16099955, 0.80259293, -2.8260934, -0.24784257, -0.9690624, 0.5863302, -0.0848784, -3.8474228, 0.6043199, 0.19716166, 0.48339006, 0.022308467, 2.9877596, -0.22003816, 0.5030187, 0.40742403, 2.3884847, 1.3377057, 0.03965891, 2.2390943, 2.4587617, -1.0826445, 1.3741084, 0.9702326, -1.0039244, -0.11839072, 1.4302572, 1.2645842, -0.99718225, 2.663692, -1.1477947, 0.7652534, -0.6031758, -0.17729475, -0.992262, 1.989643, -0.72117364, 0.0916418, 1.3735677, 0.35776773, 1.3185933, -1.0422467, -0.40227982, 1.9068569, 0.26661342]</td>
-      <td>[-0.2844909, 0.39486414, -0.29922548, 0.026530692, 1.2402308, 0.6849597, 0.22171415, 1.1757132, 1.6040323, -1.1198272, -0.8969306, 2.486966, -1.9380313, 0.26788518, 1.270719, 0.008989361, 2.015358, -0.995867, 0.28859442, -0.21244797, 1.8975848, 0.7015464, 0.15380877, 1.515052, -1.5326287, -1.0253289, -2.7549756, -0.81292415, 1.754881, 2.0618231, -0.164788, 0.9021463, 0.24025336, -0.8273677, 2.0715895, -0.5560104, 1.5273378, 0.5394673, -0.24066179, 0.012111424, 0.07375086, 0.6852015, -1.7510698, 0.930581, 1.0507412, -1.5666918, 1.6675467, -1.5944803, 1.7269504, 1.1746826, 1.7738193, -1.4851779, -0.4614606, 1.2705019, -0.47668794, -0.9183224, 1.0675664, -0.98648226, 0.3117699, 0.4450617, 1.1351311, -0.6601455, -2.7705634, 0.27910224, 0.5883243, 0.28529423, 0.8831947, 3.2832482, 0.21316877, 0.107157536, 1.0145535, 0.7118645, 0.62196463, -0.67991567, 1.9766676, 1.5993948, 0.5753832, 1.2972467, -0.85221344, 0.11414911, 1.6582446, 0.5911942, 1.1361358, 0.048497565, 1.8349174, -0.57384175, -0.2044813, -0.5567194, -1.3511335, -0.38534522, 2.1614444, -0.5642625, 0.59345967, 1.231725, 0.6929633, -0.06359955, 0.6900589, -0.15387042, 1.7884512, 0.70258224]</td>
+      <th>1912</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.40</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1970</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.15</td>
+      <td>0.43</td>
+      <td>0.67</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2180</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.25</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2409</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.25</td>
+      <td>0.33</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2731</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.33</td>
+      <td>0.33</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2772</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.25</td>
+      <td>0.33</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2863</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.14</td>
+      <td>0.33</td>
+      <td>0.33</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3144</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.25</td>
+      <td>0.33</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3191</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.00</td>
+      <td>0.25</td>
+      <td>0.33</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>10925</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.20</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
     </tr>
   </tbody>
 </table>
@@ -15492,36 +15303,6 @@ $$u \cdot v$$<p>Pour rappel, le dot product s'effectue de la manière suivante: 
 
 </div>
 
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>On va vérifier notre résultat avec numpy</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[25]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">sql_array_to_array</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">tb_rte_route</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
- <span class="o">.</span><span class="n">str</span>
- <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;\[|\]|,&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
- <span class="o">.</span><span class="n">str</span>
- <span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">expand</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
- <span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
- <span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-<span class="p">)</span>
-</pre></div>
-
-    </div>
 </div>
 </div>
 
@@ -15531,31 +15312,10 @@ $$u \cdot v$$<p>Pour rappel, le dot product s'effectue de la manière suivante: 
 <div class="prompt input_prompt">In&nbsp;[26]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_1&#39;</span><span class="p">),</span><span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_2&#39;</span><span class="p">))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[26]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>126.94924545677813</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -15563,13 +15323,20 @@ $$u \cdot v$$<p>Pour rappel, le dot product s'effectue de la manière suivante: 
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<ol>
-<li>Calcul du dénominateur</li>
-</ol>
-<p>Le denominateur est $\|u\|_{2}\|v\|_{2}$, ce qui correspond à la norme. La norme est une extension de la valeur absolue des nombres aux vecteurs. Elle permet de mesurer la longueur commune à toutes les représentations d'un vecteur dans un espace affine, mais définit aussi une distance entre deux vecteurs invariante par translation et compatible avec la multiplication externe.</p>
-<p>La norme usuelle (euclidienne) d'un vecteur peut se calculer à l'aide de ses coordonnées dans un repère orthonormé à l'aide du théorème de Pythagore.
-Dans le plan, si le vecteur ${\displaystyle {\vec {u}}}{\vec {u}}$ a pour coordonnées ${\displaystyle (x,y)}(x,y)$, sa norme s'écrire:</p>
-$$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
+<h2 id="5.-Donner-la-distribution-de-index_id_max_intersection-par-possibilit&#233;-pour-count_inpi_index_id_siret-et-count_inpi_siren_siret">5. Donner la distribution de <code>index_id_max_intersection</code> par possibilit&#233; pour <code>count_inpi_index_id_siret</code> et <code>count_inpi_siren_siret</code><a class="anchor-link" href="#5.-Donner-la-distribution-de-index_id_max_intersection-par-possibilit&#233;-pour-count_inpi_index_id_siret-et-count_inpi_siren_siret">&#182;</a></h2><ul>
+<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
+<li>TOP 10</li>
+<li>BOTTOM 10</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>count_inpi_index_id_siret</code></p>
+
 </div>
 </div>
 </div>
@@ -15579,31 +15346,32 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT </span>
-<span class="s2">pairs, words_1, </span>
-<span class="s2">SQRT(</span>
-<span class="s2">                REDUCE(</span>
-<span class="s2">                  transform(</span>
-<span class="s2">                    list_weights_1, </span>
-<span class="s2">                    (x) -&gt; POW(x, 2)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  CAST(</span>
-<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  (s, x) -&gt; CAST(</span>
-<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  s -&gt; s.sum</span>
-<span class="s2">                )</span>
-<span class="s2">              ) as norme_w1 </span>
-
-<span class="s2">FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  </span>
+<span class="s2">  SELECT </span>
+<span class="s2">  count_inpi_index_id_siret,</span>
+<span class="s2">  MAP(</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
+<span class="s2">    approx_percentile(</span>
+<span class="s2">      index_id_max_intersection,</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
+<span class="s2">    ) AS nest</span>
+<span class="s2">    FROM siretisation.ets_insee_inpi_var_group_max </span>
+<span class="s2">    GROUP BY count_inpi_index_id_siret</span>
+<span class="s2">    ) </span>
+<span class="s2">    </span>
+<span class="s2">    SELECT </span>
+<span class="s2">    count_inpi_index_id_siret,</span>
+<span class="s2">    pct, </span>
+<span class="s2">    value AS  pct_intersection</span>
+<span class="s2">    FROM dataset</span>
+<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_cosine_sql&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;pct_count_inpi_index_id_siret&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
 </pre></div>
@@ -15612,72 +15380,14 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[27]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>pairs</th>
-      <th>words_1</th>
-      <th>norme_w1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>PAIR</td>
-      <td>RTE</td>
-      <td>13.612547</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Résultat via numpy</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[28]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_1&#39;</span><span class="p">))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_index_id_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -15694,103 +15404,6 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
 
 
 
-
-<div class="output_text output_subarea output_execute_result">
-<pre>13.612547364554665</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>On calcule du cosine</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[29]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span><span class="s2">&quot;&quot;&quot; </span>
-<span class="s2">SELECT </span>
-<span class="s2">pairs, words_1, words_2, </span>
-<span class="s2"> REDUCE(</span>
-<span class="s2">              zip_with(</span>
-<span class="s2">                list_weights_1, </span>
-<span class="s2">                list_weights_2, </span>
-<span class="s2">                (x, y) -&gt; x * y</span>
-<span class="s2">              ), </span>
-<span class="s2">              CAST(</span>
-<span class="s2">                ROW(0.0) AS ROW(sum DOUBLE)</span>
-<span class="s2">              ), </span>
-<span class="s2">              (s, x) -&gt; CAST(</span>
-<span class="s2">                ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
-<span class="s2">              ), </span>
-<span class="s2">              s -&gt; s.sum</span>
-<span class="s2">            ) / (</span>
-<span class="s2">              SQRT(</span>
-<span class="s2">                REDUCE(</span>
-<span class="s2">                  transform(</span>
-<span class="s2">                    list_weights_1, </span>
-<span class="s2">                    (x) -&gt; POW(x, 2)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  CAST(</span>
-<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  (s, x) -&gt; CAST(</span>
-<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  s -&gt; s.sum</span>
-<span class="s2">                )</span>
-<span class="s2">              ) * SQRT(</span>
-<span class="s2">                REDUCE(</span>
-<span class="s2">                  transform(</span>
-<span class="s2">                    list_weights_2, </span>
-<span class="s2">                    (x) -&gt; POW(x, 2)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  CAST(</span>
-<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  (s, x) -&gt; CAST(</span>
-<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
-<span class="s2">                  ), </span>
-<span class="s2">                  s -&gt; s.sum</span>
-<span class="s2">                )</span>
-<span class="s2">              )</span>
-<span class="s2">            ) AS cosine_distance</span>
-
-<span class="s2">FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_cosine&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[29]:</div>
-
-
-
 <div class="output_html rendered_html output_subarea output_execute_result">
 <div>
 <style scoped>
@@ -15802,27 +15415,129 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
         vertical-align: top;
     }
 
-    .dataframe thead th {
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
         text-align: right;
     }
 </style>
 <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
-      <th>pairs</th>
-      <th>words_1</th>
-      <th>words_2</th>
-      <th>cosine_distance</th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_index_id_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>PAIR</td>
-      <td>RTE</td>
-      <td>ROUTE</td>
-      <td>0.780276</td>
+      <th>1</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.5</td>
+      <td>0.78</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0.5</td>
+      <td>0.80</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0.5</td>
+      <td>0.75</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0.5</td>
+      <td>0.75</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>0.5</td>
+      <td>0.75</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
     </tr>
   </tbody>
 </table>
@@ -15837,15 +15552,24 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
 <div class="prompt input_prompt">In&nbsp;[30]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
-
-<span class="mi">1</span> <span class="o">-</span> <span class="n">distance</span><span class="o">.</span><span class="n">cosine</span><span class="p">(</span>
-     <span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_1&#39;</span><span class="p">),</span>
-     <span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_2&#39;</span><span class="p">)</span>
- <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_index_id_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -15862,13 +15586,574 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
 
 
 
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-<div class="output_text output_subarea output_execute_result">
-<pre>0.7802756671384312</pre>
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_index_id_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>69</th>
+      <td>0.43</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>73</th>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>84</th>
+      <td>0.80</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>86</th>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>94</th>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>97</th>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>98</th>
+      <td>0.70</td>
+      <td>0.73</td>
+      <td>0.78</td>
+      <td>0.8</td>
+      <td>0.82</td>
+      <td>0.9</td>
+    </tr>
+    <tr>
+      <th>119</th>
+      <td>0.33</td>
+      <td>0.33</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>139</th>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>390</th>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.00</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 </div>
 
 </div>
 
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[31]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>count_inpi_siren_siret</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[32]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  </span>
+<span class="s2">  SELECT </span>
+<span class="s2">  count_inpi_siren_siret,</span>
+<span class="s2">  MAP(</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
+<span class="s2">    approx_percentile(</span>
+<span class="s2">      index_id_max_intersection,</span>
+<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
+<span class="s2">    ) AS nest</span>
+<span class="s2">    FROM siretisation.ets_insee_inpi_var_group_max </span>
+<span class="s2">    GROUP BY count_inpi_siren_siret</span>
+<span class="s2">    ) </span>
+<span class="s2">    </span>
+<span class="s2">    SELECT </span>
+<span class="s2">    count_inpi_siren_siret,</span>
+<span class="s2">    pct, </span>
+<span class="s2">    value AS pct_intersection</span>
+<span class="s2">    FROM dataset</span>
+<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;pct_count_inpi_siren_siret&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[33]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_siren_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[33]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_siren_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0.5</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0.5</td>
+      <td>0.88</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0.5</td>
+      <td>0.78</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0.5</td>
+      <td>0.80</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0.5</td>
+      <td>0.80</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>0.5</td>
+      <td>0.88</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[34]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[35]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">&#39;count_inpi_siren_siret&#39;</span><span class="p">,</span> <span class="s1">&#39;pct&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tb</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[35]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+
+    .dataframe thead tr:last-of-type th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="6" halign="left">pct_intersection</th>
+    </tr>
+    <tr>
+      <th>pct</th>
+      <th>0.10</th>
+      <th>0.25</th>
+      <th>0.50</th>
+      <th>0.75</th>
+      <th>0.80</th>
+      <th>0.95</th>
+    </tr>
+    <tr>
+      <th>count_inpi_siren_siret</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1912</th>
+      <td>0.33</td>
+      <td>0.57</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1970</th>
+      <td>0.50</td>
+      <td>0.75</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2180</th>
+      <td>0.50</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2409</th>
+      <td>0.50</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2731</th>
+      <td>0.33</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2772</th>
+      <td>0.30</td>
+      <td>0.50</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2863</th>
+      <td>0.33</td>
+      <td>0.67</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3144</th>
+      <td>0.40</td>
+      <td>0.67</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3191</th>
+      <td>0.33</td>
+      <td>0.67</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>10925</th>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[36]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#print(tb.to_markdown())</span>
+</pre></div>
+
+    </div>
 </div>
 </div>
 
@@ -15882,7 +16167,7 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[31]:</div>
+<div class="prompt input_prompt">In&nbsp;[37]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">ipykernel</span><span class="o">,</span> <span class="nn">json</span>
@@ -15897,7 +16182,7 @@ $$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[32]:</div>
+<div class="prompt input_prompt">In&nbsp;[38]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_report</span><span class="p">(</span><span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span><span class="p">,</span> <span class="n">keep_code</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
