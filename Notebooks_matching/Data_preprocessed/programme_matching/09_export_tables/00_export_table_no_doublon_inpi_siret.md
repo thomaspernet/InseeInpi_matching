@@ -23,7 +23,7 @@ jupyter:
 * La table contient partiellement des index_id avec des doublons. Cela est du a une mauvaise préparation de la donnée ou bien a des index impossibles en l’état a dédoublonner. Dès lors, il faut retirer ses index de la table a exporter
 * Nous allons créer une table finale qui contient les informations des données brutes de l’INPI et les données transformées. Pour cela, il faut utiliser la table ets_inpi_sql 
   * Il faudra ensuite exporter en csv la table complète et une seconde table avec uniquement le siren, siren, ID séquence et variables référentielles de l’établissement au sens de l’INPI.
-  * Les deux CSV seront disponibles calfdata/TEMP_PARTAGE_DATA_INPI
+  * Les deux CSV seront disponibles [calfdata/TEMP_PARTAGE_DATA_INPI](https://s3.console.aws.amazon.com/s3/buckets/calfdata/TEMP_PARTAGE_DATA_INPI/?region=eu-west-3&tab=overview)
 * Please, update the Source URL by clicking on the button after the information have been pasted
   * US 01 CSV INPI Modify rows
   * Delete tables and Github related to the US: Delete rows
@@ -87,16 +87,17 @@ import seaborn as sns
 import os, shutil
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent.parent)
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-
-name_credential = 'XXX_credentials.csv'
-region = ''
-bucket = ''
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python
+bucket = 'calfdata'
 con = aws_connector.aws_instantiate(credential = path_cred,
                                        region = region)
 client= con.client_boto()
@@ -112,20 +113,443 @@ if pandas_setting:
     pd.set_option('display.max_colwidth', None)
 ```
 
+```python
+s3_output = 'inpi/sql_output'
+database = 'siretisation'
+```
+
+# Brief analysis
+
+Il y a certains `index_id` qui peuvent avoir des doublons après avoir merger avec la table `ets_inpi_sql` car la date de transmission est la même (ie le timestamp) Lors de nos développements, nous n'avons pas envisagé ce cas de figure, toutefois lors de la mise en production, cet aspect a été pris en compte.
+
+Dans la query si dessous, nous allons imprimer les lignes ayant des doublons:
+
+```python
+query = """
+WITH merge_inpi AS (
+  SELECT 
+    ROW_NUMBER() OVER (PARTITION BY ets_insee_inpi_no_duplicate.index_id ORDER BY file_timestamp) AS row_id_group,
+    ets_insee_inpi_no_duplicate.index_id, 
+    ets_insee_inpi_no_duplicate.siren, 
+    ets_insee_inpi_no_duplicate.siret, 
+    ets_insee_inpi_no_duplicate.sequence_id
+  FROM 
+    siretisation.ets_insee_inpi_no_duplicate 
+    INNER JOIN siretisation.ets_inpi_sql ON ets_insee_inpi_no_duplicate.index_id = siretisation.ets_inpi_sql.index_id 
+  WHERE 
+    count_index = 1
+) 
+SELECT 
+
+  index_id, COUNT(*) AS cnt
+  
+FROM 
+  merge_inpi 
+GROUP BY  index_id
+ORDER BY cnt DESC
+LIMIT 20
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "nb_index", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
 # Creation tables
+
+Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayant des timestamps de transmission identique. Pour ne pas avoir de doublons lors de la création de la table `ets_inpi_no_doublon_siret`, nous décidons de ne récupérer la première ligne. Ce n'est pas optimal comme solution!
+
+{
+	"StorageDescriptor": {
+		"cols": {
+			"FieldSchema": [
+				{
+					"name": "row_id_group",
+					"type": "bigint",
+					"comment": "Nombre de lignes par index_id. Normalement que des 1"
+				},
+				{
+					"name": "index_id",
+					"type": "bigint",
+					"comment": "Identification "
+				},
+				{
+					"name": "siren",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "siret",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "sequence_id",
+					"type": "bigint",
+					"comment": ""
+				},
+				{
+					"name": "code_greffe",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "nom_greffe",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "numero_gestion",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "id_etablissement",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "status",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "origin",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "date_greffe",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "file_timestamp",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "libelle_evt",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "last_libele_evt",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "status_admin",
+					"type": "varchar(1)",
+					"comment": ""
+				},
+				{
+					"name": "type",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "status_ets",
+					"type": "varchar(5)",
+					"comment": ""
+				},
+				{
+					"name": "siège_pm",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "rcs_registre",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "adresse_ligne1",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "adresse_ligne2",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "adresse_ligne3",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "adresse_reconstituee_inpi",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "adresse_distance_inpi",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "list_numero_voie_matching_inpi",
+					"type": "array<string>",
+					"comment": ""
+				},
+				{
+					"name": "numero_voie_matching",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "voie_clean",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "type_voie_matching",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "code_postal",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "code_postal_matching",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "ville",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "ville_matching",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "code_commune",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "pays",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "domiciliataire_nom",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "domiciliataire_siren",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "domiciliataire_greffe",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "domiciliataire_complément",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "siege_domicile_représentant",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "nom_commercial",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "enseigne",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "activité_ambulante",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "activité_saisonnière",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "activité_non_sédentaire",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "date_début_activité",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "activité",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "origine_fonds",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "origine_fonds_info",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "type_exploitation",
+					"type": "string",
+					"comment": ""
+				},
+				{
+					"name": "csv_source",
+					"type": "string",
+					"comment": ""
+				}
+			]
+		},
+		"location": "s3://calfdata/inpi/sql_output/tables/bf7473f3-4aab-4389-abed-ccc92e1d42ec/",
+		"inputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+		"outputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+		"compressed": "false",
+		"numBuckets": "0",
+		"SerDeInfo": {
+			"name": "ets_inpi_no_doublon_siret",
+			"serializationLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+			"parameters": {}
+		},
+		"bucketCols": [],
+		"sortCols": [],
+		"parameters": {},
+		"SkewedInfo": {},
+		"storedAsSubDirectories": "false"
+	},
+	"parameters": {
+		"EXTERNAL": "TRUE",
+		"has_encrypted_data": "false"
+	}
+}
 
 ## Steps
 
 ```python
-s3_output = 'XX'
-database = ''
+query = """
+DROP TABLE `ets_inpi_no_doublon_siret`;
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
 ```
 
 ```python
 query = """
+CREATE TABLE siretisation.ets_inpi_no_doublon_siret
+WITH (
+  format='PARQUET'
+) AS
+WITH merge_inpi AS (
+  SELECT 
+    ROW_NUMBER() OVER (PARTITION BY ets_insee_inpi_no_duplicate.index_id ORDER BY file_timestamp) AS row_id_group,
+    ets_insee_inpi_no_duplicate.index_id, 
+    ets_insee_inpi_no_duplicate.siren, 
+    ets_insee_inpi_no_duplicate.siret, 
+    ets_insee_inpi_no_duplicate.sequence_id,
+    code_greffe, 
+    nom_greffe, 
+    numero_gestion, 
+    id_etablissement, 
+    status, 
+    origin, 
+    date_greffe, 
+    file_timestamp, 
+    libelle_evt, 
+    last_libele_evt, 
+    ets_insee_inpi_no_duplicate.status_admin, 
+    type, 
+    ets_insee_inpi_no_duplicate.status_ets, 
+    "siège_pm", 
+    rcs_registre, 
+    adresse_ligne1, 
+    adresse_ligne2, 
+    adresse_ligne3, 
+    adresse_reconstituee_inpi, 
+    ets_insee_inpi_no_duplicate.adresse_distance_inpi, 
+    ets_insee_inpi_no_duplicate.list_numero_voie_matching_inpi, 
+    numero_voie_matching, 
+    voie_clean, 
+    type_voie_matching, 
+    code_postal, 
+    code_postal_matching, 
+    ville, 
+    ville_matching, 
+    code_commune, 
+    pays, 
+    domiciliataire_nom, 
+    domiciliataire_siren, 
+    domiciliataire_greffe, 
+    "domiciliataire_complément", 
+    "siege_domicile_représentant", 
+    nom_commercial, 
+    ets_insee_inpi_no_duplicate.enseigne, 
+    "activité_ambulante", 
+    "activité_saisonnière", 
+    "activité_non_sédentaire", 
+    ets_insee_inpi_no_duplicate."date_début_activité", 
+    "activité", 
+    origine_fonds, 
+    origine_fonds_info, 
+    type_exploitation, 
+    csv_source 
+  FROM 
+    siretisation.ets_insee_inpi_no_duplicate 
+    INNER JOIN siretisation.ets_inpi_sql ON ets_insee_inpi_no_duplicate.index_id = siretisation.ets_inpi_sql.index_id 
+  WHERE 
+    count_index = 1
+) 
+SELECT 
 
+  *
+  
+FROM 
+  merge_inpi 
+WHERE row_id_group = 1    
 """
 
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+Maintenant que la table est créée, nous pouvons la copier dans le dossier [calfdata/TEMP_PARTAGE_DATA_INPI](https://s3.console.aws.amazon.com/s3/buckets/calfdata/TEMP_PARTAGE_DATA_INPI/?region=eu-west-3&tab=overview)
+
+```python
+query = """
+SELECT index_id, siren, siret, sequence_id, code_greffe, nom_greffe, numero_gestion, id_etablissement
+FROM ets_inpi_no_doublon_siret 
+"""
 output = s3.run_query(
             query=query,
             database=database,
@@ -133,6 +557,260 @@ output = s3.run_query(
   filename = None, ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+```
+
+```python
+source_key =  '{}/{}.csv'.format(s3_output, output['QueryID'])
+destination_key_filename = '{}/{}.csv'.format('TEMP_PARTAGE_DATA_INPI', 'inpi_siret')
+s3.copy_object_s3(source_key = source_key,
+                              destination_key = destination_key_filename,
+                              remove = True
+                                                )
+```
+
+```python
+query = """
+SELECT *
+FROM ets_inpi_no_doublon_siret 
+"""
+output = s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = None, ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+source_key =  '{}/{}.csv'.format(s3_output, output['QueryID'])
+destination_key_filename = '{}/{}.csv'.format('TEMP_PARTAGE_DATA_INPI', 'inpi_siret_full')
+s3.copy_object_s3(source_key = source_key,
+                              destination_key = destination_key_filename,
+                              remove = True )
+```
+
+# Analyse table
+
+
+Nombre de lignes
+
+```python
+query = """
+SELECT COUNT(*) as cnt
+FROM ets_inpi_no_doublon_siret
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "analyse_1", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+Nombre de siren
+
+```python
+query = """
+SELECT COUNT(DISTINCT(siren)) as CNT
+FROM ets_inpi_no_doublon_siret
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "analyse_2", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+Nombre de siret
+
+```python
+query = """
+SELECT COUNT(DISTINCT(siret)) as CNT
+FROM ets_inpi_no_doublon_siret
+"""
+s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "analyse_3", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+Nombre d'établissements par ville
+
+```python
+query = """
+SELECT ville_matching, COUNT(DISTINCT(siret)) as CNT
+FROM ets_inpi_no_doublon_siret
+GROUP BY ville_matching
+ORDER BY CNT DESC
+LIMIT 25
+"""
+(
+    s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "analyse_4", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+    .set_index('ville_matching')
+    .style
+    .format("{:,.0f}")
+    .bar(subset= ['CNT' ],
+                       color='#d65f5f')
+)
+```
+
+Nombre d"établissements par Greffe
+
+```python
+query = """
+SELECT nom_greffe, COUNT(DISTINCT(siret)) as CNT
+FROM ets_inpi_no_doublon_siret
+GROUP BY nom_greffe
+ORDER BY CNT DESC
+LIMIT 25
+"""
+(
+    s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "analyse_4", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+    .set_index('nom_greffe')
+    .style
+    .format("{:,.0f}")
+    .bar(subset= ['CNT' ],
+                       color='#d65f5f')
+)
+```
+
+Nombre d'établissements créés par année
+
+```python
+query = """
+SELECT YEAR(
+Coalesce(
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d'
+        )
+      ), 
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d %hh:%mm:%ss.SSS'
+        )
+      ), 
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d %hh:%mm:%ss'
+        )
+      ), 
+      try(
+        cast(
+          "date_début_activité" as timestamp
+        )
+      )
+    ) 
+) as date_debut_activite,
+
+
+COUNT(DISTINCT(siret)) as CNT
+FROM ets_inpi_no_doublon_siret
+GROUP BY YEAR(
+Coalesce(
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d'
+        )
+      ), 
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d %hh:%mm:%ss.SSS'
+        )
+      ), 
+      try(
+        date_parse(
+          "date_début_activité", '%Y-%m-%d %hh:%mm:%ss'
+        )
+      ), 
+      try(
+        cast(
+          "date_début_activité" as timestamp
+        )
+      )
+    ) 
+)
+ORDER BY CNT DESC
+LIMIT 25
+"""
+(
+    s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "analyse_4", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+    .dropna()
+    .style
+    .format("{:,.0f}")
+    .bar(subset= ['CNT' ],
+                       color='#d65f5f')
+)
+```
+
+Nombre de siret par événements
+
+A verifier pourquoi nombre de lignes différents du nombre de siret par ville
+
+```python
+query = """
+SELECT ville_matching, libelle_evt,
+COUNT(DISTINCT(siret)) as CNT
+FROM ets_inpi_no_doublon_siret
+GROUP BY ville_matching, libelle_evt
+ORDER BY CNT DESC
+"""
+
+output = (
+    s3.run_query(
+            query=query,
+            database=database,
+            s3_output=s3_output,
+  filename = "analyse_4", ## Add filename to print dataframe
+  destination_key = None ### Add destination key if need to copy output
+        )
+    #.dropna()
+    #.style
+    #.format("{:,.0f}")
+    #.bar(subset= ['CNT' ],
+    #                   color='#d65f5f')
+)
+```
+
+```python
+(output
+ #.dropna()
+ .set_index(['ville_matching','libelle_evt'])
+ .unstack(-1)
+ .assign(total = lambda x: x.sum(axis = 1))
+ .sort_values(by = 'total', ascending = False)
+ .head(25)
+ .fillna(0)
+ .style
+ .format("{:,.0f}")
+ .bar(subset= ['total' ],
+                       color='#d65f5f')
+)
 ```
 
 # Generation report
