@@ -162,6 +162,7 @@ s3.run_query(
 
 Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayant des timestamps de transmission identique. Pour ne pas avoir de doublons lors de la création de la table `ets_inpi_no_doublon_siret`, nous décidons de ne récupérer la première ligne. Ce n'est pas optimal comme solution!
 
+```
 {
 	"StorageDescriptor": {
 		"cols": {
@@ -169,12 +170,14 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "row_id_group",
 					"type": "bigint",
-					"comment": "Nombre de lignes par index_id. Normalement que des 1"
+					"comment": "Nombre de lignes par index_id. Normalement que des 1",
+                    "Notebook origin": "https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/09_export_tables/00_export_table_no_doublon_inpi_siret.md#steps"
 				},
 				{
 					"name": "index_id",
 					"type": "bigint",
-					"comment": "Identification "
+					"comment": "Identification lignes de l'INPI. Création du numéro de ligne",
+                    "Notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#create-id-and-id-sequence"
 				},
 				{
 					"name": "siren",
@@ -189,7 +192,8 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "sequence_id",
 					"type": "bigint",
-					"comment": ""
+					"comment": "Numéro d'identification du groupe Siren, nom greffe, code greffe, id etablissement",
+                     "Notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#create-id-and-id-sequence"
 				},
 				{
 					"name": "code_greffe",
@@ -214,12 +218,13 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "status",
 					"type": "string",
-					"comment": ""
+					"comment": " indique si les lignes sont a ignorer ou non car fait référence à une ligne provenant d'un partiel",
+                    "Notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#test-de-v%C3%A9rification-1"
 				},
 				{
 					"name": "origin",
 					"type": "string",
-					"comment": ""
+					"comment": "Indique si le csv provient de la branche stock ou la branche événement"
 				},
 				{
 					"name": "date_greffe",
@@ -229,7 +234,7 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "file_timestamp",
 					"type": "string",
-					"comment": ""
+					"comment": "Extraction de la date de transmission inscrite dans le csv"
 				},
 				{
 					"name": "libelle_evt",
@@ -239,12 +244,14 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "last_libele_evt",
 					"type": "string",
-					"comment": ""
+					"comment": "Extraction du dernier libellé de l'événement connu pour une séquence, et appliquer cette information à l'ensemble de la séquence",
+                    "Notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets"
 				},
 				{
 					"name": "status_admin",
 					"type": "varchar(1)",
-					"comment": ""
+					"comment": "Indique si l'établissement est ouvert ou fermée. La ligne impacte toute l'historique",
+                    "Notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etapes"
 				},
 				{
 					"name": "type",
@@ -254,7 +261,8 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "status_ets",
 					"type": "varchar(5)",
-					"comment": ""
+					"comment": "Informe du type d'établissement (SIE/PRI.SEC) concernant une séquence",
+                    "Notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets"
 				},
 				{
 					"name": "siège_pm",
@@ -284,32 +292,38 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "adresse_reconstituee_inpi",
 					"type": "string",
-					"comment": ""
+					"comment": "Concatenation des champs de l'adresse et suppression des espace",
+                    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#adress_reconsitituee_inpi"
 				},
 				{
 					"name": "adresse_distance_inpi",
 					"type": "string",
-					"comment": ""
+					"comment": "Concatenation des champs de l'adresse, suppression des espaces et des articles. Utilisé pour calculer le score permettant de distinguer la similarité/dissimilarité entre deux adresses (INPI vs INSEE)"
+                    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#adresse_distance_inpi"
 				},
 				{
 					"name": "list_numero_voie_matching_inpi",
 					"type": "array<string>",
-					"comment": ""
+					"comment": "Ensemble des numéros compris dans les champs de l'adresse",
+    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etapes"
 				},
 				{
 					"name": "numero_voie_matching",
 					"type": "string",
-					"comment": ""
+					"comment": "Extraction du premier numéro de voie dans l'adresse. Deprecated",
+    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#numero_voie_matching"
 				},
 				{
 					"name": "voie_clean",
 					"type": "string",
-					"comment": ""
+					"comment": "Extraction du type de voie contenu dans l’adresse. Variable pivot servant à reprendre l’abrevation du type de voie comme à l’INSEE",
+    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#voie_matching"
 				},
 				{
 					"name": "type_voie_matching",
 					"type": "string",
-					"comment": ""
+					"comment": "Extration du type de voie dans l'adresse et match avec abbrévation type de voie de l'INSEE",
+    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#voie_matching"
 				},
 				{
 					"name": "code_postal",
@@ -319,7 +333,8 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "code_postal_matching",
 					"type": "string",
-					"comment": ""
+					"comment": "Reconstruit le code postal si le champs code postal est nul. La reconstitution se fait si le champs ville contient exactement 5 digit",
+    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#filtrer-les-dates-de-greffe"
 				},
 				{
 					"name": "ville",
@@ -329,7 +344,8 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 				{
 					"name": "ville_matching",
 					"type": "string",
-					"comment": ""
+					"comment": "Nettoyage regex de la ville et suppression des espaces. La même logique de nettoyage est appliquée coté INSEE",
+    "notebook_origin":"https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-1-pr%C3%A9paration-ville_matching"
 				},
 				{
 					"name": "code_commune",
@@ -444,7 +460,8 @@ Nous avons constaté dans avec la query précédente qu'il y avait 9 lignes ayan
 		"has_encrypted_data": "false"
 	}
 }
-
+```
+    
 ## Steps
 
 ```python
@@ -882,5 +899,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python
-create_report(extension = "html")
+create_report(extension = "html", keep_code = True)
 ```
