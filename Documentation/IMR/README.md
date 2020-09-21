@@ -14,6 +14,7 @@ Le détail se trouve dans le PDF suivant: [Doc_Tech_IMR_Mai_2019_v1.5.1.pdf](htt
 - [Personnes Morales](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#personnes-morales):PM -> Pages 15-18
 - [Personnes Physiques](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#personnes-physiques):PP -> Pages 19-24
 - [Représentants](https://scm.saas.cagip.group.gca/PERNETTH/InseeInpi_matching/tree/master/Documentation/IMR#repr%C3%A9sentants): REP -> Pages 30-37
+- [Recapitulatif](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/tree/master/Documentation/IMR#r%C3%A9capitulatif-ensemble-des-variables-selon-origine)
 
 Les fichiers transmis permettent d’exploiter les données de flux en provenance des greffes des tribunaux de commerce, et plus précisément :
 * Constitution du dossier d’une personne morale ou personne physique (identifiée par son siren et son n° de gestion), dans le cas d’une 1ère immatriculation,
