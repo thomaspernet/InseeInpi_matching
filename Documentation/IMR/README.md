@@ -254,3 +254,126 @@ Les fichiers sont de 2 types :
 | ID_Représentant              | ID (numéro uniqued’identification d’unreprésentant) | Valeur obligatoire.Cet identifiant sert à faciliter l’intégration des mises à jourpour un représentant donné.                                                     | Valeur obligatoire.Cet identifiant sert à faciliter l’intégration des mises à jourpour un représentant donné.                                                               | Valeur obligatoire.Cet identifiant sert à faciliter l’intégration des mises à jourpour un représentant donné.                                                     |
 | date_greffe                  | Date de l’événement                                 | Obligatoire                                                                                                                                                       | Obligatoire                                                                                                                                                                 | Obligatoire                                                                                                                                                       |
 | Libelle_Evt                  | Libellé de l’évènement                              | Obligatoire                                                                                                                                                       | Obligatoire                                                                                                                                                                 | Obligatoire                                                                                                                                                       |
+
+
+# Récapitulatif ensemble des variables selon Origine
+
+Le tableau ci dessous récapitule l'origine des variables et leur présence dans chacun des tableaux
+
+| Var name                        | 01_PM | 02_PP | 03_REP | 04_ETS | 05_OBS | 06_ACTES | 07_CPTESANN |
+|---------------------------------|-------|-------|--------|--------|--------|----------|-------------|
+| Code Greffe                     | OK    | OK    | OK     | OK     | OK     | OK       | OK          |
+| Nom_Greffe                      | OK    | OK    | OK     | OK     | OK     | OK       | OK          |
+| Numero_Gestion                  | OK    | OK    | OK     | OK     | OK     | OK       | OK          |
+| Siren                           | OK    | OK    | OK     | OK     | OK     | OK       | OK          |
+| Type_Inscription                | OK    | OK    |        |        |        |          |             |
+| Date_Immatriculation            | OK    | OK    |        |        |        |          |             |
+| Date_1re_Immatriculation        | OK    | OK    |        |        |        |          |             |
+| Date_Radiation                  | OK    | OK    |        |        |        |          |             |
+| Date_Transfert                  | OK    | OK    |        |        |        |          |             |
+| Sans_Activité                   | OK    | OK    |        |        |        |          |             |
+| Date_Debut_Activité             | OK    | OK    |        |        |        |          |             |
+| Date_Début_1re_Activité         | OK    | OK    |        |        |        |          |             |
+| Date_Cessation_Activité         | OK    | OK    |        |        |        |          |             |
+| Denomination                    | OK    |       |        |        |        |          |             |
+| Sigle                           | OK    |       |        |        |        |          |             |
+| Forme_Juridique                 | OK    |       | OK     |        |        |          |             |
+| Associé_Unique                  | OK    |       |        |        |        |          |             |
+| Activité_Principale             | OK    |       |        |        |        |          |             |
+| Type_Capital                    | OK    |       |        |        |        |          |             |
+| Capital                         | OK    |       |        |        |        |          |             |
+| Capital_Actuel                  | OK    |       |        |        |        |          |             |
+| Devise                          | OK    |       |        |        |        |          |             |
+| Date_Cléture                    | OK    |       |        |        |        |          | OK          |
+| Date_Cléture_Except.            | OK    |       |        |        |        |          |             |
+| Economie_Sociale_Solidaire      | OK    |       |        |        |        |          |             |
+| Durée_PM                        | OK    |       |        |        |        |          |             |
+| Date_Greffe                     | OK    | OK    | OK     | OK     | OK     |          |             |
+| Libelle_Evt                     | OK    | OK    | OK     | OK     |        |          |             |
+| Nom_Patronymique                |       | OK    | OK     |        |        |          |             |
+| Nom_Usage                       |       | OK    | OK     |        |        |          |             |
+| Pseudonyme                      |       | OK    | OK     |        |        |          |             |
+| Prénoms                         |       | OK    | OK     |        |        |          |             |
+| Date_Naissance                  |       | OK    | OK     |        |        |          |             |
+| Ville_Naissance                 |       | OK    | OK     |        |        |          |             |
+| Pays_Naissance                  |       | OK    | OK     |        |        |          |             |
+| Nationalité                     |       | OK    | OK     |        |        |          |             |
+| Adresse_Ligne1                  |       | OK    | OK     | OK     |        |          |             |
+| Adresse_Ligne2                  |       | OK    | OK     | OK     |        |          |             |
+| Adresse_Ligne3                  |       | OK    | OK     | OK     |        |          |             |
+| Code_Postal                     |       | OK    | OK     | OK     |        |          |             |
+| Ville                           |       | OK    | OK     | OK     |        |          |             |
+| Code_Commune                    |       | OK    | OK     | OK     |        |          |             |
+| Pays                            |       | OK    | OK     | OK     |        |          |             |
+| Activité_Forain                 |       | OK    |        |        |        |          |             |
+| EIRL                            |       | OK    |        |        |        |          |             |
+| Auto-entrepreneur               |       | OK    |        |        |        |          |             |
+| DAP                             |       | OK    |        |        |        |          |             |
+| DAP_Dénomination                |       | OK    |        |        |        |          |             |
+| DAP_Objet                       |       | OK    |        |        |        |          |             |
+| DAP_Date_Cléture                |       | OK    |        |        |        |          |             |
+| DAP_Adresse_Ligne1              |       | OK    |        |        |        |          |             |
+| DAP_Adresse_Ligne2              |       | OK    |        |        |        |          |             |
+| DAP_Adresse_Ligne3              |       | OK    |        |        |        |          |             |
+| DAP_Code_Postal                 |       | OK    |        |        |        |          |             |
+| DAP_Ville                       |       | OK    |        |        |        |          |             |
+| DAP_Code_Commune                |       | OK    |        |        |        |          |             |
+| DAP_Pays                        |       | OK    |        |        |        |          |             |
+| Conjoint_Collab_Nom_Patronym    |       | OK    | OK     |        |        |          |             |
+| Conjoint_Collab_Nom_Usage       |       | OK    | OK     |        |        |          |             |
+| Conjoint_Collab_Pseudo          |       | OK    | OK     |        |        |          |             |
+| Conjoint_Collab_Prénoms         |       | OK    | OK     |        |        |          |             |
+| Conjoint_Collab_Date_Fin        |       | OK    | OK     |        |        |          |             |
+| Type                            |       |       | OK     | OK     |        |          |             |
+| Dénomination                    |       |       | OK     |        |        |          |             |
+| Siren.1                         |       |       | OK     |        |        |          |             |
+| Qualité                         |       |       | OK     |        |        |          |             |
+| Rep_Perm_Nom                    |       |       | OK     |        |        |          |             |
+| Rep_Perm_Nom_Usage              |       |       | OK     |        |        |          |             |
+| Rep_Perm_Pseudo                 |       |       | OK     |        |        |          |             |
+| Rep_Perm_Prénoms                |       |       | OK     |        |        |          |             |
+| Rep_Perm_Date_Naissance         |       |       | OK     |        |        |          |             |
+| Rep_Perm_Ville_Naissance        |       |       | OK     |        |        |          |             |
+| Rep_Perm_Pays_Naissance         |       |       | OK     |        |        |          |             |
+| Rep_Perm_Nationalité            |       |       | OK     |        |        |          |             |
+| Rep_Perm_Adr_Ligne1             |       |       | OK     |        |        |          |             |
+| Rep_Perm_Adr_Ligne2             |       |       | OK     |        |        |          |             |
+| Rep_Perm_Adr_Ligne3             |       |       | OK     |        |        |          |             |
+| Rep_Perm_Code_Postal            |       |       | OK     |        |        |          |             |
+| Rep_Perm_Ville                  |       |       | OK     |        |        |          |             |
+| Rep_Perm_Code_Commune           |       |       | OK     |        |        |          |             |
+| Rep_Perm_Pays                   |       |       | OK     |        |        |          |             |
+| ID_Représentant                 |       |       | OK     |        |        |          |             |
+| Siége_PM                        |       |       |        | OK     |        |          |             |
+| RCS_Registre                    |       |       |        | OK     |        |          |             |
+| Domiciliataire_Nom              |       |       |        | OK     |        |          |             |
+| Domiciliataire_Siren            |       |       |        | OK     |        |          |             |
+| Domiciliataire_Greffe           |       |       |        | OK     |        |          |             |
+| Domiciliataire_Complément       |       |       |        | OK     |        |          |             |
+| Siege_Domicile_Représentant     |       |       |        | OK     |        |          |             |
+| Nom_Commercial                  |       |       |        | OK     |        |          |             |
+| Enseigne                        |       |       |        | OK     |        |          |             |
+| Activité_Ambulante              |       |       |        | OK     |        |          |             |
+| Activité_Saisonniére            |       |       |        | OK     |        |          |             |
+| Activité_Non_Sédentaire         |       |       |        | OK     |        |          |             |
+| Date_Début_Activité             |       |       |        | OK     |        |          |             |
+| Activité                        |       |       |        | OK     |        |          |             |
+| Origine_Fonds                   |       |       |        | OK     |        |          |             |
+| Origine_Fonds_Info              |       |       |        | OK     |        |          |             |
+| Type_Exploitation               |       |       |        | OK     |        |          |             |
+| ID_Etablissement                |       |       |        | OK     |        |          |             |
+| ID_Observation                  |       |       |        |        | OK     |          |             |
+| Numéro_Observation              |       |       |        |        | OK     |          |             |
+| Date_Ajout                      |       |       |        |        | OK     |          |             |
+| Date_Suppression                |       |       |        |        | OK     |          |             |
+| Texte                           |       |       |        |        | OK     |          |             |
+| Etat                            |       |       |        |        | OK     | OK       | OK          |
+| Date_Dépét                      |       |       |        |        |        | OK       | OK          |
+| Numéro_Dépét                    |       |       |        |        |        | OK       | OK          |
+| Date_Acte                       |       |       |        |        |        | OK       |             |
+| Type_Acte                       |       |       |        |        |        | OK       |             |
+| Décision                        |       |       |        |        |        | OK       |             |
+| Durée_Exercice                  |       |       |        |        |        |          | OK          |
+| Type_Remise                     |       |       |        |        |        |          | OK          |
+| Confidentialité                 |       |       |        |        |        |          | OK          |
+| Confidentialité_Compte_résultat |       |       |        |        |        |          | OK          |
