@@ -75,6 +75,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import os, shutil
+from itertools import chain
 
 path = os.getcwd()
 parent_path = str(Path(path).parent)
@@ -259,6 +260,1309 @@ L'INPI peut gonfler le nombre d'établissements d'une entreprise lorsque le gref
 
 Pour conclure, la table finale va avoir une seule ligne par quadruplet et date de greffe. 
 
+
+# Préparation table ETS INPI filtrée et enrichie
+
+La préparation de la table des ETS se fait en 3 étapes:
+
+1. Création des tables
+2. Filtrage et enrichissement des flux intra day et intra date de greffe
+3. Enrichissements des lignes d'un événement a l'autre et filtrage des événements partiels
+
+![](https://app.lucidchart.com/publicSegments/view/5c24129a-f50a-4977-97b3-9a62eaa936b7/image.png)
+
+La première étape est relativement simple car elle consiste a créer les tables des stocks et des flux. L'arborescence du S3 est la suivante:
+
+```
+01_donnees_source
+    ├───Flux
+    │   ├───2017
+    │   │   ├───ETS
+    │   │   │   ├───EVT
+    │   │   │   └───NEW
+    │   ├───2018
+    │   │   ├───ETS
+    │   │   │   ├───EVT
+    │   │   │   └───NEW
+    │   └───2019
+    │   │   ├───ETS
+    │   │   │   ├───EVT
+    │   │   │   └───NEW
+    └───Stock
+        ├───Stock_initial
+            ├───2017
+            │   ├───ETS
+        └───Stock_partiel
+            ├───2018
+            │   ├───ETS
+            ├───2019
+            │   ├───ETS
+            └───2020
+                ├───ETS
+```
+
+Dans la seconde étape, nous allons concatener les tables des partiels et des flux. De plus nous allons filtrer et enrichir la donnée des flux. L'enrichissement va se faire greffe par greffe car la donnée est trop volumineuse pour etre traité en un seul bloc. La technique que nous avons utilisé n'a pas été optimisé ce qui pousse a faire un traitement brique par brique. Dès que l'enrichissement au niveau du timestamp est fait, il faut répliquer l'opération au niveau de la date de greffe.
+
+La troisième est dernière étape est divisée en trois partie. Dans un premier temps, il faut concatener les tables de stock et des flux filtrés et enrichis, ensite il est nécéssaire de filtrer les événements précédents un partiel. Finalement, il faut enrichir la donnée d'un événement a un autre.
+
+Un point de rappel sur les règles de gestion appliquées
+
+- Une séquence est un classement chronologique pour le quadruplet suivant:
+    - siren + code greffe + numero gestion + ID établissement pour les Etablissements
+- Une ligne événement ne modifie que le champs comportant la modification. Les champs non modifiés vont être remplis par la ligne t-1
+- Une ligne partiel va rendre caduque l'ensemble des séquences précédentes.
+- Le remplissage doit se faire de deux façons
+    - une première fois avec la date de transmission (plusieurs informations renseignées pour une meme date de transmission pour une même séquence). La dernière ligne remplie des valeurs précédentes de la séquence -> 
+2. Filtrage et enrichissement des 
+    - une seconde fois en ajoutant les valeurs non renseignées pour cet évènement, en se basant sur les informations des lignes précédentes du triplet (quadruplet pour les Etablissements). Les lignes précédentes ont une date de transmission différente et/ou initial, partiel et création. -> Flux entre les événements 
+
+
+## Préparation json parameters
+
+Pour faciliter l'ingestion de données en batch, on prépare un json `parameters` avec les paths où récupérer la data, le nom des tables, les origines, mais aussi un champ pour récupérer l'ID de l'execution dans Athena
+
+```python
+list_ = []
+for i in  [
+"type",
+"Siege_PM",
+"RCS_Registre",
+"Adresse_Ligne1",
+"Adresse_Ligne2",
+"Adresse_Ligne3",
+"Code_Postal",
+"Ville",
+"Code_Commune",
+"Pays",
+"Domiciliataire_Nom",
+"Domiciliataire_Siren",
+"Domiciliataire_Greffe",
+"Domiciliataire_Complement",
+"Siege_Domicile_Representant",
+"Nom_Commercial",
+"Enseigne",
+"Activite_Ambulante",
+"Activite_Saisonniere",
+"Activite_Non_Sedentaire",
+"Date_Debut_Activite",
+"Activite",
+"Origine_Fonds",
+"Origine_Fonds_Info",
+"Type_Exploitation",
+"max_partiel",
+"csv_source"
+]:
+    list_.append(i.lower())
+list_
+```
+
+```python
+'step_x':{
+           'query':{
+               'top': {},
+               'middle': {}, 
+               'bottom' : {}
+           },
+    "output_id":[]
+    }
+```
+
+```python
+parameters ={
+   "global":{
+      "database":"ets_inpi",
+      "output":"INPI/sql_output",
+      "output_preparation":"INPI/sql_output_preparation",
+      "ETS_step4_id":[
+         
+      ],
+      "table_final_id":{
+         "ETS":{
+            
+         }
+      }
+   },
+   "steps":{
+       'step_0':{
+           'query':{
+               'top':"CREATE EXTERNAL TABLE IF NOT EXISTS {0}.{1} (",
+               'bottom': """ )
+     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+    WITH SERDEPROPERTIES (
+   'separatorChar' = '{0}',
+   'quoteChar' = '"'
+   )
+     LOCATION '{1}'
+     TBLPROPERTIES ('has_encrypted_data'='false',
+              'skip.header.line.count'='1');"""
+               
+           }
+       },
+       'step_1':
+       {
+           'tables':['ets_partiel', 'ets_flux'],
+            'partionned': [
+               "siren", "code_greffe","nom_greffe",
+               "numero_gestion", "id_etablissement", 
+               "file_timestamp"
+           ],
+           'query':{
+               'top': """
+                    CREATE TABLE {}.{}
+                    WITH (
+                    format='PARQUET'
+                    ) AS
+                    WITH append AS (
+                    SELECT * FROM {}
+              """,
+               'middle':"""
+                    UNION 
+                    SELECT * FROM {} """,
+               'bottom': """
+            )
+            SELECT * 
+            FROM append
+            ORDER BY {}
+            """
+           },
+           "output_id":[]
+       },
+       'step_2':
+       {
+           'tables': ['ets_flux_filtre_enrichie_timestamp','ets_flux_filtre_enrichie_date_greffe'],
+           'partionned': {
+               'time_stamp':
+               [
+               "siren", "code_greffe","nom_greffe",
+               "numero_gestion", "id_etablissement", 
+               "file_timestamp"
+           ],
+               'date_greffe':
+               [
+               "siren", "code_greffe","nom_greffe",
+               "numero_gestion", "id_etablissement", 
+               "date_greffe"
+           ],
+           },
+           "path":['s3://calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX',
+                   's3://calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE'
+                  ],
+           "separator":",",
+           'query':{
+               'top': {
+                   'first':"""
+WITH createID AS (
+  SELECT 
+   *, 
+    ROW_NUMBER() OVER (
+      PARTITION BY 
+       {0}
+    ) As row_ID, 
+    DENSE_RANK () OVER (
+      ORDER BY 
+        {0}
+    ) As ID 
+  FROM 
+    {1}.{2} 
+  WHERE {4} = '{3}'  
+) 
+SELECT 
+  * 
+FROM 
+  (
+    WITH filled AS (
+      SELECT 
+        ID, 
+        row_ID, 
+        {0}, 
+""",
+                   'second':"""first_value("{0}") over (partition by ID, "{0}_partition" order by 
+ID, row_ID
+ ) as "{0}"
+"""
+               },
+               'middle':{
+                   'first':"""FROM 
+        (
+          SELECT 
+            *, """,
+                   'second':"""sum(case when "{0}" = '' then 0 else 1 end) over (partition by ID 
+order by  row_ID) as "{0}_partition" 
+"""
+               },
+               'bottom':""" 
+          FROM 
+            createID 
+          ORDER BY 
+            ID, row_ID ASC
+        ) 
+      ORDER BY 
+        ID, 
+        row_ID
+    ) 
+    SELECT
+    {1},
+    {0},
+CASE WHEN siren IS NOT NULL THEN 'EVT' 
+ELSE NULL END as origin
+    FROM 
+      (
+        SELECT 
+          *, 
+          ROW_NUMBER() OVER(
+            PARTITION BY ID 
+            ORDER BY 
+              ID, row_ID DESC
+          ) AS max_value 
+        FROM 
+          filled
+      ) AS T 
+    WHERE 
+      max_value = 1
+  )ORDER BY {1}
+"""
+           },
+           'to_fill':{
+           'time_stamp':['libelle_evt',
+ 'date_greffe',
+ 'type',
+ 'siege_pm',
+ 'rcs_registre',
+ 'adresse_ligne1',
+ 'adresse_ligne2',
+ 'adresse_ligne3',
+ 'code_postal',
+ 'ville',
+ 'code_commune',
+ 'pays',
+ 'domiciliataire_nom',
+ 'domiciliataire_siren',
+ 'domiciliataire_greffe',
+ 'domiciliataire_complement',
+ 'siege_domicile_representant',
+ 'nom_commercial',
+ 'enseigne',
+ 'activite_ambulante',
+ 'activite_saisonniere',
+ 'activite_non_sedentaire',
+ 'date_debut_activite',
+ 'activite',
+ 'origine_fonds',
+ 'origine_fonds_info',
+ 'type_exploitation',
+ 'csv_source'],
+               'date_greffe':[
+                   'libelle_evt',
+ 'type',
+ 'siege_pm',
+ 'rcs_registre',
+ 'adresse_ligne1',
+ 'adresse_ligne2',
+ 'adresse_ligne3',
+ 'code_postal',
+ 'ville',
+ 'code_commune',
+ 'pays',
+ 'domiciliataire_nom',
+ 'domiciliataire_siren',
+ 'domiciliataire_greffe',
+ 'domiciliataire_complement',
+ 'siege_domicile_representant',
+ 'nom_commercial',
+ 'enseigne',
+ 'activite_ambulante',
+ 'activite_saisonniere',
+ 'activite_non_sedentaire',
+ 'date_debut_activite',
+ 'activite',
+ 'origine_fonds',
+ 'origine_fonds_info',
+ 'type_exploitation',
+ 'csv_source'] },
+           'year':[2017, 2018,2019],
+          'code_greffe': [
+
+"1801",
+"7803",
+"0301",
+"1104",
+"8101",
+"4801",
+"6601",
+"2801",
+"2104",
+"1402",
+"1601",
+"0605",
+"8302",
+"7601",
+"5601",
+"2702",
+"7608",
+"2401",
+"6201",
+"8201",
+"5103",
+"1407",
+"5401",
+"7001",
+"1704",
+"5802",
+"6901",
+"6403",
+"4202",
+"0901",
+"7301",
+"3502",
+"4401",
+"5501",
+"9401",
+"1101",
+"7802",
+"4502",
+"8801",
+"1708",
+"3402",
+"7901",
+"2602",
+"2001",
+"6401",
+"0602",
+"3902",
+"5602",
+"3405",
+"6502",
+"4901",
+"8002",
+"5906",
+"8102",
+"0603",
+"0202",
+"7801",
+"4302",
+"7701",
+"2402",
+"5002",
+"6101",
+"5910",
+"1303",
+"3303",
+"0702",
+"8602",
+"9301",
+"4601",
+"5902",
+"1301",
+"6303",
+"4201",
+"6202",
+"3801",
+"6002",
+"7102",
+"2301",
+"5001",
+"5402",
+"9001",
+"7106",
+"2002",
+"4001",
+"3201",
+"4101",
+"0501",
+"3003",
+"1501",
+"4402",
+"8903",
+"0203",
+"5952",
+"2202",
+"1304",
+"3701",
+"8701",
+"3302",
+"3501",
+"0802",
+"6903",
+"5101",
+"4701",
+"3102",
+"1203",
+"3802",
+"2501",
+"8901",
+"2903",
+"2701",
+"6001",
+"5201",
+"8305",
+"1901",
+"7702",
+"8401",
+"7202",
+"7501",
+"9201",
+"8501",
+"7401",
+"7606",
+"0101",
+"7402",
+"0601",
+"8303",
+"0303",
+"5301",
+"3601",
+"1305",
+"4002",
+"2901",
+"1001",
+"0401"
+],
+           "output_id":[]
+       },
+    'step_3':{
+        'tables': ['ets_filtre_enrichi_historique_tmp','ets_filtre_enrichie_historique'],
+        'partionned': {
+               'date_greffe':
+               [
+               "siren", "code_greffe","nom_greffe",
+               "numero_gestion", "id_etablissement", 
+               "date_greffe"
+           ]},
+        'to_fill':
+['type',
+ 'siege_pm',
+ 'rcs_registre',
+ 'adresse_ligne1',
+ 'adresse_ligne2',
+ 'adresse_ligne3',
+ 'code_postal',
+ 'ville',
+ 'code_commune',
+ 'pays',
+ 'domiciliataire_nom',
+ 'domiciliataire_siren',
+ 'domiciliataire_greffe',
+ 'domiciliataire_complement',
+ 'siege_domicile_representant',
+ 'nom_commercial',
+ 'enseigne',
+ 'activite_ambulante',
+ 'activite_saisonniere',
+ 'activite_non_sedentaire',
+ 'date_debut_activite',
+ 'activite',
+ 'origine_fonds',
+ 'origine_fonds_info',
+ 'type_exploitation',
+ 'csv_source'],
+        
+           'query':{
+               'preparation':"""
+               CREATE TABLE ets_inpi.ets_filtre_enrichi_historique_tmp WITH (format = 'PARQUET') AS 
+WITH concat_ AS (
+SELECT 
+  siren, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  Coalesce(
+         try(date_parse(date_greffe, '%Y-%m-%d')),
+         try(date_parse(date_greffe, '%Y/%m/%d')),
+         try(date_parse(date_greffe, '%d %M %Y')),
+         try(date_parse(date_greffe, '%d/%m/%Y')),
+         try(date_parse(date_greffe, '%d-%m-%Y'))
+  )
+  as date_greffe, 
+  libelle_evt,
+  type, 
+  siege_pm, 
+  rcs_registre, 
+  adresse_ligne1, 
+  adresse_ligne2, 
+  adresse_ligne3, 
+  code_postal, 
+  code_commune, 
+  pays, 
+  domiciliataire_nom, 
+  domiciliataire_siren, 
+  domiciliataire_greffe, 
+  domiciliataire_complement, 
+  siege_domicile_representant, 
+  enseigne, 
+  activite_ambulante, 
+  activite_saisonniere, 
+  activite_non_sedentaire, 
+  date_debut_activite, 
+  activite, 
+  origine_fonds, 
+  origine_fonds_info, 
+  ville,
+  nom_commercial,
+  type_exploitation,
+  csv_source,
+  'FLUX' AS origin 
+FROM 
+  ets_flux_filtre_enrichie_date_greffe 
+UNION 
+  (
+    SELECT 
+      siren, 
+      code_greffe, 
+      nom_greffe, 
+      numero_gestion, 
+      id_etablissement, 
+      Coalesce(
+         try(date_parse(date_greffe, '%Y-%m-%d')),
+         try(date_parse(date_greffe, '%Y/%m/%d')),
+         try(date_parse(date_greffe, '%d %M %Y')),
+         try(date_parse(date_greffe, '%d/%m/%Y')),
+         try(date_parse(date_greffe, '%d-%m-%Y'))
+  )
+  as date_greffe, 
+  libelle_evt,
+      type, 
+      siege_pm, 
+      rcs_registre, 
+      adresse_ligne1, 
+      adresse_ligne2, 
+      adresse_ligne3, 
+      code_postal, 
+      code_commune, 
+      pays, 
+      domiciliataire_nom, 
+      domiciliataire_siren, 
+      domiciliataire_greffe, 
+      domiciliataire_complement, 
+      siege_domicile_representant, 
+      enseigne, 
+      activite_ambulante, 
+      activite_saisonniere, 
+      activite_non_sedentaire, 
+      date_debut_activite, 
+      activite, 
+      origine_fonds, 
+      origine_fonds_info, 
+      ville,
+  nom_commercial,
+  type_exploitation,
+      csv_source,
+       'INITIAL' AS origin 
+    FROM 
+      ets_initial
+  ) 
+UNION 
+  (
+    SELECT 
+      date_.siren, 
+      date_.code_greffe, 
+      date_.nom_greffe, 
+      date_.numero_gestion, 
+      date_.id_etablissement, 
+      Coalesce(
+         try(date_parse(date_greffe, '%Y-%m-%d')),
+         try(date_parse(date_greffe, '%Y/%m/%d')),
+         try(date_parse(date_greffe, '%d %M %Y')),
+         try(date_parse(date_greffe, '%d/%m/%Y')),
+         try(date_parse(date_greffe, '%d-%m-%Y'))
+  )
+  as date_greffe, 
+  libelle_evt,
+      type, 
+      siege_pm, 
+      rcs_registre, 
+      adresse_ligne1, 
+      adresse_ligne2, 
+      adresse_ligne3, 
+      code_postal, 
+      code_commune, 
+      pays, 
+      domiciliataire_nom, 
+      domiciliataire_siren, 
+      domiciliataire_greffe, 
+      domiciliataire_complement, 
+      siege_domicile_representant, 
+      enseigne, 
+      activite_ambulante, 
+      activite_saisonniere, 
+      activite_non_sedentaire, 
+      date_debut_activite, 
+      activite, 
+      origine_fonds, 
+      origine_fonds_info, 
+      ville,
+  nom_commercial,
+  type_exploitation,
+      csv_source, 
+      'PARTIEL' AS origin 
+    FROM 
+      (
+        SELECT 
+          siren, 
+          code_greffe, 
+          nom_greffe, 
+          numero_gestion, 
+          id_etablissement, 
+          date_greffe, 
+          type, 
+          libelle_evt,
+          siege_pm, 
+          rcs_registre, 
+          adresse_ligne1, 
+          adresse_ligne2, 
+          adresse_ligne3, 
+          code_postal, 
+          code_commune, 
+          pays, 
+          domiciliataire_nom, 
+          domiciliataire_siren, 
+          domiciliataire_greffe, 
+          domiciliataire_complement, 
+          siege_domicile_representant, 
+          enseigne, 
+          activite_ambulante, 
+          activite_saisonniere, 
+          activite_non_sedentaire, 
+          date_debut_activite, 
+          activite, 
+          origine_fonds, 
+          origine_fonds_info, 
+          ville,
+  nom_commercial,
+  type_exploitation,
+          csv_source, 
+          Coalesce(
+            try(
+              cast(file_timestamp as timestamp)
+            )
+          ) as file_timestamp 
+        FROM 
+          ets_partiel
+      ) as date_ 
+      INNER JOIN (
+        SELECT 
+          siren, 
+          code_greffe, 
+          nom_greffe, 
+          numero_gestion, 
+          id_etablissement, 
+          MAX(
+            Coalesce(
+              try(
+                cast(file_timestamp as timestamp)
+              )
+            )
+          ) as file_timestamp 
+        FROM 
+          ets_partiel 
+        GROUP BY 
+          siren, 
+          code_greffe, 
+          nom_greffe, 
+          numero_gestion, 
+          id_etablissement
+      ) as max_ ON date_.siren = max_.siren 
+      AND date_.code_greffe = max_.code_greffe 
+      AND date_.nom_greffe = max_.nom_greffe 
+      AND date_.numero_gestion = max_.numero_gestion 
+      AND date_.id_etablissement = max_.id_etablissement 
+      AND date_.file_timestamp = max_.file_timestamp
+  ) 
+ORDER BY 
+  siren, 
+  code_greffe, 
+  nom_greffe, 
+  numero_gestion, 
+  id_etablissement, 
+  date_greffe
+)
+SELECT    concat_.siren, 
+          concat_.code_greffe, 
+          concat_.nom_greffe, 
+          concat_.numero_gestion, 
+          concat_.id_etablissement, 
+          libelle_evt,
+          date_greffe, 
+          type, 
+          siege_pm, 
+          rcs_registre, 
+          adresse_ligne1, 
+          adresse_ligne2, 
+          adresse_ligne3, 
+          code_postal, 
+          code_commune, 
+          pays, 
+          domiciliataire_nom, 
+          domiciliataire_siren, 
+          domiciliataire_greffe, 
+          domiciliataire_complement, 
+          siege_domicile_representant, 
+          enseigne, 
+          activite_ambulante, 
+          activite_saisonniere, 
+          activite_non_sedentaire, 
+          date_debut_activite, 
+          activite, 
+          origine_fonds, 
+          origine_fonds_info, 
+          ville,
+  nom_commercial,
+  type_exploitation,
+          csv_source,
+          origin,
+          CASE WHEN date_greffe <= date_greffe_max AND origin != 'PARTIEL' THEN 'IGNORE' ELSE NULL END as status
+
+FROM concat_
+LEFT JOIN (
+  SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe
+ as date_greffe_max
+  FROM concat_ 
+  WHERE origin = 'PARTIEL'
+  ) as partiel
+  ON 
+  concat_.siren = partiel.siren AND
+  concat_.code_greffe = partiel.code_greffe AND
+  concat_.nom_greffe = partiel.nom_greffe AND
+  concat_.numero_gestion = partiel.numero_gestion AND
+  concat_.id_etablissement = partiel.id_etablissement""",
+               'enrichissement':{
+               'top': {},
+               'middle': {}, 
+               'bottom' : {}
+           }
+           },
+    "output_id":[]
+    }
+},
+   "schema":{
+      "name":['code_greffe',
+ 'nom_greffe',
+ 'numero_gestion',
+ 'siren',
+ 'type',
+ 'siege_pm',
+ 'rcs_registre',
+ 'adresse_ligne1',
+ 'adresse_ligne2',
+ 'adresse_ligne3',
+ 'code_postal',
+ 'ville',
+ 'code_commune',
+ 'pays',
+ 'domiciliataire_nom',
+ 'domiciliataire_siren',
+ 'domiciliataire_greffe',
+ 'domiciliataire_complement',
+ 'siege_domicile_representant',
+ 'nom_commercial',
+ 'enseigne',
+ 'activite_ambulante',
+ 'activite_saisonniere',
+ 'activite_non_sedentaire',
+ 'date_debut_activite',
+ 'activite',
+ 'origine_fonds',
+ 'origine_fonds_info',
+ 'type_exploitation',
+ 'id_etablissement',
+ 'date_greffe',
+ 'libelle_evt',
+ 'csv_source',
+ 'nature',
+ 'type_data',
+ 'origin',
+ 'file_timestamp'],
+      "format":[
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string",
+         "string"
+      ]
+   },
+   "Tables":{
+      "Stock":{
+         "INITIAL":{
+               "path": ["s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Initial/2017/ETS"],
+               "tables": ["ets_initial"],
+               "origin":"INITIAL",
+               "separator":";",
+               "output_id":[
+                  
+               ]
+         },
+         "PARTIEL":{
+               "path":[
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Partiel/2018/ETS",
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Partiel/2019/ETS"
+               ],
+               "tables":[
+                  "ets_partiel_2018",
+                  "ets_partiel_2019"
+               ],
+               "origin":"PARTIEL",
+               "separator":";",
+               "output_id":[
+                  
+               ]
+         }
+      },
+      "Flux":{
+         "NEW":{
+               "path":[
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2017/ETS/NEW",
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2018/ETS/NEW",
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2019/ETS/NEW"
+               ],
+               "tables":[
+                  "ets_new_2017",
+                  "ets_new_2018",
+                  "ets_new_2019"
+               ],
+               "origin":"NEW",
+               "separator":";",
+               "output_id":[
+                  
+               ]
+         },
+         "EVT":{
+               "path":[
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2017/ETS/EVT",
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2018/ETS/EVT",
+                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2019/ETS/EVT"
+               ],
+               "tables":[
+                  "ets_evt_2017",
+                  "ets_evt_2018",
+                  "ets_evt_2019"
+               ],
+               "origin":"EVT",
+               "separator":";",
+               "output_id":[
+                  
+               ]
+         }
+      }
+   }
+}
+```
+
+## Step 1: Creation tables
+
+Afin de ne pas mélanger l'ensemble des tables, nous allons créer 3 tables distinctes:
+
+- 1 table pour les stocks initiaux: `ets_stock`
+- 1 table pour les événements: `ets_flux`
+- 1 table pour les partiels: `ets_partiel`
+
+Etant donné que nous avons compartimenté les données par origine et année, nous devons créer une étape intermédiaire qui contient les tables par année
+
+```python
+"CREATE DATABASE ets_inpi"
+```
+
+On drop les tables si elles existent déjà.
+
+```python
+db = parameters['global']['database']
+s3_output = parameters['global']['output']
+```
+
+```python
+for origin in parameters['Tables'].items():
+    for key0, type_origin in origin[1].items():
+        for i, path in  enumerate(type_origin['path']):
+            query = "DROP TABLE {}".format(type_origin['tables'][i])
+            s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+```
+
+On créé les tables intermédiaires
+
+```python
+from tqdm.notebook import tqdm
+```
+
+```python
+for origin in  tqdm(parameters['Tables'].items()):
+    for key0, type_origin in origin[1].items():
+        
+        for i, path in  enumerate(type_origin['path']):
+            table_top = ""
+            table_bottom = ""
+            middle = ""
+            table_top += parameters['steps']['step_0']['query']['top'].format(db, type_origin['tables'][i])#top.format(db, type_origin['tables'][i])
+            table_bottom += parameters['steps']['step_0']['query']['bottom'].format(type_origin['separator'], path)#bottom.format(type_origin['separator'], path)
+            ### ADD VARIABLES
+            for index, name in enumerate(parameters['schema']['name']):
+                if index == len(parameters['schema']['name'])-1:
+                    middle += "`{0}` {1}".format(
+                        name,
+                        parameters['schema']['format'][index])
+                else:
+                    middle += "`{0}` {1},".format(
+                    name,
+                    parameters['schema']['format'][index])
+            query = table_top + middle + table_bottom        
+            output = s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+            type_origin['output_id'].append(output['QueryID'])
+            print(output)
+```
+
+Comme indiqué précédemment, il faut concatener les tables avant de faire le filtrage et enrichissement.
+
+```python
+for origin in parameters['Tables'].items():
+    for key0, type_origin in origin[1].items():
+        if type_origin['origin'] != 'INITIAL':
+            if type_origin['origin'] == 'PARTIEL':
+                table_name = parameters['steps']['step_1']['tables'][0]
+                query = "DROP TABLE {}".format(table_name)
+            else:
+                table_name = parameters['steps']['step_1']['tables'][1]
+                query = "DROP TABLE {}".format(table_name)
+        s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+```
+
+```python
+table_name
+```
+
+```python
+for origin in parameters['Tables'].items():
+    
+    table_middle = ""
+    if origin[0] == 'Stock':
+        
+        for key0, type_origin in origin[1].items():
+            for i, table in enumerate(type_origin['tables']):
+                table_name = parameters['steps']['step_1']['tables'][0]
+                if table != 'ets_initial':
+                    if i == 0:
+                        table_top = parameters['steps']['step_1']['query']['top'].format(db,table_name, table)
+                    else:
+                        table_middle = parameters['steps']['step_1']['query']['middle'].format(table)
+            table_bottom = parameters['steps']['step_1']['query']['bottom'].format(','.join([str(elem) for elem in parameters['steps']['step_1']['partionned']]))
+            query = table_top + table_middle + table_bottom
+    else:
+        for key0, type_origin in origin[1].items():
+            for i, table in enumerate(type_origin['tables']):
+                table_name = parameters['steps']['step_1']['tables'][1]
+                if key0 == 'NEW' and i == 0:
+                    table_top = parameters['steps']['step_1']['query']['top'].format(db,table_name, table)
+                else:
+                    table_middle += parameters['steps']['step_1']['query']['middle'].format(table)
+        table_bottom = parameters['steps']['step_1']['query']['bottom'].format(','.join([str(elem) for elem in parameters['steps']['step_1']['partionned']]))
+        query = table_top + table_middle + table_bottom 
+    output = s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+    parameters['steps']['step_1']['output_id'].append(output['QueryID'])
+    print(output)
+```
+
+## Step 2: filtrage intra day et intra date de greffe
+
+Dans cette étape, nous devons enrichir les lignes selon la partition suivante:
+
+- siren, 
+- code_greffe,
+- nom_greffe,
+- numero_gestion, 
+- id_etablissement, 
+    - file_timestamp
+    - date_greffe
+
+puis il faut récupérer la dernière ligne du `file_timestamp` pour une date de greffe (`date_greffe`) donnée.
+
+Nous allons procéder en deux étapes totalement identiques. La première consiste a filtrer et enrichir la data en utilisant le time_stamp (date de transmission) et dans un second temps en filtrant et enrichissant via la date de greffe (événement). Au final, nous devons avoir qu'une seule ligne enrichie pour une entreprise et un événement donnée.
+
+Etant donnée la taille de la data, nous allons préparer les flux selon les greffes. Les fichiers sont stockés dans le S3, [calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX/?region=eu-west-3&tab=overview) pour le timestamp et vont etre récupéré dans la query suivante pour créer une table reconstruite. Chacun des csv portera le nom du greffe.
+
+
+
+```python
+for greffe in parameters['steps']['step_2']['code_greffe']:
+        filtre_top = parameters['steps']['step_2']['query']['top']['first'].format(
+        ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['time_stamp']]),
+            db,
+            'ets_flux',
+            greffe,
+            'code_greffe'
+        )
+        filtre_bottom =parameters['steps']['step_2']['query']['bottom'].format(
+            ','.join([str(elem).lower() for elem in parameters['steps']['step_2']['to_fill']['time_stamp']]),
+            ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['time_stamp']])
+        )
+        query_fillin = filtre_top
+        for x, val in enumerate( parameters['steps']['step_2']['to_fill']['time_stamp']):
+
+            if x != len( parameters['steps']['step_2']['to_fill']['time_stamp']) -1:
+                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower() )+ ","
+            else:
+                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower())
+                query_fillin+= parameters['steps']['step_2']['query']['middle']['first']
+
+        for x, val in enumerate(parameters['steps']['step_2']['to_fill']['time_stamp']):
+            if x != len( parameters['steps']['step_2']['to_fill']['time_stamp']) -1:
+                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())+ ","
+            else:
+                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())
+                query_fillin+=filtre_bottom
+        
+        output = s3.run_query(query_fillin,
+                      database = db,
+                      s3_output = s3_output,
+                      filename = None,
+                      destination_key = None)
+        parameters['steps']['step_2']['output_id'].append(output['QueryID'])
+        source_key = '{}/{}.csv'.format(s3_output, output['QueryID'])
+        destination_key = '{0}/{1}.csv'.format(parameters['steps']['step_2']['path'][0][14:],greffe)
+        print(output)
+        s3.move_object_s3(source_key, destination_key, remove = True)
+```
+
+### Table filtree et enrichie intermediaire timestamps
+
+
+Nous venons de filtrer les transmissions intra day, mais pas par date de greffe. L'ensemble des CSV sont dans le S3. Il nous suffit de créer une table intermédiaire, puis de réitéter l'opération non pas sur le timestamp, mais sur la date de greffe. Il est possible qu'une transmission possède plusieurs lignes pour la même transmission. C'est une erreur de notre part lors de la création de la table initiale, nous aurions du créer un numéro de ligne au sein du groupe et ne récupérer que la ligne maximum. Temporairement, nous filtrons la dernière ligne, même si elle n'est indiquée comme la dernière dans les CSV (entre date de greffe)
+
+```python
+query = "DROP TABLE {}".format(parameters['steps']['step_2']['tables'][0])
+s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+```
+
+```python
+table_top = ""
+table_bottom = ""
+middle = ""
+schema_filtre = list(chain.from_iterable([parameters['steps']['step_2']['partionned']['time_stamp'],
+                          parameters['steps']['step_2']['to_fill']['time_stamp']])
+    )
+table_top += parameters['steps']['step_0']['query']['top'].format(db, parameters['steps']['step_2']['tables'][0])#top.format(db, type_origin['tables'][i])
+table_bottom += parameters['steps']['step_0']['query']['bottom'].format(parameters['steps']['step_2']['separator'],
+                                                                        parameters['steps']['step_2']['path'][0])
+for index, name in enumerate(schema_filtre):
+    if index == len(schema_filtre)-1:
+        middle += "`{0}` {1}".format(
+                        name,
+                        'string')
+    else:
+        middle += "`{0}` {1},".format(
+                    name,
+                    'string')
+query = table_top + middle + table_bottom 
+output = s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+parameters['steps']['step_2']['output_id'].append(output['QueryID'])
+```
+
+### Table filtree et enrichie intermediaire date greffe
+
+Etant donnée la taille de la data, nous allons préparer les flux selon les greffes. Les fichiers sont stockés dans le S3, [calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE/?region=eu-west-3&tab=overview) et vont etre récupéré dans la query suivante pour créer une table reconstruite. Chacun des csv portera le nom du greffe.
+
+```python
+for greffe in parameters['steps']['step_2']['code_greffe']:
+        filtre_top = parameters['steps']['step_2']['query']['top']['first'].format(
+        ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['date_greffe']]),
+            db,
+            parameters['steps']['step_2']['tables'][0],
+            greffe,
+            'code_greffe'
+            #'{}_{}_{}'.format(parameters['steps']['step_2']['tables'][0], 
+            #origin, 
+            #year
+        )
+        filtre_bottom =parameters['steps']['step_2']['query']['bottom'].format(
+            ','.join([str(elem).lower() for elem in parameters['steps']['step_2']['to_fill']['date_greffe']]),
+            ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['date_greffe']])
+        )
+        query_fillin = filtre_top
+        for x, val in enumerate( parameters['steps']['step_2']['to_fill']['date_greffe']):
+
+            if x != len( parameters['steps']['step_2']['to_fill']['date_greffe']) -1:
+                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower() )+ ","
+            else:
+                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower())
+                query_fillin+= parameters['steps']['step_2']['query']['middle']['first']
+
+        for x, val in enumerate(parameters['steps']['step_2']['to_fill']['date_greffe']):
+            if x != len( parameters['steps']['step_2']['to_fill']['date_greffe']) -1:
+                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())+ ","
+            else:
+                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())
+                query_fillin+=filtre_bottom
+        
+        output = s3.run_query(query_fillin,
+                      database = db,
+                      s3_output = s3_output,
+                      filename = None,
+                      destination_key = None)
+        source_key = '{}/{}.csv'.format(s3_output, output['QueryID'])
+        destination_key = '{0}/{1}.csv'.format(parameters['steps']['step_2']['path'][1][14:],greffe)
+        parameters['steps']['step_2']['output_id'].append(output['QueryID'])
+        print(output)
+        s3.move_object_s3(source_key, destination_key, remove = True)
+```
+
+```python
+query = "DROP TABLE {}".format(parameters['steps']['step_2']['tables'][1])
+s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+```
+
+On peut créer la table filtrée et enrichie avec une seule ligne par date de greffe
+
+```python
+table_top = ""
+table_bottom = ""
+middle = ""
+schema_filtre = list(chain.from_iterable([parameters['steps']['step_2']['partionned']['date_greffe'],
+                          parameters['steps']['step_2']['to_fill']['date_greffe']])
+    )
+table_top += parameters['steps']['step_0']['query']['top'].format(db, parameters['steps']['step_2']['tables'][1])#top.format(db, type_origin['tables'][i])
+table_bottom += parameters['steps']['step_0']['query']['bottom'].format(parameters['steps']['step_2']['separator'],
+                                                                        parameters['steps']['step_2']['path'][1])
+for index, name in enumerate(schema_filtre):
+    if index == len(schema_filtre)-1:
+        middle += "`{0}` {1}".format(
+                        name,
+                        'string')
+    else:
+        middle += "`{0}` {1},".format(
+                    name,
+                    'string')
+query = table_top + middle + table_bottom 
+output = s3.run_query(query,
+                                  database = db,
+                                  s3_output = s3_output,
+                                  filename = None,
+                                  destination_key = None)
+parameters['steps']['step_2']['output_id'].append(output['QueryID'])
+```
+
+## Step 3: Enrichissements des lignes d'un événement a l'autre et filtrage des événements partiels
+
+Nous avons dès à présent 3 tables contenant l'ensemble des événements d'un établissement. La table initial, la table des flux filtrés et enrichis et la table des partiels. Il faut reconstituer la table finale en concatenant ses trois tables puis en enrichissant les lignes selon l'événement précédents et en indiquant les lignes a ignorer en cas de partiel. 
+
+
+```python
+s3.run_query(
+    "drop table {}".format(parameters['steps']['step_3']['tables'][0]),
+    database = db,
+    s3_output = s3_output,
+    filename = None,
+    destination_key = None)
+```
+
+Tout d'abord, nous allons créer une table intermédiaire dans lequel la concaténation et la création du status 'IGNORE' va ête réalisé. 
+
+```python
+s3.run_query(
+   parameters['steps']['step_3']['query']['preparation'],
+    database = db,
+    s3_output = s3_output,
+    filename = None,
+    destination_key = None)
+```
+
+La seconde partie de l'étape va procéder a l'enrichissement des valeurs sur les flux à partir du moment ou la ligne n'est pas à ignore
+
+```python
+top = """
+SELECT siren,
+                 code_greffe,
+                 nom_greffe,
+                 numero_gestion,
+                 id_etablissement,
+                 origin, 
+                 status,
+                 date_greffe,
+                 libelle_evt,
+
+"""
+middle = """
+CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "{0}" = '' THEN 
+LAG ("{0}", 1) OVER (  PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement 
+ ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "{0}" END AS "{0}" 
+
+"""
+bottom = """
+FROM {}
+ORDER BY siren,code_greffe, numero_gestion, id_etablissement,date_greffe
+"""
+```
+
+```python
+parameters['steps']['step_3']['tables'][0]
+```
+
+```python
+table_middle = ""
+table_bottom = bottom.format(parameters['steps']['step_3']['tables'][0])
+for x, value in enumerate(parameters['steps']['step_3']['to_fill']):
+    if  x != len(parameters['steps']['step_3']['to_fill'])-1:
+        table_middle +=middle.format(value) +","
+    else:
+        table_middle +=middle.format(value)
+query = top + table_middle + table_bottom
+print(query)
+```
 
 # Generation report
 
