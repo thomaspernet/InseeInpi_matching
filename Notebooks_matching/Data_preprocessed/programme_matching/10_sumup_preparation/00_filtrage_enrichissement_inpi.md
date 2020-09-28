@@ -68,13 +68,13 @@ Select the US you just created →Filtrage et enrichissement de la donnée de l�
 
 ```python
 from awsPy.aws_authorization import aws_connector
-from awsPy.aws_athena import service_athena
+from awsPy.aws_glue import service_glue
 from awsPy.aws_s3 import service_s3
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import os, shutil
+import os, shutil, json
 from itertools import chain
 
 path = os.getcwd()
@@ -93,6 +93,7 @@ con = aws_connector.aws_instantiate(credential = path_cred,
 client= con.client_boto()
 s3 = service_s3.connect_S3(client = client,
                       bucket = bucket, verbose = False) 
+glue = service_glue.connect_glue(client = client) 
 ```
 
 ```python
@@ -322,861 +323,485 @@ Un point de rappel sur les règles de gestion appliquées
 Pour faciliter l'ingestion de données en batch, on prépare un json `parameters` avec les paths où récupérer la data, le nom des tables, les origines, mais aussi un champ pour récupérer l'ID de l'execution dans Athena
 
 ```python
-list_ = []
-for i in  [
-"type",
-"Siege_PM",
-"RCS_Registre",
-"Adresse_Ligne1",
-"Adresse_Ligne2",
-"Adresse_Ligne3",
-"Code_Postal",
-"Ville",
-"Code_Commune",
-"Pays",
-"Domiciliataire_Nom",
-"Domiciliataire_Siren",
-"Domiciliataire_Greffe",
-"Domiciliataire_Complement",
-"Siege_Domicile_Representant",
-"Nom_Commercial",
-"Enseigne",
-"Activite_Ambulante",
-"Activite_Saisonniere",
-"Activite_Non_Sedentaire",
-"Date_Debut_Activite",
-"Activite",
-"Origine_Fonds",
-"Origine_Fonds_Info",
-"Type_Exploitation",
-"max_partiel",
-"csv_source"
-]:
-    list_.append(i.lower())
-list_
+### If chinese characters, set  ensure_ascii=False
+s3.download_file(key = 'DATA/ETL/parameters_ETL_TEMPLATE.json')
+with open('parameters_ETL_TEMPLATE.json', 'r') as fp:
+    parameters = json.load(fp)
 ```
 
 ```python
-'step_x':{
-           'query':{
-               'top': {},
-               'middle': {}, 
-               'bottom' : {}
-           },
-    "output_id":[]
-    }
+parameters['GLOBAL']['DATABASE'] = 'ets_inpi'
 ```
 
 ```python
-parameters ={
-   "global":{
-      "database":"ets_inpi",
-      "output":"INPI/sql_output",
-      "output_preparation":"INPI/sql_output_preparation",
-      "ETS_step4_id":[
-         
-      ],
-      "table_final_id":{
-         "ETS":{
-            
-         }
-      }
-   },
-   "steps":{
-       'step_0':{
-           'query':{
-               'top':"CREATE EXTERNAL TABLE IF NOT EXISTS {0}.{1} (",
-               'bottom': """ )
-     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-    WITH SERDEPROPERTIES (
-   'separatorChar' = '{0}',
-   'quoteChar' = '"'
-   )
-     LOCATION '{1}'
-     TBLPROPERTIES ('has_encrypted_data'='false',
-              'skip.header.line.count'='1');"""
-               
-           }
-       },
-       'step_1':
-       {
-           'tables':['ets_partiel', 'ets_flux'],
-            'partionned': [
-               "siren", "code_greffe","nom_greffe",
-               "numero_gestion", "id_etablissement", 
-               "file_timestamp"
-           ],
-           'query':{
-               'top': """
-                    CREATE TABLE {}.{}
-                    WITH (
-                    format='PARQUET'
-                    ) AS
-                    WITH append AS (
-                    SELECT * FROM {}
-              """,
-               'middle':"""
-                    UNION 
-                    SELECT * FROM {} """,
-               'bottom': """
-            )
-            SELECT * 
-            FROM append
-            ORDER BY {}
-            """
-           },
-           "output_id":[]
-       },
-       'step_2':
-       {
-           'tables': ['ets_flux_filtre_enrichie_timestamp','ets_flux_filtre_enrichie_date_greffe'],
-           'partionned': {
-               'time_stamp':
-               [
-               "siren", "code_greffe","nom_greffe",
-               "numero_gestion", "id_etablissement", 
-               "file_timestamp"
-           ],
-               'date_greffe':
-               [
-               "siren", "code_greffe","nom_greffe",
-               "numero_gestion", "id_etablissement", 
-               "date_greffe"
-           ],
-           },
-           "path":['s3://calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX',
-                   's3://calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE'
-                  ],
-           "separator":",",
-           'query':{
-               'top': {
-                   'first':"""
-WITH createID AS (
-  SELECT 
-   *, 
-    ROW_NUMBER() OVER (
-      PARTITION BY 
-       {0}
-    ) As row_ID, 
-    DENSE_RANK () OVER (
-      ORDER BY 
-        {0}
-    ) As ID 
-  FROM 
-    {1}.{2} 
-  WHERE {4} = '{3}'  
-) 
-SELECT 
-  * 
-FROM 
-  (
-    WITH filled AS (
-      SELECT 
-        ID, 
-        row_ID, 
-        {0}, 
-""",
-                   'second':"""first_value("{0}") over (partition by ID, "{0}_partition" order by 
-ID, row_ID
- ) as "{0}"
-"""
-               },
-               'middle':{
-                   'first':"""FROM 
-        (
-          SELECT 
-            *, """,
-                   'second':"""sum(case when "{0}" = '' then 0 else 1 end) over (partition by ID 
-order by  row_ID) as "{0}_partition" 
-"""
-               },
-               'bottom':""" 
-          FROM 
-            createID 
-          ORDER BY 
-            ID, row_ID ASC
-        ) 
-      ORDER BY 
-        ID, 
-        row_ID
-    ) 
-    SELECT
-    {1},
-    {0},
-CASE WHEN siren IS NOT NULL THEN 'EVT' 
-ELSE NULL END as origin
-    FROM 
-      (
-        SELECT 
-          *, 
-          ROW_NUMBER() OVER(
-            PARTITION BY ID 
-            ORDER BY 
-              ID, row_ID DESC
-          ) AS max_value 
-        FROM 
-          filled
-      ) AS T 
-    WHERE 
-      max_value = 1
-  )ORDER BY {1}
-"""
-           },
-           'to_fill':{
-           'time_stamp':['libelle_evt',
- 'date_greffe',
- 'type',
- 'siege_pm',
- 'rcs_registre',
- 'adresse_ligne1',
- 'adresse_ligne2',
- 'adresse_ligne3',
- 'code_postal',
- 'ville',
- 'code_commune',
- 'pays',
- 'domiciliataire_nom',
- 'domiciliataire_siren',
- 'domiciliataire_greffe',
- 'domiciliataire_complement',
- 'siege_domicile_representant',
- 'nom_commercial',
- 'enseigne',
- 'activite_ambulante',
- 'activite_saisonniere',
- 'activite_non_sedentaire',
- 'date_debut_activite',
- 'activite',
- 'origine_fonds',
- 'origine_fonds_info',
- 'type_exploitation',
- 'csv_source'],
-               'date_greffe':[
-                   'libelle_evt',
- 'type',
- 'siege_pm',
- 'rcs_registre',
- 'adresse_ligne1',
- 'adresse_ligne2',
- 'adresse_ligne3',
- 'code_postal',
- 'ville',
- 'code_commune',
- 'pays',
- 'domiciliataire_nom',
- 'domiciliataire_siren',
- 'domiciliataire_greffe',
- 'domiciliataire_complement',
- 'siege_domicile_representant',
- 'nom_commercial',
- 'enseigne',
- 'activite_ambulante',
- 'activite_saisonniere',
- 'activite_non_sedentaire',
- 'date_debut_activite',
- 'activite',
- 'origine_fonds',
- 'origine_fonds_info',
- 'type_exploitation',
- 'csv_source'] },
-           'year':[2017, 2018,2019],
-          'code_greffe': [
+parameters
+```
 
-"1801",
-"7803",
-"0301",
-"1104",
-"8101",
-"4801",
-"6601",
-"2801",
-"2104",
-"1402",
-"1601",
-"0605",
-"8302",
-"7601",
-"5601",
-"2702",
-"7608",
-"2401",
-"6201",
-"8201",
-"5103",
-"1407",
-"5401",
-"7001",
-"1704",
-"5802",
-"6901",
-"6403",
-"4202",
-"0901",
-"7301",
-"3502",
-"4401",
-"5501",
-"9401",
-"1101",
-"7802",
-"4502",
-"8801",
-"1708",
-"3402",
-"7901",
-"2602",
-"2001",
-"6401",
-"0602",
-"3902",
-"5602",
-"3405",
-"6502",
-"4901",
-"8002",
-"5906",
-"8102",
-"0603",
-"0202",
-"7801",
-"4302",
-"7701",
-"2402",
-"5002",
-"6101",
-"5910",
-"1303",
-"3303",
-"0702",
-"8602",
-"9301",
-"4601",
-"5902",
-"1301",
-"6303",
-"4201",
-"6202",
-"3801",
-"6002",
-"7102",
-"2301",
-"5001",
-"5402",
-"9001",
-"7106",
-"2002",
-"4001",
-"3201",
-"4101",
-"0501",
-"3003",
-"1501",
-"4402",
-"8903",
-"0203",
-"5952",
-"2202",
-"1304",
-"3701",
-"8701",
-"3302",
-"3501",
-"0802",
-"6903",
-"5101",
-"4701",
-"3102",
-"1203",
-"3802",
-"2501",
-"8901",
-"2903",
-"2701",
-"6001",
-"5201",
-"8305",
-"1901",
-"7702",
-"8401",
-"7202",
-"7501",
-"9201",
-"8501",
-"7401",
-"7606",
-"0101",
-"7402",
-"0601",
-"8303",
-"0303",
-"5301",
-"3601",
-"1305",
-"4002",
-"2901",
-"1001",
-"0401"
-],
-           "output_id":[]
-       },
-    'step_3':{
-        'tables': ['ets_filtre_enrichi_historique_tmp','ets_filtre_enrichie_historique'],
-        'partionned': {
-               'date_greffe':
-               [
-               "siren", "code_greffe","nom_greffe",
-               "numero_gestion", "id_etablissement", 
-               "date_greffe"
-           ]},
-        'to_fill':
-['type',
- 'siege_pm',
- 'rcs_registre',
- 'adresse_ligne1',
- 'adresse_ligne2',
- 'adresse_ligne3',
- 'code_postal',
- 'ville',
- 'code_commune',
- 'pays',
- 'domiciliataire_nom',
- 'domiciliataire_siren',
- 'domiciliataire_greffe',
- 'domiciliataire_complement',
- 'siege_domicile_representant',
- 'nom_commercial',
- 'enseigne',
- 'activite_ambulante',
- 'activite_saisonniere',
- 'activite_non_sedentaire',
- 'date_debut_activite',
- 'activite',
- 'origine_fonds',
- 'origine_fonds_info',
- 'type_exploitation',
- 'csv_source'],
-        
-           'query':{
-               'preparation':"""
-               CREATE TABLE ets_inpi.ets_filtre_enrichi_historique_tmp WITH (format = 'PARQUET') AS 
-WITH concat_ AS (
-SELECT 
-  siren, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  Coalesce(
-         try(date_parse(date_greffe, '%Y-%m-%d')),
-         try(date_parse(date_greffe, '%Y/%m/%d')),
-         try(date_parse(date_greffe, '%d %M %Y')),
-         try(date_parse(date_greffe, '%d/%m/%Y')),
-         try(date_parse(date_greffe, '%d-%m-%Y'))
-  )
-  as date_greffe, 
-  libelle_evt,
-  type, 
-  siege_pm, 
-  rcs_registre, 
-  adresse_ligne1, 
-  adresse_ligne2, 
-  adresse_ligne3, 
-  code_postal, 
-  code_commune, 
-  pays, 
-  domiciliataire_nom, 
-  domiciliataire_siren, 
-  domiciliataire_greffe, 
-  domiciliataire_complement, 
-  siege_domicile_representant, 
-  enseigne, 
-  activite_ambulante, 
-  activite_saisonniere, 
-  activite_non_sedentaire, 
-  date_debut_activite, 
-  activite, 
-  origine_fonds, 
-  origine_fonds_info, 
-  ville,
-  nom_commercial,
-  type_exploitation,
-  csv_source,
-  'FLUX' AS origin 
-FROM 
-  ets_flux_filtre_enrichie_date_greffe 
-UNION 
-  (
-    SELECT 
-      siren, 
-      code_greffe, 
-      nom_greffe, 
-      numero_gestion, 
-      id_etablissement, 
-      Coalesce(
-         try(date_parse(date_greffe, '%Y-%m-%d')),
-         try(date_parse(date_greffe, '%Y/%m/%d')),
-         try(date_parse(date_greffe, '%d %M %Y')),
-         try(date_parse(date_greffe, '%d/%m/%Y')),
-         try(date_parse(date_greffe, '%d-%m-%Y'))
-  )
-  as date_greffe, 
-  libelle_evt,
-      type, 
-      siege_pm, 
-      rcs_registre, 
-      adresse_ligne1, 
-      adresse_ligne2, 
-      adresse_ligne3, 
-      code_postal, 
-      code_commune, 
-      pays, 
-      domiciliataire_nom, 
-      domiciliataire_siren, 
-      domiciliataire_greffe, 
-      domiciliataire_complement, 
-      siege_domicile_representant, 
-      enseigne, 
-      activite_ambulante, 
-      activite_saisonniere, 
-      activite_non_sedentaire, 
-      date_debut_activite, 
-      activite, 
-      origine_fonds, 
-      origine_fonds_info, 
-      ville,
-  nom_commercial,
-  type_exploitation,
-      csv_source,
-       'INITIAL' AS origin 
-    FROM 
-      ets_initial
-  ) 
-UNION 
-  (
-    SELECT 
-      date_.siren, 
-      date_.code_greffe, 
-      date_.nom_greffe, 
-      date_.numero_gestion, 
-      date_.id_etablissement, 
-      Coalesce(
-         try(date_parse(date_greffe, '%Y-%m-%d')),
-         try(date_parse(date_greffe, '%Y/%m/%d')),
-         try(date_parse(date_greffe, '%d %M %Y')),
-         try(date_parse(date_greffe, '%d/%m/%Y')),
-         try(date_parse(date_greffe, '%d-%m-%Y'))
-  )
-  as date_greffe, 
-  libelle_evt,
-      type, 
-      siege_pm, 
-      rcs_registre, 
-      adresse_ligne1, 
-      adresse_ligne2, 
-      adresse_ligne3, 
-      code_postal, 
-      code_commune, 
-      pays, 
-      domiciliataire_nom, 
-      domiciliataire_siren, 
-      domiciliataire_greffe, 
-      domiciliataire_complement, 
-      siege_domicile_representant, 
-      enseigne, 
-      activite_ambulante, 
-      activite_saisonniere, 
-      activite_non_sedentaire, 
-      date_debut_activite, 
-      activite, 
-      origine_fonds, 
-      origine_fonds_info, 
-      ville,
-  nom_commercial,
-  type_exploitation,
-      csv_source, 
-      'PARTIEL' AS origin 
-    FROM 
-      (
-        SELECT 
-          siren, 
-          code_greffe, 
-          nom_greffe, 
-          numero_gestion, 
-          id_etablissement, 
-          date_greffe, 
-          type, 
-          libelle_evt,
-          siege_pm, 
-          rcs_registre, 
-          adresse_ligne1, 
-          adresse_ligne2, 
-          adresse_ligne3, 
-          code_postal, 
-          code_commune, 
-          pays, 
-          domiciliataire_nom, 
-          domiciliataire_siren, 
-          domiciliataire_greffe, 
-          domiciliataire_complement, 
-          siege_domicile_representant, 
-          enseigne, 
-          activite_ambulante, 
-          activite_saisonniere, 
-          activite_non_sedentaire, 
-          date_debut_activite, 
-          activite, 
-          origine_fonds, 
-          origine_fonds_info, 
-          ville,
-  nom_commercial,
-  type_exploitation,
-          csv_source, 
-          Coalesce(
-            try(
-              cast(file_timestamp as timestamp)
-            )
-          ) as file_timestamp 
-        FROM 
-          ets_partiel
-      ) as date_ 
-      INNER JOIN (
-        SELECT 
-          siren, 
-          code_greffe, 
-          nom_greffe, 
-          numero_gestion, 
-          id_etablissement, 
-          MAX(
-            Coalesce(
-              try(
-                cast(file_timestamp as timestamp)
-              )
-            )
-          ) as file_timestamp 
-        FROM 
-          ets_partiel 
-        GROUP BY 
-          siren, 
-          code_greffe, 
-          nom_greffe, 
-          numero_gestion, 
-          id_etablissement
-      ) as max_ ON date_.siren = max_.siren 
-      AND date_.code_greffe = max_.code_greffe 
-      AND date_.nom_greffe = max_.nom_greffe 
-      AND date_.numero_gestion = max_.numero_gestion 
-      AND date_.id_etablissement = max_.id_etablissement 
-      AND date_.file_timestamp = max_.file_timestamp
-  ) 
-ORDER BY 
-  siren, 
-  code_greffe, 
-  nom_greffe, 
-  numero_gestion, 
-  id_etablissement, 
-  date_greffe
-)
-SELECT    concat_.siren, 
-          concat_.code_greffe, 
-          concat_.nom_greffe, 
-          concat_.numero_gestion, 
-          concat_.id_etablissement, 
-          libelle_evt,
-          date_greffe, 
-          type, 
-          siege_pm, 
-          rcs_registre, 
-          adresse_ligne1, 
-          adresse_ligne2, 
-          adresse_ligne3, 
-          code_postal, 
-          code_commune, 
-          pays, 
-          domiciliataire_nom, 
-          domiciliataire_siren, 
-          domiciliataire_greffe, 
-          domiciliataire_complement, 
-          siege_domicile_representant, 
-          enseigne, 
-          activite_ambulante, 
-          activite_saisonniere, 
-          activite_non_sedentaire, 
-          date_debut_activite, 
-          activite, 
-          origine_fonds, 
-          origine_fonds_info, 
-          ville,
-  nom_commercial,
-  type_exploitation,
-          csv_source,
-          origin,
-          CASE WHEN date_greffe <= date_greffe_max AND origin != 'PARTIEL' THEN 'IGNORE' ELSE NULL END as status
+## 2. Prepare `TABLES.CREATION`
 
-FROM concat_
-LEFT JOIN (
-  SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe
- as date_greffe_max
-  FROM concat_ 
-  WHERE origin = 'PARTIEL'
-  ) as partiel
-  ON 
-  concat_.siren = partiel.siren AND
-  concat_.code_greffe = partiel.code_greffe AND
-  concat_.nom_greffe = partiel.nom_greffe AND
-  concat_.numero_gestion = partiel.numero_gestion AND
-  concat_.id_etablissement = partiel.id_etablissement""",
-               'enrichissement':{
-               'top': {},
-               'middle': {}, 
-               'bottom' : {}
-           }
-           },
-    "output_id":[]
+This part usually starts with raw/transformed data in S3. The typical architecture in the S3 is:
+
+- `DATA/RAW_DATA` or `DATA/UNZIP_DATA_APPEND_ALL` or `DATA/TRANSFORMED`. One of our rule is, if the user needs to create a table from a CSV/JSON (raw or transformed), then the query should be written in the key `TABLES.CREATION` and the notebook in the folder `01_prepare_tables`
+
+One or more notebooks in the folder `01_prepare_tables` are used to create the raw tables. Please, use the notebook named `XX_template_table_creation_AWS` to create table using the key `TABLES.CREATION`
+
+```python
+new_table = [
+    {
+    "database": "ets_inpi",
+    "name": "ets_initial",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Initial/2017/ETS",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_partiel_2018",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Partiel/2018/ETS",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_partiel_2019",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Partiel/2019/ETS",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_new_2017",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2017/ETS/NEW",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_new_2018",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2018/ETS/NEW",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_new_2019",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2019/ETS/NEW",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_evt_2017",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2017/ETS/EVT",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_evt_2018",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2018/ETS/EVT",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
+    },
+     {
+    "database": "ets_inpi",
+    "name": "ets_evt_2019",
+    "output_id": "",
+    "separator": ";",
+    "s3URI": "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2019/ETS/EVT",
+    "schema": [
+{'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nature', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_data', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''}
+    ],
+    
     }
-},
-   "schema":{
-      "name":['code_greffe',
- 'nom_greffe',
- 'numero_gestion',
- 'siren',
- 'type',
- 'siege_pm',
- 'rcs_registre',
- 'adresse_ligne1',
- 'adresse_ligne2',
- 'adresse_ligne3',
- 'code_postal',
- 'ville',
- 'code_commune',
- 'pays',
- 'domiciliataire_nom',
- 'domiciliataire_siren',
- 'domiciliataire_greffe',
- 'domiciliataire_complement',
- 'siege_domicile_representant',
- 'nom_commercial',
- 'enseigne',
- 'activite_ambulante',
- 'activite_saisonniere',
- 'activite_non_sedentaire',
- 'date_debut_activite',
- 'activite',
- 'origine_fonds',
- 'origine_fonds_info',
- 'type_exploitation',
- 'id_etablissement',
- 'date_greffe',
- 'libelle_evt',
- 'csv_source',
- 'nature',
- 'type_data',
- 'origin',
- 'file_timestamp'],
-      "format":[
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string",
-         "string"
-      ]
-   },
-   "Tables":{
-      "Stock":{
-         "INITIAL":{
-               "path": ["s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Initial/2017/ETS"],
-               "tables": ["ets_initial"],
-               "origin":"INITIAL",
-               "separator":";",
-               "output_id":[
-                  
-               ]
-         },
-         "PARTIEL":{
-               "path":[
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Partiel/2018/ETS",
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Stock/Stock_Partiel/2019/ETS"
-               ],
-               "tables":[
-                  "ets_partiel_2018",
-                  "ets_partiel_2019"
-               ],
-               "origin":"PARTIEL",
-               "separator":";",
-               "output_id":[
-                  
-               ]
-         }
-      },
-      "Flux":{
-         "NEW":{
-               "path":[
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2017/ETS/NEW",
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2018/ETS/NEW",
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2019/ETS/NEW"
-               ],
-               "tables":[
-                  "ets_new_2017",
-                  "ets_new_2018",
-                  "ets_new_2019"
-               ],
-               "origin":"NEW",
-               "separator":";",
-               "output_id":[
-                  
-               ]
-         },
-         "EVT":{
-               "path":[
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2017/ETS/EVT",
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2018/ETS/EVT",
-                  "s3://calfdata/INPI/TC_1/01_donnee_source/Flux/2019/ETS/EVT"
-               ],
-               "tables":[
-                  "ets_evt_2017",
-                  "ets_evt_2018",
-                  "ets_evt_2019"
-               ],
-               "origin":"EVT",
-               "separator":";",
-               "output_id":[
-                  
-               ]
-         }
-      }
-   }
-}
+]
+```
+
+To remove an item from the list, use `pop` with the index to remove. Exemple `parameters['TABLES']['CREATION']['ALL_SCHEMA'].pop(6)` will remove the 5th item
+
+```python
+to_remove = False
+if to_remove:
+    parameters['TABLES']['CREATION']['ALL_SCHEMA'].pop(0)
+```
+
+```python
+parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(new_table)
+```
+
+```python
+#print(json.dumps(parameters['TABLES']['CREATION']['ALL_SCHEMA'], indent=4, sort_keys=False, ensure_ascii=False))
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
+with open('parameters_ETL.json', 'r') as fp:
+    parameters = json.load(fp)
 ```
 
 ## Step 1: Creation tables
@@ -1196,114 +821,202 @@ Etant donné que nous avons compartimenté les données par origine et année, n
 On drop les tables si elles existent déjà.
 
 ```python
-db = parameters['global']['database']
-s3_output = parameters['global']['output']
+s3_output = parameters['GLOBAL']['QUERIES_OUTPUT']
+db = parameters['GLOBAL']['DATABASE']
 ```
 
 ```python
-for origin in parameters['Tables'].items():
-    for key0, type_origin in origin[1].items():
-        for i, path in  enumerate(type_origin['path']):
-            query = "DROP TABLE {}".format(type_origin['tables'][i])
-            s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
-```
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            # CREATE QUERY
 
-On créé les tables intermédiaires
+            ### Create top/bottom query
+            table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
+                        table_info["database"], table_info["name"]
+                    )
+            table_bottom = parameters["TABLES"]["CREATION"]["template"][
+                        "bottom_OpenCSVSerde"
+                    ].format(table_info["separator"], table_info["s3URI"])
 
-```python
-from tqdm.notebook import tqdm
-```
-
-```python
-for origin in  tqdm(parameters['Tables'].items()):
-    for key0, type_origin in origin[1].items():
-        
-        for i, path in  enumerate(type_origin['path']):
-            table_top = ""
-            table_bottom = ""
-            middle = ""
-            table_top += parameters['steps']['step_0']['query']['top'].format(db, type_origin['tables'][i])#top.format(db, type_origin['tables'][i])
-            table_bottom += parameters['steps']['step_0']['query']['bottom'].format(type_origin['separator'], path)#bottom.format(type_origin['separator'], path)
-            ### ADD VARIABLES
-            for index, name in enumerate(parameters['schema']['name']):
-                if index == len(parameters['schema']['name'])-1:
-                    middle += "`{0}` {1}".format(
-                        name,
-                        parameters['schema']['format'][index])
+            ### Create middle
+            table_middle = ""
+            nb_var = len(table_info["schema"])
+            for i, val in enumerate(table_info["schema"]):
+                if i == nb_var - 1:
+                    table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                "middle"
+                            ].format(val['Name'], val['Type'], ")")
                 else:
-                    middle += "`{0}` {1},".format(
-                    name,
-                    parameters['schema']['format'][index])
-            query = table_top + middle + table_bottom        
-            output = s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
-            type_origin['output_id'].append(output['QueryID'])
+                    table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                "middle"
+                            ].format(val['Name'], val['Type'], ",")
+
+            query = table_top + table_middle + table_bottom
+
+            ## DROP IF EXIST
+
+            s3.run_query(
+                            query="DROP TABLE {}".format(table_info["name"]),
+                            database=db,
+                            s3_output=s3_output
+                    )
+
+            ## RUN QUERY
+            output = s3.run_query(
+                        query=query,
+                        database=table_info["database"],
+                        s3_output=s3_output,
+                        filename=None,  ## Add filename to print dataframe
+                        destination_key=None,  ### Add destination key if need to copy output
+                    )
+
+                ## SAVE QUERY ID
+            table_info['output_id'] = output['QueryID']
+
+                     ### UPDATE CATALOG -> ISSUE WITH WINDOWS :) 
+                #https://github.com/boto/boto3/issues/1238
+            #glue.update_schema_table(
+            #            database=table_info["database"],
+            #            table=table_info["name"],
+            #            schema=table_info["schema"],
+            #        )
+
             print(output)
 ```
+
+## 3. Prepare `TABLES.PREPARATION`
+
+In this stage of the ETL, we are processing the data from existing tables in Athena. This stage is meant to use one or more table to create temporary, intermediate or final tables to use in the analysis. The notebook template is named `XX_template_table_preprocessing_AWS` and should be saved in the child folder `02_prepare_tables_model`
+
 
 Comme indiqué précédemment, il faut concatener les tables avant de faire le filtrage et enrichissement.
 
 ```python
-for origin in parameters['Tables'].items():
-    for key0, type_origin in origin[1].items():
-        if type_origin['origin'] != 'INITIAL':
-            if type_origin['origin'] == 'PARTIEL':
-                table_name = parameters['steps']['step_1']['tables'][0]
-                query = "DROP TABLE {}".format(table_name)
-            else:
-                table_name = parameters['steps']['step_1']['tables'][1]
-                query = "DROP TABLE {}".format(table_name)
-        s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
+step_0 = [
+    {
+   "STEPS_0":{
+      "name":"Concatenation table stock",
+      "execution":[
+         {
+            "database":"ets_inpi",
+            "name":"ets_partiel",
+            "output_id":"",
+            "query":{
+               "top":"WITH append AS ( SELECT * FROM ets_inpi.ets_partiel_2018",
+               "middle":" UNION SELECT * FROM ets_inpi.ets_partiel_2019 ",
+               "bottom":" ) SELECT * FROM append ORDER BY siren, code_greffe,nom_greffe,numero_gestion, id_etablissement, file_timestamp"
+            }
+         }
+      ],
+       "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+},
+    {
+   "STEPS_1":{
+      "name":"Concatenation table flux",
+      "execution":[
+         {
+            "database":"ets_inpi",
+            "name":"ets_flux",
+            "output_id":"",
+            "query":{
+               "top":"WITH append AS ( SELECT * FROM ets_inpi.ets_new_2017",
+               "middle":"  UNION SELECT * FROM ets_inpi.ets_new_2018 UNION SELECT * FROM ets_inpi.ets_new_2019 UNION SELECT * FROM ets_inpi.ets_evt_2017 UNION SELECT * FROM ets_inpi.ets_evt_2018 UNION SELECT * FROM ets_inpi.ets_evt_2019",
+               "bottom":" ) SELECT * FROM append ORDER BY siren, code_greffe,nom_greffe,numero_gestion, id_etablissement, file_timestamp"
+            }
+         }
+      ],
+       "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+}
+]
 ```
 
 ```python
-table_name
+to_remove = False
+if to_remove:
+    parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].pop(0)
 ```
 
 ```python
-for origin in parameters['Tables'].items():
-    
-    table_middle = ""
-    if origin[0] == 'Stock':
-        
-        for key0, type_origin in origin[1].items():
-            for i, table in enumerate(type_origin['tables']):
-                table_name = parameters['steps']['step_1']['tables'][0]
-                if table != 'ets_initial':
-                    if i == 0:
-                        table_top = parameters['steps']['step_1']['query']['top'].format(db,table_name, table)
-                    else:
-                        table_middle = parameters['steps']['step_1']['query']['middle'].format(table)
-            table_bottom = parameters['steps']['step_1']['query']['bottom'].format(','.join([str(elem) for elem in parameters['steps']['step_1']['partionned']]))
-            query = table_top + table_middle + table_bottom
-    else:
-        for key0, type_origin in origin[1].items():
-            for i, table in enumerate(type_origin['tables']):
-                table_name = parameters['steps']['step_1']['tables'][1]
-                if key0 == 'NEW' and i == 0:
-                    table_top = parameters['steps']['step_1']['query']['top'].format(db,table_name, table)
-                else:
-                    table_middle += parameters['steps']['step_1']['query']['middle'].format(table)
-        table_bottom = parameters['steps']['step_1']['query']['bottom'].format(','.join([str(elem) for elem in parameters['steps']['step_1']['partionned']]))
-        query = table_top + table_middle + table_bottom 
-    output = s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
-    parameters['steps']['step_1']['output_id'].append(output['QueryID'])
-    print(output)
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].extend(step_0)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA']
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+
+            ### LOOP EXECUTION WITHIN STEP
+            for j, step_n in enumerate(steps[step_name]["execution"]):
+
+                ### DROP IF EXIST
+                s3.run_query(
+                    query="DROP TABLE {}.{}".format(step_n["database"], step_n["name"]),
+                    database=db,
+                    s3_output=s3_output,
+                )
+
+                ### CREATE TOP
+                table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                    "top"
+                ].format(step_n["database"], step_n["name"],)
+
+                ### COMPILE QUERY
+                query = (
+                    table_top
+                    + step_n["query"]["top"]
+                    + step_n["query"]["middle"]
+                    + step_n["query"]["bottom"]
+                )
+                output = s3.run_query(
+                    query=query,
+                    database=db,
+                    s3_output=s3_output,
+                    filename=None,  ## Add filename to print dataframe
+                    destination_key=None,  ### Add destination key if need to copy output
+                )
+
+                ## SAVE QUERY ID
+                step_n["output_id"] = output["QueryID"]
+
+                ### UPDATE CATALOG
+                #glue.update_schema_table(
+                #    database=step_n["database"],
+                #    table=step_n["name"],
+                #    schema=steps[step_name]["schema"],
+                #)
+                #print(query)
+
+                print(output)
 ```
 
 ## Step 2: filtrage intra day et intra date de greffe
@@ -1324,47 +1037,250 @@ Nous allons procéder en deux étapes totalement identiques. La première consis
 
 Etant donnée la taille de la data, nous allons préparer les flux selon les greffes. Les fichiers sont stockés dans le S3, [calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX/?region=eu-west-3&tab=overview) pour le timestamp et vont etre récupéré dans la query suivante pour créer une table reconstruite. Chacun des csv portera le nom du greffe.
 
+Les greffes "7202", "7501" et "9201" doivent etre traités séparement car ils sont trop volumineux.
+
 
 
 ```python
-for greffe in parameters['steps']['step_2']['code_greffe']:
-        filtre_top = parameters['steps']['step_2']['query']['top']['first'].format(
-        ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['time_stamp']]),
-            db,
-            'ets_flux',
-            greffe,
-            'code_greffe'
-        )
-        filtre_bottom =parameters['steps']['step_2']['query']['bottom'].format(
-            ','.join([str(elem).lower() for elem in parameters['steps']['step_2']['to_fill']['time_stamp']]),
-            ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['time_stamp']])
-        )
-        query_fillin = filtre_top
-        for x, val in enumerate( parameters['steps']['step_2']['to_fill']['time_stamp']):
+greffes = [
 
-            if x != len( parameters['steps']['step_2']['to_fill']['time_stamp']) -1:
-                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower() )+ ","
-            else:
-                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower())
-                query_fillin+= parameters['steps']['step_2']['query']['middle']['first']
+["1801",
+"7803",
+"0301",
+"1104",
+"8101",
+"4801",
+"6601",
+"2801",
+"2104",
+"1402",
+"1601",
+"0605",
+"8302",
+"7601",
+"5601",
+"2702",
+"7608",
+"2401",
+"6201",
+"8201"],
+["5103",
+"1407",
+"5401",
+"7001",
+"1704",
+"5802",
+"6901",
+"6403",
+"4202",
+"0901",
+"7301",
+"3502",
+"4401",
+"5501",
+"9401",
+"1101",
+"7802",
+"4502",
+"8801",
+"1708",
+"3402"],
+["7901",
+"2602",
+"2001",
+"6401",
+"0602",
+"3902",
+"5602",
+"3405",
+"6502",
+"4901",
+"8002",
+"5906",
+"8102",
+"0603",
+"0202",
+"7801",
+"4302",
+"7701",
+"2402",
+"5002",
+"6101",
+"5910"],
+["1303",
+"3303",
+"0702",
+"8602",
+"9301",
+"4601",
+"5902",
+"1301",
+"6303",
+"4201",
+"6202",
+"3801",
+"6002",
+"7102",
+"2301",
+"5001",
+"5402",
+"9001",
+"7106",
+"2002",
+"4001",
+"3201"],
+["4101",
+"0501",
+"3003",
+"1501",
+"4402",
+"8903",
+"0203",
+"5952",
+"2202",
+"1304",
+"3701",
+"8701",
+"3302",
+"3501",
+"0802",
+"6903",
+"5101",
+"4701",
+"3102",
+"1203",
+"3802"],
+["2501",
+"8901",
+"2903",
+"2701",
+"6001",
+"5201",
+"8305",
+"1901",
+"7702",
+"8401"],
+["7202"],
+["7501"],
+["9201"],
+["8501",
+"7401",
+"7606",
+"0101",
+"7402",
+"0601",
+"8303",
+"0303",
+"5301",
+"3601",
+"1305",
+"4002",
+"2901",
+"1001",
+"0401"]
+]
 
-        for x, val in enumerate(parameters['steps']['step_2']['to_fill']['time_stamp']):
-            if x != len( parameters['steps']['step_2']['to_fill']['time_stamp']) -1:
-                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())+ ","
-            else:
-                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())
-                query_fillin+=filtre_bottom
-        
-        output = s3.run_query(query_fillin,
-                      database = db,
-                      s3_output = s3_output,
-                      filename = None,
-                      destination_key = None)
-        parameters['steps']['step_2']['output_id'].append(output['QueryID'])
-        source_key = '{}/{}.csv'.format(s3_output, output['QueryID'])
-        destination_key = '{0}/{1}.csv'.format(parameters['steps']['step_2']['path'][0][14:],greffe)
-        print(output)
-        s3.move_object_s3(source_key, destination_key, remove = True)
+```
+
+```python
+s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
+with open('parameters_ETL.json', 'r') as fp:
+    parameters = json.load(fp)
+```
+
+```python
+step_1 = {
+   "STEPS_2":{
+      "name":"filtrage intra day et intra date de greffe",
+      "execution":[
+         {
+            "database":"ets_inpi",
+            "name":"",
+            "output_id":"",
+            "query":{
+               "top":"WITH createID AS ( SELECT *, ROW_NUMBER() OVER ( PARTITION BY siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,file_timestamp ) As row_ID, DENSE_RANK () OVER ( ORDER BY siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,file_timestamp ) As ID FROM ets_inpi.ets_flux WHERE  ( code_greffe = '{}') ) ",
+               "middle":""" SELECT * FROM ( WITH filled AS ( SELECT ID, row_ID, siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,file_timestamp, first_value(\"libelle_evt\") over (partition by ID, \"libelle_evt_partition\" order by ID, row_ID ) as \"libelle_evt\" ,first_value(\"date_greffe\") over (partition by ID, \"date_greffe_partition\" order by ID, row_ID ) as \"date_greffe\" ,first_value(\"type\") over (partition by ID, \"type_partition\" order by ID, row_ID ) as \"type\" ,first_value(\"siege_pm\") over (partition by ID, \"siege_pm_partition\" order by ID, row_ID ) as \"siege_pm\" ,first_value(\"rcs_registre\") over (partition by ID, \"rcs_registre_partition\" order by ID, row_ID ) as \"rcs_registre\" ,first_value(\"adresse_ligne1\") over (partition by ID, \"adresse_ligne1_partition\" order by ID, row_ID ) as \"adresse_ligne1\" ,first_value(\"adresse_ligne2\") over (partition by ID, \"adresse_ligne2_partition\" order by ID, row_ID ) as \"adresse_ligne2\" ,first_value(\"adresse_ligne3\") over (partition by ID, \"adresse_ligne3_partition\" order by ID, row_ID ) as \"adresse_ligne3\" ,first_value(\"code_postal\") over (partition by ID, \"code_postal_partition\" order by ID, row_ID ) as \"code_postal\" ,first_value(\"ville\") over (partition by ID, \"ville_partition\" order by ID, row_ID ) as \"ville\" ,first_value(\"code_commune\") over (partition by ID, \"code_commune_partition\" order by ID, row_ID ) as \"code_commune\" ,first_value(\"pays\") over (partition by ID, \"pays_partition\" order by ID, row_ID ) as \"pays\" ,first_value(\"domiciliataire_nom\") over (partition by ID, \"domiciliataire_nom_partition\" order by ID, row_ID ) as \"domiciliataire_nom\" ,first_value(\"domiciliataire_siren\") over (partition by ID, \"domiciliataire_siren_partition\" order by ID, row_ID ) as \"domiciliataire_siren\" ,first_value(\"domiciliataire_greffe\") over (partition by ID, \"domiciliataire_greffe_partition\" order by ID, row_ID ) as \"domiciliataire_greffe\" ,first_value(\"domiciliataire_complement\") over (partition by ID, \"domiciliataire_complement_partition\" order by ID, row_ID ) as \"domiciliataire_complement\" ,first_value(\"siege_domicile_representant\") over (partition by ID, \"siege_domicile_representant_partition\" order by ID, row_ID ) as \"siege_domicile_representant\" ,first_value(\"nom_commercial\") over (partition by ID, \"nom_commercial_partition\" order by ID, row_ID ) as \"nom_commercial\" ,first_value(\"enseigne\") over (partition by ID, \"enseigne_partition\" order by ID, row_ID ) as \"enseigne\" ,first_value(\"activite_ambulante\") over (partition by ID, \"activite_ambulante_partition\" order by ID, row_ID ) as \"activite_ambulante\" ,first_value(\"activite_saisonniere\") over (partition by ID, \"activite_saisonniere_partition\" order by ID, row_ID ) as \"activite_saisonniere\" ,first_value(\"activite_non_sedentaire\") over (partition by ID, \"activite_non_sedentaire_partition\" order by ID, row_ID ) as \"activite_non_sedentaire\" ,first_value(\"date_debut_activite\") over (partition by ID, \"date_debut_activite_partition\" order by ID, row_ID ) as \"date_debut_activite\" ,first_value(\"activite\") over (partition by ID, \"activite_partition\" order by ID, row_ID ) as \"activite\" ,first_value(\"origine_fonds\") over (partition by ID, \"origine_fonds_partition\" order by ID, row_ID ) as \"origine_fonds\" ,first_value(\"origine_fonds_info\") over (partition by ID, \"origine_fonds_info_partition\" order by ID, row_ID ) as \"origine_fonds_info\" ,first_value(\"type_exploitation\") over (partition by ID, \"type_exploitation_partition\" order by ID, row_ID ) as \"type_exploitation\" ,first_value(\"csv_source\") over (partition by ID, \"csv_source_partition\" order by ID, row_ID ) as \"csv_source\" FROM ( SELECT *, sum(case when \"libelle_evt\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"libelle_evt_partition\" ,sum(case when \"date_greffe\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"date_greffe_partition\" ,sum(case when \"type\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"type_partition\" ,sum(case when \"siege_pm\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"siege_pm_partition\" ,sum(case when \"rcs_registre\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"rcs_registre_partition\" ,sum(case when \"adresse_ligne1\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"adresse_ligne1_partition\" ,sum(case when \"adresse_ligne2\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"adresse_ligne2_partition\" ,sum(case when \"adresse_ligne3\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"adresse_ligne3_partition\" ,sum(case when \"code_postal\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"code_postal_partition\" ,sum(case when \"ville\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"ville_partition\" ,sum(case when \"code_commune\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"code_commune_partition\" ,sum(case when \"pays\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"pays_partition\" ,sum(case when \"domiciliataire_nom\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"domiciliataire_nom_partition\" ,sum(case when \"domiciliataire_siren\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"domiciliataire_siren_partition\" ,sum(case when \"domiciliataire_greffe\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"domiciliataire_greffe_partition\" ,sum(case when \"domiciliataire_complement\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"domiciliataire_complement_partition\" ,sum(case when \"siege_domicile_representant\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"siege_domicile_representant_partition\" ,sum(case when \"nom_commercial\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"nom_commercial_partition\" ,sum(case when \"enseigne\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"enseigne_partition\" ,sum(case when \"activite_ambulante\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"activite_ambulante_partition\" ,sum(case when \"activite_saisonniere\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"activite_saisonniere_partition\" ,sum(case when \"activite_non_sedentaire\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"activite_non_sedentaire_partition\" ,sum(case when \"date_debut_activite\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"date_debut_activite_partition\" ,sum(case when \"activite\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"activite_partition\" ,sum(case when \"origine_fonds\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"origine_fonds_partition\" ,sum(case when \"origine_fonds_info\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"origine_fonds_info_partition\" ,sum(case when \"type_exploitation\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"type_exploitation_partition\" ,sum(case when \"csv_source\" = '' then 0 else 1 end) over (partition by ID order by row_ID) as \"csv_source_partition\" FROM createID ORDER BY ID, row_ID ASC ) ORDER BY ID, row_ID ) """,
+                "bottom":" SELECT siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,file_timestamp, libelle_evt,date_greffe,type,siege_pm,rcs_registre,adresse_ligne1,adresse_ligne2,adresse_ligne3,code_postal,ville,code_commune,pays,domiciliataire_nom,domiciliataire_siren,domiciliataire_greffe,domiciliataire_complement,siege_domicile_representant,nom_commercial,enseigne,activite_ambulante,activite_saisonniere,activite_non_sedentaire,date_debut_activite,activite,origine_fonds,origine_fonds_info,type_exploitation,csv_source, CASE WHEN siren IS NOT NULL THEN 'EVT' ELSE NULL END as origin FROM ( SELECT *, ROW_NUMBER() OVER( PARTITION BY ID ORDER BY ID, row_ID DESC ) AS max_value FROM filled ) AS T WHERE max_value = 1 )ORDER BY siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,file_timestamp "
+            }
+         }
+      ],
+       "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+}
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_1)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for greffe in greffes[-2:]:
+    ### Preparer le filtre
+    filter_greffe = "' OR code_greffe = '".join(greffe)
+    namefile = '_'.join(greffe)
+```
+
+```python
+for greffe in greffes[-4:]:
+    ### Preparer le filtre
+    filter_greffe = "' OR code_greffe = '".join(greffe)
+    namefile = '_'.join(greffe)
+    for key, value in parameters["TABLES"]["PREPARATION"].items():
+        if key == "ALL_SCHEMA":
+            ### LOOP STEPS
+            for i, steps in enumerate(value):
+                step_name = "STEPS_{}".format(i)
+                if step_name in ['STEPS_2']:
+
+                    ### LOOP EXECUTION WITHIN STEP
+                    for j, step_n in enumerate(steps[step_name]["execution"]):
+                        ### CREATE TOP
+                        ### COMPILE QUERY
+                        query = (
+                            step_n["query"]["top"].format(filter_greffe)
+                            + step_n["query"]["middle"]
+                            + step_n["query"]["bottom"]
+                        )
+                        output = s3.run_query(
+                            query=query,
+                            database=db,
+                            s3_output=s3_output,
+                            filename=None,  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+
+                        ## SAVE QUERY ID
+                        step_n["output_id"] = output["QueryID"]
+
+                        ### UPDATE CATALOG
+                        #glue.update_schema_table(
+                        #    database=step_n["database"],
+                        #    table=step_n["name"],
+                        #    schema=steps[step_name]["schema"],
+                        #)
+                        print(output)
+                        source_key = '{}/{}.csv'.format(s3_output, output['QueryID'])
+                        destination_key = '{0}/{1}.csv'.format("INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX",namefile)
+                        s3.move_object_s3(source_key, destination_key, remove = True)
 ```
 
 ### Table filtree et enrichie intermediaire timestamps
@@ -1373,40 +1289,136 @@ for greffe in parameters['steps']['step_2']['code_greffe']:
 Nous venons de filtrer les transmissions intra day, mais pas par date de greffe. L'ensemble des CSV sont dans le S3. Il nous suffit de créer une table intermédiaire, puis de réitéter l'opération non pas sur le timestamp, mais sur la date de greffe. Il est possible qu'une transmission possède plusieurs lignes pour la même transmission. C'est une erreur de notre part lors de la création de la table initiale, nous aurions du créer un numéro de ligne au sein du groupe et ne récupérer que la ligne maximum. Temporairement, nous filtrons la dernière ligne, même si elle n'est indiquée comme la dernière dans les CSV (entre date de greffe)
 
 ```python
-query = "DROP TABLE {}".format(parameters['steps']['step_2']['tables'][0])
-s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
+s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
+with open('parameters_ETL.json', 'r') as fp:
+    parameters = json.load(fp)
 ```
 
 ```python
-table_top = ""
-table_bottom = ""
-middle = ""
-schema_filtre = list(chain.from_iterable([parameters['steps']['step_2']['partionned']['time_stamp'],
-                          parameters['steps']['step_2']['to_fill']['time_stamp']])
-    )
-table_top += parameters['steps']['step_0']['query']['top'].format(db, parameters['steps']['step_2']['tables'][0])#top.format(db, type_origin['tables'][i])
-table_bottom += parameters['steps']['step_0']['query']['bottom'].format(parameters['steps']['step_2']['separator'],
-                                                                        parameters['steps']['step_2']['path'][0])
-for index, name in enumerate(schema_filtre):
-    if index == len(schema_filtre)-1:
-        middle += "`{0}` {1}".format(
-                        name,
-                        'string')
-    else:
-        middle += "`{0}` {1},".format(
-                    name,
-                    'string')
-query = table_top + middle + table_bottom 
-output = s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
-parameters['steps']['step_2']['output_id'].append(output['QueryID'])
+table_filre_timestamp = [{
+    "database": "ets_inpi",
+    "name": "ets_flux_filtre_enrichie_timestamp",
+    "output_id": "",
+    "separator": ",",
+    "s3URI": "s3://calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX",
+    "schema": [
+        {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'file_timestamp', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''}
+    ]
+}
+]
+```
+
+```python
+parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(table_filre_timestamp)
+```
+
+```python
+parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+#parameters['TABLES']['CREATION']['ALL_SCHEMA'].pop(-1)
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_flux_filtre_enrichie_timestamp']:
+                # CREATE QUERY
+
+                ### Create top/bottom query
+                table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
+                            table_info["database"], table_info["name"]
+                        )
+                table_bottom = parameters["TABLES"]["CREATION"]["template"][
+                            "bottom_OpenCSVSerde"
+                        ].format(table_info["separator"], table_info["s3URI"])
+
+                ### Create middle
+                table_middle = ""
+                nb_var = len(table_info["schema"])
+                for i, val in enumerate(table_info["schema"]):
+                    if i == nb_var - 1:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ")")
+                    else:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ",")
+
+                query = table_top + table_middle + table_bottom
+                ## DROP IF EXIST
+
+                s3.run_query(
+                                query="DROP TABLE {}".format(table_info["name"]),
+                                database=db,
+                                s3_output=s3_output
+                        )
+
+                ## RUN QUERY
+                output = s3.run_query(
+                            query=query,
+                            database=table_info["database"],
+                            s3_output=s3_output,
+                            filename=None,  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+
+                    ## SAVE QUERY ID
+                table_info['output_id'] = output['QueryID']
+
+                         ### UPDATE CATALOG
+                #glue.update_schema_table(
+                #            database=table_info["database"],
+                #            table=table_info["name"],
+                #            schema=table_info["schema"],
+                #        )
+
+                print(output)
 ```
 
 ### Table filtree et enrichie intermediaire date greffe
@@ -1414,86 +1426,238 @@ parameters['steps']['step_2']['output_id'].append(output['QueryID'])
 Etant donnée la taille de la data, nous allons préparer les flux selon les greffes. Les fichiers sont stockés dans le S3, [calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE/?region=eu-west-3&tab=overview) et vont etre récupéré dans la query suivante pour créer une table reconstruite. Chacun des csv portera le nom du greffe.
 
 ```python
-for greffe in parameters['steps']['step_2']['code_greffe']:
-        filtre_top = parameters['steps']['step_2']['query']['top']['first'].format(
-        ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['date_greffe']]),
-            db,
-            parameters['steps']['step_2']['tables'][0],
-            greffe,
-            'code_greffe'
-            #'{}_{}_{}'.format(parameters['steps']['step_2']['tables'][0], 
-            #origin, 
-            #year
-        )
-        filtre_bottom =parameters['steps']['step_2']['query']['bottom'].format(
-            ','.join([str(elem).lower() for elem in parameters['steps']['step_2']['to_fill']['date_greffe']]),
-            ','.join([str(elem) for elem in parameters['steps']['step_2']['partionned']['date_greffe']])
-        )
-        query_fillin = filtre_top
-        for x, val in enumerate( parameters['steps']['step_2']['to_fill']['date_greffe']):
-
-            if x != len( parameters['steps']['step_2']['to_fill']['date_greffe']) -1:
-                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower() )+ ","
-            else:
-                query_fillin+=parameters['steps']['step_2']['query']['top']['second'].format(val.lower())
-                query_fillin+= parameters['steps']['step_2']['query']['middle']['first']
-
-        for x, val in enumerate(parameters['steps']['step_2']['to_fill']['date_greffe']):
-            if x != len( parameters['steps']['step_2']['to_fill']['date_greffe']) -1:
-                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())+ ","
-            else:
-                query_fillin+=parameters['steps']['step_2']['query']['middle']['second'].format(val.lower())
-                query_fillin+=filtre_bottom
-        
-        output = s3.run_query(query_fillin,
-                      database = db,
-                      s3_output = s3_output,
-                      filename = None,
-                      destination_key = None)
-        source_key = '{}/{}.csv'.format(s3_output, output['QueryID'])
-        destination_key = '{0}/{1}.csv'.format(parameters['steps']['step_2']['path'][1][14:],greffe)
-        parameters['steps']['step_2']['output_id'].append(output['QueryID'])
-        print(output)
-        s3.move_object_s3(source_key, destination_key, remove = True)
+s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
+with open('parameters_ETL.json', 'r') as fp:
+    parameters = json.load(fp)
 ```
 
 ```python
-query = "DROP TABLE {}".format(parameters['steps']['step_2']['tables'][1])
-s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
+step_3 = {
+   "STEPS_3":{
+      "name":"Table filtree et enrichie intermediaire date greffe",
+      "execution":[
+         {
+            "database":"ets_inpi",
+            "name":"",
+            "output_id":"",
+            "query":{
+               "top":"WITH createID AS ( SELECT *, ROW_NUMBER() OVER ( PARTITION BY siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,date_greffe ) As row_ID, DENSE_RANK () OVER ( ORDER BY siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,date_greffe ) As ID FROM ets_inpi.ets_flux_filtre_enrichie_timestamp WHERE  ( code_greffe = '{}') ) ",
+               "middle":""" SELECT * FROM ( WITH filled AS ( SELECT ID, row_ID, siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,date_greffe, first_value("libelle_evt") over (partition by ID, "libelle_evt_partition" order by ID, row_ID ) as "libelle_evt" ,first_value("type") over (partition by ID, "type_partition" order by ID, row_ID ) as "type" ,first_value("siege_pm") over (partition by ID, "siege_pm_partition" order by ID, row_ID ) as "siege_pm" ,first_value("rcs_registre") over (partition by ID, "rcs_registre_partition" order by ID, row_ID ) as "rcs_registre" ,first_value("adresse_ligne1") over (partition by ID, "adresse_ligne1_partition" order by ID, row_ID ) as "adresse_ligne1" ,first_value("adresse_ligne2") over (partition by ID, "adresse_ligne2_partition" order by ID, row_ID ) as "adresse_ligne2" ,first_value("adresse_ligne3") over (partition by ID, "adresse_ligne3_partition" order by ID, row_ID ) as "adresse_ligne3" ,first_value("code_postal") over (partition by ID, "code_postal_partition" order by ID, row_ID ) as "code_postal" ,first_value("ville") over (partition by ID, "ville_partition" order by ID, row_ID ) as "ville" ,first_value("code_commune") over (partition by ID, "code_commune_partition" order by ID, row_ID ) as "code_commune" ,first_value("pays") over (partition by ID, "pays_partition" order by ID, row_ID ) as "pays" ,first_value("domiciliataire_nom") over (partition by ID, "domiciliataire_nom_partition" order by ID, row_ID ) as "domiciliataire_nom" ,first_value("domiciliataire_siren") over (partition by ID, "domiciliataire_siren_partition" order by ID, row_ID ) as "domiciliataire_siren" ,first_value("domiciliataire_greffe") over (partition by ID, "domiciliataire_greffe_partition" order by ID, row_ID ) as "domiciliataire_greffe" ,first_value("domiciliataire_complement") over (partition by ID, "domiciliataire_complement_partition" order by ID, row_ID ) as "domiciliataire_complement" ,first_value("siege_domicile_representant") over (partition by ID, "siege_domicile_representant_partition" order by ID, row_ID ) as "siege_domicile_representant" ,first_value("nom_commercial") over (partition by ID, "nom_commercial_partition" order by ID, row_ID ) as "nom_commercial" ,first_value("enseigne") over (partition by ID, "enseigne_partition" order by ID, row_ID ) as "enseigne" ,first_value("activite_ambulante") over (partition by ID, "activite_ambulante_partition" order by ID, row_ID ) as "activite_ambulante" ,first_value("activite_saisonniere") over (partition by ID, "activite_saisonniere_partition" order by ID, row_ID ) as "activite_saisonniere" ,first_value("activite_non_sedentaire") over (partition by ID, "activite_non_sedentaire_partition" order by ID, row_ID ) as "activite_non_sedentaire" ,first_value("date_debut_activite") over (partition by ID, "date_debut_activite_partition" order by ID, row_ID ) as "date_debut_activite" ,first_value("activite") over (partition by ID, "activite_partition" order by ID, row_ID ) as "activite" ,first_value("origine_fonds") over (partition by ID, "origine_fonds_partition" order by ID, row_ID ) as "origine_fonds" ,first_value("origine_fonds_info") over (partition by ID, "origine_fonds_info_partition" order by ID, row_ID ) as "origine_fonds_info" ,first_value("type_exploitation") over (partition by ID, "type_exploitation_partition" order by ID, row_ID ) as "type_exploitation" ,first_value("csv_source") over (partition by ID, "csv_source_partition" order by ID, row_ID ) as "csv_source" FROM ( SELECT *, sum(case when "libelle_evt" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "libelle_evt_partition" ,sum(case when "type" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "type_partition" ,sum(case when "siege_pm" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "siege_pm_partition" ,sum(case when "rcs_registre" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "rcs_registre_partition" ,sum(case when "adresse_ligne1" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "adresse_ligne1_partition" ,sum(case when "adresse_ligne2" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "adresse_ligne2_partition" ,sum(case when "adresse_ligne3" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "adresse_ligne3_partition" ,sum(case when "code_postal" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "code_postal_partition" ,sum(case when "ville" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "ville_partition" ,sum(case when "code_commune" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "code_commune_partition" ,sum(case when "pays" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "pays_partition" ,sum(case when "domiciliataire_nom" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "domiciliataire_nom_partition" ,sum(case when "domiciliataire_siren" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "domiciliataire_siren_partition" ,sum(case when "domiciliataire_greffe" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "domiciliataire_greffe_partition" ,sum(case when "domiciliataire_complement" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "domiciliataire_complement_partition" ,sum(case when "siege_domicile_representant" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "siege_domicile_representant_partition" ,sum(case when "nom_commercial" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "nom_commercial_partition" ,sum(case when "enseigne" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "enseigne_partition" ,sum(case when "activite_ambulante" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "activite_ambulante_partition" ,sum(case when "activite_saisonniere" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "activite_saisonniere_partition" ,sum(case when "activite_non_sedentaire" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "activite_non_sedentaire_partition" ,sum(case when "date_debut_activite" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "date_debut_activite_partition" ,sum(case when "activite" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "activite_partition" ,sum(case when "origine_fonds" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "origine_fonds_partition" ,sum(case when "origine_fonds_info" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "origine_fonds_info_partition" ,sum(case when "type_exploitation" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "type_exploitation_partition" ,sum(case when "csv_source" = '' then 0 else 1 end) over (partition by ID order by row_ID) as "csv_source_partition" FROM createID ORDER BY ID, row_ID ASC ) ORDER BY ID, row_ID ) """,
+               "bottom":" SELECT siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,date_greffe, libelle_evt,type,siege_pm,rcs_registre,adresse_ligne1,adresse_ligne2,adresse_ligne3,code_postal,ville,code_commune,pays,domiciliataire_nom,domiciliataire_siren,domiciliataire_greffe,domiciliataire_complement,siege_domicile_representant,nom_commercial,enseigne,activite_ambulante,activite_saisonniere,activite_non_sedentaire,date_debut_activite,activite,origine_fonds,origine_fonds_info,type_exploitation,csv_source, CASE WHEN siren IS NOT NULL THEN 'EVT' ELSE NULL END as origin FROM ( SELECT *, ROW_NUMBER() OVER( PARTITION BY ID ORDER BY ID, row_ID DESC ) AS max_value FROM filled ) AS T WHERE max_value = 1 )ORDER BY siren,code_greffe,nom_greffe,numero_gestion,id_etablissement,date_greffe"
+            }
+         }
+      ],
+       "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+}
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_3)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for greffe in greffes:
+    ### Preparer le filtre
+    filter_greffe = "' OR code_greffe = '".join(greffe)
+    namefile = '_'.join(greffe)
+    for key, value in parameters["TABLES"]["PREPARATION"].items():
+        if key == "ALL_SCHEMA":
+            ### LOOP STEPS
+            for i, steps in enumerate(value):
+                step_name = "STEPS_{}".format(i)
+                if step_name in ['STEPS_3']:
+
+                    ### LOOP EXECUTION WITHIN STEP
+                    for j, step_n in enumerate(steps[step_name]["execution"]):
+                        ### CREATE TOP
+                        ### COMPILE QUERY
+                        query = (
+                            step_n["query"]["top"].format(filter_greffe)
+                            + step_n["query"]["middle"]
+                            + step_n["query"]["bottom"]
+                        )
+                        output = s3.run_query(
+                            query=query,
+                            database=db,
+                            s3_output=s3_output,
+                            filename=None,  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+
+                        ## SAVE QUERY ID
+                        step_n["output_id"] = output["QueryID"]
+
+                        ### UPDATE CATALOG
+                        #glue.update_schema_table(
+                        #    database=step_n["database"],
+                        #    table=step_n["name"],
+                        #    schema=steps[step_name]["schema"],
+                        #)
+                        print(output)
+                        source_key = '{}/{}.csv'.format(s3_output, output['QueryID'])
+                        destination_key = '{0}/{1}.csv'.format("INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE",namefile)
+                        s3.move_object_s3(source_key, destination_key, remove = True)
 ```
 
 On peut créer la table filtrée et enrichie avec une seule ligne par date de greffe
 
 ```python
-table_top = ""
-table_bottom = ""
-middle = ""
-schema_filtre = list(chain.from_iterable([parameters['steps']['step_2']['partionned']['date_greffe'],
-                          parameters['steps']['step_2']['to_fill']['date_greffe']])
-    )
-table_top += parameters['steps']['step_0']['query']['top'].format(db, parameters['steps']['step_2']['tables'][1])#top.format(db, type_origin['tables'][i])
-table_bottom += parameters['steps']['step_0']['query']['bottom'].format(parameters['steps']['step_2']['separator'],
-                                                                        parameters['steps']['step_2']['path'][1])
-for index, name in enumerate(schema_filtre):
-    if index == len(schema_filtre)-1:
-        middle += "`{0}` {1}".format(
-                        name,
-                        'string')
-    else:
-        middle += "`{0}` {1},".format(
-                    name,
-                    'string')
-query = table_top + middle + table_bottom 
-output = s3.run_query(query,
-                                  database = db,
-                                  s3_output = s3_output,
-                                  filename = None,
-                                  destination_key = None)
-parameters['steps']['step_2']['output_id'].append(output['QueryID'])
+s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
+with open('parameters_ETL.json', 'r') as fp:
+    parameters = json.load(fp)
+```
+
+```python
+table_filre_greffe = [{
+    "database": "ets_inpi",
+    "name": "ets_flux_filtre_enrichie_date_greffe",
+    "output_id": "",
+    "separator": ",",
+    "s3URI": "s3://calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE",
+    "schema": [
+       {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numero_gestion', 'Type': 'string', 'Comment': ''},
+ {'Name': 'id_etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libelle_evt', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_pm', 'Type': 'string', 'Comment': ''},
+ {'Name': 'rcs_registre', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne1', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne2', 'Type': 'string', 'Comment': ''},
+ {'Name': 'adresse_ligne3', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_postal', 'Type': 'string', 'Comment': ''},
+ {'Name': 'ville', 'Type': 'string', 'Comment': ''},
+ {'Name': 'code_commune', 'Type': 'string', 'Comment': ''},
+ {'Name': 'pays', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_nom', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_greffe', 'Type': 'string', 'Comment': ''},
+ {'Name': 'domiciliataire_complement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siege_domicile_representant', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nom_commercial', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_ambulante', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_saisonniere', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite_non_sedentaire', 'Type': 'string', 'Comment': ''},
+ {'Name': 'date_debut_activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activite', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origine_fonds_info', 'Type': 'string', 'Comment': ''},
+ {'Name': 'type_exploitation', 'Type': 'string', 'Comment': ''},
+ {'Name': 'csv_source', 'Type': 'string', 'Comment': ''},
+ {'Name': 'origin', 'Type': 'string', 'Comment': ''}
+    ]
+}
+]
+```
+
+```python
+#parameters['TABLES']['CREATION']['ALL_SCHEMA']
+```
+
+```python
+to_remove = False
+if to_remove:
+    parameters['TABLES']['CREATION']['ALL_SCHEMA'].pop(-1)
+```
+
+```python
+parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(table_filre_greffe)
+```
+
+```python
+parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_flux_filtre_enrichie_date_greffe']:
+                # CREATE QUERY
+
+                ### Create top/bottom query
+                table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
+                            table_info["database"], table_info["name"]
+                        )
+                table_bottom = parameters["TABLES"]["CREATION"]["template"][
+                            "bottom_OpenCSVSerde"
+                        ].format(table_info["separator"], table_info["s3URI"])
+
+                ### Create middle
+                table_middle = ""
+                nb_var = len(table_info["schema"])
+                for i, val in enumerate(table_info["schema"]):
+                    if i == nb_var - 1:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ")")
+                    else:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ",")
+
+                query = table_top + table_middle + table_bottom
+                ## DROP IF EXIST
+
+                s3.run_query(
+                                query="DROP TABLE {}".format(table_info["name"]),
+                                database=db,
+                                s3_output=s3_output
+                        )
+
+                ## RUN QUERY
+                output = s3.run_query(
+                            query=query,
+                            database=table_info["database"],
+                            s3_output=s3_output,
+                            filename=None,  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+
+                    ## SAVE QUERY ID
+                table_info['output_id'] = output['QueryID']
+
+                         ### UPDATE CATALOG
+                #glue.update_schema_table(
+                #            database=table_info["database"],
+                #            table=table_info["name"],
+                #            schema=table_info["schema"],
+                #        )
+
+                print(output)
 ```
 
 ## Step 3: Enrichissements des lignes d'un événement a l'autre et filtrage des événements partiels
@@ -1501,67 +1665,648 @@ parameters['steps']['step_2']['output_id'].append(output['QueryID'])
 Nous avons dès à présent 3 tables contenant l'ensemble des événements d'un établissement. La table initial, la table des flux filtrés et enrichis et la table des partiels. Il faut reconstituer la table finale en concatenant ses trois tables puis en enrichissant les lignes selon l'événement précédents et en indiquant les lignes a ignorer en cas de partiel. 
 
 
-```python
-s3.run_query(
-    "drop table {}".format(parameters['steps']['step_3']['tables'][0]),
-    database = db,
-    s3_output = s3_output,
-    filename = None,
-    destination_key = None)
-```
 
 Tout d'abord, nous allons créer une table intermédiaire dans lequel la concaténation et la création du status 'IGNORE' va ête réalisé. 
 
 ```python
-s3.run_query(
-   parameters['steps']['step_3']['query']['preparation'],
-    database = db,
-    s3_output = s3_output,
-    filename = None,
-    destination_key = None)
+s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
+with open('parameters_ETL.json', 'r') as fp:
+    parameters = json.load(fp)
+```
+
+```python
+step_4 = {
+   "STEPS_4":{
+      "name":"ignore les status IGNORE",
+      "execution":[
+         {
+            "database":"ets_inpi",
+            "name":"ets_filtre_enrichie_historique_tmp",
+            "output_id":"",
+            "query":{
+               "top":" WITH concat_ AS ( SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, Coalesce( try(date_parse(date_greffe, '%Y-%m-%d')), try(date_parse(date_greffe, '%Y/%m/%d')), try(date_parse(date_greffe, '%d %M %Y')), try(date_parse(date_greffe, '%d/%m/%Y')), try(date_parse(date_greffe, '%d-%m-%Y')) ) as date_greffe, libelle_evt, type, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, code_postal, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, ville, nom_commercial, type_exploitation, csv_source, 'FLUX' AS origin FROM ets_flux_filtre_enrichie_date_greffe ",
+               "middle":" UNION ( SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, Coalesce( try(date_parse(date_greffe, '%Y-%m-%d')), try(date_parse(date_greffe, '%Y/%m/%d')), try(date_parse(date_greffe, '%d %M %Y')), try(date_parse(date_greffe, '%d/%m/%Y')), try(date_parse(date_greffe, '%d-%m-%Y')) ) as date_greffe, libelle_evt, type, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, code_postal, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, ville, nom_commercial, type_exploitation, csv_source, 'INITIAL' AS origin FROM ets_initial ) UNION ( SELECT date_.siren, date_.code_greffe, date_.nom_greffe, date_.numero_gestion, date_.id_etablissement, Coalesce( try(date_parse(date_greffe, '%Y-%m-%d')), try(date_parse(date_greffe, '%Y/%m/%d')), try(date_parse(date_greffe, '%d %M %Y')), try(date_parse(date_greffe, '%d/%m/%Y')), try(date_parse(date_greffe, '%d-%m-%Y')) ) as date_greffe, libelle_evt, type, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, code_postal, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, ville, nom_commercial, type_exploitation, csv_source, 'PARTIEL' AS origin FROM ( SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe, type, libelle_evt, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, code_postal, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, ville, nom_commercial, type_exploitation, csv_source, Coalesce( try( cast(file_timestamp as timestamp) ) ) as file_timestamp FROM ets_partiel ) as date_ INNER JOIN ( SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, MAX( Coalesce( try( cast(file_timestamp as timestamp) ) ) ) as file_timestamp FROM ets_partiel GROUP BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement ) as max_ ON date_.siren = max_.siren AND date_.code_greffe = max_.code_greffe AND date_.nom_greffe = max_.nom_greffe AND date_.numero_gestion = max_.numero_gestion AND date_.id_etablissement = max_.id_etablissement AND date_.file_timestamp = max_.file_timestamp ) ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe ) ",
+               "bottom":" SELECT concat_.siren, concat_.code_greffe, concat_.nom_greffe, concat_.numero_gestion, concat_.id_etablissement, libelle_evt, date_greffe, type, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, code_postal, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, ville, nom_commercial, type_exploitation, csv_source, origin, CASE WHEN date_greffe <= date_greffe_max AND origin != 'PARTIEL' THEN 'IGNORE' ELSE NULL END as status FROM concat_ LEFT JOIN ( SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, date_greffe as date_greffe_max FROM concat_ WHERE origin = 'PARTIEL' ) as partiel ON concat_.siren = partiel.siren AND concat_.code_greffe = partiel.code_greffe AND concat_.nom_greffe = partiel.nom_greffe AND concat_.numero_gestion = partiel.numero_gestion AND concat_.id_etablissement = partiel.id_etablissement"
+            }
+         }
+      ],
+       "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+}
+```
+
+```python
+to_remove = False
+if to_remove:
+    parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].pop(-1)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_4)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_4']:
+
+                ### LOOP EXECUTION WITHIN STEP
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### DROP IF EXIST
+                    s3.run_query(
+                        query="DROP TABLE {}.{}".format(step_n["database"], step_n["name"]),
+                        database=db,
+                        s3_output=s3_output,
+                    )
+
+                    ### CREATE TOP
+                    table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                    "top"
+                ].format(step_n["database"], step_n["name"],)
+
+                    ### CREATE TOP
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                            + step_n["query"]["top"]
+                            + step_n["query"]["middle"]
+                            + step_n["query"]["bottom"]
+                        )
+                    output = s3.run_query(
+                            query=query,
+                            database=db,
+                            s3_output=s3_output,
+                            filename=None,  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+
+                        ## SAVE QUERY ID
+                    step_n["output_id"] = output["QueryID"]
+
+                        ### UPDATE CATALOG
+                        #glue.update_schema_table(
+                        #    database=step_n["database"],
+                        #    table=step_n["name"],
+                        #    schema=steps[step_name]["schema"],
+                        #)
+                    print(output)
+                        #parameters['steps']['step_2']['output_id'].append(output['QueryID'])
+                        #source_key = '{}/{}.csv'.format(s3_output, output['QueryID'])
+                        #destination_key = '{0}/{1}.csv'.format(INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE,greffe)
+                        #s3.move_object_s3(source_key, destination_key, remove = True)
 ```
 
 La seconde partie de l'étape va procéder a l'enrichissement des valeurs sur les flux à partir du moment ou la ligne n'est pas à ignore
 
 ```python
-top = """
-SELECT siren,
-                 code_greffe,
-                 nom_greffe,
-                 numero_gestion,
-                 id_etablissement,
-                 origin, 
-                 status,
-                 date_greffe,
-                 libelle_evt,
-
-"""
-middle = """
-CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "{0}" = '' THEN 
-LAG ("{0}", 1) OVER (  PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement 
- ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "{0}" END AS "{0}" 
-
-"""
-bottom = """
-FROM {}
-ORDER BY siren,code_greffe, numero_gestion, id_etablissement,date_greffe
-"""
+s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
+with open('parameters_ETL.json', 'r') as fp:
+    parameters = json.load(fp)
 ```
 
 ```python
-parameters['steps']['step_3']['tables'][0]
+step_5 = {
+   "STEPS_5":{
+      "name":"Enrichissement des flux sur variable n et n-1",
+      "execution":[
+         {
+            "database":"ets_inpi",
+            "name":"ets_filtre_enrichie_historique",
+            "output_id":"",
+            "query":{
+               "top":"SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, origin, status, date_greffe, libelle_evt,",
+               "middle":""" CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "type" = '' THEN LAG ("type", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "type" END AS "type" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "siege_pm" = '' THEN LAG ("siege_pm", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "siege_pm" END AS "siege_pm" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "rcs_registre" = '' THEN LAG ("rcs_registre", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "rcs_registre" END AS "rcs_registre" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "adresse_ligne1" = '' THEN LAG ("adresse_ligne1", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "adresse_ligne1" END AS "adresse_ligne1" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "adresse_ligne2" = '' THEN LAG ("adresse_ligne2", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "adresse_ligne2" END AS "adresse_ligne2" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "adresse_ligne3" = '' THEN LAG ("adresse_ligne3", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "adresse_ligne3" END AS "adresse_ligne3" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "code_postal" = '' THEN LAG ("code_postal", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "code_postal" END AS "code_postal" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "ville" = '' THEN LAG ("ville", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "ville" END AS "ville" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "code_commune" = '' THEN LAG ("code_commune", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "code_commune" END AS "code_commune" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "pays" = '' THEN LAG ("pays", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "pays" END AS "pays" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "domiciliataire_nom" = '' THEN LAG ("domiciliataire_nom", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "domiciliataire_nom" END AS "domiciliataire_nom" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "domiciliataire_siren" = '' THEN LAG ("domiciliataire_siren", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "domiciliataire_siren" END AS "domiciliataire_siren" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "domiciliataire_greffe" = '' THEN LAG ("domiciliataire_greffe", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "domiciliataire_greffe" END AS "domiciliataire_greffe" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "domiciliataire_complement" = '' THEN LAG ("domiciliataire_complement", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "domiciliataire_complement" END AS "domiciliataire_complement" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "siege_domicile_representant" = '' THEN LAG ("siege_domicile_representant", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "siege_domicile_representant" END AS "siege_domicile_representant" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "nom_commercial" = '' THEN LAG ("nom_commercial", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "nom_commercial" END AS "nom_commercial" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "enseigne" = '' THEN LAG ("enseigne", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "enseigne" END AS "enseigne" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "activite_ambulante" = '' THEN LAG ("activite_ambulante", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "activite_ambulante" END AS "activite_ambulante" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "activite_saisonniere" = '' THEN LAG ("activite_saisonniere", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "activite_saisonniere" END AS "activite_saisonniere" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "activite_non_sedentaire" = '' THEN LAG ("activite_non_sedentaire", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "activite_non_sedentaire" END AS "activite_non_sedentaire" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "date_debut_activite" = '' THEN LAG ("date_debut_activite", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "date_debut_activite" END AS "date_debut_activite" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "activite" = '' THEN LAG ("activite", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "activite" END AS "activite" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "origine_fonds" = '' THEN LAG ("origine_fonds", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "origine_fonds" END AS "origine_fonds" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "origine_fonds_info" = '' THEN LAG ("origine_fonds_info", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "origine_fonds_info" END AS "origine_fonds_info" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "type_exploitation" = '' THEN LAG ("type_exploitation", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "type_exploitation" END AS "type_exploitation" , CASE WHEN origin = 'FLUX' AND status != 'IGNORE' AND "csv_source" = '' THEN LAG ("csv_source", 1) OVER ( PARTITION BY siren,"code_greffe", numero_gestion, id_etablissement ORDER BY siren,'code_greffe', numero_gestion, id_etablissement,date_greffe ) ELSE "csv_source" END AS "csv_source" """,
+               "bottom":" FROM ets_filtre_enrichie_historique_tmp ORDER BY siren,code_greffe, numero_gestion, id_etablissement,date_greffe "
+            }
+         }
+      ],
+       "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+}
 ```
 
 ```python
+to_remove = False
+if to_remove:
+    parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].pop(-1)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_5)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_5']:
+
+                ### LOOP EXECUTION WITHIN STEP
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### DROP IF EXIST
+                    s3.run_query(
+                        query="DROP TABLE {}.{}".format(step_n["database"], step_n["name"]),
+                        database=db,
+                        s3_output=s3_output,
+                    )
+
+                    ### CREATE TOP
+                    table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                    "top"
+                ].format(step_n["database"], step_n["name"],)
+
+                    ### CREATE TOP
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                            + step_n["query"]["top"]
+                            + step_n["query"]["middle"]
+                            + step_n["query"]["bottom"]
+                        )
+                    output = s3.run_query(
+                            query=query,
+                            database=db,
+                            s3_output=s3_output,
+                            filename=None,  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+
+                        ## SAVE QUERY ID
+                    step_n["output_id"] = output["QueryID"]
+
+                        ### UPDATE CATALOG
+                        #glue.update_schema_table(
+                        #    database=step_n["database"],
+                        #    table=step_n["name"],
+                        #    schema=steps[step_name]["schema"],
+                        #)
+                    print(output)
+```
+
+Finalisation ETL avec les ID des queries executées.
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+# Analytics
+
+The cells below execute the job in the key `ANALYSIS`. You need to change the `primary_key` and `secondary_key` 
+
+
+## Count missing values
+
+```python
+from datetime import date
+today = date.today().strftime('%Y%M%d')
+today
+```
+
+Il y un bug avec boto3 et Glue. Il faut donc récupérer maunellement le schema de donnée .. Nous n'avons pas pu modifier le catalogue de données via le fichier JSON.
+
+```python
+schema = {
+	"StorageDescriptor": {
+		"Columns": 
+			 [
+				{
+					"Name": "siren",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "code_greffe",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "nom_greffe",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "numero_gestion",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "id_etablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "origin",
+					"Type": "varchar(7)",
+					"comment": ""
+				},
+				{
+					"Name": "status",
+					"Type": "varchar(6)",
+					"comment": ""
+				},
+				{
+					"Name": "date_greffe",
+					"Type": "timestamp",
+					"comment": ""
+				},
+				{
+					"Name": "libelle_evt",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "type",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "siege_pm",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "rcs_registre",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_ligne1",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_ligne2",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_ligne3",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "code_postal",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "ville",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "code_commune",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "pays",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_nom",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_siren",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_greffe",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_complement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "siege_domicile_representant",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "nom_commercial",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "enseigne",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite_ambulante",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite_saisonniere",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite_non_sedentaire",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "date_debut_activite",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "origine_fonds",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "origine_fonds_info",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "type_exploitation",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "csv_source",
+					"Type": "string",
+					"comment": ""
+				}
+			],
+		"inputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+		"outputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+		"compressed": "false",
+		"numBuckets": "0",
+		"SerDeInfo": {
+			"name": "ets_filtre_enrichie_historique",
+			"serializationLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+			"parameters": {}
+		},
+		"bucketCols": [],
+		"sortCols": [],
+		"parameters": {},
+		"SkewedInfo": {},
+		"storedAsSubDirectories": "false"
+	},
+	"parameters": {
+		"EXTERNAL": "TRUE",
+		"has_encrypted_data": "false"
+	}
+}
+```
+
+```python
+table_top = parameters["ANALYSIS"]["COUNT_MISSING"]["top"]
 table_middle = ""
-table_bottom = bottom.format(parameters['steps']['step_3']['tables'][0])
-for x, value in enumerate(parameters['steps']['step_3']['to_fill']):
-    if  x != len(parameters['steps']['step_3']['to_fill'])-1:
-        table_middle +=middle.format(value) +","
+table_bottom = parameters["ANALYSIS"]["COUNT_MISSING"]["bottom"].format(
+    step_n["database"], step_n["name"]
+)
+
+for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
+    if key == len(schema["StorageDescriptor"]["Columns"]) - 1:
+
+        table_middle += "{} ".format(
+            parameters["ANALYSIS"]["COUNT_MISSING"]["middle"].format(value["Name"])
+        )
     else:
-        table_middle +=middle.format(value)
-query = top + table_middle + table_bottom
-print(query)
+        table_middle += "{} ,".format(
+            parameters["ANALYSIS"]["COUNT_MISSING"]["middle"].format(value["Name"])
+        )
+query = table_top + table_middle + table_bottom
+output = s3.run_query(
+    query=query,
+    database=db,
+    s3_output=s3_output,
+    filename="count_missing",  ## Add filename to print dataframe
+    destination_key=None,  ### Add destination key if need to copy output
+)
+display(
+    output.T.rename(columns={0: "total_missing"})
+    .assign(total_missing_pct=lambda x: x["total_missing"] / x.iloc[0, 0])
+    .sort_values(by=["total_missing"], ascending=False)
+    .style.format("{0:,.2%}", subset=["total_missing_pct"])
+    .bar(subset="total_missing_pct", color=["#d65f5f"])
+)
+```
+
+# Brief description table
+
+In this part, we provide a brief summary statistic from the lattest jobs. For the continuous analysis with a primary/secondary key, please add the relevant variables you want to know the count and distribution
+
+
+## Categorical Description
+
+During the categorical analysis, we wil count the number of observations for a given group and for a pair.
+
+### Count obs by group
+
+- Index: primary group
+- nb_obs: Number of observations per primary group value
+- percentage: Percentage of observation per primary group value over the total number of observations
+
+Returns the top 10 only
+
+```python
+for field in schema["StorageDescriptor"]["Columns"]:
+    if field["Type"] in ["string", "object","varchar(6)","varchar(7)" "varchar(12)"]:
+
+        print("Nb of obs for {}".format(field["Name"]))
+
+        query = parameters["ANALYSIS"]["CATEGORICAL"]["PAIR"].format(
+            step_n["database"], step_n["name"], field["Name"]
+        )
+        output = s3.run_query(
+            query=query,
+            database=db,
+            s3_output=s3_output,
+            filename="count_categorical_{}".format(
+                field["Name"]
+            ),  ## Add filename to print dataframe
+            destination_key=None,  ### Add destination key if need to copy output
+        )
+
+        ### Print top 10
+
+        display(
+            (
+                output.set_index([field["Name"]])
+                .assign(percentage=lambda x: x["nb_obs"] / x["nb_obs"].sum())
+                .sort_values("percentage", ascending=False)
+                .head(10)
+                .style.format("{0:.2%}", subset=["percentage"])
+                .bar(subset=["percentage"], color="#d65f5f")
+            )
+        )
+```
+
+### Count obs by two pair
+
+You need to pass the primary group in the cell below
+
+- Index: primary group
+- Columns: Secondary key -> All the categorical variables in the dataset
+- nb_obs: Number of observations per primary group value
+- Total: Total number of observations per primary group value (sum by row)
+- percentage: Percentage of observations per primary group value over the total number of observations per primary group value (sum by row)
+
+Returns the top 10 only
+
+```python
+primary_key = "libelle_evt"
+```
+
+```python
+for field in schema["StorageDescriptor"]["Columns"]:
+    if field["Type"] in ["string", "object", "varchar(6)","varchar(7)" "varchar(12)"]:
+        if field["Name"] != primary_key:
+            print(
+                "Nb of obs for the primary group {} and {}".format(
+                    primary_key, field["Name"]
+                )
+            )
+            query = parameters["ANALYSIS"]["CATEGORICAL"]["MULTI_PAIR"].format(
+                step_n["database"], step_n["name"], primary_key, field["Name"]
+            )
+
+            output = s3.run_query(
+                query=query,
+                database=db,
+                s3_output=s3_output,
+                filename="count_categorical_{}_{}".format(
+                    primary_key, field["Name"]
+                ),  # Add filename to print dataframe
+                destination_key=None,  # Add destination key if need to copy output
+            )
+
+            display(
+                (
+                    pd.concat(
+                        [
+                            (
+                                output.loc[
+                                    lambda x: x[field["Name"]].isin(
+                                        (
+                                            output.assign(
+                                                total_secondary=lambda x: x["nb_obs"]
+                                                .groupby([x[field["Name"]]])
+                                                .transform("sum")
+                                            )
+                                            .drop_duplicates(
+                                                subset="total_secondary", keep="last"
+                                            )
+                                            .sort_values(
+                                                by=["total_secondary"], ascending=False
+                                            )
+                                            .iloc[:10, 1]
+                                            .to_list()
+                                        )
+                                    )
+                                ]
+                                .set_index([primary_key, field["Name"]])
+                                .unstack([0])
+                                .fillna(0)
+                                .assign(total=lambda x: x.sum(axis=1))
+                                .sort_values(by=["total"])
+                            ),
+                            (
+                                output.loc[
+                                    lambda x: x[field["Name"]].isin(
+                                        (
+                                            output.assign(
+                                                total_secondary=lambda x: x["nb_obs"]
+                                                .groupby([x[field["Name"]]])
+                                                .transform("sum")
+                                            )
+                                            .drop_duplicates(
+                                                subset="total_secondary", keep="last"
+                                            )
+                                            .sort_values(
+                                                by=["total_secondary"], ascending=False
+                                            )
+                                            .iloc[:10, 1]
+                                            .to_list()
+                                        )
+                                    )
+                                ]
+                                .rename(columns={"nb_obs": "percentage"})
+                                .set_index([primary_key, field["Name"]])
+                                .unstack([0])
+                                .fillna(0)
+                                .apply(lambda x: x / x.sum(), axis=1)
+                            ),
+                        ],
+                        axis=1,
+                    )
+                    .fillna(0)
+                    # .sort_index(axis=1, level=1)
+                    .style.format("{0:,.2f}", subset=["nb_obs", "total"])
+                    .bar(subset=["total"], color="#d65f5f")
+                    .format("{0:,.2%}", subset=("percentage"))
+                    .background_gradient(
+                        cmap=sns.light_palette("green", as_cmap=True), subset=("nb_obs")
+                    )
+                )
+            )
 ```
 
 # Generation report
