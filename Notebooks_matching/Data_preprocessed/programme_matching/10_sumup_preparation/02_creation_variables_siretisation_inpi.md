@@ -75,13 +75,13 @@ import seaborn as sns
 import os, shutil, json
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent)
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-
-name_credential = 'XX_credentials.csv'
-region = ''
-bucket = ''
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python inputHidden=false jupyter={"outputs_hidden": false} outputHidden=false id="pBP8v2IBDIn6"
@@ -101,212 +101,95 @@ if pandas_setting:
     pd.set_option('display.max_colwidth', None)
 ```
 
-<!-- #region id="i19_A-u1DIoB" -->
-# Creation tables
+# Introduction 
 
-The data creation, and transformation are done through a JSON file. The JSON file is available in the S3, and version in Github.
+L’objectif de la sirétisation est d’attribuer un siret à un établissement appartenant à une entreprise. Le siret est un identifiant unique rattaché à un établissement, et donc à une adresse. Un siret, dès lors, ne peut posséder plusieurs adresses. En cas de création, déménagement ou fermeture d’établissement, un nouveau siret sera attribué. 
 
-- [DATA/ETS]
+L’INSEE est en charge de la création et attribution du siret. Toutefois, cette information ne figure pas à l’INPI. La manière dont l’INPI distingue des établissements est légèrement différente de l’INSEE. A l’INPI, il faut regarder la séquence siren, code greffe, numéro de gestion et numéro d’établissement pour identifier un établissement d’un autre. 
 
-The table schema is automatically modifidied based on the parameter logs
+La difficulté de la siretisation vient du manque de normalisme entre les deux organismes. L’INSEE affiche davantage de conformité dans la création de la variable qu’à l’INPI. La création de l’adresse du coté de l’INPI est laissée à la seule appréciation du greffe. Il est a noté que des fautes sont possibles à la fois à l’INPI mais aussi à l’INSEE. 
 
-## How to use
+La seconde difficulté rencontrée est la différence d’état des fichiers entre l’INSEE et l’INPI. L’INSEE fournit chaque mois un stock de donnée, ou dit autrement, donne un état des lieux à l’instant t des entreprises en France. Un établissement peut être ouvert en t-1 mais fermée à date t . Ce changement d’état ne va pas figurer à l’INSEE. Nous allons recevoir uniquement le dernier état connu, a savoir la fermeture. D’un point de vue technique, un siret n’a qu’une seule ligne dans la table de l’INSEE. La table de l’INPI va contenir l’ensemble des données historiques, avant toutes les modifications effectuées sur les établissements. En prenant l’exemple ci dessus, nous connaissons le status de l’établissement lors des deux dates, un premier état ouvert et un second état fermé. Dès lors nous pouvons avoir plusieurs lignes possibles par siret. 
 
-1. Load the json file from the S3, and start populate it
-2. the template skips the header. If the files does not have a header, remove `'skip.header.line.count'='1'`
+Lors de notre processus de siretisation, nous allons rapprocher les deux tables en utilisant un score de similarité et des règles de gestion. Le rapprochement  entre les deux tables va se faire via le siren, la ville et le code postal. Il est très probable qu’une entreprise possède plusieurs établissements dans la même ville, ce qui va aboutir à un doublonage des observations. Autrement dit, un même établissement à l’INPI va posséder plusieurs siret. Par exemple, si une entreprise possède 2 établissement dans la même ville, et que ses deux établissements sont aussi présents à l’INPI, alors le rapprochement va déboucher sur 4 lignes (deux lignes par établissements). Il faut multiplier le nombre de création de nouvelles lignes par le nombre d’événements à l’INPI. Si la table de l’INPI à 2 événements pour un établissement, alors cela va créer 4 lignes supplémentaires (deux par événement). 
 
+L’utilisation du score de similarité (défini ci dessous) et les règles de gestion vont permettre de distinguer les siret aux bonnes adresses. Du fait de la compléxité de certaines adresses, il peut y avoir des lignes qui ne peuvent être siretisé. Lorsque ce cas se présente, nous avons deux méthodes. La méthode une consiste à regarder si la séquence n’a pas été trouvé via une autre ligne. En effet, si nous avons pu trouver le siret d’une séquence via une autre ligne, nous pouvons l’attribuer à l’ensemble des lignes de la même séquence. Nous savons qu’une séquence ne peut pas changer, et qu’une fois le siret trouvé, ce sera toujours le même. Attention, nous avons détecté dans certains cas des séquences avec plusieurs siret car l’INPI a modifié l’adresse d’une séquence sans fermer l’établissement, ce qui n’est pas possible dans les faits. La seconde méthode repose sur le NLP (Natural Language Processing), plus précisément le Word2Vec pour calculer la similarité entre les adresses plus détaillées à l’INPI qu’a l’INSEE. Si un des mots de l’INSEE n’est pas présent dans l’adresse de l’INPI alors que l’adresse est plus détaillée, nous allons calculer un indicateur de similarité entre les mot de l’INSEE  non présents dans l’INPI est ceux de l’INPI. Si une des valeurs est supérieure a un seuil, on peut dire que c’est la bonne adresse. Par exemple, l’INPI peut avoir écrit BD alors que l’INSEE a écrit BOULEVARD . Le modèle va comprendre que les deux mots ont la même signification. 
 
-### Template create table
+## Tableau recapitulatif variables
 
-- To create a new table using raw data (i.e files in a given folder in the S3), copy the template below and paste it inside the list `TABLES.CREATION.ALL_SCHEMA`
+Pour créer les tests pour la siretisation, nous avons besoin de créer de nouvelle variables. Le tableau ci-dessous récapital les variables pour la table de l'INPI.
 
-```
-{
-   "database":"",
-   "name":"",
-   "output_id":"",
-   "separator":",",
-   "s3URI":"",
-   "schema":[
-   {
-      "Name":"",
-      "Type":"",
-      "Comment":""
-   }
-]
-}
-```
-
-Each variable has to pass written inside the schema:
-
-- `Name`: Variable name
-- `Type`: Type of variable. Refer to [athena/latest/ug/data-types](https://docs.aws.amazon.com/athena/latest/ug/data-types.html) for the accepted data type
-- `Comment`: Provide a comment to the variable
-
-You can add other fields if needed, they will be pushed to Glue.
-
-## Templare prepare table
-
-- To create a new table using existing table (i.e Athena tables), copy the template below and paste it inside the list `TABLES.PREPARATION.ALL_SCHEMA`
-    - The list `ALL_SCHEMA` accepts one or more steps. Each steps, `STEPS_X` can be a sequence of queries execution. 
-
-```
-"PREPARATION":{
-   "ALL_SCHEMA":[
-      {
-         "STEPS_0":{
-            "name":"",
-            "execution":[
-               {
-                  "database":"",
-                  "name":"",
-                  "output_id":"",
-                  "query":{
-                     "top":"",
-                     "middle":"",
-                     "bottom":""
-                  }
-               }
-            ],
-            "schema":[
-               {
-                  "Name":"",
-                  "Type":"",
-                  "Comment":""
-               }
-            ]
-         }
-      }
-   ],
-   "template":{
-      "top":"CREATE TABLE {}.{} WITH (format = 'PARQUET') AS "
-   }
-}
-``` 
-
-To add a step, use this template inside `TABLES.PREPARATION.ALL_SCHEMA`
-
-```
-{
-   "STEPS_X":{
-      "name":"",
-      "execution":[
-         {
-            "database":"",
-            "name":"",
-            "output_id":"",
-            "query":{
-               "top":"",
-               "middle":"",
-               "bottom":""
-            }
-         }
-      ],
-      "schema":[
-               {
-                  "Name":"",
-                  "Type":"",
-                  "Comment":""
-               }
-            ]
-   }
-}
-```
-
-To add a query execution with a within, use the following template inside the list `STEPS_X.execution`
-
-```
-{
-   "database":"",
-   "name":"",
-   "output_id":"",
-   "query":{
-      "top":"",
-      "middle":"",
-      "bottom":""
-   }
-}
-``` 
+| Tables | Variables                      | Commentaire                                                                                                                                                                                             | Bullet_inputs                                                | US_md                                                          | query_md_gitlab                                                                                                                                                                                                                                                                                        | Pattern_regex                                                       |
+|--------|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|----------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| INPI   | sequence_id                    | ID unique pour la séquence suivante: siren + code greffe + nom greffe + numero gestion +ID établissement                                                                                                | siren code_greffe nom_greffe numero_gestion id_etablissement | [2976](https://tree.taiga.io/project/olivierlubet-air/us/2976) | [create-id-and-id-sequence](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/01_Athena_concatenate_ETS.md#create-id-and-id-sequence)                                                                    |                                                                     |
+| INPI   | adresse_reconstituee_inpi      | Concatenation des champs de l'adresse et suppression des espace                                                                                                                                         | adresse_ligne1 adresse_ligne2 adresse_ligne3                 | [2690](https://tree.taiga.io/project/olivierlubet-air/us/2690) | [adress_reconsitituee_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#adress_reconsitituee_inpi)                                                                         | debut/fin espace,espace,accent,Upper                                |
+| INPI   | adresse_distance_inpi          | Concatenation des champs de l'adresse, suppression des espaces et des articles. Utilisé pour calculer le score permettant de distinguer la similarité/dissimilarité entre deux adresses (INPI vs INSEE) | adresse_ligne1 adresse_ligne2 adresse_ligne3                 | [2949](https://tree.taiga.io/project/olivierlubet-air/us/2949) | [adresse_distance_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#adresse_distance_inpi)                                                                                 | article,digit,debut/fin espace,espace,accent,Upper                  |
+| INPI   | ville_matching                 | Nettoyage regex de la ville et suppression des espaces. La même logique de nettoyage est appliquée coté INSEE                                                                                           | ville                                                        | [2613](https://tree.taiga.io/project/olivierlubet-air/us/2613) | [etape-1-pr%C3%A9paration-ville_matching](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-1-pr%C3%A9paration-ville_matching)                                             | article,digit,debut/fin espace,espace,accent,Upper,Regles_speciales |
+| INPI   | list_numero_voie_matching_inpi | Liste contenant tous les numéros de l'adresse dans l'INPI                                                                                                                                               | adresse_ligne1 adresse_ligne2 adresse_ligne3                 | [3000](https://tree.taiga.io/project/olivierlubet-air/us/3000) | [etape-5-creation-liste-num%C3%A9ro-de-voie](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-5-creation-liste-num%C3%A9ro-de-voie)                                       | digit,debut/fin espace,espace                                       |
+| INPI   | last_libele_evt                | Extraction du dernier libellé de l'événement connu pour une séquence, et appliquer cette information à l'ensemble de la séquence                                                                        | libelle_evt                                                  | [2950](https://tree.taiga.io/project/olivierlubet-air/us/2950) | [etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets) |                                                                     |
+| INPI   | status_admin                   | Informe du status ouvert/fermé concernant une séquence                                                                                                                                                  | last_libele_evt                                              | [2951](https://tree.taiga.io/project/olivierlubet-air/us/2951) | [etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets) | Regles_speciales                                                    |
+| INPI   | status_ets                     | Informe du type d'établissement (SIE/PRI/SEC) concernant une séquence                                                                                                                                   | type                                                         | [2951](https://tree.taiga.io/project/olivierlubet-air/us/2951) | [etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/03_ETS_add_variables.md#etape-4-cr%C3%A9ation-last_libele_evt-status_admin-status_ets) | Regles_speciales                                                    |
 
 
+## Transformation data
 
-Each step name should follow this format `STEPS_0`, `STEPS_1`, `STEPS_2`, etc
+Il y a 9 variables a construire pour finaliser la table de l'INPI. Parmis les 9 variables, 7 peuvent être créer assez simplement alors que les 3 autres demandent de faire de partionner la data sur une séquence. Une sequence fait référence a à la définition d'un établissement au sens de l'INPI, comme évoqué en introduction de la documentation.
 
-## Templare add comments to Glue
+**Aucun grouping**
 
-The AWS Glue Data Catalog contains references to data that is used as sources and targets of your extract, transform, and load (ETL) jobs in AWS Glue. To create your data warehouse or data lake, you must catalog this data. The AWS Glue Data Catalog is an index to the location, schema, and runtime metrics of your data. You use the information in the Data Catalog to create and monitor your ETL jobs. Information in the Data Catalog is stored as metadata tables, where each table specifies a single data store.
+* `index_id`: 
+    - Création du numéro de ligne
+* `enseigne`: 
+    - Mise en majuscule
+* `ville_matching`:
+    - Nettoyage regex de la ville et suppression des espaces
+* `adress_reconstituee_inpi`
+    - Concatenation des champs de l'adresse et suppression des espaces
+* `adress_distance_inpi`: 
+    - Concatenation des champs de l'adresse, suppression des espaces et des articles
+* `list_numero_voie_matching`:
+    - Liste contenant tous les numéros de l'adresse dans l'INPI
+* `status_ets`: 
+    - Informe du type d'établissement (SIE/PRI.SEC) concernant une séquence
 
-We make use of the `boto3` API to add comments in the metastore. 
+**Grouping**
 
-- To alter the metadata (only comments), copy the template below and paste inside the list `PREPARATION.STEPS_X.schema`. 
-
-```
-[
-   {
-      "Name":"",
-      "Type":"",
-      "Comment":""
-   }
-]
-```
-
-The schema is related to a table, and will be modified by Glue API. **Only** variables inside the list will be modified, the remaining variables will keep default's value.
-
-## Analytical part
-
-The json file already contains queries to analyse the dataset. It contains queries to count the number of observations for a given variables, for a group and a pair of group. It also has queries to provide the distribution for a single column, for a group and a pair of group. The queries are available in the key `ANALYSIS`
-<!-- #endregion -->
-
-<!-- #region id="0TdKeensDIoB" -->
-# Prepare parameters file
-
-There are three steps to prepara the parameter file:
-
-1. Prepare `GLOBAL` parameters
-2. Prepare `TABLES.CREATION`:
-    - Usually a notebook in the folder `01_prepare_tables` 
-3. Prepare `TABLES.PREPARATION`
-    - Usually a notebook in the folder `02_prepare_tables_model` 
+* `sequence_id`:
+    - Attribution d'un ID unique pour la sequence siren + code greffe + nom greffe + numero gestion +ID établissement. Cela fait référence a la définition d'établissement au sens de l'INPI.
+* `status_admin`: 
+    - Informe du status ouvert/fermé concernant une séquence
+* `last_libelle_evt`: 
+    - Extraction du dernier libellé de l'événement connu pour une séquence, et appliquer cette information à l'ensemble de la séquence    
     
-The parameter file is named `parameters_ETL.json` and will be moved each time in the root folder `01_data_preprocessing` for versioning. When the parameter file is finished, we will use it in the deployment process to run the entire process
-    
-## Prepare `GLOBAL` parameters
-    
-To begin with, you need to add the global parameters in the key `GLOBAL`:
-
-- `DATABASE`
-- `QUERIES_OUTPUT`. By default, `SQL_OUTPUT_ATHENA`
-
-## 2. Prepare `TABLES.CREATION` 
-
-This part should already been done with the notebooks in the folder `01_prepare_tables`. At this stage, the key `TABLES.CREATION`  in parameter file should have content, except if the project needs tables already created from a different project
-
-## 3. Prepare `TABLES.PREPARATION`
-
-In this stage of the ETL, we are processing the data from existing tables in Athena. This stage is meant to use one or more table to create temporary, intermediate or final tables to use in the analysis. The notebook template is named `XX_template_table_preprocessing_AWS` and should be saved in the child folder `02_prepare_tables_model`
-<!-- #endregion -->
+Pour faciliter la construction de la table `ets_inpi_transformed`, nous allons procéder a une étape intermédiaire, a savoir la création de `ets_inpi_transformed_temp`. Cette table intermédiaire va calculer l'index et la séquence.
 
 ```python id="nOhbGckqDIoC"
 ### If chinese characters, set  ensure_ascii=False
 s3.download_file(key = 'DATA/ETL/parameters_ETL.json')
 with open('parameters_ETL.json', 'r') as fp:
     parameters = json.load(fp)
-print(json.dumps(parameters, indent=4, sort_keys=True, ensure_ascii=False))
+#print(json.dumps(parameters, indent=4, sort_keys=True, ensure_ascii=False))
 ```
 
+### Etap 1: Creation séquence
+
+Dans cette étape, nous allons créer un index, qui est simplement le numéro de ligne, ainsi qu'un ID établissement unique, qui groupe les variables `siren`, `code_greffe`, `nom_greffe`, `numero_gestion`, `id_etablissement`.
+
+Pour rappel, nous en sommes a l'étape 6 dans la pipeline.
+
 ```python id="uVGYsgexDIoF"
-step_X = {
-   "STEPS_X":{
-      "name":"",
+step_6 = {
+   "STEPS_6":{
+      "name":"Creation sequence caracterisant un établissement au sens de l'INPI",
       "execution":[
          {
-            "database":"",
-            "name":"",
+            "database":"ets_inpi",
+            "name":"ets_inpi_transformed_temp",
             "output_id":"",
             "query":{
-               "top":"",
-               "middle":"",
-               "bottom":""
+               "top":" WITH cte AS ( SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, sequence_id, ROW_NUMBER() OVER ( PARTITION BY sequence_id ORDER BY sequence_id) as rownum FROM ( SELECT siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, DENSE_RANK () OVER( ORDER BY siren, code_greffe, nom_greffe, numero_gestion, id_etablissement) AS sequence_id FROM ets_filtre_enrichie_historique ) ) ",
+               "middle":" SELECT ROW_NUMBER() OVER () as index_id, sequence_id, ets_filtre_enrichie_historique.siren, ets_filtre_enrichie_historique.code_greffe, ets_filtre_enrichie_historique.nom_greffe, ets_filtre_enrichie_historique.numero_gestion, ets_filtre_enrichie_historique.id_etablissement, status, origin, date_greffe, libelle_evt, type, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, code_postal, ville, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, nom_commercial, enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, type_exploitation, csv_source FROM ets_filtre_enrichie_historique INNER JOIN ( ",
+               "bottom":" SELECT * FROM cte WHERE rownum = 1 ) as no_dup_cte ON ets_filtre_enrichie_historique.siren = no_dup_cte.siren AND ets_filtre_enrichie_historique.code_greffe = no_dup_cte.code_greffe AND ets_filtre_enrichie_historique.nom_greffe = no_dup_cte.nom_greffe AND ets_filtre_enrichie_historique.numero_gestion = no_dup_cte.numero_gestion AND ets_filtre_enrichie_historique.id_etablissement = no_dup_cte.id_etablissement "
             }
          }
       ],
@@ -332,7 +215,11 @@ if to_remove:
 ```
 
 ```python id="b-M0cc5ADIoN"
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_X)
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_6)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
 ```
 
 ```python id="MEw20IRNDIoQ"
@@ -341,7 +228,7 @@ json_file = json.dumps(parameters)
 f = open(json_filename,"w")
 f.write(json_file)
 f.close()
-#s3.upload_file(json_filename, 'DATA/ETL')
+s3.upload_file(json_filename, 'DATA/ETL')
 ```
 
 ```python id="JDdataIdDIoS"
@@ -354,25 +241,12 @@ with open('parameters_ETL.json', 'r') as fp:
 Move `parameters_ETL.json` to the parent folder `01_prepare_tables`
 <!-- #endregion -->
 
-```python id="adsAFGs9DIoW"
-import shutil
-shutil.move('parameters_ETL.json', '../parameters_ETL.json')
-```
-
-<!-- #region heading_collapsed=true id="E6iqILHYDIoZ" -->
-# Execute jobs
-
-The cell below will execute the queries in the key `TABLES.PREPARATION` for all the steps in `ALL_SCHEMA` 
-
-## Steps
-
-1.
-<!-- #endregion -->
-
 ```python id="EGtMXwPsDIoa"
 s3_output = parameters['GLOBAL']['QUERIES_OUTPUT']
 db = parameters['GLOBAL']['DATABASE']
 ```
+
+Il faut être patient car l'éxécution prend environ 20 minutes.
 
 ```python id="IIfWNKz_DIod"
 for key, value in parameters["TABLES"]["PREPARATION"].items():
@@ -380,48 +254,164 @@ for key, value in parameters["TABLES"]["PREPARATION"].items():
         ### LOOP STEPS
         for i, steps in enumerate(value):
             step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_6']:
 
-            ### LOOP EXECUTION WITHIN STEP
-            for j, step_n in enumerate(steps[step_name]["execution"]):
+                ### LOOP EXECUTION WITHIN STEP
+                for j, step_n in enumerate(steps[step_name]["execution"]):
 
-                ### DROP IF EXIST
-                s3.run_query(
-                    query="DROP TABLE {}.{}".format(step_n["database"], step_n["name"]),
-                    database=db,
-                    s3_output=s3_output,
-                )
+                    ### DROP IF EXIST
+                    s3.run_query(
+                        query="DROP TABLE {}.{}".format(step_n["database"], step_n["name"]),
+                        database=db,
+                        s3_output=s3_output,
+                    )
 
-                ### CREATE TOP
-                table_top = parameters["TABLES"]["PREPARATION"]["template"][
-                    "top"
-                ].format(step_n["database"], step_n["name"],)
+                    ### CREATE TOP
+                    table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                        "top"
+                    ].format(step_n["database"], step_n["name"],)
 
-                ### COMPILE QUERY
-                query = (
-                    table_top
-                    + step_n["query"]["top"]
-                    + step_n["query"]["middle"]
-                    + step_n["query"]["bottom"]
-                )
-                output = s3.run_query(
-                    query=query,
-                    database=db,
-                    s3_output=s3_output,
-                    filename=None,  ## Add filename to print dataframe
-                    destination_key=None,  ### Add destination key if need to copy output
-                )
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + step_n["query"]["top"]
+                        + step_n["query"]["middle"]
+                        + step_n["query"]["bottom"]
+                    )
+                    output = s3.run_query(
+                        query=query,
+                        database=db,
+                        s3_output=s3_output,
+                        filename=None,  ## Add filename to print dataframe
+                        destination_key=None,  ### Add destination key if need to copy output
+                    )
 
-                ## SAVE QUERY ID
-                step_n["output_id"] = output["QueryID"]
+                    ## SAVE QUERY ID
+                    step_n["output_id"] = output["QueryID"]
 
-                ### UPDATE CATALOG
-                glue.update_schema_table(
-                    database=step_n["database"],
-                    table=step_n["name"],
-                    schema=steps[step_name]["schema"],
-                )
+                    ### UPDATE CATALOG
+                    #glue.update_schema_table(
+                    #    database=step_n["database"],
+                    #    table=step_n["name"],
+                    #    schema=steps[step_name]["schema"],
+                    #)
 
-                print(output)
+                    print(output)
+```
+
+### Etap 2: Creation variables simples et groupings
+
+Dès lors que l'index et la sequence ont été créée, nous allons pouvoir calculer les variables de grouping sur ce dernier. De plus, nous allons créer les variables dites "simples" au préalable.
+
+Le calcul de la variable `status_admin` nécéssite la variable `last_libelle_evt`. En effet, nous avons besoin de connaitre le status le plus récent d'un établissement pour indiquer si un établissement est en activité ou fermé administrativment. Lorsque l'établissement est fermé, il faut l'indiquer sur l'ensemble de la séquence car les valeurs passées doivent être mises a jour.
+
+Le nettoyage des variables de l'adresse suive le schema suivant:
+
+| Table | Variables                 | Article | Digit | Debut/fin espace | Espace | Accent | Upper |
+|-------|---------------------------|---------|-------|------------------|--------|--------|-------|
+| INPI  | adresse_distance_inpi     | X       | X     | X                | X      | X      | X     |
+| INPI  | adresse_reconstituee_inpi |         |       | X                | X      | X      | X     |
+
+```python
+step_7 = {
+   "STEPS_7":{
+      "name":"Creation variables simple et le status administratif d'un etablissement",
+      "execution":[
+         {
+            "database":"ets_inpi",
+            "name":"ets_inpi_transformed",
+            "output_id":"",
+            "query":{
+               "top":"WITH create_var AS ( SELECT index_id, ets_inpi_transformed_temp.sequence_id, siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, status, origin, date_greffe, libelle_evt, last_libele_evt, CASE WHEN last_libele_evt = 'Etablissement supprimé' THEN 'F' ELSE 'A' END AS status_admin, type, CASE WHEN type = 'SIE' OR type = 'SEP' THEN 'true' ELSE 'false' END AS status_ets, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, REGEXP_REPLACE( trim( REGEXP_REPLACE( REGEXP_REPLACE( NORMALIZE( UPPER( CONCAT( adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3 ) ), NFD ), '\pM', '' ), '[^\w\s]| +', ' ' ) ), '\s+\s+', ' ' ) AS adresse_reconstituee_inpi , regexp_replace( trim( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( NORMALIZE( UPPER( CONCAT( adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3 ) ), NFD ), '\pM', '' ), '[^\w\s]|\d+| +', ' ' ), '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', '' ) ), '\s+\s+', ' ' ) AS adresse_distance_inpi, array_distinct( regexp_extract_all( trim( REGEXP_REPLACE( REGEXP_REPLACE( NORMALIZE( UPPER( CONCAT( adresse_ligne1, ' ', adresse_ligne2, ' ', adresse_ligne3 ) ), NFD ), '\pM', '' ), '[^\w\s]| +', ' ' ) ), '[0-9]+' ) ) AS list_numero_voie_matching_inpi, code_postal, CASE WHEN code_postal = '' THEN REGEXP_EXTRACT(ville, '\d{5}') WHEN LENGTH(code_postal) = 5 THEN code_postal ELSE NULL END AS code_postal_matching, ville, REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( NORMALIZE( UPPER(ville), NFD ), '\pM', '' ), '^\d+\s|\s\d+\s|\s\d+$', '' ), '^LA\s+|^LES\s+|^LE\s+|\\(.*\\)|^L(ES|A|E) | L(ES|A|E) | L(ES|A|E)$|CEDEX | CEDEX | CEDEX|^E[R*] | E[R*] | E[R*]$', '' ), '^STE | STE | STE$|^STES | STES | STES', 'SAINTE' ), '^ST | ST | ST$', 'SAINT' ), 'S/|^S | S | S$', 'SUR' ), '/S', 'SOUS' ), '[^\w\s]|\([^()]*\)|ER ARRONDISSEMENT|E ARRONDISSEMENT|" \
+"|^SUR$|CEDEX|[0-9]+|\s+', '' ), 'MARSEILLEE', 'MARSEILLE' ) as ville_matching, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, nom_commercial, UPPER(enseigne) as enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, type_exploitation, csv_source FROM ets_inpi_transformed_temp",
+               "middle":" LEFT JOIN ( SELECT ets_inpi_transformed_temp.sequence_id, ets_inpi_transformed_temp.libelle_evt as last_libele_evt, max_date_greffe FROM ets_inpi_transformed_temp INNER JOIN ( SELECT sequence_id, MAX(date_greffe) as max_date_greffe FROM ets_inpi_transformed_temp GROUP BY sequence_id ) AS temp ON temp.sequence_id = ets_inpi_transformed_temp.sequence_id ) as max_date ON max_date.sequence_id = ets_inpi_transformed_temp.sequence_id)",
+               "bottom":" SELECT index_id, sequence_id, siren, code_greffe, nom_greffe, numero_gestion, id_etablissement, status, origin, date_greffe, libelle_evt, last_libele_evt, status_admin, type, status_ets, siege_pm, rcs_registre, adresse_ligne1, adresse_ligne2, adresse_ligne3, adresse_reconstituee_inpi , adresse_distance_inpi, CASE WHEN cardinality(list_numero_voie_matching_inpi) = 0 THEN NULL ELSE list_numero_voie_matching_inpi END as list_numero_voie_matching_inpi, code_postal, code_postal_matching, ville_matching, code_commune, pays, domiciliataire_nom, domiciliataire_siren, domiciliataire_greffe, domiciliataire_complement, siege_domicile_representant, nom_commercial, enseigne, activite_ambulante, activite_saisonniere, activite_non_sedentaire, date_debut_activite, activite, origine_fonds, origine_fonds_info, type_exploitation, csv_source FROM create_var "
+            }
+         }
+      ],
+      "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+}
+```
+
+```python
+to_remove = True
+if to_remove:
+    parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].pop(-1)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_7)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_7']:
+
+                ### LOOP EXECUTION WITHIN STEP
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+
+                    ### DROP IF EXIST
+                    s3.run_query(
+                        query="DROP TABLE {}.{}".format(step_n["database"], step_n["name"]),
+                        database=db,
+                        s3_output=s3_output,
+                    )
+
+                    ### CREATE TOP
+                    table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                        "top"
+                    ].format(step_n["database"], step_n["name"],)
+
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + step_n["query"]["top"]
+                        + step_n["query"]["middle"]
+                        + step_n["query"]["bottom"]
+                    )
+                    output = s3.run_query(
+                        query=query,
+                        database=db,
+                        s3_output=s3_output,
+                        filename=None,  ## Add filename to print dataframe
+                        destination_key=None,  ### Add destination key if need to copy output
+                    )
+
+                    ## SAVE QUERY ID
+                    step_n["output_id"] = output["QueryID"]
+
+                    ### UPDATE CATALOG
+                    #glue.update_schema_table(
+                    #    database=step_n["database"],
+                    #    table=step_n["name"],
+                    #    schema=steps[step_name]["schema"],
+                    #)
+
+                    print(output)
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
 ```
 
 <!-- #region id="tkXIgOQcDIog" -->
@@ -438,8 +428,258 @@ schema
 <!-- #region id="DvROvxftDIok" -->
 # Analytics
 
-The cells below execute the job in the key `ANALYSIS`. You need to change the `primary_key` and `secondary_key` 
+The cells below execute the job in the key `ANALYSIS`. You need to change the `primary_key` and `secondary_key`.
+
+Il n'est pas possible de récupérer le schema de Glue avec Boto3 sous windows. Nous devons récuperer le schéma manuellement
 <!-- #endregion -->
+
+```python
+schema = {
+	"StorageDescriptor": {
+		"Columns": [
+				{
+					"Name": "index_id",
+					"Type": "bigint",
+					"comment": ""
+				},
+				{
+					"Name": "sequence_id",
+					"Type": "bigint",
+					"comment": ""
+				},
+				{
+					"Name": "siren",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "code_greffe",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "nom_greffe",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "numero_gestion",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "id_etablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "status",
+					"Type": "varchar(6)",
+					"comment": ""
+				},
+				{
+					"Name": "origin",
+					"Type": "varchar(7)",
+					"comment": ""
+				},
+				{
+					"Name": "date_greffe",
+					"Type": "timestamp",
+					"comment": ""
+				},
+				{
+					"Name": "libelle_evt",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "last_libele_evt",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "status_admin",
+					"Type": "varchar(1)",
+					"comment": ""
+				},
+				{
+					"Name": "type",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "status_ets",
+					"Type": "varchar(5)",
+					"comment": ""
+				},
+				{
+					"Name": "siege_pm",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "rcs_registre",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_ligne1",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_ligne2",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_ligne3",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_reconstituee_inpi",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_distance_inpi",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "list_numero_voie_matching_inpi",
+					"Type": "array<string>",
+					"comment": ""
+				},
+				{
+					"Name": "code_postal",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "code_postal_matching",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "ville_matching",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "code_commune",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "pays",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_nom",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_siren",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_greffe",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "domiciliataire_complement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "siege_domicile_representant",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "nom_commercial",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "enseigne",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite_ambulante",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite_saisonniere",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite_non_sedentaire",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "date_debut_activite",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "activite",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "origine_fonds",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "origine_fonds_info",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "type_exploitation",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "csv_source",
+					"Type": "string",
+					"comment": ""
+				}
+			],
+		"location": "s3://calfdata/SQL_OUTPUT_ATHENA/tables/7d26db88-7b1a-4084-9ee3-17f3a59c4f8d/",
+		"inputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+		"outputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+		"compressed": "false",
+		"numBuckets": "0",
+		"SerDeInfo": {
+			"name": "ets_inpi_transformed",
+			"serializationLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+			"parameters": {}
+		},
+		"bucketCols": [],
+		"sortCols": [],
+		"parameters": {},
+		"SkewedInfo": {},
+		"storedAsSubDirectories": "false"
+	},
+	"parameters": {
+		"EXTERNAL": "TRUE",
+		"has_encrypted_data": "false"
+	}
+}
+```
 
 <!-- #region id="TtEjycmxDIol" -->
 ## Count missing values
@@ -448,6 +688,7 @@ The cells below execute the job in the key `ANALYSIS`. You need to change the `p
 ```python id="3xU6B60NDIom"
 from datetime import date
 today = date.today().strftime('%Y%M%d')
+today
 ```
 
 ```python id="ShHZcC-YDIoo"
@@ -552,7 +793,7 @@ Returns the top 10 only
 <!-- #endregion -->
 
 ```python id="ySqwANvMDIov"
-primary_key = "year"
+primary_key = "last_libele_evt"
 ```
 
 ```python id="zhgodxZRDIox"
@@ -649,238 +890,6 @@ for field in schema["StorageDescriptor"]["Columns"]:
             )
 ```
 
-<!-- #region id="z152f88NDIoz" -->
-## Continuous description
-
-There are three possibilities to show the ditribution of a continuous variables:
-
-1. Display the percentile
-2. Display the percentile, with one primary key
-3. Display the percentile, with one primary key, and a secondary key
-<!-- #endregion -->
-
-<!-- #region id="ctlCHMGlDIo0" -->
-### 1. Display the percentile
-
-- pct: Percentile [.25, .50, .75, .95, .90]
-<!-- #endregion -->
-
-```python id="HPyYHHPmDIo0"
-table_top = ""
-table_top_var = ""
-table_middle = ""
-table_bottom = ""
-
-var_index = 0
-size_continuous = len([len(x) for x in schema["StorageDescriptor"]["Columns"] if 
-                       x['Type'] in ["float", "double", "bigint"]])
-cont = 0
-for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
-    if value["Type"] in ["float", "double", "bigint"]:
-        cont +=1
-
-        if var_index == 0:
-            table_top_var += "{} ,".format(value["Name"])
-            table_top = parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"][
-                "bottom"
-            ].format(step_n["database"], step_n["name"], value["Name"], key)
-        else:
-            temp_middle_1 = "{} {}".format(
-                parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["middle_1"],
-                parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["bottom"].format(
-                    step_n["database"], step_n["name"], value["Name"], key
-                ),
-            )
-            temp_middle_2 = parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"][
-                "middle_2"
-            ].format(value["Name"])
-
-            if cont == size_continuous:
-
-                table_top_var += "{} {}".format(
-                    value["Name"],
-                    parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["top_3"],
-                )
-                table_bottom += "{} {})".format(temp_middle_1, temp_middle_2)
-            else:
-                table_top_var += "{} ,".format(value["Name"])
-                table_bottom += "{} {}".format(temp_middle_1, temp_middle_2)
-        var_index += 1
-
-query = (
-    parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["top_1"]
-    + table_top
-    + parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["top_2"]
-    + table_top_var
-    + table_bottom
-)
-output = s3.run_query(
-    query=query,
-    database=db,
-    s3_output=s3_output,
-    filename="count_distribution",  ## Add filename to print dataframe
-    destination_key=None,  ### Add destination key if need to copy output
-)
-(output.sort_values(by="pct").set_index(["pct"]).style.format("{0:.2f}"))
-```
-
-<!-- #region id="b8nFWOjgDIo3" -->
-### 2. Display the percentile, with one primary key
-
-The primary key will be passed to all the continuous variables
-
-- index: 
-    - Primary group
-    - Percentile [.25, .50, .75, .95, .90] per primary group value
-- Columns: Secondary group
-- Heatmap is colored based on the row, ie darker blue indicates larger values for a given row
-<!-- #endregion -->
-
-```python id="NBDD0QlHDIo3"
-primary_key = "year"
-table_top = ""
-table_top_var = ""
-table_middle = ""
-table_bottom = ""
-var_index = 0
-cont = 0
-for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
-
-    if value["Type"] in ["float", "double", "bigint"]:
-        cont +=1
-
-        if var_index == 0:
-            table_top_var += "{} ,".format(value["Name"])
-            table_top = parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                "bottom"
-            ].format(
-                step_n["database"], step_n["name"], value["Name"], key, primary_key
-            )
-        else:
-            temp_middle_1 = "{} {}".format(
-                parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                    "middle_1"
-                ],
-                parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                    "bottom"
-                ].format(
-                    step_n["database"], step_n["name"], value["Name"], key, primary_key
-                ),
-            )
-            temp_middle_2 = parameters["ANALYSIS"]["CONTINUOUS"][
-                "ONE_PAIR_DISTRIBUTION"
-            ]["middle_2"].format(value["Name"], primary_key)
-
-            if cont == size_continuous:
-
-                table_top_var += "{} {}".format(
-                    value["Name"],
-                    parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                        "top_3"
-                    ],
-                )
-                table_bottom += "{} {})".format(temp_middle_1, temp_middle_2)
-            else:
-                table_top_var += "{} ,".format(value["Name"])
-                table_bottom += "{} {}".format(temp_middle_1, temp_middle_2)
-        var_index += 1
-
-query = (
-    parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"]["top_1"]
-    + table_top
-    + parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"]["top_2"].format(
-        primary_key
-    )
-    + table_top_var
-    + table_bottom
-)
-output = s3.run_query(
-    query=query,
-    database=db,
-    s3_output=s3_output,
-    filename="count_distribution_primary_key",  # Add filename to print dataframe
-    destination_key=None,  # Add destination key if need to copy output
-)
-(
-    output.set_index([primary_key, "pct"])
-    .unstack(1)
-    .T.style.format("{0:,.2f}")
-    .background_gradient(cmap=sns.light_palette("blue", as_cmap=True), axis=1)
-)
-```
-
-<!-- #region id="aqyKFfZ_DIo6" -->
-### 3. Display the percentile, with one primary key, and a secondary key
-
-The primary and secondary key will be passed to all the continuous variables. The output might be too big so we print only the top 10 for the secondary key
-
-- index:  Primary group
-- Columns: 
-    - Secondary group
-    - Percentile [.25, .50, .75, .95, .90] per secondary group value
-- Heatmap is colored based on the column, ie darker green indicates larger values for a given column
-<!-- #endregion -->
-
-```python id="ZGR2gjTDDIo6"
-primary_key = 'year'
-secondary_key = 'cityen'
-```
-
-```python id="PzisiEP4DIo9"
-for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
-
-    if value["Type"] in ["float", "double", "bigint"]:
-
-        query = parameters["ANALYSIS"]["CONTINUOUS"]["TWO_PAIRS_DISTRIBUTION"].format(
-            step_n["database"],
-            step_n["name"],
-            primary_key,
-            secondary_key,
-            value["Name"],
-        )
-
-        output = s3.run_query(
-            query=query,
-            database=db,
-            s3_output=s3_output,
-            filename="count_distribution_{}_{}_{}".format(
-                primary_key, secondary_key, value["Name"]
-            ),  ## Add filename to print dataframe
-            destination_key=None,  ### Add destination key if need to copy output
-        )
-
-        print(
-            "Distribution of {}, by {} and {}".format(
-                value["Name"], primary_key, secondary_key,
-            )
-        )
-
-        display(
-            (
-                output.loc[
-                    lambda x: x[secondary_key].isin(
-                        (
-                            output.assign(
-                                total_secondary=lambda x: x[value["Name"]]
-                                .groupby([x[secondary_key]])
-                                .transform("sum")
-                            )
-                            .drop_duplicates(subset="total_secondary", keep="last")
-                            .sort_values(by=["total_secondary"], ascending=False)
-                            .iloc[:10, 1]
-                        ).to_list()
-                    )
-                ]
-                .set_index([primary_key, "pct", secondary_key])
-                .unstack([0, 1])
-                .fillna(0)
-                .sort_index(axis=1, level=[1, 2])
-                .style.format("{0:,.2f}")
-                .background_gradient(cmap=sns.light_palette("green", as_cmap=True))
-            )
-        )
-```
-
 <!-- #region id="kJLL-NklDIpB" -->
 # Generation report
 <!-- #endregion -->
@@ -952,5 +961,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python id="5qEsk80XDIpG"
-create_report(extension = "html")
+create_report(extension = "html", keep_code = True)
 ```
