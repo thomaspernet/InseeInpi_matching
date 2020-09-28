@@ -16,7 +16,57 @@ jupyter:
 ---
 
 <!-- #region id="mKJUtoJnDIUZ" -->
-# NOTEBOOK NAME FROM CODA TASK
+# Création table INSEE transformée contenant les nouvelles variables permettant la siretisation
+
+# Objective(s)
+
+*  Creation de la table INSEE avec les data de juillet
+* Création des variables pour faire les tests de siretisation
+* Please, update the Source URL by clicking on the button after the information have been pasted
+  * US 03 Creation Variables data INPI et INSEE Modify rows
+  * Delete tables and Github related to the US: Delete rows
+
+# Metadata
+
+* Epic: Epic 6
+* US: US 4
+* Date Begin: 9/28/2020
+* Duration Task: 1
+* Description: Creation des variables qui vont servir a réaliser les tests pour la siretisation
+* Step type: Transform table
+* Status: Active
+  * Change Status task: Active
+  * Update table: Modify rows
+* Source URL: US 03 Creation Variables data INPI et INSEE
+* Task type: Jupyter Notebook
+* Users: Thomas Pernet
+* Watchers: Thomas Pernet
+* User Account: https://937882855452.signin.aws.amazon.com/console
+* Estimated Log points: 10
+* Task tag: #athena,#lookup-table,#sql,#data-preparation,#insee
+* Toggl Tag: #documentation
+
+# Input Cloud Storage [AWS/GCP]
+
+## Table/file
+
+* Origin: 
+* Athena
+* Name: 
+* ets_insee_raw_juillet
+* Github: 
+  * 
+
+# Destination Output/Delivery
+
+## Table/file
+
+* Origin: 
+* Athena
+* Name:
+* ets_insee_transformed
+* GitHub:
+
 <!-- #endregion -->
 ```python inputHidden=false jupyter={"outputs_hidden": false} outputHidden=false id="h4Umnv0nDIUa"
 from awsPy.aws_authorization import aws_connector
@@ -29,13 +79,14 @@ import seaborn as sns
 import os, shutil, json
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent)
+parent_path = str(Path(path).parent)
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-
-name_credential = 'thomas_vat_credentials.csv'
 region = 'eu-west-3'
-bucket = 'chinese-data'
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+bucket = 'calfdata'
+
 ```
 
 ```python inputHidden=false jupyter={"outputs_hidden": false} outputHidden=false id="tTZePIXWDIUf"
@@ -55,174 +106,26 @@ if pandas_setting:
     pd.set_option('display.max_colwidth', None)
 ```
 
-<!-- #region id="E6pnziRgDIUl" -->
-# Creation tables
-
-The data creation, and transformation are done through a JSON file. The JSON file is available in the S3, and version in Github.
-
-- [DATA/ETS]
-
-The table schema is automatically modifidied based on the parameter logs
-
-## How to use
-
-1. Load the json file from the S3, and start populate it
-2. the template skips the header. If the files does not have a header, remove `'skip.header.line.count'='1'`
-
-
-### Template create table
-
-- To create a new table using raw data (i.e files in a given folder in the S3), copy the template below and paste it inside the list `TABLES.CREATION.ALL_SCHEMA`
-
-```
-{
-   "database":"",
-   "name":"",
-   "output_id":"",
-   "separator":",",
-   "s3URI":"",
-   "schema":[
-   {
-      "Name":"",
-      "Type":"",
-      "Comment":""
-   }
-]
-}
-```
-
-Each variable has to pass written inside the schema:
-
-- `Name`: Variable name
-- `Type`: Type of variable. Refer to [athena/latest/ug/data-types](https://docs.aws.amazon.com/athena/latest/ug/data-types.html) for the accepted data type
-- `Comment`: Provide a comment to the variable
-
-You can add other fields if needed, they will be pushed to Glue.
-
-## Templare prepare table
-
-- To create a new table using existing table (i.e Athena tables), copy the template below and paste it inside the list `TABLES.PREPARATION.ALL_SCHEMA`
-    - The list `ALL_SCHEMA` accepts one or more steps. Each steps, `STEPS_X` can be a sequence of queries execution. 
-
-```
-"PREPARATION":{
-   "ALL_SCHEMA":[
-      {
-         "STEPS_0":{
-            "name":"",
-            "execution":[
-               {
-                  "database":"",
-                  "name":"",
-                  "output_id":"",
-                  "query":{
-                     "top":"",
-                     "middle":"",
-                     "bottom":""
-                  }
-               }
-            ],
-            "schema":[
-               {
-                  "Name":"",
-                  "Type":"",
-                  "Comment":""
-               }
-            ]
-         }
-      }
-   ],
-   "template":{
-      "top":"CREATE TABLE {}.{} WITH (format = 'PARQUET') AS "
-   }
-}
-``` 
-
-To add a step, use this template inside `TABLES.PREPARATION.ALL_SCHEMA`
-
-```
-{
-   "STEPS_X":{
-      "name":"",
-      "execution":[
-         {
-            "database":"",
-            "name":"",
-            "output_id":"",
-            "query":{
-               "top":"",
-               "middle":"",
-               "bottom":""
-            }
-         }
-      ]
-   }
-}
-```
-
-To add a query execution with a within, use the following template inside the list `STEPS_X.execution`
-
-```
-{
-   "database":"",
-   "name":"",
-   "output_id":"",
-   "query":{
-      "top":"",
-      "middle":"",
-      "bottom":""
-   }
-}
-``` 
-
-
-
-Each step name should follow this format `STEPS_0`, `STEPS_1`, `STEPS_2`, etc
-
-## Templare add comments to Glue
-
-The AWS Glue Data Catalog contains references to data that is used as sources and targets of your extract, transform, and load (ETL) jobs in AWS Glue. To create your data warehouse or data lake, you must catalog this data. The AWS Glue Data Catalog is an index to the location, schema, and runtime metrics of your data. You use the information in the Data Catalog to create and monitor your ETL jobs. Information in the Data Catalog is stored as metadata tables, where each table specifies a single data store.
-
-We make use of the `boto3` API to add comments in the metastore. 
-
-- To alter the metadata (only comments), copy the template below and paste inside the list `PREPARATION.STEPS_X.schema`. 
-
-```
-[
-   {
-      "Name":"",
-      "Type":"",
-      "Comment":""
-   }
-]
-```
-
-The schema is related to a table, and will be modified by Glue API. **Only** variables inside the list will be modified, the remaining variables will keep default's value.
-
-## Analytical part
-
-The json file already contains queries to analyse the dataset. It contains queries to count the number of observations for a given variables, for a group and a pair of group. It also has queries to provide the distribution for a single column, for a group and a pair of group. The queries are available in the key `ANALYSIS`
-<!-- #endregion -->
-
 <!-- #region id="bea5ESvKDIUm" -->
-# Prepare parameters file
+# Etape création table tansformée INSEE
 
-There are three steps to prepara the parameter file:
+La préparation de la table transformée de l'INSEE se fait en deux étapes. La première étape consiste bien sur à intégrer dans la base de donnée, la table brute de l'INSEE. Nous utiliserons la table datant de juillet 2020, pour correspondre avec celle de l'équipe Datum.
 
-1. Prepare `GLOBAL` parameters
-2. Prepare `TABLES.CREATION`:
-    - Usually a notebook in the folder `01_prepare_tables` 
-3. Prepare `TABLES.PREPARATION`
-    - Usually a notebook in the folder `02_prepare_tables_model` 
-    
-The parameter file is named `parameters_ETL.json` and will be moved each time in the root folder `01_data_preprocessing` for versioning. When the parameter file is finished, we will use it in the deployment process to run the entire process
-    
-## Prepare `GLOBAL` parameters
-    
-To begin with, you need to add the global parameters in the key `GLOBAL`:
+Dans un second temps, nous allons 6 variables, qui sont résumés dans le tableau ci dessous
 
-- `DATABASE`
-- `QUERIES_OUTPUT`. By default, `SQL_OUTPUT_ATHENA`
+| Tables | Variables                          | Commentaire                                                                                                                                                                                                        | Bullet_inputs                                                                                                                 | Bullet_point_regex                                     | Inputs                                                                                                                        | US_md                                                          | query_md_gitlab                                                                                                                                                                                                                                                              | Pattern_regex                                          |
+|--------|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| INSEE  | voie_clean                         | Extraction du type de voie contenu dans l’adresse. Variable type voie nom complet. Exemple, l'INSEE indique CH, pour chemin, il faut donc indiquer CHEMIN. Besoin table externe (type_voie) pour créer la variable |                                                                                                                               |                                                        |                                                                                                                               | [2953](https://tree.taiga.io/project/olivierlubet-air/us/2953) | [etape-1-pr%C3%A9paration-voie_clean](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md#etape-1-pr%C3%A9paration-voie_clean)                     |                                                        |
+| INSEE  | indiceRepetitionEtablissement_full | Récupération du nom complet des indices de répétion; par exemple B devient BIS, T devient TER                                                                                                                      | indiceRepetitionEtablissement                                                                                                 | Regles_speciales                                       | indiceRepetitionEtablissement                                                                                                 | [2953](https://tree.taiga.io/project/olivierlubet-air/us/2953) | []()                                                                                                                                                                                                                                                                         | Regles_speciales                                       |
+| INSEE  | adresse_reconstituee_insee         | Concatenation des champs de l'adresse et suppression des espace                                                                                                                                                    | numeroVoieEtablissement indiceRepetitionEtablissement_full voie_clean libelleVoieEtablissement complementAdresseEtablissement | debut/fin espace espace Upper                          | numeroVoieEtablissement,indiceRepetitionEtablissement_full,voie_clean,libelleVoieEtablissement,complementAdresseEtablissement | [2954](https://tree.taiga.io/project/olivierlubet-air/us/2954) | [etape-2-preparation-adress_reconstituee_insee](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md#etape-2-preparation-adress_reconstituee_insee) | debut/fin espace,espace,Upper                          |
+| INSEE  | adresse_distance_insee             | Concatenation des champs de l'adresse, suppression des espaces et des articles. Utilisé pour calculer le score permettant de distinguer la similarité/dissimilarité entre deux adresses (INPI vs INSEE)            | numeroVoieEtablissement indiceRepetitionEtablissement_full voie_clean libelleVoieEtablissement complementAdresseEtablissement | article digit debut/fin espace espace Upper            | numeroVoieEtablissement,indiceRepetitionEtablissement_full,voie_clean,libelleVoieEtablissement,complementAdresseEtablissement | [3004](https://tree.taiga.io/project/olivierlubet-air/us/3004) | [etape-3-adresse_distance_insee](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md#etape-3-adresse_distance_insee)                               | article,digit,debut/fin espace,espace,Upper            |
+| INSEE  | list_numero_voie_matching_insee    | Liste contenant tous les numéros de l'adresse dans l'INSEE                                                                                                                                                         | numeroVoieEtablissement indiceRepetitionEtablissement_full voie_clean libelleVoieEtablissement complementAdresseEtablissement | article digit debut/fin espace                         | numeroVoieEtablissement,indiceRepetitionEtablissement_full,voie_clean,libelleVoieEtablissement,complementAdresseEtablissement | [3004](https://tree.taiga.io/project/olivierlubet-air/us/3004) | [etape-4-creation-liste-num%C3%A9ro-de-voie](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md#etape-4-creation-liste-num%C3%A9ro-de-voie)       | article,digit,debut/fin espace                         |
+| INSEE  | ville_matching                     | Nettoyage regex de la ville et suppression des espaces. La même logique de nettoyage est appliquée coté INPI                                                                                                       | libelleCommuneEtablissement                                                                                                   | article digit debut/fin espace espace Regles_speciales | libelleCommuneEtablissement                                                                                                   | [2954](https://tree.taiga.io/project/olivierlubet-air/us/2954) | [etape-2-cr%C3%A9ation-ville_matching](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md#etape-2-cr%C3%A9ation-ville_matching)                   | article,digit,debut/fin espace,espace,Regles_speciales |
+| INSEE  | count_initial_insee                | Compte du nombre de siret (établissement) par siren (entreprise)                                                                                                                                                   | siren                                                                                                                         |                                                        | siren                                                                                                                         | [2955](https://tree.taiga.io/project/olivierlubet-air/us/2955) | [etape-5-count_initial_insee](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/01_preparation/04_ETS_add_variables_insee.md#etape-5-count_initial_insee)                                     |                                                        |
+    
+## Prepare `TABLE.CREATION` parameters
+    
+Le fichier config JSON contient déjà les étapes de préparation de l'INPI. Nous allons continuer d'ajouter les queries a éxécuter dans le JSON afin d'avoir un processus complet contenu dans un seul est même fichier. 
 <!-- #endregion -->
 
 ```python id="U-PscJ-YDIUm"
@@ -233,7 +136,7 @@ with open('parameters_ETL.json', 'r') as fp:
 ```
 
 ```python id="S482exQ8DIUp"
-parameters['GLOBAL']['DATABASE'] = ''
+parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
 ```
 
 <!-- #region id="oxyFXf8iDIUs" -->
@@ -247,17 +150,91 @@ One or more notebooks in the folder `01_prepare_tables` are used to create the r
 <!-- #endregion -->
 
 ```python id="_0NnpDD-DIUt"
-new_table = [{
-    "database": "",
-    "name": "",
+table_raw_insee = [{
+    "database": "ets_insee",
+    "name": "ets_insee_raw_juillet",
     "output_id": "",
     "separator": ",",
-    "s3URI": "",
+    "s3URI": "s3://calfdata/INSEE/00_rawData/ETS_01_07_2020",
     "schema": [
-        {'Name': '', 'Type': '', 'Comment': ''}]
+        {'Name': 'siren', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nic', 'Type': 'string', 'Comment': ''},
+ {'Name': 'siret', 'Type': 'string', 'Comment': ''},
+ {'Name': 'statutdiffusionetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'datecreationetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'trancheeffectifsetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'anneeeffectifsetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activiteprincipaleregistremetiersetablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'datederniertraitementetablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'etablissementsiege', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nombreperiodesetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'complementadresseetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numerovoieetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'indicerepetitionetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'typevoieetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellevoieetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'codepostaletablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellecommuneetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellecommuneetrangeretablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'distributionspecialeetablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'codecommuneetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'codecedexetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellecedexetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'codepaysetrangeretablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellepaysetrangeretablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'complementadresse2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'numerovoie2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'indicerepetition2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'typevoie2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellevoie2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'codepostal2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellecommune2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellecommuneetranger2etablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'distributionspeciale2etablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'codecommune2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'codecedex2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellecedex2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'codepaysetranger2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'libellepaysetranger2etablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'datedebut', 'Type': 'string', 'Comment': ''},
+ {'Name': 'etatadministratifetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne1etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne2etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'enseigne3etablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'denominationusuelleetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'activiteprincipaleetablissement', 'Type': 'string', 'Comment': ''},
+ {'Name': 'nomenclatureactiviteprincipaleetablissement',
+  'Type': 'string',
+  'Comment': ''},
+ {'Name': 'caractereemployeuretablissement', 'Type': 'string', 'Comment': ''}
+    ]
 }
 ]
 #len(parameters['TABLES']['CREATION']['ALL_SCHEMA'])
+```
+
+```python
+#filte = "42dcc900-50a8-4ab5-83e2-9778ca6fea72.csv"
+#list_ = []
+#for i in list(pd.read_csv(filte).columns):
+#    list_.append(
+#    {'Name': i, 'Type': 'string', 'Comment': ''}
+#    )
+#list_
 ```
 
 <!-- #region id="fwcsoOPCDIUx" -->
@@ -271,11 +248,11 @@ if to_remove:
 ```
 
 ```python id="auvdEPNLDIU1"
-parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(new_table)
+parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(table_raw_insee)
 ```
 
 ```python id="-mmdbMCoDIU4"
-print(json.dumps(parameters, indent=4, sort_keys=False, ensure_ascii=False))
+parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
 ```
 
 ```python id="IqqQ6sbPDIU6"
@@ -297,55 +274,6 @@ with open('parameters_ETL.json', 'r') as fp:
 Move `parameters_ETL.json` to the parent folder `01_prepare_tables`
 <!-- #endregion -->
 
-```python id="EA7tb9X0DIVB"
-import shutil
-shutil.move('parameters_ETL.json', '../parameters_ETL.json')
-```
-
-<!-- #region heading_collapsed=true id="i0KOiBp3DIVE" -->
-# Run Parameters files
-
-1. Create a database
-
-**Chinese trade**
-
-
-```
-CREATE DATABASE chinese_trade
-```
-
-**Chinese look up**
-
-```
-CREATE DATABASE chinese_lookup
-```
-
-# Execute jobs
-
-The cell below will execute the queries in the key `TABLES.PREPARATION` for all the steps in `ALL_SCHEMA` 
-
-## Steps
-
-If you don't need to execute all the schema, change to code below from
-    
-```
-for key, value in parameters["TABLES"]["CREATION"].items():
-    if key == "ALL_SCHEMA":
-        for table_info in value:
-``` 
-
-To 
-    
-```
-for key, value in parameters["TABLES"]["CREATION"].items():
-    if key == "ALL_SCHEMA":
-        for table_info in value:
-            if table_info['name'] in ['TABLE NAME']:
-```
-
-Alter `TABLE NAME` with the tables you want to create
-<!-- #endregion -->
-
 ```python id="fCwL6Ou5DIVF"
 s3_output = parameters['GLOBAL']['QUERIES_OUTPUT']
 db = parameters['GLOBAL']['DATABASE']
@@ -355,77 +283,352 @@ db = parameters['GLOBAL']['DATABASE']
 for key, value in parameters["TABLES"]["CREATION"].items():
     if key == "ALL_SCHEMA":
         for table_info in value:
-            # CREATE QUERY
+            if table_info['name'] in ['ets_insee_raw_juillet']:
 
-            ### Create top/bottom query
-            table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
-                        table_info["database"], table_info["name"]
+                # CREATE QUERY
+
+                ### Create top/bottom query
+                table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
+                            table_info["database"], table_info["name"]
+                        )
+                table_bottom = parameters["TABLES"]["CREATION"]["template"][
+                            "bottom_OpenCSVSerde"
+                        ].format(table_info["separator"], table_info["s3URI"])
+
+                ### Create middle
+                table_middle = ""
+                nb_var = len(table_info["schema"])
+                for i, val in enumerate(table_info["schema"]):
+                    if i == nb_var - 1:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ")")
+                    else:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ",")
+
+                query = table_top + table_middle + table_bottom
+
+                ## DROP IF EXIST
+
+                s3.run_query(
+                                query="DROP TABLE {}".format(table_info["name"]),
+                                database=db,
+                                s3_output=s3_output
+                        )
+
+                ## RUN QUERY
+                output = s3.run_query(
+                            query=query,
+                            database=table_info["database"],
+                            s3_output=s3_output,
+                            filename=None,  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+
+                    ## SAVE QUERY ID
+                table_info['output_id'] = output['QueryID']
+
+                         ### UPDATE CATALOG
+                #glue.update_schema_table(
+                #            database=table_info["database"],
+                #            table=table_info["name"],
+                #            schema=table_info["schema"],
+                #        )
+
+                print(output)
+```
+
+## Creation table transformée
+
+La tale tranformée contient 6 variables supplémentaires qui vont être utilisées pour la réalisation des tests. Les 6 variables sont les suivantes:
+
+* `voie_clean` 
+    - Ajout de la variable non abbrégée du type de voie. Exemple, l'INSEE indique CH, pour chemin, il faut donc indiquer CHEMIN
+* `count_initial_insee`
+    - Compte du nombre de siret (établissement) par siren (entreprise).
+* ville_matching 
+    - Nettoyage de la ville de l'INSEE (`libelleCommuneEtablissement`) de la même manière que l'INPI
+* adress_reconstituee_insee:
+    - Reconstitution de l'adresse à l'INSEE en utilisant le numéro de voie `numeroVoieEtablissement`, le type de voie non abbrégé, `voie_clean`, l'adresse `libelleVoieEtablissement`  et le `complementAdresseEtablissement` et suppression des articles
+* adresse_distance_insee
+* list_enseigne:
+    - Concatenation de:
+        - `enseigne1etablissement`
+        - `enseigne2etablissement`
+        - `enseigne3etablissement`
+
+Pour créer le pattern regex, on utilise une liste de type de voie disponible dans le Gitlab et à l'INSEE, que nous avons ensuite modifié manuellement. 
+
+- Input
+    - CSV: [TypeVoie.csv](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/data/input/Parameters/typeVoieEtablissement.csv)
+        - CSV dans S3: [Parameters/upper_stop.csv](https://s3.console.aws.amazon.com/s3/buckets/calfdata/Parameters/TYPE_VOIE/)
+        - A créer en table
+   - Athena: type_voie
+       - CSV dans S3: [Parameters/type_voie.csv](https://s3.console.aws.amazon.com/s3/buckets/calfdata/Parameters/TYPE_VOIE_SQL/)
+- Code Python: [Exemple Input 1](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/05_redaction_US/04_prep_voie_num_2697.md#exemple-input-1)
+
+Pour rappel, nous sommes a l'étape 8 de la préparation des données
+
+Le nettoyage des variables de l'adresse suive le schema suivant:
+
+| Table | Variables                 | Article | Digit | Debut/fin espace | Espace | Accent | Upper |
+|-------|---------------------------|---------|-------|------------------|--------|--------|-------|
+| INSEE  | adresse_distance_insee     | X       | X     | X                | X      | X      | X     |
+| INSEE  | adresse_reconstituee_insee |         |       | X                | X      | X      | X     |
+
+```python
+step_8 = {
+   "STEPS_8":{
+      "name":"Creation des variables pour la réalisation des tests pour la siretisation",
+      "execution":[
+         {
+            "database":"ets_insee",
+            "name":"ets_insee_transformed",
+            "output_id":"",
+            "query":{
+               "top":" WITH remove_empty_siret AS ( SELECT siren, siret, dateCreationEtablissement, etablissementSiege, etatAdministratifEtablissement, complementAdresseEtablissement, numeroVoieEtablissement, indiceRepetitionEtablissement, CASE WHEN indiceRepetitionEtablissement = 'B' THEN 'BIS' WHEN indiceRepetitionEtablissement = 'T' THEN 'TER' WHEN indiceRepetitionEtablissement = 'Q' THEN 'QUATER' WHEN indiceRepetitionEtablissement = 'C' THEN 'QUINQUIES' ELSE indiceRepetitionEtablissement END as indiceRepetitionEtablissement_full, typeVoieEtablissement, libelleVoieEtablissement, codePostalEtablissement, libelleCommuneEtablissement, libelleCommuneEtrangerEtablissement, distributionSpecialeEtablissement, codeCommuneEtablissement, codeCedexEtablissement, libelleCedexEtablissement, codePaysEtrangerEtablissement, libellePaysEtrangerEtablissement, enseigne1Etablissement, enseigne2Etablissement, enseigne3Etablissement, array_remove( array_distinct( SPLIT( concat( enseigne1etablissement, ',', enseigne2etablissement, ',', enseigne3etablissement ), ',' ) ), '' ) as list_enseigne FROM ets_insee.ets_insee_raw_juillet ) ",
+                "middle":" SELECT * FROM ( WITH concat_adress AS( SELECT siren, siret, dateCreationEtablissement, etablissementSiege, etatAdministratifEtablissement, codePostalEtablissement, codeCommuneEtablissement, libelleCommuneEtablissement, ville_matching, numeroVoieEtablissement, array_distinct( regexp_extract_all( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( CONCAT( COALESCE(numeroVoieEtablissement, ''), ' ', COALESCE( indiceRepetitionEtablissement_full, '' ), ' ', COALESCE(voie_clean, ''), ' ', COALESCE(libelleVoieEtablissement, ''), ' ', COALESCE( complementAdresseEtablissement, '' ) ), '[^\w\s]| +', ' ' ), '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', '' ), '\s+\s+', ' ' ), '[0-9]+' ) ) AS list_numero_voie_matching_insee, typeVoieEtablissement, voie_clean, libelleVoieEtablissement, complementAdresseEtablissement, indiceRepetitionEtablissement_full, REGEXP_REPLACE( NORMALIZE( UPPER( trim( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( CONCAT( COALESCE(numeroVoieEtablissement, ''), ' ', COALESCE( indiceRepetitionEtablissement_full, '' ), ' ', COALESCE(voie_clean, ''), ' ', COALESCE(libelleVoieEtablissement, ''), ' ', COALESCE( complementAdresseEtablissement, '' ) ), '[^\w\s]| +', ' ' ), '\s\s+', ' ' ), '^\s+|\s+$', '' ) ) ), NFD ), '\pM', '' ) AS adresse_reconstituee_insee, REGEXP_REPLACE( NORMALIZE( UPPER( REGEXP_REPLACE( trim( REGEXP_REPLACE( REGEXP_REPLACE( CONCAT( COALESCE(numeroVoieEtablissement, ''), ' ', COALESCE( indiceRepetitionEtablissement_full, '' ), ' ', COALESCE(voie_clean, ''), ' ', COALESCE(libelleVoieEtablissement, ''), ' ', COALESCE( complementAdresseEtablissement, '' ) ), '[^\w\s]|\d+| +', ' ' ), '(?:^|(?<= ))(AU|AUX|AVEC|CE|CES|DANS|DE|DES|DU|ELLE|EN|ET|EUX|IL|ILS|LA|LE|LES)(?:(?= )|$)', '' ) ), '\s+\s+', ' ' ) ), NFD ), '\pM', '' ) AS adresse_distance_insee, enseigne1Etablissement, enseigne2Etablissement, enseigne3Etablissement, list_enseigne FROM ( SELECT siren, siret, dateCreationEtablissement, etablissementSiege, etatAdministratifEtablissement, codePostalEtablissement, codeCommuneEtablissement, libelleCommuneEtablissement, REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( REGEXP_REPLACE( libelleCommuneEtablissement, '^\d+\s|\s\d+\s|\s\d+$', '' ), '^LA\s+|^LES\s+|^LE\s+|\\(.*\\)|^L(ES|A|E) | L(ES|A|E) | L(ES|A|E)$|CEDEX | CEDEX | CEDEX|^E[R*] | E[R*] | E[R*]$', '' ), '^STE | STE | STE$|^STES | STES | STES', 'SAINTE' ), '^ST | ST | ST$', 'SAINT' ), 'S/|^S | S | S$', 'SUR' ), '/S', 'SOUS' ), '[^\w\s]|\([^()]*\)|ER ARRONDISSEMENT|E ARRONDISSEMENT|" \
+"|^SUR$|CEDEX|[0-9]+|\s+', '' ) as ville_matching, libelleVoieEtablissement, complementAdresseEtablissement, numeroVoieEtablissement, indiceRepetitionEtablissement_full, typeVoieEtablissement, enseigne1Etablissement, enseigne2Etablissement, enseigne3Etablissement, list_enseigne FROM remove_empty_siret ) LEFT JOIN inpi.type_voie ON typevoieetablissement = type_voie.voie_matching ) ",
+                "bottom":" SELECT count_initial_insee, concat_adress.siren, siret, dateCreationEtablissement, etablissementSiege, etatAdministratifEtablissement, codePostalEtablissement, codeCommuneEtablissement, libelleCommuneEtablissement, ville_matching, libelleVoieEtablissement, complementAdresseEtablissement, numeroVoieEtablissement, CASE WHEN cardinality( list_numero_voie_matching_insee ) = 0 THEN NULL ELSE list_numero_voie_matching_insee END as list_numero_voie_matching_insee, indiceRepetitionEtablissement_full, typeVoieEtablissement, voie_clean, adresse_reconstituee_insee, adresse_distance_insee, enseigne1Etablissement, enseigne2Etablissement, enseigne3Etablissement, CASE WHEN cardinality(list_enseigne) = 0 THEN NULL ELSE list_enseigne END AS list_enseigne FROM concat_adress LEFT JOIN ( SELECT siren, COUNT(siren) as count_initial_insee FROM concat_adress GROUP BY siren ) as count_siren ON concat_adress.siren = count_siren.siren ) " }
+         }
+      ],
+       "schema":[
+               {
+                  "Name":"",
+                  "Type":"",
+                  "Comment":""
+               }
+            ]
+   }
+}
+```
+
+```python
+to_remove = True
+if to_remove:
+    parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].pop(-1)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_8)
+```
+
+```python
+parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+```
+
+```python
+json_filename ='parameters_ETL.json'
+json_file = json.dumps(parameters)
+f = open(json_filename,"w")
+f.write(json_file)
+f.close()
+s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_8']:
+
+                ### LOOP EXECUTION WITHIN STEP
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+
+                    ### DROP IF EXIST
+                    s3.run_query(
+                        query="DROP TABLE {}.{}".format(step_n["database"], step_n["name"]),
+                        database=db,
+                        s3_output=s3_output,
                     )
-            table_bottom = parameters["TABLES"]["CREATION"]["template"][
-                        "bottom"
-                    ].format(table_info["separator"], table_info["s3URI"])
 
-            ### Create middle
-            table_middle = ""
-            nb_var = len(table_info["schema"])
-            for i, val in enumerate(table_info["schema"]):
-                if i == nb_var - 1:
-                    table_middle += parameters["TABLES"]["CREATION"]["template"][
-                                "middle"
-                            ].format(val['Name'], val['Type'], ")")
-                else:
-                    table_middle += parameters["TABLES"]["CREATION"]["template"][
-                                "middle"
-                            ].format(val['Name'], val['Type'], ",")
+                    ### CREATE TOP
+                    table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                        "top"
+                    ].format(step_n["database"], step_n["name"],)
 
-            query = table_top + table_middle + table_bottom
-
-            ## DROP IF EXIST
-
-            s3.run_query(
-                            query="DROP TABLE {}".format(table_info["name"]),
-                            database=db,
-                            s3_output=s3_output
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + step_n["query"]["top"]
+                        + step_n["query"]["middle"]
+                        + step_n["query"]["bottom"]
                     )
-
-            ## RUN QUERY
-            output = s3.run_query(
+                    output = s3.run_query(
                         query=query,
-                        database=table_info["database"],
+                        database=db,
                         s3_output=s3_output,
                         filename=None,  ## Add filename to print dataframe
                         destination_key=None,  ### Add destination key if need to copy output
                     )
 
-                ## SAVE QUERY ID
-            table_info['output_id'] = output['QueryID']
+                    ## SAVE QUERY ID
+                    step_n["output_id"] = output["QueryID"]
 
-                     ### UPDATE CATALOG
-            glue.update_schema_table(
-                        database=table_info["database"],
-                        table=table_info["name"],
-                        schema=table_info["schema"],
-                    )
+                    ### UPDATE CATALOG
+                    #glue.update_schema_table(
+                    #    database=step_n["database"],
+                    #    table=step_n["name"],
+                    #    schema=steps[step_name]["schema"],
+                    #)
 
-            print(output)
-```
-
-<!-- #region id="i-B8nwhBDIVK" -->
-Get the schema of the lattest job
-<!-- #endregion -->
-
-```python id="GwvY0_mZDIVL"
-schema = glue.get_table_information(
-    database = table_info["database"],
-    table = table_info["name"])['Table']
-schema
+                    print(output)
 ```
 
 <!-- #region id="8K6P4GUMDIVN" -->
 # Analytics
 
-The cells below execute the job in the key `ANALYSIS`. You need to change the `primary_key` and `secondary_key` 
+The cells below execute the job in the key `ANALYSIS`. You need to change the `primary_key` and `secondary_key`.
+
+Il n'est pas possible de récupérer le schema de Glue avec Boto3 sous windows. Nous devons récuperer le schéma manuellement
 <!-- #endregion -->
+
+```python
+schema = {
+	"StorageDescriptor": {
+		"Columns":  [
+				{
+					"Name": "count_initial_insee",
+					"Type": "bigint",
+					"comment": ""
+				},
+				{
+					"Name": "siren",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "siret",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "datecreationetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "etablissementsiege",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "etatadministratifetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "codepostaletablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "codecommuneetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "libellecommuneetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "ville_matching",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "libellevoieetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "complementadresseetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "numerovoieetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "list_numero_voie_matching_insee",
+					"Type": "array<string>",
+					"comment": ""
+				},
+				{
+					"Name": "indicerepetitionetablissement_full",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "typevoieetablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "voie_clean",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_reconstituee_insee",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "adresse_distance_insee",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "enseigne1etablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "enseigne2etablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "enseigne3etablissement",
+					"Type": "string",
+					"comment": ""
+				},
+				{
+					"Name": "list_enseigne",
+					"Type": "array<string>",
+					"comment": ""
+				}
+			],
+		"location": "s3://calfdata/SQL_OUTPUT_ATHENA/tables/51d2765a-0852-4a0a-9333-943ee7e66f5d/",
+		"inputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+		"outputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+		"compressed": "false",
+		"numBuckets": "0",
+		"SerDeInfo": {
+			"name": "ets_insee_transformed",
+			"serializationLib": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+			"parameters": {}
+		},
+		"bucketCols": [],
+		"sortCols": [],
+		"parameters": {},
+		"SkewedInfo": {},
+		"storedAsSubDirectories": "false"
+	},
+	"parameters": {
+		"EXTERNAL": "TRUE",
+		"has_encrypted_data": "false"
+	}
+}
+```
 
 <!-- #region id="xvOS6SftDIVO" -->
 ## Count missing values
@@ -434,6 +637,11 @@ The cells below execute the job in the key `ANALYSIS`. You need to change the `p
 ```python id="fV8oF3BxDIVP"
 from datetime import date
 today = date.today().strftime('%Y%M%d')
+today
+```
+
+```python
+#table_info["name"] = "ets_insee_transformed"
 ```
 
 ```python id="B4PV0taoDIVS"
@@ -523,350 +731,6 @@ for field in schema["StorageDescriptor"]["Columns"]:
         )
 ```
 
-<!-- #region id="9iqstn8ODIVX" -->
-### Count obs by two pair
-
-You need to pass the primary group in the cell below
-
-- Index: primary group
-- Columns: Secondary key -> All the categorical variables in the dataset
-- nb_obs: Number of observations per primary group value
-- Total: Total number of observations per primary group value (sum by row)
-- percentage: Percentage of observations per primary group value over the total number of observations per primary group value (sum by row)
-
-Returns the top 10 only
-<!-- #endregion -->
-
-```python id="lpwMbAN8DIVY"
-primary_key = ""
-```
-
-```python id="tSfnBzP7DIVa"
-for field in schema["StorageDescriptor"]["Columns"]:
-    if field["Type"] in ["string", "object", "varchar(12)"]:
-        if field["Name"] != primary_key:
-            print(
-                "Nb of obs for the primary group {} and {}".format(
-                    primary_key, field["Name"]
-                )
-            )
-            query = parameters["ANALYSIS"]["CATEGORICAL"]["MULTI_PAIR"].format(
-                table_info["database"], table_info["name"], primary_key, field["Name"]
-            )
-
-            output = s3.run_query(
-                query=query,
-                database=db,
-                s3_output=s3_output,
-                filename="count_categorical_{}_{}".format(
-                    primary_key, field["Name"]
-                ),  # Add filename to print dataframe
-                destination_key=None,  # Add destination key if need to copy output
-            )
-
-            display(
-                (
-                    pd.concat(
-                        [
-                            (
-                                output.loc[
-                                    lambda x: x[field["Name"]].isin(
-                                        (
-                                            output.assign(
-                                                total_secondary=lambda x: x["nb_obs"]
-                                                .groupby([x[field["Name"]]])
-                                                .transform("sum")
-                                            )
-                                            .drop_duplicates(
-                                                subset="total_secondary", keep="last"
-                                            )
-                                            .sort_values(
-                                                by=["total_secondary"], ascending=False
-                                            )
-                                            .iloc[:10, 1]
-                                            .to_list()
-                                        )
-                                    )
-                                ]
-                                .set_index([primary_key, field["Name"]])
-                                .unstack([0])
-                                .fillna(0)
-                                .assign(total=lambda x: x.sum(axis=1))
-                                .sort_values(by=["total"])
-                            ),
-                            (
-                                output.loc[
-                                    lambda x: x[field["Name"]].isin(
-                                        (
-                                            output.assign(
-                                                total_secondary=lambda x: x["nb_obs"]
-                                                .groupby([x[field["Name"]]])
-                                                .transform("sum")
-                                            )
-                                            .drop_duplicates(
-                                                subset="total_secondary", keep="last"
-                                            )
-                                            .sort_values(
-                                                by=["total_secondary"], ascending=False
-                                            )
-                                            .iloc[:10, 1]
-                                            .to_list()
-                                        )
-                                    )
-                                ]
-                                .rename(columns={"nb_obs": "percentage"})
-                                .set_index([primary_key, field["Name"]])
-                                .unstack([0])
-                                .fillna(0)
-                                .apply(lambda x: x / x.sum(), axis=1)
-                            ),
-                        ],
-                        axis=1,
-                    )
-                    .fillna(0)
-                    # .sort_index(axis=1, level=1)
-                    .style.format("{0:,.2f}", subset=["nb_obs", "total"])
-                    .bar(subset=["total"], color="#d65f5f")
-                    .format("{0:,.2%}", subset=("percentage"))
-                    .background_gradient(
-                        cmap=sns.light_palette("green", as_cmap=True), subset=("nb_obs")
-                    )
-                )
-            )
-```
-
-<!-- #region id="sIQHr8Q7DIVc" -->
-## Continuous description
-
-There are three possibilities to show the ditribution of a continuous variables:
-
-1. Display the percentile
-2. Display the percentile, with one primary key
-3. Display the percentile, with one primary key, and a secondary key
-<!-- #endregion -->
-
-<!-- #region id="O2R82Q2kDIVd" -->
-### 1. Display the percentile
-
-- pct: Percentile [.25, .50, .75, .95, .90]
-<!-- #endregion -->
-
-```python id="e52k_VqbDIVd"
-table_top = ""
-table_top_var = ""
-table_middle = ""
-table_bottom = ""
-
-var_index = 0
-size_continuous = len([len(x) for x in schema["StorageDescriptor"]["Columns"] if 
-                       x['Type'] in ["float", "double", "bigint"]])
-cont = 0
-for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
-    if value["Type"] in ["float", "double", "bigint"]:
-        cont +=1
-
-        if var_index == 0:
-            table_top_var += "{} ,".format(value["Name"])
-            table_top = parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"][
-                "bottom"
-            ].format(table_info["database"], table_info["name"], value["Name"], key)
-        else:
-            temp_middle_1 = "{} {}".format(
-                parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["middle_1"],
-                parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["bottom"].format(
-                    table_info["database"], table_info["name"], value["Name"], key
-                ),
-            )
-            temp_middle_2 = parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"][
-                "middle_2"
-            ].format(value["Name"])
-
-            if cont == size_continuous:
-
-                table_top_var += "{} {}".format(
-                    value["Name"],
-                    parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["top_3"],
-                )
-                table_bottom += "{} {})".format(temp_middle_1, temp_middle_2)
-            else:
-                table_top_var += "{} ,".format(value["Name"])
-                table_bottom += "{} {}".format(temp_middle_1, temp_middle_2)
-        var_index += 1
-
-query = (
-    parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["top_1"]
-    + table_top
-    + parameters["ANALYSIS"]["CONTINUOUS"]["DISTRIBUTION"]["top_2"]
-    + table_top_var
-    + table_bottom
-)
-output = s3.run_query(
-    query=query,
-    database=db,
-    s3_output=s3_output,
-    filename="count_distribution",  ## Add filename to print dataframe
-    destination_key=None,  ### Add destination key if need to copy output
-)
-(output.sort_values(by="pct").set_index(["pct"]).style.format("{0:.2f}"))
-```
-
-<!-- #region id="W_kq9xtNDIVg" -->
-### 2. Display the percentile, with one primary key
-
-The primary key will be passed to all the continuous variables
-
-- index: 
-    - Primary group
-    - Percentile [.25, .50, .75, .95, .90] per primary group value
-- Columns: Secondary group
-- Heatmap is colored based on the row, ie darker blue indicates larger values for a given row
-<!-- #endregion -->
-
-```python id="MsRYb2z1DIVg"
-primary_key = ""
-table_top = ""
-table_top_var = ""
-table_middle = ""
-table_bottom = ""
-var_index = 0
-cont = 0
-for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
-
-    if value["Type"] in ["float", "double", "bigint"]:
-        cont +=1
-
-        if var_index == 0:
-            table_top_var += "{} ,".format(value["Name"])
-            table_top = parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                "bottom"
-            ].format(
-                table_info["database"], table_info["name"], value["Name"], key, primary_key
-            )
-        else:
-            temp_middle_1 = "{} {}".format(
-                parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                    "middle_1"
-                ],
-                parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                    "bottom"
-                ].format(
-                    table_info["database"], table_info["name"], value["Name"], key, primary_key
-                ),
-            )
-            temp_middle_2 = parameters["ANALYSIS"]["CONTINUOUS"][
-                "ONE_PAIR_DISTRIBUTION"
-            ]["middle_2"].format(value["Name"], primary_key)
-
-            if cont == size_continuous:
-
-                table_top_var += "{} {}".format(
-                    value["Name"],
-                    parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"][
-                        "top_3"
-                    ],
-                )
-                table_bottom += "{} {})".format(temp_middle_1, temp_middle_2)
-            else:
-                table_top_var += "{} ,".format(value["Name"])
-                table_bottom += "{} {}".format(temp_middle_1, temp_middle_2)
-        var_index += 1
-
-query = (
-    parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"]["top_1"]
-    + table_top
-    + parameters["ANALYSIS"]["CONTINUOUS"]["ONE_PAIR_DISTRIBUTION"]["top_2"].format(
-        primary_key
-    )
-    + table_top_var
-    + table_bottom
-)
-output = s3.run_query(
-    query=query,
-    database=db,
-    s3_output=s3_output,
-    filename="count_distribution_primary_key",  # Add filename to print dataframe
-    destination_key=None,  # Add destination key if need to copy output
-)
-(
-    output.set_index([primary_key, "pct"])
-    .unstack(1)
-    .T.style.format("{0:,.2f}")
-    .background_gradient(cmap=sns.light_palette("blue", as_cmap=True), axis=1)
-)
-```
-
-<!-- #region id="61AIL--zDIVk" -->
-### 3. Display the percentile, with one primary key, and a secondary key
-
-The primary and secondary key will be passed to all the continuous variables. The output might be too big so we print only the top 10 for the secondary key
-
-- index:  Primary group
-- Columns: 
-    - Secondary group
-    - Percentile [.25, .50, .75, .95, .90] per secondary group value
-- Heatmap is colored based on the column, ie darker green indicates larger values for a given column
-<!-- #endregion -->
-
-```python id="7JabxGQZDIVk"
-primary_key = ''
-secondary_key = ''
-```
-
-```python id="s388_0nHDIVm"
-for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
-
-    if value["Type"] in ["float", "double", "bigint"]:
-
-        query = parameters["ANALYSIS"]["CONTINUOUS"]["TWO_PAIRS_DISTRIBUTION"].format(
-            table_info["database"],
-            table_info["name"],
-            primary_key,
-            secondary_key,
-            value["Name"],
-        )
-
-        output = s3.run_query(
-            query=query,
-            database=db,
-            s3_output=s3_output,
-            filename="count_distribution_{}_{}_{}".format(
-                primary_key, secondary_key, value["Name"]
-            ),  ## Add filename to print dataframe
-            destination_key=None,  ### Add destination key if need to copy output
-        )
-
-        print(
-            "Distribution of {}, by {} and {}".format(
-                value["Name"], primary_key, secondary_key,
-            )
-        )
-
-        display(
-            (
-                output.loc[
-                    lambda x: x[secondary_key].isin(
-                        (
-                            output.assign(
-                                total_secondary=lambda x: x[value["Name"]]
-                                .groupby([x[secondary_key]])
-                                .transform("sum")
-                            )
-                            .drop_duplicates(subset="total_secondary", keep="last")
-                            .sort_values(by=["total_secondary"], ascending=False)
-                            .iloc[:10, 1]
-                        ).to_list()
-                    )
-                ]
-                .set_index([primary_key, "pct", secondary_key])
-                .unstack([0, 1])
-                .fillna(0)
-                .sort_index(axis=1, level=[1, 2])
-                .style.format("{0:,.2f}")
-                .background_gradient(cmap=sns.light_palette("green", as_cmap=True))
-            )
-        )
-```
-
 <!-- #region id="HUrDFOV6DIVo" -->
 # Generation report
 <!-- #endregion -->
@@ -938,5 +802,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python id="zjf7kUNQDIVu"
-create_report(extension = "html")
+create_report(extension = "html", keep_code = True)
 ```
