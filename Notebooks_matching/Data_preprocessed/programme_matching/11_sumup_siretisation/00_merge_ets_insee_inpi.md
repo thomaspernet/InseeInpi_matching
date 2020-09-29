@@ -239,7 +239,7 @@ WITH (
     ON ets_inpi_transformed.siren = insee.siren 
     AND ets_inpi_transformed.ville_matching = insee.ville_matching 
     AND ets_inpi_transformed.code_postal_matching = insee.codepostaletablissement 
-    WHERE status = 'IGNORE'
+    WHERE status is NULL
 
 """
 
