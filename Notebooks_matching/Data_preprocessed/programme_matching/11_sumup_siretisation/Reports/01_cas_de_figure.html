@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>02_test_list_num_voie</title>
+<title>01_cas_de_figure</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13077,10 +13077,11 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Creation-table-contenant-le-test-de-la-liste-num&#233;ro-de-voie">Creation table contenant le test de la liste num&#233;ro de voie<a class="anchor-link" href="#Creation-table-contenant-le-test-de-la-liste-num&#233;ro-de-voie">&#182;</a></h1><h1 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h1><ul>
-<li>Comparer les listes INSEE/INPI contenant les digits de l’adresse:<ul>
-<li><code>intersection_numero_voie</code>: Nombre de numéros en commun</li>
-<li><code>union_numero_voie</code>: Ensemble des numéros des deux listes</li>
+<h1 id="Creation-de-la-table-contenant-les-statut-entre-les-adresses-INSEE-et-INPI">Creation de la table contenant les statut entre les adresses INSEE et INPI<a class="anchor-link" href="#Creation-de-la-table-contenant-les-statut-entre-les-adresses-INSEE-et-INPI">&#182;</a></h1><h1 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h1><ul>
+<li>Creation des cas de figures possible entre la comparaison de l’adresse INSEE et l’adresse de l’INPI</li>
+<li>Please, update the Source URL by clicking on the button after the information have been pasted<ul>
+<li>US 05 Creation variables de siretisation Modify rows</li>
+<li>Delete tables and Github related to the US: Delete rows</li>
 </ul>
 </li>
 </ul>
@@ -13089,14 +13090,14 @@ div#notebook {
 <li>US: US 5</li>
 <li>Date Begin: 9/29/2020</li>
 <li>Duration Task: 0</li>
-<li>Description: Creation de la table  ets_insee_inpi_list_num_voie qui compare la liste des digits de l’adresse INPI avec la liste de l’adresse INSEE</li>
+<li>Description: Creation de la documentation avec les types de statut et creation de la table statut</li>
 <li>Step type: Transform table</li>
 <li>Status: Active<ul>
 <li>Change Status task: Active</li>
 <li>Update table: Modify rows</li>
 </ul>
 </li>
-<li>Source URL:  </li>
+<li>Source URL: US 05 Creation variables de siretisation</li>
 <li>Task type: Jupyter Notebook</li>
 <li>Users: Thomas Pernet</li>
 <li>Watchers: Thomas Pernet</li>
@@ -13119,9 +13120,9 @@ div#notebook {
 <li>Origin: </li>
 <li>Athena</li>
 <li>Name:</li>
-<li>ets_insee_inpi_list_num_voie</li>
+<li>ets_insee_inpi_statut_cas</li>
 <li>GitHub:</li>
-<li><a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/02_test_list_num_voie.md">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/02_test_list_num_voie.md</a></li>
+<li><a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/01_cas_de_figure.md">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/01_cas_de_figure.md</a></li>
 </ul>
 
 </div>
@@ -13130,81 +13131,15 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Connexion-serveur">Connexion serveur<a class="anchor-link" href="#Connexion-serveur">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">awsPy.aws_authorization</span> <span class="kn">import</span> <span class="n">aws_connector</span>
-<span class="kn">from</span> <span class="nn">awsPy.aws_s3</span> <span class="kn">import</span> <span class="n">service_s3</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">shutil</span>
-
-<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-<span class="n">parent_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
-<span class="n">path_cred</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/credential_AWS.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span>
-<span class="n">con</span> <span class="o">=</span> <span class="n">aws_connector</span><span class="o">.</span><span class="n">aws_instantiate</span><span class="p">(</span><span class="n">credential</span> <span class="o">=</span> <span class="n">path_cred</span><span class="p">,</span>
-                                       <span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;eu-west-3&#39;</span><span class="p">)</span>
-
-<span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;eu-west-3&#39;</span>
-<span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;calfdata&#39;</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">con</span> <span class="o">=</span> <span class="n">aws_connector</span><span class="o">.</span><span class="n">aws_instantiate</span><span class="p">(</span><span class="n">credential</span> <span class="o">=</span> <span class="n">path_cred</span><span class="p">,</span>
-                                       <span class="n">region</span> <span class="o">=</span> <span class="n">region</span><span class="p">)</span>
-<span class="n">client</span><span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">client_boto</span><span class="p">()</span>
-<span class="n">s3</span> <span class="o">=</span> <span class="n">service_s3</span><span class="o">.</span><span class="n">connect_S3</span><span class="p">(</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span><span class="p">,</span>
-                      <span class="n">bucket</span> <span class="o">=</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pandas_setting</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">if</span> <span class="n">pandas_setting</span><span class="p">:</span>
-    <span class="n">cm</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">light_palette</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">as_cmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_columns&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_colwidth&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h1><p>Pour préparer le test sur la voie, il faut avoir deux variables indiquant la ressemblance de la liste des numéros de l'INSEE et celle de l'INPI. Ainsi, dans ce notebook, nous allons créer:</p>
-<ul>
-<li><code>intersection_numero_voie</code>: Nombre de numéros en commun</li>
-<li><code>union_numero_voie</code>: Ensemble des numéros des deux listes</li>
-</ul>
+<h1 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h1><p>Le second ensemble du processus de siretisation peut se diviser en 6 sous-ensembles, ou chacune des sous-parties fait référence à la création d'une ou plusieurs variables de test.</p>
 <p>Le tableau ci dessous récapitule les sous-ensembles 1 à 6, qui vont de la création des types de ressemble entre l'adresse de l'INSEE et de l'INPI jusqu'aux tests sur la date, l'état administratif et de l'ensemble</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <table>
 <thead><tr>
 <th>Rang</th>
@@ -13334,6 +13269,524 @@ div#notebook {
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Pour facilité la comprehension de la création des variables de tests, nous allons créer des tables intermédiaires. Pour chaque table, nous allons créer un notebook avec le détail des queries et une analyse de la table. Le graphique ci dessous contient le nom des notebooks ainsi que les champs créées.</p>
+<p>Dans ce notebook, nous allons générer une table avec les caractéristiques qui relient l'adresse de l'INSEE et de l'INPI. La particularité de ce notebook est la creation de la variable <code>status_cas</code>. La variable <code>status_cas</code>  indique le cas de figure détecté entre l'adresse de l'INSEE et l'INPI. Il y a 5 possibilités au total:</p>
+<ul>
+<li>CAS_1: Les mots dans l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE</li>
+<li>CAS_2: Aucun des mots de l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE</li>
+<li>CAS_3: Cardinalite exception parfaite mots INPI ou INSEE</li>
+<li>CAS_4: Cardinalite Exception mots INPI diffférente Cardinalite Exception mots INSEE</li>
+<li>CAS_5: Cadrinalite exception insee est égal de 0 ou cardinalite exception inpi est égal de 0</li>
+<li>CAS_6: CAS_NO_ADRESSE</li>
+</ul>
+<p>La création de cette variable repose sur des variables intermédiaire:</p>
+<ul>
+<li><code>insee_except</code>: Liste de mots provenant de l'INSEE non contenue dans l'INPI</li>
+<li><code>inpi_except</code>: Liste de mots provenant de l'INPI non contenue dans l'INSEE</li>
+<li><code>intersection</code>: Nombre de mots en commun</li>
+<li><code>union_</code>: Nombre de mots total entre les deux adresses</li>
+<li><code>pct_intersection</code>: <code>intersection</code> / <code>union_</code></li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="https://app.lucidchart.com/publicSegments/view/dc9a6210-77ac-4358-96c9-ab5a714cfac1/image.png" alt=""></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Similarit&#233;-adresse">Similarit&#233; adresse<a class="anchor-link" href="#Similarit&#233;-adresse">&#182;</a></h2><p>Le rapprochement entre les deux tables, à savoir l’INSEE et l’INPI, va amener à la création de deux vecteurs d’adresse. Un vecteur avec des mots contenus spécifiquement à l’INSEE, et un second vecteur avec les mots de l’adresse de l’INPI. Notre objectif est de comparé ses deux vecteurs pour définir si ils sont identiques ou non. Nous avons distingué 7 cas de figures possibles entre les deux vecteurs (figure ci dessous).</p>
+<p><img src="https://drive.google.com/uc?export=view&amp;id=1Qj_HooHrhFYSuTsoqFbl4Vxy9tN3V5Bu" alt=""></p>
+<h3 id="D&#233;finition">D&#233;finition<a class="anchor-link" href="#D&#233;finition">&#182;</a></h3><p>La comparaison de l'adresse de l'INSEE et de l'INPI repose sur les concepts d'union et d'intersection (figure ci dessous)</p>
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Intersection_of_sets_A_and_B.svg/400px-Intersection_of_sets_A_and_B.svg.png" alt=""></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<ul>
+<li>Union: $|INSEE \cup INPI| = |INSEE|+|INPI|-|INSEE \cap INPI|$<ul>
+<li>Exemple:<ul>
+<li>$INSEE = [A, B, C, D, E]$</li>
+<li>$INPI = [A, B, F, G]$</li>
+<li>$Union = [A, B, C, D, E, F, G]$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Intersection: $|INSEE \cap INPI|$<ul>
+<li>Exemple:<ul>
+<li>$INSEE = [A, B, C, D, E]$</li>
+<li>$INPI = [A, B, F, G]$</li>
+<li>$Intersect = [A, B]$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Cardinality: taille d’un array<ul>
+<li>Exemple:<ul>
+<li>$INSEE = [A, B, C, D, E] = 5$</li>
+<li>$INPI = [A, B, F, G] = 4$</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Detail-cas-de-figure">Detail cas de figure<a class="anchor-link" href="#Detail-cas-de-figure">&#182;</a></h3><p>Dans cette partie, nous allons détailler l'ensemble des cas de figures. Toutefois, dans la partie finale nous allons regrouper les cas 5 et 6 ensemble.</p>
+<h4 id="Cas-de-figure-1:-similarit&#233;-parfaite">Cas de figure 1: similarit&#233; parfaite<a class="anchor-link" href="#Cas-de-figure-1:-similarit&#233;-parfaite">&#182;</a></h4><ul>
+<li>Definition: Les mots dans l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE</li>
+<li>Math definition: $\frac{|INSEE \cap INPI|}{|INSEE|+|INPI|-|INSEE \cap INPI|} =1$</li>
+<li>Règle: $\text{intersection} = \text{union} \rightarrow \text{cas 1}$</li>
+</ul>
+<table>
+<thead><tr>
+<th>list_inpi</th>
+<th>list_insee</th>
+<th>insee_except</th>
+<th>intersection</th>
+<th>union_</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[BOULEVARD, HAUSSMANN]</td>
+<td>[BOULEVARD, HAUSSMANN]</td>
+<td>[]</td>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td>[QUAI, GABUT]</td>
+<td>[QUAI, GABUT]</td>
+<td>[]</td>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td>[BOULEVARD, VOLTAIRE]</td>
+<td>[BOULEVARD, VOLTAIRE]</td>
+<td>[]</td>
+<td>2</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Cas-de-figure-2:-Dissimilarit&#233;-parfaite">Cas de figure 2: Dissimilarit&#233; parfaite<a class="anchor-link" href="#Cas-de-figure-2:-Dissimilarit&#233;-parfaite">&#182;</a></h4><ul>
+<li>Definition: Aucun des mots de l’adresse de l’INPI sont égales aux mots dans l’adresse de l’INSEE</li>
+<li>Math definition: $\frac{|INSEE \cap INPI|}{|INSEE|+|INPI|-|INSEE \cap INPI|}$</li>
+<li>Règle: $\text{intersection} = 0 \rightarrow \text{cas 2}$</li>
+</ul>
+<table>
+<thead><tr>
+<th>list_inpi</th>
+<th>list_insee</th>
+<th>insee_except</th>
+<th>intersection</th>
+<th>union_</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[CHEMIN, MOUCHE]</td>
+<td>[AVENUE, CHARLES, GAULLE, SAINT, GENIS]</td>
+<td>[AVENUE, CHARLES, GAULLE, SAINT, GENIS]</td>
+<td>0</td>
+<td>7</td>
+</tr>
+<tr>
+<td>[AVENUE, CHARLES, GAULLE, SAINT, GENIS]</td>
+<td>[CHEMIN, MOUCHE]</td>
+<td>[CHEMIN, MOUCHE]</td>
+<td>0</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Cas-de-figure-3:-Intersection-parfaite-INPI">Cas de figure 3: Intersection parfaite INPI<a class="anchor-link" href="#Cas-de-figure-3:-Intersection-parfaite-INPI">&#182;</a></h4><ul>
+<li>Definition: Tous les mots dans l’adresse de l’INPI  sont contenus dans l’adresse de l’INSEE</li>
+<li>Math definition: $\frac{|INPI|}{|INSEE \cap INPI|}  \text{  = 1 and }|INSEE \cap INPI| &lt;&gt; |INSEE \cup INPI|$</li>
+<li>Règle: $|\text{list_inpi}|= \text{intersection}  \text{  = 1 and }\text{intersection} \neq  \text{union} \rightarrow \text{cas 3}$</li>
+</ul>
+<table>
+<thead><tr>
+<th>list_inpi</th>
+<th>list_insee</th>
+<th>insee_except</th>
+<th>intersection</th>
+<th>union_</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[ALLEE, BERLIOZ]</td>
+<td>[ALLEE, BERLIOZ, CHEZ, MME, IDALI]</td>
+<td>[CHEZ, MME, IDALI]</td>
+<td>2</td>
+<td>5</td>
+</tr>
+<tr>
+<td>[RUE, MAI, OLONNE, SUR, MER]</td>
+<td>[RUE, HUIT, MAI, OLONNE, SUR, MER]</td>
+<td>[HUIT]</td>
+<td>5</td>
+<td>6</td>
+</tr>
+<tr>
+<td>[RUE, CAMILLE, CLAUDEL]</td>
+<td>[RUE, CAMILLE, CLAUDEL, VITRE]</td>
+<td>[VITRE]</td>
+<td>3</td>
+<td>4</td>
+</tr>
+<tr>
+<td>[ROUTE, D, ESLETTES]</td>
+<td>[ROUTE, D, ESLETTES, A]</td>
+<td>[A]</td>
+<td>3</td>
+<td>4</td>
+</tr>
+<tr>
+<td>[AVENUE, MAI]</td>
+<td>[AVENUE, HUIT, MAI]</td>
+<td>[HUIT]</td>
+<td>2</td>
+<td>3</td>
+</tr>
+<tr>
+<td>[RUE, SOUS, DINE]</td>
+<td>[RUE, SOUS, DINE, RES, SOCIALE, HENRIETTE, D, ANGEVILLE]</td>
+<td>[RES, SOCIALE, HENRIETTE, D, ANGEVILLE]</td>
+<td>3</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Cas-de-figure-4:-Intersection-parfaite-INSEE">Cas de figure 4: Intersection parfaite INSEE<a class="anchor-link" href="#Cas-de-figure-4:-Intersection-parfaite-INSEE">&#182;</a></h4><ul>
+<li>Definition: Tous les mots dans l’adresse de l’INSEE  sont contenus dans l’adresse de l’INPI</li>
+<li>Math definition: $\frac{|INSEE|}{|INSEE \cap INPI|}  \text{  = 1 and }|INSEE \cap INPI| &lt;&gt; |INSEE \cup INPI|$</li>
+<li>Règle: $|\text{list_insee}|= \text{intersection}  \text{  = 1 and }\text{intersection} \neq  \text{union} \rightarrow \text{cas 4}$</li>
+</ul>
+<table>
+<thead><tr>
+<th>list_inpi</th>
+<th>list_insee</th>
+<th>insee_except</th>
+<th>intersection</th>
+<th>union_</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[ROUTE, D, ENGHIEN]</td>
+<td>[ROUTE, ENGHIEN]</td>
+<td>[]</td>
+<td>2</td>
+<td>3</td>
+</tr>
+<tr>
+<td>[ZAC, PARC, D, ACTIVITE, PARIS, EST, ALLEE, LECH, WALESA]</td>
+<td>[ALLEE, LECH, WALESA, ZAC, PARC, ACTIVITE, EST]</td>
+<td>[]</td>
+<td>7</td>
+<td>9</td>
+</tr>
+<tr>
+<td>[LIEU, DIT, PADER, QUARTIER, RIBERE]</td>
+<td>[LIEU, DIT, RIBERE]</td>
+<td>[]</td>
+<td>3</td>
+<td>5</td>
+</tr>
+<tr>
+<td>[A, BOULEVARD, CONSTANTIN, DESCAT]</td>
+<td>[BOULEVARD, CONSTANTIN, DESCAT]</td>
+<td>[]</td>
+<td>3</td>
+<td>4</td>
+</tr>
+<tr>
+<td>[RUE, MENILMONTANT, BP]</td>
+<td>[RUE, MENILMONTANT]</td>
+<td>[]</td>
+<td>2</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Cas-de-figure-5:-Cardinality-exception-parfaite-INSEE-INPI,-intersection-positive">Cas de figure 5: Cardinality exception parfaite INSEE INPI, intersection positive<a class="anchor-link" href="#Cas-de-figure-5:-Cardinality-exception-parfaite-INSEE-INPI,-intersection-positive">&#182;</a></h4><ul>
+<li>Definition: L’adresse de l’INPI contient des mots de l’adresse de l’INPI et la cardinality des mots non présents dans les deux adresses est équivalente</li>
+<li>Math definition: $|INPI|-|INPI \cap INSEE| = |INSEE|-|INPI \cap INSEE|$</li>
+<li>Règle: $|\text{insee_except}| = |\text{inpi_except}| \text{ and } \text{intersection} &gt; 0 \rightarrow \text{cas 5}$</li>
+</ul>
+<table>
+<thead><tr>
+<th>list_inpi</th>
+<th>list_insee</th>
+<th>insee_except</th>
+<th>inpi_except</th>
+<th>intersection</th>
+<th>union_</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[AVENUE, GEORGES, VACHER, C, A, SAINTE, VICTOIRE, IMMEUBLE, CCE, CD, ZI, ROUSSET, PEYNIER]</td>
+<td>[AVENUE, GEORGES, VACHER, C, A, STE, VICTOIRE, IMMEUBLE, CCE, CD, ZI, ROUSSET, PEYNIER]</td>
+<td>[STE]</td>
+<td>[SAINTE]</td>
+<td>12</td>
+<td>14</td>
+</tr>
+<tr>
+<td>[BIS, AVENUE, PAUL, DOUMER, RES, SAINT, MARTIN, BAT, D, C, O, M, ROSSI]</td>
+<td>[BIS, AVENUE, PAUL, DOUMER, RES, ST, MARTIN, BAT, D, C, O, M, ROSSI]</td>
+<td>[ST]</td>
+<td>[SAINT]</td>
+<td>12</td>
+<td>14</td>
+</tr>
+<tr>
+<td>[ROUTE, DEPARTEMENTALE, CHEZ, SOREME, CENTRE, COMMERCIAL, L, OCCITAN, PLAN, OCCIDENTAL]</td>
+<td>[ROUTE, DEPARTEMENTALE, CHEZ, SOREME, CENTRE, COMMERCIAL, L, OCCITAN, PLAN, OC]</td>
+<td>[OC]</td>
+<td>[OCCIDENTAL]</td>
+<td>9</td>
+<td>11</td>
+</tr>
+<tr>
+<td>[LIEU, DIT, FOND, CHAMP, MALTON, PARC, EOLIEN, SUD, MARNE, PDL]</td>
+<td>[LIEU, DIT, FONDD, CHAMP, MALTON, PARC, EOLIEN, SUD, MARNE, PDL]</td>
+<td>[FONDD]</td>
+<td>[FOND]</td>
+<td>9</td>
+<td>11</td>
+</tr>
+<tr>
+<td>[AVENUE, ROBERT, BRUN, ZI, CAMP, LAURENT, LOT, NUMERO, ST, BERNARD]</td>
+<td>[AVENUE, ROBERT, BRUN, ZI, CAMP, LAURENT, LOT, ST, BERNARD, N]</td>
+<td>[N]</td>
+<td>[NUMERO]</td>
+<td>9</td>
+<td>11</td>
+</tr>
+<tr>
+<td>[PLACE, MARCEL, DASSAULT, PARC, D, ACTIVITES, TY, NEHUE, BATIMENT, H]</td>
+<td>[PLACE, MARCEL, DASSAULT, PARC, D, ACTIVITES, TY, NEHUE, BAT, H]</td>
+<td>[BAT]</td>
+<td>[BATIMENT]</td>
+<td>9</td>
+<td>11</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Cas-de-figure-6:-Cardinality-exception-INSEE-sup&#233;rieure-INPI,-intersection-positive">Cas de figure 6: Cardinality exception INSEE sup&#233;rieure INPI, intersection positive<a class="anchor-link" href="#Cas-de-figure-6:-Cardinality-exception-INSEE-sup&#233;rieure-INPI,-intersection-positive">&#182;</a></h4><ul>
+<li>Definition: L’adresse de l’INPI contient des mots de l’adresse de l’INPI et la cardinality des mots non présents dans l’adresse de l’INSEE est supérieure à la cardinality de l’adresse de l’INPI</li>
+<li>Math definition: $|INPI|-|INPI \cap INSEE| &lt; |INSEE|-|INPI \cap INSEE|$</li>
+<li>Règle: $|\text{insee_except}| &gt; |\text{inpi_except}| \text{ and } \text{intersection} &gt; 0 \rightarrow \text{cas 6}$</li>
+</ul>
+<table>
+<thead><tr>
+<th>list_inpi</th>
+<th>list_insee</th>
+<th>insee_except</th>
+<th>inpi_except</th>
+<th>intersection</th>
+<th>union_</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[AVENUE, AUGUSTE, PICARD, POP, UP, TOURVILLE, CC, EMPLACEMENT, DIT, PRECAIRE, N]</td>
+<td>[AVENUE, AUGUSTE, PICARD, POP, UP, TOURVILL, CC, TOURVILLE, EMPLACEMT, DIT, PRECAIRE, N]</td>
+<td>[TOURVILL, EMPLACEMT]</td>
+<td>[EMPLACEMENT]</td>
+<td>10</td>
+<td>13</td>
+</tr>
+<tr>
+<td>[ROUTE, COTE, D, AZUR, C, O, TENERGIE, ARTEPARC, MEYREUIL, BAT, A]</td>
+<td>[ROUTE, C, O, TENERGIE, ARTEPARC, MEYREUI, BAT, A, RTE, COTE, D, AZUR]</td>
+<td>[MEYREUI, RTE]</td>
+<td>[MEYREUIL]</td>
+<td>10</td>
+<td>13</td>
+</tr>
+<tr>
+<td>[C, O, TENERGIE, ARTEPARC, MEYREUIL, BATIMENT, A, ROUTE, COTE, D, AZUR]</td>
+<td>[ROUTE, C, O, TENERGIE, ARTEPARC, MEYREUI, BATIMENT, A, RTE, COTE, D, AZUR]</td>
+<td>[MEYREUI, RTE]</td>
+<td>[MEYREUIL]</td>
+<td>10</td>
+<td>13</td>
+</tr>
+<tr>
+<td>[LOTISSEMENT, VANGA, DI, L, ORU, VILLA, FRANCK, TINA, CHEZ, COLOMBANI, CHRISTIAN]</td>
+<td>[LIEU, DIT, VANGA, DI, L, ORU, VILLA, FRANCK, TINA, CHEZ, COLOMBANI, CHRISTIAN]</td>
+<td>[LIEU, DIT]</td>
+<td>[LOTISSEMENT]</td>
+<td>10</td>
+<td>13</td>
+</tr>
+<tr>
+<td>[AVENUE, DECLARATION, DROITS, HOMME, RES, CLOS, ST, MAMET, BAT, C, APPT]</td>
+<td>[AVENUE, DECL, DROITS, L, HOMME, RES, CLOS, ST, MAMET, BAT, C, APPT]</td>
+<td>[DECL, L]</td>
+<td>[DECLARATION]</td>
+<td>10</td>
+<td>13</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Cas-de-figure-7:-Cardinality-exception-INPI-sup&#233;rieure-INSEE,-intersection-positive">Cas de figure 7: Cardinality exception INPI sup&#233;rieure INSEE, intersection positive<a class="anchor-link" href="#Cas-de-figure-7:-Cardinality-exception-INPI-sup&#233;rieure-INSEE,-intersection-positive">&#182;</a></h4><ul>
+<li>Definition: L’adresse de l’INSEE contient des mots de l’adresse de l’INPI et la cardinality des mots non présents dans l’adresse de l’INPI est supérieure à la cardinality de l’adresse de l’INSEE</li>
+<li>Math definition: $|INPI|-|INPI \cap INSEE| &gt; |INSEE|-|INPI \cap INSEE|$</li>
+<li>Règle: $|\text{insee_except}| &lt; |\text{inpi_except} \text{ and } \text{intersection} &gt; 0 \rightarrow \text{cas 7}$</li>
+</ul>
+<table>
+<thead><tr>
+<th>list_inpi</th>
+<th>list_insee</th>
+<th>insee_except</th>
+<th>inpi_except</th>
+<th>intersection</th>
+<th>union_</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[RTE, CABRIERES, D, AIGUES, CHEZ, MR, DOL, JEAN, CLAUDE, LIEUDIT, PLAN, PLUS, LOIN]</td>
+<td>[ROUTE, CABRIERES, D, AIGUES, CHEZ, MR, DOL, JEAN, CLAUDE, PLAN, PLUS, LOIN]</td>
+<td>[ROUTE]</td>
+<td>[RTE, LIEUDIT]</td>
+<td>11</td>
+<td>14</td>
+</tr>
+<tr>
+<td>[ROUTE, N, ZAC, PONT, RAYONS, CC, GRAND, VAL, ILOT, B, BAT, A, LOCAL]</td>
+<td>[ZONE, ZAC, PONT, RAYONS, CC, GRAND, VAL, ILOT, B, BAT, A, LOCAL]</td>
+<td>[ZONE]</td>
+<td>[ROUTE, N]</td>
+<td>11</td>
+<td>14</td>
+</tr>
+<tr>
+<td>[BOULEVARD, PAUL, VALERY, BAT, B, ESC, H, APPT, C, O, MADAME, BLANDINE, BOVE]</td>
+<td>[BOULEVARD, PAUL, VALERY, BAT, B, ESC, H, APT, C, O, BOVE, BLANDINE]</td>
+<td>[APT]</td>
+<td>[APPT, MADAME]</td>
+<td>11</td>
+<td>14</td>
+</tr>
+<tr>
+<td>[RUE, JEANNE, D, ARC, A, L, ANGLE, N, ROLLON, EME, ETAGE, POLE, PRO, AGRI]</td>
+<td>[RUE, JEANNE, D, ARC, A, L, ANGLE, N, ROLLON, E, ETAGE]</td>
+<td>[E]</td>
+<td>[EME, POLE, PRO, AGRI]</td>
+<td>10</td>
+<td>15</td>
+</tr>
+<tr>
+<td>[CHEZ, MR, MME, DANIEL, DEZEMPTE, AVENUE, BALCONS, FRONT, MER, L, OISEAU, BLEU, BATIMENT, B]</td>
+<td>[AVENUE, BALCONS, FRONT, MER, CHEZ, MR, MME, DANIEL, DEZEMPTE, L, OISEA]</td>
+<td>[OISEA]</td>
+<td>[OISEAU, BLEU, BATIMENT, B]</td>
+<td>10</td>
+<td>15</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Connexion-serveur">Connexion serveur<a class="anchor-link" href="#Connexion-serveur">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">awsPy.aws_authorization</span> <span class="kn">import</span> <span class="n">aws_connector</span>
+<span class="kn">from</span> <span class="nn">awsPy.aws_s3</span> <span class="kn">import</span> <span class="n">service_s3</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">shutil</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+<span class="n">parent_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+<span class="n">path_cred</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/credential_AWS.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span>
+<span class="n">con</span> <span class="o">=</span> <span class="n">aws_connector</span><span class="o">.</span><span class="n">aws_instantiate</span><span class="p">(</span><span class="n">credential</span> <span class="o">=</span> <span class="n">path_cred</span><span class="p">,</span>
+                                       <span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;eu-west-3&#39;</span><span class="p">)</span>
+
+<span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;eu-west-3&#39;</span>
+<span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;calfdata&#39;</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">con</span> <span class="o">=</span> <span class="n">aws_connector</span><span class="o">.</span><span class="n">aws_instantiate</span><span class="p">(</span><span class="n">credential</span> <span class="o">=</span> <span class="n">path_cred</span><span class="p">,</span>
+                                       <span class="n">region</span> <span class="o">=</span> <span class="n">region</span><span class="p">)</span>
+<span class="n">client</span><span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">client_boto</span><span class="p">()</span>
+<span class="n">s3</span> <span class="o">=</span> <span class="n">service_s3</span><span class="o">.</span><span class="n">connect_S3</span><span class="p">(</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span><span class="p">,</span>
+                      <span class="n">bucket</span> <span class="o">=</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pandas_setting</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">if</span> <span class="n">pandas_setting</span><span class="p">:</span>
+    <span class="n">cm</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">light_palette</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">as_cmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_columns&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_colwidth&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Input/output">Input/output<a class="anchor-link" href="#Input/output">&#182;</a></h1>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
@@ -13354,7 +13807,7 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">DROP TABLE ets_siretisation.ets_insee_inpi_list_num_voie;</span>
+<span class="s2">DROP TABLE ets_siretisation.ets_insee_inpi_statut_cas;</span>
 <span class="s2">&quot;&quot;&quot;</span>
 <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
@@ -13382,9 +13835,9 @@ div#notebook {
 
 <div class="output_text output_subarea output_execute_result">
 <pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 10000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 547000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;df05d415-3023-4d0c-b0af-03e6e5095f70&#39;}</pre>
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 27, 0, 428000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 27, 0, 972000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;e1efad65-9f6a-46a7-8c10-92bcf2ac3784&#39;}</pre>
 </div>
 
 </div>
@@ -13399,36 +13852,104 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">create_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">CREATE TABLE ets_siretisation.ets_insee_inpi_list_num_voie</span>
+<span class="s2">CREATE TABLE ets_siretisation.ets_insee_inpi_statut_cas</span>
 <span class="s2">WITH (</span>
 <span class="s2">  format=&#39;PARQUET&#39;</span>
 <span class="s2">) AS</span>
-<span class="s2">SELECT </span>
-<span class="s2">row_id,</span>
-<span class="s2">siret, </span>
-<span class="s2">list_numero_voie_matching_inpi, </span>
-<span class="s2">list_numero_voie_matching_insee,</span>
-<span class="s2">CAST(</span>
+<span class="s2">WITH create_var AS (</span>
+<span class="s2">  SELECT </span>
+<span class="s2">    row_id,</span>
+<span class="s2">    siret, </span>
+<span class="s2">    adresse_distance_insee, </span>
+<span class="s2">    adresse_distance_inpi, </span>
+<span class="s2">    array_distinct(</span>
+<span class="s2">      array_except(</span>
+<span class="s2">        split(adresse_distance_insee, &#39; &#39;), </span>
+<span class="s2">        split(adresse_distance_inpi, &#39; &#39;)</span>
+<span class="s2">      )</span>
+<span class="s2">    ) as insee_except, </span>
+<span class="s2">    array_distinct(</span>
+<span class="s2">      array_except(</span>
+<span class="s2">        split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">        split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">      )</span>
+<span class="s2">    ) as inpi_except, </span>
+<span class="s2">    CAST(</span>
 <span class="s2">      cardinality(</span>
 <span class="s2">        array_distinct(</span>
 <span class="s2">          array_intersect(</span>
-<span class="s2">            list_numero_voie_matching_inpi, </span>
-<span class="s2">            list_numero_voie_matching_insee</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
 <span class="s2">          )</span>
 <span class="s2">        )</span>
 <span class="s2">      ) AS DECIMAL(10, 2)</span>
-<span class="s2">    ) as intersection_numero_voie, </span>
+<span class="s2">    ) as intersection, </span>
 <span class="s2">    CAST(</span>
 <span class="s2">      cardinality(</span>
 <span class="s2">        array_distinct(</span>
 <span class="s2">          array_union(</span>
-<span class="s2">            list_numero_voie_matching_inpi, </span>
-<span class="s2">            list_numero_voie_matching_insee</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
 <span class="s2">          )</span>
 <span class="s2">        )</span>
 <span class="s2">      ) AS DECIMAL(10, 2)</span>
-<span class="s2">    ) as union_numero_voie</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi </span>
+<span class="s2">    ) as union_, </span>
+<span class="s2">    CAST(</span>
+<span class="s2">      cardinality(</span>
+<span class="s2">        array_distinct(</span>
+<span class="s2">          array_intersect(</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">          )</span>
+<span class="s2">        )</span>
+<span class="s2">      ) AS DECIMAL(10, 2)</span>
+<span class="s2">    )/ CAST(</span>
+<span class="s2">      cardinality(</span>
+<span class="s2">        array_distinct(</span>
+<span class="s2">          array_union(</span>
+<span class="s2">            split(adresse_distance_inpi, &#39; &#39;), </span>
+<span class="s2">            split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">          )</span>
+<span class="s2">        )</span>
+<span class="s2">      ) AS DECIMAL(10, 2)</span>
+<span class="s2">    ) as pct_intersection </span>
+<span class="s2">  FROM </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi</span>
+<span class="s2">) </span>
+
+<span class="s2">SELECT </span>
+<span class="s2">  * </span>
+<span class="s2">FROM </span>
+<span class="s2">  (</span>
+<span class="s2">    WITH test AS (</span>
+<span class="s2">      SELECT </span>
+<span class="s2">      row_id,</span>
+<span class="s2">        siret, </span>
+<span class="s2">        adresse_distance_insee, </span>
+<span class="s2">        adresse_distance_inpi, </span>
+<span class="s2">        CASE WHEN cardinality(insee_except) = 0 THEN NULL ELSE insee_except END as insee_except,</span>
+<span class="s2">        CASE WHEN cardinality(inpi_except) = 0 THEN NULL ELSE inpi_except END as inpi_except,</span>
+<span class="s2">        intersection, </span>
+<span class="s2">        union_, </span>
+<span class="s2">        intersection / union_ as pct_intersection, </span>
+<span class="s2">        CASE WHEN intersection = union_ THEN &#39;CAS_1&#39; WHEN intersection = 0 THEN &#39;CAS_2&#39; WHEN CARDINALITY(insee_except) = CARDINALITY(inpi_except) </span>
+<span class="s2">        AND intersection != union_ </span>
+<span class="s2">        AND intersection != union_ </span>
+<span class="s2">        AND intersection != 0 THEN &#39;CAS_3&#39; WHEN (</span>
+<span class="s2">          CARDINALITY(insee_except) = 0 </span>
+<span class="s2">          OR CARDINALITY(inpi_except) = 0</span>
+<span class="s2">        ) </span>
+<span class="s2">        AND intersection != union_ </span>
+<span class="s2">        AND intersection != 0 THEN &#39;CAS_5&#39; WHEN CARDINALITY(insee_except) != CARDINALITY(inpi_except) </span>
+<span class="s2">        AND intersection != union_ </span>
+<span class="s2">        AND intersection != union_ </span>
+<span class="s2">        AND intersection != 0 THEN &#39;CAS_4&#39; ELSE &#39;CAS_NO_ADRESSE&#39; END AS status_cas </span>
+<span class="s2">      FROM </span>
+<span class="s2">        create_var </span>
+<span class="s2">    )</span>
+<span class="s2">    SELECT *</span>
+<span class="s2">    FROM test</span>
+<span class="s2">    )</span>
 <span class="s2">&quot;&quot;&quot;</span>
 <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">create_table</span><span class="p">,</span>
@@ -13456,9 +13977,9 @@ div#notebook {
 
 <div class="output_text output_subarea output_execute_result">
 <pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 650000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 50, 191000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;00db2417-5020-4010-ab11-48919bfab56c&#39;}</pre>
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 27, 2, 237000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 27, 34, 987000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;eae1b43c-bf65-4854-bbe9-bcf6c9312074&#39;}</pre>
 </div>
 
 </div>
@@ -13474,17 +13995,55 @@ div#notebook {
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">SELECT *</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi_list_num_voie</span>
-<span class="s2">LIMIT 10</span>
+<span class="s2">       FROM (SELECT * </span>
+<span class="s2">             FROm ets_siretisation.ets_insee_inpi_statut_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_1&#39;</span>
+<span class="s2">       LIMIT 1</span>
+<span class="s2">             )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM siretisation.ets_insee_inpi_status_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_2&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM siretisation.ets_insee_inpi_status_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_3&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM siretisation.ets_insee_inpi_status_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_4&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM siretisation.ets_insee_inpi_status_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_5&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       ORDER BY status_cas</span>
+<span class="s2">       </span>
+
 <span class="s2">&quot;&quot;&quot;</span>
 
 <span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
             <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;test_list_num_voie&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;tb_exemple&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
+
+<span class="n">tb</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+<span class="n">tb</span><span class="p">[[</span><span class="s1">&#39;siret&#39;</span><span class="p">,</span> <span class="s1">&#39;adresse_distance_insee&#39;</span><span class="p">,</span> <span class="s1">&#39;adresse_distance_inpi&#39;</span><span class="p">]]</span>
+<span class="p">],</span><span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Input&quot;</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">),</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+<span class="n">tb</span><span class="p">[[</span><span class="s1">&#39;insee_except&#39;</span><span class="p">,</span> <span class="s1">&#39;inpi_except&#39;</span><span class="p">,</span> <span class="s1">&#39;intersection&#39;</span><span class="p">,</span> <span class="s1">&#39;union_&#39;</span><span class="p">,</span> <span class="s1">&#39;pct_intersection&#39;</span><span class="p">,</span><span class="s1">&#39;status_cas&#39;</span><span class="p">]]</span>
+<span class="p">],</span><span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Output&quot;</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">)</span>
+
 <span class="n">tb</span>
 </pre></div>
 
@@ -13513,112 +14072,90 @@ div#notebook {
         vertical-align: top;
     }
 
-    .dataframe thead th {
-        text-align: right;
+    .dataframe thead tr th {
+        text-align: left;
     }
 </style>
 <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
-      <th>row_id</th>
+      <th colspan="3" halign="left">Input</th>
+      <th colspan="6" halign="left">Output</th>
+    </tr>
+    <tr>
+      <th></th>
       <th>siret</th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>intersection_numero_voie</th>
-      <th>union_numero_voie</th>
+      <th>adresse_distance_insee</th>
+      <th>adresse_distance_inpi</th>
+      <th>insee_except</th>
+      <th>inpi_except</th>
+      <th>intersection</th>
+      <th>union_</th>
+      <th>pct_intersection</th>
+      <th>status_cas</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>6398554</td>
-      <td>45316986400015</td>
-      <td>[1]</td>
-      <td>[1]</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>40127510200010</td>
+      <td>ROUTE VERSAILLES</td>
+      <td>ROUTE VERSAILLES</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>1.00</td>
+      <td>CAS_1</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>6398555</td>
-      <td>45317288400026</td>
-      <td>[8]</td>
-      <td>[27]</td>
+      <td>53404795600022</td>
+      <td>CHEMIN POTENCES</td>
+      <td>AVENUE GENERAL GAULLE</td>
+      <td>[CHEMIN, POTENCES]</td>
+      <td>[AVENUE, GENERAL, GAULLE]</td>
       <td>0.0</td>
-      <td>2.0</td>
+      <td>5.0</td>
+      <td>0.00</td>
+      <td>CAS_2</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>6398556</td>
-      <td>45317288400018</td>
-      <td>[8]</td>
-      <td>[8]</td>
+      <td>53404757600028</td>
+      <td>RUE SAINT LOUIS</td>
+      <td>RUE ISAAC CHAPELIER</td>
+      <td>[SAINT, LOUIS]</td>
+      <td>[ISAAC, CHAPELIER]</td>
       <td>1.0</td>
-      <td>1.0</td>
+      <td>5.0</td>
+      <td>0.20</td>
+      <td>CAS_3</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>6398557</td>
-      <td>45318372500028</td>
-      <td>[18]</td>
-      <td>[15]</td>
-      <td>0.0</td>
-      <td>2.0</td>
+      <td>53404757600010</td>
+      <td>RUE CHAPELIER</td>
+      <td>RUE SAINT LOUIS</td>
+      <td>[CHAPELIER]</td>
+      <td>[SAINT, LOUIS]</td>
+      <td>1.0</td>
+      <td>4.0</td>
+      <td>0.25</td>
+      <td>CAS_4</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>6398558</td>
-      <td>45318372500010</td>
-      <td>[18]</td>
-      <td>[18]</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>6398559</td>
-      <td>45318372500028</td>
-      <td>[15]</td>
-      <td>[15]</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6398560</td>
-      <td>45318372500010</td>
-      <td>[15]</td>
-      <td>[18]</td>
-      <td>0.0</td>
+      <td>53404757600010</td>
+      <td>RUE CHAPELIER</td>
+      <td>RUE ISAAC CHAPELIER</td>
+      <td>NaN</td>
+      <td>[ISAAC]</td>
       <td>2.0</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>6398561</td>
-      <td>45292440000016</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>6398562</td>
-      <td>45292440000016</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>6398563</td>
-      <td>45293141300028</td>
-      <td>[10]</td>
-      <td>[10]</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>3.0</td>
+      <td>0.67</td>
+      <td>CAS_5</td>
     </tr>
   </tbody>
 </table>
@@ -13636,15 +14173,9 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Analyse">Analyse<a class="anchor-link" href="#Analyse">&#182;</a></h1><ol>
 <li>Vérifier que le nombre de lignes est indentique avant et après la création des variables</li>
-<li>Calculer le nombre d'occurence pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><ul>
-<li>Afficher le top 50 et bottom 50</li>
-</ul>
-</li>
-<li>Calculer le nombre d'occurence par cardinalité pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code></li>
-<li>Donner la distribution de  <code>intersection_numero_voie</code> et <code>union_numero_voie</code><ul>
-<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
-</ul>
-</li>
+<li>Compter le nombre de lignes par cas</li>
+<li>Compter le nombre d'index par cas</li>
+<li>Créer un tableau avec une ligne par cas</li>
 </ol>
 
 </div>
@@ -13733,15 +14264,14 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT COUNT(*) as CNT</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi_list_num_voie</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT count(*) as CNT</span>
+<span class="s2">       FROM ets_insee_inpi_statut_cas</span>
+<span class="s2"> &quot;&quot;&quot;</span>
 <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
             <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi_list_num&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi_status_cas&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
 </pre></div>
@@ -13801,15 +14331,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="2.-Calculer-le-nombre-d'occurence-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">2. Calculer le nombre d'occurence pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><a class="anchor-link" href="#2.-Calculer-le-nombre-d'occurence-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_inpi</code></p>
-
+<h2 id="2.-Compter-le-nombre-de-lignes-par-cas">2. Compter le nombre de lignes par cas<a class="anchor-link" href="#2.-Compter-le-nombre-de-lignes-par-cas">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -13819,16 +14341,16 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT list_numero_voie_matching_inpi, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY list_numero_voie_matching_inpi</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+<span class="s2">SELECT status_cas, count(*) as CNT</span>
+<span class="s2">       FROM ets_insee_inpi_statut_cas</span>
+<span class="s2">       GROUP BY status_cas</span>
+<span class="s2">       ORDER BY status_cas</span>
+<span class="s2">       &quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
             <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_group_ets_insee_inpi_status_cas&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
 </pre></div>
@@ -13837,14 +14359,80 @@ div#notebook {
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[10]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>status_cas</th>
+      <th>CNT</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>CAS_1</td>
+      <td>7515647</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>CAS_2</td>
+      <td>965784</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>CAS_3</td>
+      <td>1016203</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>CAS_4</td>
+      <td>792090</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>CAS_5</td>
+      <td>878314</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Top 50</li>
-</ul>
-
+<h2 id="4.-Cr&#233;er-un-tableau-avec-une-ligne-par-cas">4. Cr&#233;er un tableau avec une ligne par cas<a class="anchor-link" href="#4.-Cr&#233;er-un-tableau-avec-une-ligne-par-cas">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -13853,7 +14441,54 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">       SELECT *</span>
+<span class="s2">       FROM (SELECT * </span>
+<span class="s2">             FROM ets_insee_inpi_statut_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_1&#39;</span>
+<span class="s2">       LIMIT 1</span>
+<span class="s2">             )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM ets_insee_inpi_statut_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_2&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM ets_insee_inpi_statut_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_3&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM ets_insee_inpi_statut_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_4&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       UNION (SELECT *</span>
+<span class="s2">       FROM ets_insee_inpi_statut_cas</span>
+<span class="s2">       WHERE status_cas = &#39;CAS_5&#39;</span>
+<span class="s2">              LIMIT 1</span>
+<span class="s2">              )</span>
+<span class="s2">       ORDER BY status_cas</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;tb_exemple&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+<span class="n">tb</span><span class="p">[[</span><span class="s1">&#39;siret&#39;</span><span class="p">,</span> <span class="s1">&#39;adresse_distance_insee&#39;</span><span class="p">,</span> <span class="s1">&#39;adresse_distance_inpi&#39;</span><span class="p">]]</span>
+<span class="p">],</span><span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Input&quot;</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">),</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+<span class="n">tb</span><span class="p">[[</span><span class="s1">&#39;insee_except&#39;</span><span class="p">,</span> <span class="s1">&#39;inpi_except&#39;</span><span class="p">,</span> <span class="s1">&#39;intersection&#39;</span><span class="p">,</span> <span class="s1">&#39;union_&#39;</span><span class="p">,</span> <span class="s1">&#39;pct_intersection&#39;</span><span class="p">,</span><span class="s1">&#39;status_cas&#39;</span><span class="p">]]</span>
+<span class="p">],</span><span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Output&quot;</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13881,1789 +14516,90 @@ div#notebook {
         vertical-align: top;
     }
 
-    .dataframe thead th {
-        text-align: right;
+    .dataframe thead tr th {
+        text-align: left;
     }
 </style>
 <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>cnt</th>
+      <th colspan="3" halign="left">Input</th>
+      <th colspan="6" halign="left">Output</th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>siret</th>
+      <th>adresse_distance_insee</th>
+      <th>adresse_distance_inpi</th>
+      <th>insee_except</th>
+      <th>inpi_except</th>
+      <th>intersection</th>
+      <th>union_</th>
+      <th>pct_intersection</th>
+      <th>status_cas</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
+      <td>40127510200010</td>
+      <td>ROUTE VERSAILLES</td>
+      <td>ROUTE VERSAILLES</td>
       <td>NaN</td>
-      <td>1680509</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>[1]</td>
-      <td>384355</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>[2]</td>
-      <td>369221</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>[3]</td>
-      <td>301710</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>[4]</td>
-      <td>292724</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>[5]</td>
-      <td>271919</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>[6]</td>
-      <td>256993</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>[7]</td>
-      <td>236006</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>[8]</td>
-      <td>235133</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>[10]</td>
-      <td>222849</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>[9]</td>
-      <td>206331</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>[11]</td>
-      <td>188070</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>[12]</td>
-      <td>179761</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>[14]</td>
-      <td>162157</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>[15]</td>
-      <td>148072</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>[13]</td>
-      <td>147080</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>[16]</td>
-      <td>140991</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>[18]</td>
-      <td>135433</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>[17]</td>
-      <td>134096</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>[20]</td>
-      <td>122181</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>[19]</td>
-      <td>116612</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>[21]</td>
-      <td>106709</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>[22]</td>
-      <td>106284</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>[24]</td>
-      <td>96983</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>[23]</td>
-      <td>96673</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>[26]</td>
-      <td>95176</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>[25]</td>
-      <td>93407</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>[27]</td>
-      <td>80792</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>[28]</td>
-      <td>78567</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>[30]</td>
-      <td>78552</td>
-    </tr>
-    <tr>
-      <th>30</th>
-      <td>[29]</td>
-      <td>75093</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>[31]</td>
-      <td>68499</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>[32]</td>
-      <td>67110</td>
-    </tr>
-    <tr>
-      <th>33</th>
-      <td>[33]</td>
-      <td>65958</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>[34]</td>
-      <td>62429</td>
-    </tr>
-    <tr>
-      <th>35</th>
-      <td>[35]</td>
-      <td>62085</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>[40]</td>
-      <td>58922</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>[36]</td>
-      <td>58898</td>
-    </tr>
-    <tr>
-      <th>38</th>
-      <td>[37]</td>
-      <td>58220</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>[38]</td>
-      <td>56247</td>
-    </tr>
-    <tr>
-      <th>40</th>
-      <td>[39]</td>
-      <td>51078</td>
-    </tr>
-    <tr>
-      <th>41</th>
-      <td>[42]</td>
-      <td>50189</td>
-    </tr>
-    <tr>
-      <th>42</th>
-      <td>[41]</td>
-      <td>48484</td>
-    </tr>
-    <tr>
-      <th>43</th>
-      <td>[45]</td>
-      <td>46351</td>
-    </tr>
-    <tr>
-      <th>44</th>
-      <td>[47]</td>
-      <td>45435</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>[43]</td>
-      <td>42679</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>[44]</td>
-      <td>42600</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>[50]</td>
-      <td>42024</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>[46]</td>
-      <td>39246</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>[49]</td>
-      <td>38411</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Bottom 50</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[12]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>77823</th>
-      <td>[4494]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77824</th>
-      <td>[3404, 4]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77825</th>
-      <td>[158, 159, 160, 161]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77826</th>
-      <td>[21, 233]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77827</th>
-      <td>[18, 1, 304]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77828</th>
-      <td>[3, 661365]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77829</th>
-      <td>[333, 323]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77830</th>
-      <td>[26, 905]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77831</th>
-      <td>[150, 15]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77832</th>
-      <td>[642, 2, 34]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77833</th>
-      <td>[4712]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77834</th>
-      <td>[1, 5301]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77835</th>
-      <td>[074, 18]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77836</th>
-      <td>[21, 1871]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77837</th>
-      <td>[5750]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77838</th>
-      <td>[29, 08]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77839</th>
-      <td>[39, 118]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77840</th>
-      <td>[17, 531]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77841</th>
-      <td>[22, 92, 04]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77842</th>
-      <td>[28, 204]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77843</th>
-      <td>[200, 1945]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77844</th>
-      <td>[9, 0103]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77845</th>
-      <td>[2846, 40]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77846</th>
-      <td>[242, 15]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77847</th>
-      <td>[1, 004, 89]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77848</th>
-      <td>[597, 29]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77849</th>
-      <td>[0691]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77850</th>
-      <td>[171, 0167]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77851</th>
-      <td>[27, 11, 33]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77852</th>
-      <td>[222, 52]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77853</th>
-      <td>[10, 167]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77854</th>
-      <td>[298, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77855</th>
-      <td>[13, 19, 62]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77856</th>
-      <td>[2, 3525]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77857</th>
-      <td>[2, 2147]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77858</th>
-      <td>[326, 54]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77859</th>
-      <td>[159, 95]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77860</th>
-      <td>[29, 31, 30]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77861</th>
-      <td>[2137, 19, 7]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77862</th>
-      <td>[1, 0302]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77863</th>
-      <td>[2, 12, 3, 033, 035]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77864</th>
-      <td>[7, 1, 400]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77865</th>
-      <td>[002, 21]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77866</th>
-      <td>[44, 735]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77867</th>
-      <td>[717, 8]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77868</th>
-      <td>[10, 350]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77869</th>
-      <td>[12, 1, 0509]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77870</th>
-      <td>[9002, 1, 05]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77871</th>
-      <td>[673, 83]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77872</th>
-      <td>[717, 1, 3]</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_insee</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT list_numero_voie_matching_insee, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY list_numero_voie_matching_insee</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Top 50</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[14]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
       <td>NaN</td>
-      <td>1664625</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>[1]</td>
-      <td>393197</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>[2]</td>
-      <td>374549</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>[3]</td>
-      <td>307497</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>[4]</td>
-      <td>296255</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>[5]</td>
-      <td>276934</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>[6]</td>
-      <td>261103</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>[7]</td>
-      <td>239457</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>[8]</td>
-      <td>237504</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>[10]</td>
-      <td>225908</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>[9]</td>
-      <td>208776</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>[11]</td>
-      <td>190501</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>[12]</td>
-      <td>182190</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>[14]</td>
-      <td>164393</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>[15]</td>
-      <td>149973</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>[13]</td>
-      <td>149329</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>[16]</td>
-      <td>142964</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>[18]</td>
-      <td>137656</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>[17]</td>
-      <td>136044</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>[20]</td>
-      <td>123420</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>[19]</td>
-      <td>117987</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>[21]</td>
-      <td>108492</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>[22]</td>
-      <td>107582</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>[23]</td>
-      <td>98383</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>[24]</td>
-      <td>98316</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>[26]</td>
-      <td>96689</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>[25]</td>
-      <td>94269</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>[27]</td>
-      <td>81692</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>[30]</td>
-      <td>80166</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>[28]</td>
-      <td>79552</td>
-    </tr>
-    <tr>
-      <th>30</th>
-      <td>[29]</td>
-      <td>75917</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>[31]</td>
-      <td>69419</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>[32]</td>
-      <td>67908</td>
-    </tr>
-    <tr>
-      <th>33</th>
-      <td>[33]</td>
-      <td>66432</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>[34]</td>
-      <td>63519</td>
-    </tr>
-    <tr>
-      <th>35</th>
-      <td>[35]</td>
-      <td>63288</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>[40]</td>
-      <td>59702</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>[36]</td>
-      <td>59374</td>
-    </tr>
-    <tr>
-      <th>38</th>
-      <td>[37]</td>
-      <td>58776</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>[38]</td>
-      <td>57510</td>
-    </tr>
-    <tr>
-      <th>40</th>
-      <td>[39]</td>
-      <td>51047</td>
-    </tr>
-    <tr>
-      <th>41</th>
-      <td>[42]</td>
-      <td>50238</td>
-    </tr>
-    <tr>
-      <th>42</th>
-      <td>[41]</td>
-      <td>49083</td>
-    </tr>
-    <tr>
-      <th>43</th>
-      <td>[45]</td>
-      <td>47175</td>
-    </tr>
-    <tr>
-      <th>44</th>
-      <td>[47]</td>
-      <td>46083</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>[44]</td>
-      <td>45408</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>[43]</td>
-      <td>43166</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>[50]</td>
-      <td>42571</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>[46]</td>
-      <td>39959</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>[49]</td>
-      <td>39082</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Bottom 50</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[15]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>78605</th>
-      <td>[184, 33]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78606</th>
-      <td>[3086]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78607</th>
-      <td>[470, 01]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78608</th>
-      <td>[79, 124]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78609</th>
-      <td>[191, 521]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78610</th>
-      <td>[20, 14, 120]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78611</th>
-      <td>[144, 304]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78612</th>
-      <td>[385, 18, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78613</th>
-      <td>[697, 1889, 1977]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78614</th>
-      <td>[164, 117]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78615</th>
-      <td>[3, 4, 24, 1]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78616</th>
-      <td>[200, 4, 512]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78617</th>
-      <td>[3, 50300]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78618</th>
-      <td>[521, 3, 402]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78619</th>
-      <td>[107, 87]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78620</th>
-      <td>[63, 2, 106]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78621</th>
-      <td>[271, 1, 4, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78622</th>
-      <td>[6, 0090]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78623</th>
-      <td>[8, 0701]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78624</th>
-      <td>[323, 4, 12]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78625</th>
-      <td>[13, 5, 87]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78626</th>
-      <td>[33, 1944]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78627</th>
-      <td>[797, 26]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78628</th>
-      <td>[100, 23]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78629</th>
-      <td>[184, 04]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78630</th>
-      <td>[2, 298]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78631</th>
-      <td>[12, 18, 14]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78632</th>
-      <td>[521, 11, 1918]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78633</th>
-      <td>[8, 10, 35, 37]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78634</th>
-      <td>[27, 250]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78635</th>
-      <td>[29, 445]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78636</th>
-      <td>[64, 68, 38]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78637</th>
-      <td>[160, 2, 4]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78638</th>
-      <td>[2400, 224]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78639</th>
-      <td>[121, 145]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78640</th>
-      <td>[161, 221]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78641</th>
-      <td>[47, 413]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78642</th>
-      <td>[10, 75, 79]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78643</th>
-      <td>[295, 207]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78644</th>
-      <td>[1350, 5, 1]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78645</th>
-      <td>[15, 187]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78646</th>
-      <td>[34, 570]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78647</th>
-      <td>[50, 503]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78648</th>
-      <td>[913, 55]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78649</th>
-      <td>[349225]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78650</th>
-      <td>[219, 21]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78651</th>
-      <td>[29, 623]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78652</th>
-      <td>[135, 63]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78653</th>
-      <td>[66, 76]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78654</th>
-      <td>[9225]</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="3.-Calculer-le-nombre-d'occurence-par-cardinalit&#233;-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">3. Calculer le nombre d'occurence par cardinalit&#233; pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><a class="anchor-link" href="#3.-Calculer-le-nombre-d'occurence-par-cardinalit&#233;-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_inpi</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT  CARDINALITY(list_numero_voie_matching_inpi) as cadinality, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY CARDINALITY(list_numero_voie_matching_inpi)</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[16]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>cadinality</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1.0</td>
-      <td>8741531</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>NaN</td>
-      <td>1680509</td>
-    </tr>
-    <tr>
-      <th>2</th>
       <td>2.0</td>
-      <td>643940</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3.0</td>
-      <td>89259</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4.0</td>
-      <td>9911</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>5.0</td>
-      <td>1908</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6.0</td>
-      <td>613</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>7.0</td>
-      <td>220</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>8.0</td>
-      <td>106</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>10.0</td>
-      <td>25</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>9.0</td>
-      <td>11</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>12.0</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>11.0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>16.0</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_insee</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT  CARDINALITY(list_numero_voie_matching_insee) as cadinality, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY CARDINALITY(list_numero_voie_matching_insee)</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[17]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>cadinality</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1.0</td>
-      <td>8835067</td>
+      <td>2.0</td>
+      <td>1.00</td>
+      <td>CAS_1</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>NaN</td>
-      <td>1664625</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2.0</td>
-      <td>585764</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3.0</td>
-      <td>74018</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4.0</td>
-      <td>7007</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>5.0</td>
-      <td>1155</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6.0</td>
-      <td>331</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>7.0</td>
-      <td>41</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>8.0</td>
-      <td>28</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>9.0</td>
-      <td>2</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="4.-Donner-la-distribution-de--intersection_numero_voie-et-union_numero_voie">4. Donner la distribution de  <code>intersection_numero_voie</code> et <code>union_numero_voie</code><a class="anchor-link" href="#4.-Donner-la-distribution-de--intersection_numero_voie-et-union_numero_voie">&#182;</a></h2><ul>
-<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>intersection_numero_voie</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">WITH dataset AS (</span>
-<span class="s2">  </span>
-<span class="s2">  SELECT </span>
-<span class="s2">  MAP(</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
-<span class="s2">    approx_percentile(</span>
-<span class="s2">      intersection_numero_voie,</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
-<span class="s2">    ) AS nest</span>
-<span class="s2">    FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;  </span>
-<span class="s2">    ) </span>
-<span class="s2">    </span>
-<span class="s2">    SELECT </span>
-<span class="s2">    pct, </span>
-<span class="s2">    value AS  intersection_numero_voie</span>
-<span class="s2">    FROM dataset</span>
-<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;distribution&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[18]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>pct</th>
-      <th>intersection_numero_voie</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.10</td>
+      <td>40442539900015</td>
+      <td>RUE PRE CLAUX</td>
+      <td>ALLEE PIENCOURT</td>
+      <td>[RUE, PRE, CLAUX]</td>
+      <td>[ALLEE, PIENCOURT]</td>
       <td>0.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>0.25</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.50</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>0.75</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.80</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>0.95</td>
-      <td>1.0</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>union_numero_voie</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">WITH dataset AS (</span>
-<span class="s2">  </span>
-<span class="s2">  SELECT </span>
-<span class="s2">  MAP(</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
-<span class="s2">    approx_percentile(</span>
-<span class="s2">      union_numero_voie,</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
-<span class="s2">    ) AS nest</span>
-<span class="s2">    FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;  </span>
-<span class="s2">    ) </span>
-<span class="s2">    </span>
-<span class="s2">    SELECT </span>
-<span class="s2">    pct, </span>
-<span class="s2">    value AS  union_numero_voie</span>
-<span class="s2">    FROM dataset</span>
-<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;distribution&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[19]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>pct</th>
-      <th>union_numero_voie</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.10</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>0.25</td>
-      <td>1.0</td>
+      <td>5.0</td>
+      <td>0.00</td>
+      <td>CAS_2</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0.50</td>
+      <td>33050942300019</td>
+      <td>ROUTE VALRAS</td>
+      <td>RTE VALRAS</td>
+      <td>[ROUTE]</td>
+      <td>[RTE]</td>
       <td>1.0</td>
+      <td>3.0</td>
+      <td>0.33</td>
+      <td>CAS_3</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.75</td>
+      <td>38120802400012</td>
+      <td>ZI MONTIFAUT</td>
+      <td>ZONE INDUSTRIELLE MONTIFAUT</td>
+      <td>[ZI]</td>
+      <td>[ZONE, INDUSTRIELLE]</td>
       <td>1.0</td>
+      <td>4.0</td>
+      <td>0.25</td>
+      <td>CAS_4</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.80</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>0.95</td>
-      <td>2.0</td>
+      <td>33171969000025</td>
+      <td>RUE SAINT FIACRE</td>
+      <td>RUE JEUNEURS ANGLE RUE SAINT FIACRE</td>
+      <td>NaN</td>
+      <td>[JEUNEURS, ANGLE]</td>
+      <td>3.0</td>
+      <td>5.0</td>
+      <td>0.60</td>
+      <td>CAS_5</td>
     </tr>
   </tbody>
 </table>
@@ -15685,7 +14621,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">ipykernel</span><span class="o">,</span> <span class="nn">json</span>
@@ -15700,7 +14636,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_report</span><span class="p">(</span><span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span><span class="p">,</span> <span class="n">keep_code</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>

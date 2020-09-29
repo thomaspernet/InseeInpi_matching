@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>02_test_list_num_voie</title>
+<title>05_creation_table_poids_Word2Vec</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13077,20 +13077,17 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Creation-table-contenant-le-test-de-la-liste-num&#233;ro-de-voie">Creation table contenant le test de la liste num&#233;ro de voie<a class="anchor-link" href="#Creation-table-contenant-le-test-de-la-liste-num&#233;ro-de-voie">&#182;</a></h1><h1 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h1><ul>
-<li>Comparer les listes INSEE/INPI contenant les digits de l’adresse:<ul>
-<li><code>intersection_numero_voie</code>: Nombre de numéros en commun</li>
-<li><code>union_numero_voie</code>: Ensemble des numéros des deux listes</li>
-</ul>
-</li>
+<h1 id="Cr&#233;ation-table-poids-obtenus-via-le-Word2Vec">Cr&#233;ation table poids obtenus via le Word2Vec<a class="anchor-link" href="#Cr&#233;ation-table-poids-obtenus-via-le-Word2Vec">&#182;</a></h1><h1 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h1><ul>
+<li>calculer les poids permettants de mettre en avant la similarité entre deux mots. La similarité est calculé via le Word2Vec embedding</li>
+<li>Les deux règles manquantes sont test_distance_cosine et test_distance_levhenstein. Néanmoins, ses deux tests requièrent le calcul de deux variables, dont l'une d'elle max_cosine_distance dépend des résultats de l'algorithme de Word2Vec</li>
 </ul>
 <h1 id="Metadata">Metadata<a class="anchor-link" href="#Metadata">&#182;</a></h1><ul>
 <li>Epic: Epic 6</li>
 <li>US: US 5</li>
 <li>Date Begin: 9/29/2020</li>
 <li>Duration Task: 0</li>
-<li>Description: Creation de la table  ets_insee_inpi_list_num_voie qui compare la liste des digits de l’adresse INPI avec la liste de l’adresse INSEE</li>
-<li>Step type: Transform table</li>
+<li>Description: calculer les poids permettant de mettre en avant la similarité entre deux mots</li>
+<li>Step type: Raw table</li>
 <li>Status: Active<ul>
 <li>Change Status task: Active</li>
 <li>Update table: Modify rows</li>
@@ -13102,7 +13099,7 @@ div#notebook {
 <li>Watchers: Thomas Pernet</li>
 <li>User Account: <a href="https://937882855452.signin.aws.amazon.com/console">https://937882855452.signin.aws.amazon.com/console</a></li>
 <li>Estimated Log points: 5</li>
-<li>Task tag: #athena,#sql,#data-preparation,#inpi,#insee</li>
+<li>Task tag: #s3,#athena,#sql,#data-preparation</li>
 <li>Toggl Tag: #documentation</li>
 </ul>
 <h1 id="Input-Cloud-Storage-[AWS/GCP]">Input Cloud Storage [AWS/GCP]<a class="anchor-link" href="#Input-Cloud-Storage-[AWS/GCP]">&#182;</a></h1><h2 id="Table/file">Table/file<a class="anchor-link" href="#Table/file">&#182;</a></h2><ul>
@@ -13119,9 +13116,9 @@ div#notebook {
 <li>Origin: </li>
 <li>Athena</li>
 <li>Name:</li>
-<li>ets_insee_inpi_list_num_voie</li>
+<li>weights_mots_insee_inpi_word2vec</li>
 <li>GitHub:</li>
-<li><a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/02_test_list_num_voie.md">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/02_test_list_num_voie.md</a></li>
+<li><a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/05_creation_table_poids_Word2Vec.md">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/05_creation_table_poids_Word2Vec.md</a></li>
 </ul>
 
 </div>
@@ -13199,137 +13196,8 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h1><p>Pour préparer le test sur la voie, il faut avoir deux variables indiquant la ressemblance de la liste des numéros de l'INSEE et celle de l'INPI. Ainsi, dans ce notebook, nous allons créer:</p>
-<ul>
-<li><code>intersection_numero_voie</code>: Nombre de numéros en commun</li>
-<li><code>union_numero_voie</code>: Ensemble des numéros des deux listes</li>
-</ul>
-<p>Le tableau ci dessous récapitule les sous-ensembles 1 à 6, qui vont de la création des types de ressemble entre l'adresse de l'INSEE et de l'INPI jusqu'aux tests sur la date, l'état administratif et de l'ensemble</p>
-<table>
-<thead><tr>
-<th>Rang</th>
-<th>Nom_variable</th>
-<th>Dependence</th>
-<th>Notebook</th>
-<th>Difficulte</th>
-<th>Table_generee</th>
-<th>Variables_crees_US</th>
-<th>Possibilites</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>status_cas</td>
-<td></td>
-<td>01_cas_de_figure</td>
-<td>Moyen</td>
-<td>ets_insee_inpi_status_cas</td>
-<td>status_cas,intersection,pct<em>intersection,union</em>,inpi_except,insee_except</td>
-<td>CAS_1,CAS_2,CAS_3,CAS_4,CAS_5</td>
-</tr>
-<tr>
-<td>2</td>
-<td>test_list_num_voie</td>
-<td>intersection_numero_voie,union_numero_voie</td>
-<td>03_test_list_num_voie</td>
-<td>Moyen</td>
-<td>ets_insee_inpi_list_num_voie</td>
-<td>intersection_numero_voie,union_numero_voie</td>
-<td>FALSE,NULL,TRUE,PARTIAL</td>
-</tr>
-<tr>
-<td>3</td>
-<td>test_enseigne</td>
-<td>list_enseigne,enseigne</td>
-<td>04_test_enseigne</td>
-<td>Moyen</td>
-<td>ets_insee_inpi_list_enseigne</td>
-<td>list_enseigne_contain</td>
-<td>FALSE,NULL,TRUE</td>
-</tr>
-<tr>
-<td>4</td>
-<td>test_pct_intersection</td>
-<td>pct_intersection,index_id_max_intersection</td>
-<td>06_creation_nb_siret_siren_max_pct</td>
-<td>Facile</td>
-<td>ets_insee_inpi_var_group_max</td>
-<td>count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection</td>
-<td>FALSE,TRUE</td>
-</tr>
-<tr>
-<td>4</td>
-<td>test_index_id_duplicate</td>
-<td>count_inpi_index_id_siret</td>
-<td>06_creation_nb_siret_siren_max_pct</td>
-<td>Facile</td>
-<td>ets_insee_inpi_var_group_max</td>
-<td>count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection</td>
-<td>FALSE,TRUE</td>
-</tr>
-<tr>
-<td>4</td>
-<td>test_siren_insee_siren_inpi</td>
-<td>count_initial_insee,count_inpi_siren_siret</td>
-<td>06_creation_nb_siret_siren_max_pct</td>
-<td>Facile</td>
-<td>ets_insee_inpi_var_group_max</td>
-<td>count_inpi_index_id_siret,count_inpi_siren_siret,index_id_max_intersection</td>
-<td>FALSE,TRUE</td>
-</tr>
-<tr>
-<td>5</td>
-<td>test_similarite_exception_words</td>
-<td>max_cosine_distance</td>
-<td>08_calcul_cosine_levhenstein</td>
-<td>Difficile</td>
-<td>ets_insee_inpi_similarite_max_word2vec</td>
-<td>unzip_inpi,unzip_insee,max_cosine_distance,levenshtein_distance,key_except_to_test</td>
-<td>FALSE,NULL,TRUE</td>
-</tr>
-<tr>
-<td>5</td>
-<td>test_distance_levhenstein_exception_words</td>
-<td>levenshtein_distance</td>
-<td>08_calcul_cosine_levhenstein</td>
-<td>Difficile</td>
-<td>ets_insee_inpi_similarite_max_word2vec</td>
-<td>unzip_inpi,unzip_insee,max_cosine_distance,levenshtein_distance,key_except_to_test</td>
-<td>FALSE,NULL,TRUE</td>
-</tr>
-<tr>
-<td>6</td>
-<td>test_date</td>
-<td>datecreationetablissement,date_debut_activite</td>
-<td>10_match_et_creation_regles.md</td>
-<td>Facile</td>
-<td>ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi</td>
-<td></td>
-<td>FALSE,TRUE</td>
-</tr>
-<tr>
-<td>6</td>
-<td>test_siege</td>
-<td>status_ets,etablissementsiege</td>
-<td>10_match_et_creation_regles.md</td>
-<td>Facile</td>
-<td>ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi</td>
-<td></td>
-<td>FALSE,TRUE,NULL</td>
-</tr>
-<tr>
-<td>6</td>
-<td>test_status_admin</td>
-<td>etatadministratifetablissement,status_admin</td>
-<td>10_match_et_creation_regles.md</td>
-<td>Facile</td>
-<td>ets_insee_inpi_list_num_voie,ets_insee_inpi_list_enseigne,ets_insee_inpi_similarite_max_word2vec,ets_insee_inpi_status_cas,ets_insee_inpi_var_group_max,ets_insee_inpi</td>
-<td></td>
-<td>FALSE,NULL,TRUE</td>
-</tr>
-</tbody>
-</table>
+<h1 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h1><p>Pour cacluler la similarité entre l'adresse de l'INSEE et de l'INPI, nous devons créer une liste de combinaison unique entre les deux adresses. Pour cela, nous utilisons les variables <code>adresse_distance_inpi</code> et <code>adresse_distance_insee</code> qui ont été, au préalable, néttoyée, puis nous les concatènons en prenant le soin d'enlever les mots redondants. Dit autrement, si deux mots sont présents dans les deux adresses, alors, nous n'en gardons qu'un seul.</p>
+<p>La table contient environ 2,689,814 combinaisons possibles.</p>
 
 </div>
 </div>
@@ -13350,88 +13218,14 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">DROP TABLE ets_siretisation.ets_insee_inpi_list_num_voie;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[5]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 10000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 547000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;df05d415-3023-4d0c-b0af-03e6e5095f70&#39;}</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">create_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">CREATE TABLE ets_siretisation.ets_insee_inpi_list_num_voie</span>
-<span class="s2">WITH (</span>
-<span class="s2">  format=&#39;PARQUET&#39;</span>
-<span class="s2">) AS</span>
-<span class="s2">SELECT </span>
-<span class="s2">row_id,</span>
-<span class="s2">siret, </span>
-<span class="s2">list_numero_voie_matching_inpi, </span>
-<span class="s2">list_numero_voie_matching_insee,</span>
-<span class="s2">CAST(</span>
-<span class="s2">      cardinality(</span>
-<span class="s2">        array_distinct(</span>
-<span class="s2">          array_intersect(</span>
-<span class="s2">            list_numero_voie_matching_inpi, </span>
-<span class="s2">            list_numero_voie_matching_insee</span>
-<span class="s2">          )</span>
-<span class="s2">        )</span>
-<span class="s2">      ) AS DECIMAL(10, 2)</span>
-<span class="s2">    ) as intersection_numero_voie, </span>
-<span class="s2">    CAST(</span>
-<span class="s2">      cardinality(</span>
-<span class="s2">        array_distinct(</span>
-<span class="s2">          array_union(</span>
-<span class="s2">            list_numero_voie_matching_inpi, </span>
-<span class="s2">            list_numero_voie_matching_insee</span>
-<span class="s2">          )</span>
-<span class="s2">        )</span>
-<span class="s2">      ) AS DECIMAL(10, 2)</span>
-<span class="s2">    ) as union_numero_voie</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi </span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">DROP TABLE ets_siretisation.list_pairs_mots_insee_inpi</span>
 <span class="s2">&quot;&quot;&quot;</span>
 <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">create_table</span><span class="p">,</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
             <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
   <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
@@ -13456,9 +13250,9 @@ div#notebook {
 
 <div class="output_text output_subarea output_execute_result">
 <pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 650000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 50, 191000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;00db2417-5020-4010-ab11-48919bfab56c&#39;}</pre>
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 35, 54, 66000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 35, 54, 545000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;b2efb5dc-a712-4736-9439-d9a220f4a25d&#39;}</pre>
 </div>
 
 </div>
@@ -13473,19 +13267,36 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT *</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi_list_num_voie</span>
-<span class="s2">LIMIT 10</span>
+<span class="s2">/*Combinaison mots insee inpi*/</span>
+<span class="s2">CREATE TABLE ets_siretisation.list_pairs_mots_insee_inpi</span>
+<span class="s2">WITH (</span>
+<span class="s2">  format=&#39;PARQUET&#39;</span>
+<span class="s2">) AS</span>
+<span class="s2">SELECT unique_combinaition,</span>
+<span class="s2">COUNT(*) AS CNT</span>
+<span class="s2">FROM (SELECT</span>
+<span class="s2">array_distinct(</span>
+<span class="s2">    concat(</span>
+<span class="s2">    array_distinct(</span>
+<span class="s2">      split(adresse_distance_inpi, &#39; &#39;)</span>
+<span class="s2">      ),</span>
+<span class="s2">    array_distinct(</span>
+<span class="s2">      split(adresse_distance_insee, &#39; &#39;)</span>
+<span class="s2">    )    )</span>
+<span class="s2">  ) unique_combinaition</span>
+<span class="s2">FROM ets_siretisation.ets_insee_inpi </span>
+<span class="s2">      )</span>
+<span class="s2">      GROUP BY unique_combinaition</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
             <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;test_list_num_voie&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
-<span class="n">tb</span>
+<span class="n">output</span>
 </pre></div>
 
     </div>
@@ -13502,127 +13313,12 @@ div#notebook {
 
 
 
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>row_id</th>
-      <th>siret</th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>intersection_numero_voie</th>
-      <th>union_numero_voie</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>6398554</td>
-      <td>45316986400015</td>
-      <td>[1]</td>
-      <td>[1]</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>6398555</td>
-      <td>45317288400026</td>
-      <td>[8]</td>
-      <td>[27]</td>
-      <td>0.0</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>6398556</td>
-      <td>45317288400018</td>
-      <td>[8]</td>
-      <td>[8]</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>6398557</td>
-      <td>45318372500028</td>
-      <td>[18]</td>
-      <td>[15]</td>
-      <td>0.0</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>6398558</td>
-      <td>45318372500010</td>
-      <td>[18]</td>
-      <td>[18]</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>6398559</td>
-      <td>45318372500028</td>
-      <td>[15]</td>
-      <td>[15]</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6398560</td>
-      <td>45318372500010</td>
-      <td>[15]</td>
-      <td>[18]</td>
-      <td>0.0</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>6398561</td>
-      <td>45292440000016</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>6398562</td>
-      <td>45292440000016</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>6398563</td>
-      <td>45293141300028</td>
-      <td>[10]</td>
-      <td>[10]</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 35, 56, 469000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 36, 8, 196000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;8953bd78-2c27-4d86-8fbf-8c180a997d39&#39;}</pre>
 </div>
 
 </div>
@@ -13634,26 +13330,43 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Analyse">Analyse<a class="anchor-link" href="#Analyse">&#182;</a></h1><ol>
-<li>Vérifier que le nombre de lignes est indentique avant et après la création des variables</li>
-<li>Calculer le nombre d'occurence pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><ul>
-<li>Afficher le top 50 et bottom 50</li>
+<h2 id="Calcul-model">Calcul model<a class="anchor-link" href="#Calcul-model">&#182;</a></h2><h3 id="What-Are-Word-Embeddings-for-Text?"><a href="https://machinelearningmastery.com/what-are-word-embeddings/">What Are Word Embeddings for Text?</a><a class="anchor-link" href="#What-Are-Word-Embeddings-for-Text?">&#182;</a></h3><ul>
+<li><p>by [[Jason Brownlee]]</p>
+</li>
+<li><p>A word embedding is a learned representation for text where words that have the same meaning have a similar representation</p>
+</li>
+<li><p>It is this approach to representing words and documents that may be considered one of the key breakthroughs of deep learning on challenging natural language processing problems.</p>
+<p>-&gt; One of the benefits of using dense and low-dimensional vectors is computational</p>
+</li>
+<li><p>The main benefit of the dense representations is generalization power</p>
+</li>
+<li>if we believe some features may provide similar clues, it is worthwhile to provide a representation that is able to capture these similarities</li>
+<li>Word embeddings are in fact a class of techniques where individual words are represented as real-valued vectors in a predefined vector space</li>
+<li>Each word is mapped to one vector and the vector values are learned in a way that resembles a neural network, and hence the technique is often lumped into the field of deep learning</li>
+<li>Key to the approach is the idea of using a dense distributed representation for each word</li>
+<li>Each word is represented by a real-valued vector, often tens or hundreds of dimensions. This is contrasted to the thousands or millions of dimensions required for sparse word representations, such as a one-hot encoding</li>
+<li>The distributed representation is learned based on the usage of words</li>
+<li>This allows words that are used in similar ways to result in having similar representations, naturally capturing their meaning</li>
+<li>This can be contrasted with the crisp but fragile representation in a bag of words model where, unless explicitly managed, different words have different representations, regardless of how they are used</li>
+</ul>
+<h2 id="Word-Embedding-Algorithms">Word Embedding Algorithms<a class="anchor-link" href="#Word-Embedding-Algorithms">&#182;</a></h2><ul>
+<li>Word embedding methods learn a real-valued vector representation for a predefined fixed sized vocabulary from a corpus of text</li>
+<li>The learning process is either joint with the neural network model on some task, such as document classification, or is an unsupervised process, using document statistics.</li>
+</ul>
+<h3 id="Word2Vec">Word2Vec<a class="anchor-link" href="#Word2Vec">&#182;</a></h3><ul>
+<li>Word2Vec is a statistical method for efficiently learning a standalone word embedding from a text corpus</li>
+<li>It was developed by Tomas Mikolov, et al. at Google in 2013 as a response to make the neural-network-based training of the embedding more efficient and since then has become the de facto standard for developing pre-trained word embedding</li>
+<li>Two different learning models were introduced that can be used as part of the word2vec approach to learn the word embedding; they are:<ul>
+<li>Continuous Bag-of-Words, or CBOW model </li>
+<li>Continuous Skip-Gram Model. </li>
+<li>The CBOW model learns the embedding by predicting the current word based on its context</li>
+<li>The continuous skip-gram model learns by predicting the surrounding words given a current word</li>
+<li>Both models are focused on learning about words given their local usage context, where the context is defined by a window of neighboring words</li>
+<li>The key benefit of the approach is that high-quality word embeddings can be learned efficiently (low space and time complexity), allowing larger embeddings to be learned (more dimensions) from much larger corpora of text (billions of words).</li>
 </ul>
 </li>
-<li>Calculer le nombre d'occurence par cardinalité pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code></li>
-<li>Donner la distribution de  <code>intersection_numero_voie</code> et <code>union_numero_voie</code><ul>
-<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
 </ul>
-</li>
-</ol>
 
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="1.-V&#233;rifier-que-le-nombre-de-lignes-est-indentique-avant-et-apr&#232;s-la-cr&#233;ation-des-variables">1. V&#233;rifier que le nombre de lignes est indentique avant et apr&#232;s la cr&#233;ation des variables<a class="anchor-link" href="#1.-V&#233;rifier-que-le-nombre-de-lignes-est-indentique-avant-et-apr&#232;s-la-cr&#233;ation-des-variables">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -13663,66 +13376,20 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT COUNT(*) as CNT</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi</span>
+<span class="s2">SELECT *</span>
+<span class="s2">FROM ets_siretisation.list_pairs_mots_insee_inpi</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
+<span class="c1">### run query</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;list_pairs&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="c1">#destination_key = &#39;INPI/list_pairs_mots_insee_inpi&#39; ### Add destination key if need to copy output</span>
+    <span class="p">)</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[8]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>CNT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>11168038</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -13732,18 +13399,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT COUNT(*) as CNT</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi_list_num_voie</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi_list_num&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">output</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cnt&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13779,13 +13435,60 @@ div#notebook {
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>CNT</th>
+      <th>unique_combinaition</th>
+      <th>cnt</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>11168038</td>
+      <th>301782</th>
+      <td>[RUE, VICTOR, HUGO]</td>
+      <td>15524</td>
+    </tr>
+    <tr>
+      <th>728832</th>
+      <td>[BOURG]</td>
+      <td>16257</td>
+    </tr>
+    <tr>
+      <th>728818</th>
+      <td>[AVENUE, GENERAL, GAULLE]</td>
+      <td>18072</td>
+    </tr>
+    <tr>
+      <th>619937</th>
+      <td>[RUE, PARIS]</td>
+      <td>20793</td>
+    </tr>
+    <tr>
+      <th>213893</th>
+      <td>[AVENUE, JEAN, JAURES]</td>
+      <td>22481</td>
+    </tr>
+    <tr>
+      <th>619987</th>
+      <td>[RUE, JEAN, JAURES]</td>
+      <td>23241</td>
+    </tr>
+    <tr>
+      <th>275399</th>
+      <td>[AVENUE, REPUBLIQUE]</td>
+      <td>23302</td>
+    </tr>
+    <tr>
+      <th>414414</th>
+      <td>[]</td>
+      <td>25644</td>
+    </tr>
+    <tr>
+      <th>301746</th>
+      <td>[RUE, REPUBLIQUE]</td>
+      <td>32888</td>
+    </tr>
+    <tr>
+      <th>426453</th>
+      <td>[GRANDE, RUE]</td>
+      <td>37184</td>
     </tr>
   </tbody>
 </table>
@@ -13801,14 +13504,14 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="2.-Calculer-le-nombre-d'occurence-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">2. Calculer le nombre d'occurence pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><a class="anchor-link" href="#2.-Calculer-le-nombre-d'occurence-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_inpi</code></p>
+<h2 id="Train-model">Train model<a class="anchor-link" href="#Train-model">&#182;</a></h2><p>Il y a plusieurs paramètres dans la librairie que nous allons utilisé, voici la configuration que nous allons prendre:</p>
+<ul>
+<li>size: (default 100) The number of dimensions of the embedding, e.g. the length of the dense vector to represent each token (word).</li>
+<li>window: (default 5) The maximum distance between a target word and words around the target word.</li>
+<li>min_count: (default 5) The minimum count of words to consider when training the model; words with an occurrence less than this count will be ignored.</li>
+<li>workers: (default 3) The number of threads to use while training.</li>
+<li>sg: (default 0 or CBOW) The training algorithm, either CBOW (0) or skip gram (1).</li>
+</ul>
 
 </div>
 </div>
@@ -13818,359 +13521,48 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT list_numero_voie_matching_inpi, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY list_numero_voie_matching_inpi</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">gensim.models</span> <span class="kn">import</span> <span class="n">Word2Vec</span>
+<span class="kn">import</span> <span class="nn">re</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Top 50</li>
-</ul>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">basic_clean</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[^\w\s]|[|]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[11]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>NaN</td>
-      <td>1680509</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>[1]</td>
-      <td>384355</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>[2]</td>
-      <td>369221</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>[3]</td>
-      <td>301710</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>[4]</td>
-      <td>292724</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>[5]</td>
-      <td>271919</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>[6]</td>
-      <td>256993</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>[7]</td>
-      <td>236006</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>[8]</td>
-      <td>235133</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>[10]</td>
-      <td>222849</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>[9]</td>
-      <td>206331</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>[11]</td>
-      <td>188070</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>[12]</td>
-      <td>179761</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>[14]</td>
-      <td>162157</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>[15]</td>
-      <td>148072</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>[13]</td>
-      <td>147080</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>[16]</td>
-      <td>140991</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>[18]</td>
-      <td>135433</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>[17]</td>
-      <td>134096</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>[20]</td>
-      <td>122181</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>[19]</td>
-      <td>116612</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>[21]</td>
-      <td>106709</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>[22]</td>
-      <td>106284</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>[24]</td>
-      <td>96983</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>[23]</td>
-      <td>96673</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>[26]</td>
-      <td>95176</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>[25]</td>
-      <td>93407</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>[27]</td>
-      <td>80792</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>[28]</td>
-      <td>78567</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>[30]</td>
-      <td>78552</td>
-    </tr>
-    <tr>
-      <th>30</th>
-      <td>[29]</td>
-      <td>75093</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>[31]</td>
-      <td>68499</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>[32]</td>
-      <td>67110</td>
-    </tr>
-    <tr>
-      <th>33</th>
-      <td>[33]</td>
-      <td>65958</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>[34]</td>
-      <td>62429</td>
-    </tr>
-    <tr>
-      <th>35</th>
-      <td>[35]</td>
-      <td>62085</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>[40]</td>
-      <td>58922</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>[36]</td>
-      <td>58898</td>
-    </tr>
-    <tr>
-      <th>38</th>
-      <td>[37]</td>
-      <td>58220</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>[38]</td>
-      <td>56247</td>
-    </tr>
-    <tr>
-      <th>40</th>
-      <td>[39]</td>
-      <td>51078</td>
-    </tr>
-    <tr>
-      <th>41</th>
-      <td>[42]</td>
-      <td>50189</td>
-    </tr>
-    <tr>
-      <th>42</th>
-      <td>[41]</td>
-      <td>48484</td>
-    </tr>
-    <tr>
-      <th>43</th>
-      <td>[45]</td>
-      <td>46351</td>
-    </tr>
-    <tr>
-      <th>44</th>
-      <td>[47]</td>
-      <td>45435</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>[43]</td>
-      <td>42679</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>[44]</td>
-      <td>42600</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>[50]</td>
-      <td>42024</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>[46]</td>
-      <td>39246</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>[49]</td>
-      <td>38411</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Bottom 50</li>
-</ul>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_text</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s1">&#39;unique_combinaition&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">basic_clean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_text</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 
     </div>
@@ -14183,287 +13575,18 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[12]:</div>
+    <div class="prompt output_prompt">Out[13]:</div>
 
 
 
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>77823</th>
-      <td>[4494]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77824</th>
-      <td>[3404, 4]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77825</th>
-      <td>[158, 159, 160, 161]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77826</th>
-      <td>[21, 233]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77827</th>
-      <td>[18, 1, 304]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77828</th>
-      <td>[3, 661365]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77829</th>
-      <td>[333, 323]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77830</th>
-      <td>[26, 905]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77831</th>
-      <td>[150, 15]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77832</th>
-      <td>[642, 2, 34]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77833</th>
-      <td>[4712]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77834</th>
-      <td>[1, 5301]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77835</th>
-      <td>[074, 18]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77836</th>
-      <td>[21, 1871]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77837</th>
-      <td>[5750]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77838</th>
-      <td>[29, 08]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77839</th>
-      <td>[39, 118]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77840</th>
-      <td>[17, 531]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77841</th>
-      <td>[22, 92, 04]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77842</th>
-      <td>[28, 204]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77843</th>
-      <td>[200, 1945]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77844</th>
-      <td>[9, 0103]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77845</th>
-      <td>[2846, 40]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77846</th>
-      <td>[242, 15]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77847</th>
-      <td>[1, 004, 89]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77848</th>
-      <td>[597, 29]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77849</th>
-      <td>[0691]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77850</th>
-      <td>[171, 0167]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77851</th>
-      <td>[27, 11, 33]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77852</th>
-      <td>[222, 52]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77853</th>
-      <td>[10, 167]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77854</th>
-      <td>[298, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77855</th>
-      <td>[13, 19, 62]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77856</th>
-      <td>[2, 3525]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77857</th>
-      <td>[2, 2147]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77858</th>
-      <td>[326, 54]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77859</th>
-      <td>[159, 95]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77860</th>
-      <td>[29, 31, 30]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77861</th>
-      <td>[2137, 19, 7]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77862</th>
-      <td>[1, 0302]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77863</th>
-      <td>[2, 12, 3, 033, 035]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77864</th>
-      <td>[7, 1, 400]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77865</th>
-      <td>[002, 21]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77866</th>
-      <td>[44, 735]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77867</th>
-      <td>[717, 8]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77868</th>
-      <td>[10, 350]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77869</th>
-      <td>[12, 1, 0509]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77870</th>
-      <td>[9002, 1, 05]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77871</th>
-      <td>[673, 83]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77872</th>
-      <td>[717, 1, 3]</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>0                    [CHEZ, M, LOCHE, YANNICK]
+1        [RUE, SAINT, LOUP, IMPASSE, CAPUCINS]
+2                [RUE, EUGENE, POTTIER, PARIS]
+3             [ESPACE, FORBIN, RUE, CONDORCET]
+4    [RUE, JEAN, FRANCOIS, CAIL, DENIS, PAPIN]
+Name: unique_combinaition, dtype: object</pre>
 </div>
 
 </div>
@@ -14475,42 +13598,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_insee</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT list_numero_voie_matching_insee, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY list_numero_voie_matching_insee</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Top 50</li>
-</ul>
+<p>Pour le POC, nous utilisons les paramètres par défault</p>
 
 </div>
 </div>
@@ -14520,7 +13608,12 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%%time</span> 
+<span class="n">model</span> <span class="o">=</span> <span class="n">Word2Vec</span><span class="p">(</span><span class="n">df_text</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                 <span class="n">size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+                 <span class="n">window</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                 <span class="n">min_count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                 <span class="n">sg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -14533,289 +13626,13 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[14]:</div>
+    <div class="prompt"></div>
 
 
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>NaN</td>
-      <td>1664625</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>[1]</td>
-      <td>393197</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>[2]</td>
-      <td>374549</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>[3]</td>
-      <td>307497</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>[4]</td>
-      <td>296255</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>[5]</td>
-      <td>276934</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>[6]</td>
-      <td>261103</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>[7]</td>
-      <td>239457</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>[8]</td>
-      <td>237504</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>[10]</td>
-      <td>225908</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>[9]</td>
-      <td>208776</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>[11]</td>
-      <td>190501</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>[12]</td>
-      <td>182190</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>[14]</td>
-      <td>164393</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>[15]</td>
-      <td>149973</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>[13]</td>
-      <td>149329</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>[16]</td>
-      <td>142964</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>[18]</td>
-      <td>137656</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>[17]</td>
-      <td>136044</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>[20]</td>
-      <td>123420</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>[19]</td>
-      <td>117987</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>[21]</td>
-      <td>108492</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>[22]</td>
-      <td>107582</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>[23]</td>
-      <td>98383</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>[24]</td>
-      <td>98316</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>[26]</td>
-      <td>96689</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>[25]</td>
-      <td>94269</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>[27]</td>
-      <td>81692</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>[30]</td>
-      <td>80166</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>[28]</td>
-      <td>79552</td>
-    </tr>
-    <tr>
-      <th>30</th>
-      <td>[29]</td>
-      <td>75917</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>[31]</td>
-      <td>69419</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>[32]</td>
-      <td>67908</td>
-    </tr>
-    <tr>
-      <th>33</th>
-      <td>[33]</td>
-      <td>66432</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>[34]</td>
-      <td>63519</td>
-    </tr>
-    <tr>
-      <th>35</th>
-      <td>[35]</td>
-      <td>63288</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>[40]</td>
-      <td>59702</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>[36]</td>
-      <td>59374</td>
-    </tr>
-    <tr>
-      <th>38</th>
-      <td>[37]</td>
-      <td>58776</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>[38]</td>
-      <td>57510</td>
-    </tr>
-    <tr>
-      <th>40</th>
-      <td>[39]</td>
-      <td>51047</td>
-    </tr>
-    <tr>
-      <th>41</th>
-      <td>[42]</td>
-      <td>50238</td>
-    </tr>
-    <tr>
-      <th>42</th>
-      <td>[41]</td>
-      <td>49083</td>
-    </tr>
-    <tr>
-      <th>43</th>
-      <td>[45]</td>
-      <td>47175</td>
-    </tr>
-    <tr>
-      <th>44</th>
-      <td>[47]</td>
-      <td>46083</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>[44]</td>
-      <td>45408</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>[43]</td>
-      <td>43166</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>[50]</td>
-      <td>42571</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>[46]</td>
-      <td>39959</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>[49]</td>
-      <td>39082</td>
-    </tr>
-  </tbody>
-</table>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Wall time: 1min 3s
+</pre>
 </div>
-</div>
-
 </div>
 
 </div>
@@ -14825,9 +13642,16 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Bottom 50</li>
-</ul>
+<p>Nous devons calculer la similarité entre les mots communs dans l'adresse INPI/INSEE, donc nous pouvons utiliser les poids du modèles et ensuite calculer la similarité avec la méthode du cosine.</p>
+<p>La librarie <code>gensim</code> permet d'exporter les poids en <code>.txt</code>. Toutefois, il n'est pas concevable de calculer l'ensembles des similarités entre toutes les occurences (environ 90.000), donc lors des traitements dans Athena, nous calculerons le cosines à la demande.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Sauvegarde l'ensemble des poids dans des colonnes</p>
 
 </div>
 </div>
@@ -14837,719 +13661,51 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">wv</span><span class="o">.</span><span class="n">save_word2vec_format</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100.txt&#39;</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[15]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>78605</th>
-      <td>[184, 33]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78606</th>
-      <td>[3086]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78607</th>
-      <td>[470, 01]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78608</th>
-      <td>[79, 124]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78609</th>
-      <td>[191, 521]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78610</th>
-      <td>[20, 14, 120]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78611</th>
-      <td>[144, 304]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78612</th>
-      <td>[385, 18, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78613</th>
-      <td>[697, 1889, 1977]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78614</th>
-      <td>[164, 117]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78615</th>
-      <td>[3, 4, 24, 1]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78616</th>
-      <td>[200, 4, 512]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78617</th>
-      <td>[3, 50300]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78618</th>
-      <td>[521, 3, 402]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78619</th>
-      <td>[107, 87]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78620</th>
-      <td>[63, 2, 106]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78621</th>
-      <td>[271, 1, 4, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78622</th>
-      <td>[6, 0090]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78623</th>
-      <td>[8, 0701]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78624</th>
-      <td>[323, 4, 12]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78625</th>
-      <td>[13, 5, 87]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78626</th>
-      <td>[33, 1944]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78627</th>
-      <td>[797, 26]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78628</th>
-      <td>[100, 23]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78629</th>
-      <td>[184, 04]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78630</th>
-      <td>[2, 298]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78631</th>
-      <td>[12, 18, 14]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78632</th>
-      <td>[521, 11, 1918]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78633</th>
-      <td>[8, 10, 35, 37]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78634</th>
-      <td>[27, 250]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78635</th>
-      <td>[29, 445]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78636</th>
-      <td>[64, 68, 38]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78637</th>
-      <td>[160, 2, 4]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78638</th>
-      <td>[2400, 224]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78639</th>
-      <td>[121, 145]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78640</th>
-      <td>[161, 221]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78641</th>
-      <td>[47, 413]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78642</th>
-      <td>[10, 75, 79]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78643</th>
-      <td>[295, 207]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78644</th>
-      <td>[1350, 5, 1]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78645</th>
-      <td>[15, 187]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78646</th>
-      <td>[34, 570]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78647</th>
-      <td>[50, 503]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78648</th>
-      <td>[913, 55]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78649</th>
-      <td>[349225]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78650</th>
-      <td>[219, 21]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78651</th>
-      <td>[29, 623]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78652</th>
-      <td>[135, 63]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78653</th>
-      <td>[66, 76]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78654</th>
-      <td>[9225]</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="3.-Calculer-le-nombre-d'occurence-par-cardinalit&#233;-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">3. Calculer le nombre d'occurence par cardinalit&#233; pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><a class="anchor-link" href="#3.-Calculer-le-nombre-d'occurence-par-cardinalit&#233;-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_inpi</code></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT  CARDINALITY(list_numero_voie_matching_inpi) as cadinality, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY CARDINALITY(list_numero_voie_matching_inpi)</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">list_header</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Words&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">)))</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[16]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>cadinality</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1.0</td>
-      <td>8741531</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>NaN</td>
-      <td>1680509</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2.0</td>
-      <td>643940</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3.0</td>
-      <td>89259</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4.0</td>
-      <td>9911</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>5.0</td>
-      <td>1908</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6.0</td>
-      <td>613</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>7.0</td>
-      <td>220</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>8.0</td>
-      <td>106</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>10.0</td>
-      <td>25</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>9.0</td>
-      <td>11</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>12.0</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>11.0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>16.0</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_insee</code></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT  CARDINALITY(list_numero_voie_matching_insee) as cadinality, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY CARDINALITY(list_numero_voie_matching_insee)</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100.txt&#39;</span><span class="p">,</span>
+                            <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                           <span class="n">header</span><span class="o">=</span> <span class="n">list_header</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[17]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>cadinality</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1.0</td>
-      <td>8835067</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>NaN</td>
-      <td>1664625</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2.0</td>
-      <td>585764</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3.0</td>
-      <td>74018</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4.0</td>
-      <td>7007</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>5.0</td>
-      <td>1155</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6.0</td>
-      <td>331</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>7.0</td>
-      <td>41</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>8.0</td>
-      <td>28</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>9.0</td>
-      <td>2</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="4.-Donner-la-distribution-de--intersection_numero_voie-et-union_numero_voie">4. Donner la distribution de  <code>intersection_numero_voie</code> et <code>union_numero_voie</code><a class="anchor-link" href="#4.-Donner-la-distribution-de--intersection_numero_voie-et-union_numero_voie">&#182;</a></h2><ul>
-<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>intersection_numero_voie</code></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">WITH dataset AS (</span>
-<span class="s2">  </span>
-<span class="s2">  SELECT </span>
-<span class="s2">  MAP(</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
-<span class="s2">    approx_percentile(</span>
-<span class="s2">      intersection_numero_voie,</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
-<span class="s2">    ) AS nest</span>
-<span class="s2">    FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;  </span>
-<span class="s2">    ) </span>
-<span class="s2">    </span>
-<span class="s2">    SELECT </span>
-<span class="s2">    pct, </span>
-<span class="s2">    value AS  intersection_numero_voie</span>
-<span class="s2">    FROM dataset</span>
-<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;distribution&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_weights</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100_v2.csv&#39;</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>  
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[18]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>pct</th>
-      <th>intersection_numero_voie</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.10</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>0.25</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.50</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>0.75</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.80</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>0.95</td>
-      <td>1.0</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -15557,7 +13713,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>union_numero_voie</code></p>
+<p>Le modèle se trouve à l'adresse suivante <a href="https://s3.console.aws.amazon.com/s3/buckets/calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V3?region=eu-west-3&amp;tab=overview">MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V3</a></p>
 
 </div>
 </div>
@@ -15567,34 +13723,37 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">WITH dataset AS (</span>
-<span class="s2">  </span>
-<span class="s2">  SELECT </span>
-<span class="s2">  MAP(</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
-<span class="s2">    approx_percentile(</span>
-<span class="s2">      union_numero_voie,</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
-<span class="s2">    ) AS nest</span>
-<span class="s2">    FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;  </span>
-<span class="s2">    ) </span>
-<span class="s2">    </span>
-<span class="s2">    SELECT </span>
-<span class="s2">    pct, </span>
-<span class="s2">    value AS  union_numero_voie</span>
-<span class="s2">    FROM dataset</span>
-<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">s3</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="s1">&#39;word2vec_weights_100_v2.csv&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V3&#39;</span><span class="p">)</span>
+</pre></div>
 
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Create-tables-weights">Create tables weights<a class="anchor-link" href="#Create-tables-weights">&#182;</a></h2><p>Athena ne peut pas créer des array float a partir de fichier csv, du coup on utilise la fonction concat. C'est une solution pour le poc.</p>
+<p>On créer une table temporaire qui contient l'ensemble des poids en colonnes list_mots_insee_inpi_word2vec_weights_temp puis on canct les colonnes dans la table list_mots_insee_inpi_word2vec_weights</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span>  <span class="o">=</span> <span class="s2">&quot;&quot;&quot; </span>
+<span class="s2">DROP TABLE ets_siretisation.weights_mots_insee_inpi_word2vec</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;distribution&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span>
+    <span class="p">)</span>
 </pre></div>
 
     </div>
@@ -15607,7 +13766,91 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[19]:</div>
+    <div class="prompt output_prompt">Out[20]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 13, 9, 32, 806000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 13, 9, 33, 398000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;fbbb9187-ce7c-4ce6-8600-5f018ec4d1b7&#39;}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">top</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">CREATE EXTERNAL TABLE IF NOT EXISTS ets_siretisation.weights_mots_insee_inpi_word2vec (</span>
+
+<span class="s2">`Words` string,</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">middle</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">99</span><span class="p">:</span>
+        <span class="n">middle</span> <span class="o">+=</span> <span class="s2">&quot;vec_</span><span class="si">{}</span><span class="s2"> float )&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">middle</span> <span class="o">+=</span> <span class="s2">&quot;vec_</span><span class="si">{}</span><span class="s2"> float,&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="n">bottom</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">ROW FORMAT SERDE &#39;org.apache.hadoop.hive.serde2.OpenCSVSerde&#39;</span>
+<span class="s2">    WITH SERDEPROPERTIES (</span>
+<span class="s2">   &#39;separatorChar&#39; = &#39;,&#39;,</span>
+<span class="s2">   &#39;quoteChar&#39; = &#39;&quot;&#39;</span>
+<span class="s2">   ) </span>
+<span class="s2">     LOCATION &#39;s3://calfdata/MACHINE_LEARNING/NLP/WORD2VEC_WEIGHTS/V3&#39;</span>
+<span class="s2">     TBLPROPERTIES (&#39;has_encrypted_data&#39;=&#39;false&#39;,</span>
+<span class="s2">              &#39;skip.header.line.count&#39;=&#39;1&#39;);</span>
+<span class="s2">&quot;&quot;&quot;</span> 
+<span class="n">query</span> <span class="o">=</span> <span class="n">top</span> <span class="o">+</span> <span class="n">middle</span> <span class="o">+</span><span class="n">bottom</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span>
+    <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT * FROM &quot;ets_siretisation&quot;.&quot;weights_mots_insee_inpi_word2vec&quot; limit 10;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;weights&#39;</span>
+    <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[22]:</div>
 
 
 
@@ -15630,44 +13873,1942 @@ div#notebook {
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>pct</th>
-      <th>union_numero_voie</th>
+      <th>words</th>
+      <th>vec_0</th>
+      <th>vec_1</th>
+      <th>vec_2</th>
+      <th>vec_3</th>
+      <th>vec_4</th>
+      <th>vec_5</th>
+      <th>vec_6</th>
+      <th>vec_7</th>
+      <th>vec_8</th>
+      <th>vec_9</th>
+      <th>vec_10</th>
+      <th>vec_11</th>
+      <th>vec_12</th>
+      <th>vec_13</th>
+      <th>vec_14</th>
+      <th>vec_15</th>
+      <th>vec_16</th>
+      <th>vec_17</th>
+      <th>vec_18</th>
+      <th>vec_19</th>
+      <th>vec_20</th>
+      <th>vec_21</th>
+      <th>vec_22</th>
+      <th>vec_23</th>
+      <th>vec_24</th>
+      <th>vec_25</th>
+      <th>vec_26</th>
+      <th>vec_27</th>
+      <th>vec_28</th>
+      <th>vec_29</th>
+      <th>vec_30</th>
+      <th>vec_31</th>
+      <th>vec_32</th>
+      <th>vec_33</th>
+      <th>vec_34</th>
+      <th>vec_35</th>
+      <th>vec_36</th>
+      <th>vec_37</th>
+      <th>vec_38</th>
+      <th>vec_39</th>
+      <th>vec_40</th>
+      <th>vec_41</th>
+      <th>vec_42</th>
+      <th>vec_43</th>
+      <th>vec_44</th>
+      <th>vec_45</th>
+      <th>vec_46</th>
+      <th>vec_47</th>
+      <th>vec_48</th>
+      <th>vec_49</th>
+      <th>vec_50</th>
+      <th>vec_51</th>
+      <th>vec_52</th>
+      <th>vec_53</th>
+      <th>vec_54</th>
+      <th>vec_55</th>
+      <th>vec_56</th>
+      <th>vec_57</th>
+      <th>vec_58</th>
+      <th>vec_59</th>
+      <th>vec_60</th>
+      <th>vec_61</th>
+      <th>vec_62</th>
+      <th>vec_63</th>
+      <th>vec_64</th>
+      <th>vec_65</th>
+      <th>vec_66</th>
+      <th>vec_67</th>
+      <th>vec_68</th>
+      <th>vec_69</th>
+      <th>vec_70</th>
+      <th>vec_71</th>
+      <th>vec_72</th>
+      <th>vec_73</th>
+      <th>vec_74</th>
+      <th>vec_75</th>
+      <th>vec_76</th>
+      <th>vec_77</th>
+      <th>vec_78</th>
+      <th>vec_79</th>
+      <th>vec_80</th>
+      <th>vec_81</th>
+      <th>vec_82</th>
+      <th>vec_83</th>
+      <th>vec_84</th>
+      <th>vec_85</th>
+      <th>vec_86</th>
+      <th>vec_87</th>
+      <th>vec_88</th>
+      <th>vec_89</th>
+      <th>vec_90</th>
+      <th>vec_91</th>
+      <th>vec_92</th>
+      <th>vec_93</th>
+      <th>vec_94</th>
+      <th>vec_95</th>
+      <th>vec_96</th>
+      <th>vec_97</th>
+      <th>vec_98</th>
+      <th>vec_99</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>0.10</td>
-      <td>1.0</td>
+      <td>NAUTILLE</td>
+      <td>-0.011581</td>
+      <td>-0.041337</td>
+      <td>-0.002035</td>
+      <td>-0.012852</td>
+      <td>0.005147</td>
+      <td>-0.013280</td>
+      <td>0.007437</td>
+      <td>0.005907</td>
+      <td>-0.033877</td>
+      <td>0.018708</td>
+      <td>-0.048588</td>
+      <td>0.047638</td>
+      <td>-0.121356</td>
+      <td>0.000667</td>
+      <td>0.081368</td>
+      <td>0.189221</td>
+      <td>0.178752</td>
+      <td>-0.001640</td>
+      <td>0.008755</td>
+      <td>0.003756</td>
+      <td>0.035179</td>
+      <td>-0.073323</td>
+      <td>0.065021</td>
+      <td>0.021103</td>
+      <td>-0.125269</td>
+      <td>-0.024145</td>
+      <td>-0.077993</td>
+      <td>0.011597</td>
+      <td>0.023726</td>
+      <td>0.095189</td>
+      <td>0.148277</td>
+      <td>-0.051222</td>
+      <td>0.071882</td>
+      <td>0.171177</td>
+      <td>-0.064159</td>
+      <td>-0.023830</td>
+      <td>-0.020962</td>
+      <td>-0.020800</td>
+      <td>-0.062157</td>
+      <td>0.045281</td>
+      <td>-0.099222</td>
+      <td>0.057352</td>
+      <td>-0.001594</td>
+      <td>0.078898</td>
+      <td>-0.044016</td>
+      <td>-0.041295</td>
+      <td>-0.124354</td>
+      <td>0.088748</td>
+      <td>-0.054845</td>
+      <td>0.019909</td>
+      <td>-0.021224</td>
+      <td>0.041064</td>
+      <td>-0.050738</td>
+      <td>-0.135239</td>
+      <td>-0.045664</td>
+      <td>-0.014457</td>
+      <td>-0.045166</td>
+      <td>0.030546</td>
+      <td>-0.139418</td>
+      <td>-0.003147</td>
+      <td>-0.154532</td>
+      <td>-0.040459</td>
+      <td>0.211191</td>
+      <td>-0.001298</td>
+      <td>-0.040022</td>
+      <td>0.093561</td>
+      <td>-0.009916</td>
+      <td>0.001844</td>
+      <td>0.046258</td>
+      <td>0.042717</td>
+      <td>-0.089974</td>
+      <td>-0.049276</td>
+      <td>-0.165813</td>
+      <td>-0.060070</td>
+      <td>-0.029356</td>
+      <td>-0.105001</td>
+      <td>-0.053841</td>
+      <td>-0.006844</td>
+      <td>0.111035</td>
+      <td>0.085109</td>
+      <td>0.104691</td>
+      <td>-0.000560</td>
+      <td>0.184506</td>
+      <td>0.138983</td>
+      <td>0.028593</td>
+      <td>0.000811</td>
+      <td>-0.004863</td>
+      <td>0.017533</td>
+      <td>-0.076852</td>
+      <td>-0.076002</td>
+      <td>-0.068034</td>
+      <td>0.041991</td>
+      <td>-0.077067</td>
+      <td>-0.074863</td>
+      <td>-0.096159</td>
+      <td>0.074433</td>
+      <td>-0.080952</td>
+      <td>-0.047957</td>
+      <td>0.048622</td>
+      <td>-0.037455</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>0.25</td>
-      <td>1.0</td>
+      <td>RETJONS</td>
+      <td>-0.022182</td>
+      <td>0.021477</td>
+      <td>-0.070527</td>
+      <td>-0.018824</td>
+      <td>0.005995</td>
+      <td>-0.001564</td>
+      <td>-0.007747</td>
+      <td>-0.008774</td>
+      <td>0.002237</td>
+      <td>0.092693</td>
+      <td>-0.038123</td>
+      <td>0.041175</td>
+      <td>-0.096941</td>
+      <td>0.019780</td>
+      <td>0.062330</td>
+      <td>0.151249</td>
+      <td>0.126111</td>
+      <td>0.003969</td>
+      <td>-0.022850</td>
+      <td>0.004739</td>
+      <td>0.004518</td>
+      <td>-0.021823</td>
+      <td>0.021643</td>
+      <td>-0.009941</td>
+      <td>-0.055790</td>
+      <td>-0.016849</td>
+      <td>-0.107579</td>
+      <td>0.005289</td>
+      <td>0.006212</td>
+      <td>0.111619</td>
+      <td>0.103703</td>
+      <td>-0.035809</td>
+      <td>-0.007293</td>
+      <td>0.107782</td>
+      <td>-0.010958</td>
+      <td>-0.046929</td>
+      <td>-0.023738</td>
+      <td>-0.037694</td>
+      <td>-0.067636</td>
+      <td>0.072037</td>
+      <td>-0.034964</td>
+      <td>0.027481</td>
+      <td>-0.020360</td>
+      <td>0.077928</td>
+      <td>-0.025406</td>
+      <td>0.002651</td>
+      <td>-0.072529</td>
+      <td>0.052138</td>
+      <td>0.021697</td>
+      <td>0.058737</td>
+      <td>-0.009013</td>
+      <td>0.102665</td>
+      <td>-0.042881</td>
+      <td>-0.084611</td>
+      <td>-0.029580</td>
+      <td>0.043440</td>
+      <td>-0.026326</td>
+      <td>0.036577</td>
+      <td>-0.091404</td>
+      <td>-0.026418</td>
+      <td>-0.056641</td>
+      <td>-0.049826</td>
+      <td>0.190062</td>
+      <td>0.048568</td>
+      <td>-0.025960</td>
+      <td>0.025691</td>
+      <td>0.013166</td>
+      <td>0.020241</td>
+      <td>0.006915</td>
+      <td>0.034516</td>
+      <td>-0.120766</td>
+      <td>-0.011258</td>
+      <td>-0.108514</td>
+      <td>-0.054191</td>
+      <td>-0.022859</td>
+      <td>-0.080838</td>
+      <td>-0.040208</td>
+      <td>-0.022794</td>
+      <td>0.088728</td>
+      <td>0.071704</td>
+      <td>0.059829</td>
+      <td>0.033956</td>
+      <td>0.130486</td>
+      <td>0.137730</td>
+      <td>0.002726</td>
+      <td>0.004570</td>
+      <td>0.028123</td>
+      <td>-0.023023</td>
+      <td>-0.100861</td>
+      <td>-0.061070</td>
+      <td>-0.045082</td>
+      <td>0.055999</td>
+      <td>-0.044872</td>
+      <td>-0.025612</td>
+      <td>-0.068277</td>
+      <td>0.017515</td>
+      <td>-0.123786</td>
+      <td>-0.104656</td>
+      <td>0.086090</td>
+      <td>-0.003131</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0.50</td>
-      <td>1.0</td>
+      <td>ADOU</td>
+      <td>-0.018539</td>
+      <td>-0.093999</td>
+      <td>0.076248</td>
+      <td>0.042066</td>
+      <td>0.004625</td>
+      <td>-0.076716</td>
+      <td>0.015026</td>
+      <td>0.037151</td>
+      <td>-0.005335</td>
+      <td>-0.048195</td>
+      <td>-0.002900</td>
+      <td>0.000421</td>
+      <td>0.024530</td>
+      <td>0.071030</td>
+      <td>0.037703</td>
+      <td>0.079936</td>
+      <td>0.042638</td>
+      <td>0.007418</td>
+      <td>0.040265</td>
+      <td>0.020981</td>
+      <td>0.009115</td>
+      <td>-0.029398</td>
+      <td>-0.086687</td>
+      <td>-0.017619</td>
+      <td>-0.034137</td>
+      <td>-0.074356</td>
+      <td>-0.003442</td>
+      <td>-0.025266</td>
+      <td>-0.014479</td>
+      <td>0.065277</td>
+      <td>0.055270</td>
+      <td>-0.089480</td>
+      <td>0.044303</td>
+      <td>0.136663</td>
+      <td>-0.119305</td>
+      <td>0.009746</td>
+      <td>-0.003389</td>
+      <td>-0.028351</td>
+      <td>-0.147912</td>
+      <td>-0.015346</td>
+      <td>-0.035262</td>
+      <td>0.012415</td>
+      <td>0.060346</td>
+      <td>0.025865</td>
+      <td>-0.087458</td>
+      <td>0.051659</td>
+      <td>-0.101054</td>
+      <td>0.038408</td>
+      <td>-0.024346</td>
+      <td>0.057856</td>
+      <td>0.025789</td>
+      <td>-0.028461</td>
+      <td>0.029861</td>
+      <td>-0.102128</td>
+      <td>-0.053288</td>
+      <td>0.030740</td>
+      <td>-0.034330</td>
+      <td>0.031991</td>
+      <td>-0.014685</td>
+      <td>-0.063495</td>
+      <td>0.050477</td>
+      <td>-0.020335</td>
+      <td>0.107151</td>
+      <td>-0.032854</td>
+      <td>-0.068532</td>
+      <td>0.049891</td>
+      <td>-0.022660</td>
+      <td>0.041998</td>
+      <td>0.041924</td>
+      <td>0.028509</td>
+      <td>0.035010</td>
+      <td>-0.012997</td>
+      <td>-0.040304</td>
+      <td>-0.014381</td>
+      <td>0.003889</td>
+      <td>-0.061447</td>
+      <td>-0.015148</td>
+      <td>-0.016064</td>
+      <td>0.018809</td>
+      <td>0.034902</td>
+      <td>0.033656</td>
+      <td>0.017366</td>
+      <td>0.062276</td>
+      <td>0.045667</td>
+      <td>-0.070369</td>
+      <td>-0.036581</td>
+      <td>-0.024208</td>
+      <td>0.063692</td>
+      <td>-0.014912</td>
+      <td>-0.050243</td>
+      <td>0.006351</td>
+      <td>0.032959</td>
+      <td>-0.011528</td>
+      <td>-0.102173</td>
+      <td>-0.037785</td>
+      <td>0.033918</td>
+      <td>-0.046904</td>
+      <td>0.055384</td>
+      <td>0.049993</td>
+      <td>-0.025792</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.75</td>
-      <td>1.0</td>
+      <td>PROVEN</td>
+      <td>-0.011020</td>
+      <td>-0.014787</td>
+      <td>0.022960</td>
+      <td>0.006462</td>
+      <td>-0.010039</td>
+      <td>-0.050373</td>
+      <td>-0.040036</td>
+      <td>-0.028317</td>
+      <td>-0.000624</td>
+      <td>-0.004337</td>
+      <td>-0.083570</td>
+      <td>0.008638</td>
+      <td>-0.044762</td>
+      <td>-0.000844</td>
+      <td>0.063440</td>
+      <td>0.059286</td>
+      <td>0.009874</td>
+      <td>-0.001915</td>
+      <td>-0.039605</td>
+      <td>-0.016703</td>
+      <td>-0.008861</td>
+      <td>-0.023627</td>
+      <td>0.010658</td>
+      <td>0.008400</td>
+      <td>0.019827</td>
+      <td>-0.064212</td>
+      <td>-0.012103</td>
+      <td>0.006927</td>
+      <td>-0.030955</td>
+      <td>0.000399</td>
+      <td>0.090342</td>
+      <td>-0.057184</td>
+      <td>0.014290</td>
+      <td>0.027811</td>
+      <td>-0.033944</td>
+      <td>0.069203</td>
+      <td>0.039709</td>
+      <td>0.001174</td>
+      <td>-0.060031</td>
+      <td>-0.024625</td>
+      <td>-0.105055</td>
+      <td>0.096038</td>
+      <td>0.021019</td>
+      <td>-0.026755</td>
+      <td>0.009591</td>
+      <td>-0.011696</td>
+      <td>-0.084350</td>
+      <td>0.051386</td>
+      <td>-0.021989</td>
+      <td>0.003328</td>
+      <td>0.022571</td>
+      <td>0.008414</td>
+      <td>-0.059654</td>
+      <td>-0.089835</td>
+      <td>-0.026997</td>
+      <td>0.030128</td>
+      <td>-0.027316</td>
+      <td>0.033291</td>
+      <td>-0.034323</td>
+      <td>0.064730</td>
+      <td>0.001121</td>
+      <td>-0.000947</td>
+      <td>0.019736</td>
+      <td>-0.027629</td>
+      <td>-0.022424</td>
+      <td>-0.039396</td>
+      <td>0.045425</td>
+      <td>-0.003588</td>
+      <td>0.010116</td>
+      <td>-0.101532</td>
+      <td>0.050345</td>
+      <td>-0.028553</td>
+      <td>-0.067984</td>
+      <td>-0.037966</td>
+      <td>-0.005778</td>
+      <td>-0.043754</td>
+      <td>-0.026848</td>
+      <td>0.018628</td>
+      <td>0.003479</td>
+      <td>-0.045165</td>
+      <td>0.011418</td>
+      <td>-0.018020</td>
+      <td>0.014497</td>
+      <td>0.156740</td>
+      <td>-0.017363</td>
+      <td>-0.031614</td>
+      <td>0.018627</td>
+      <td>0.024846</td>
+      <td>0.025254</td>
+      <td>-0.001588</td>
+      <td>0.021758</td>
+      <td>0.072193</td>
+      <td>0.040136</td>
+      <td>0.035821</td>
+      <td>-0.072961</td>
+      <td>0.053517</td>
+      <td>-0.003365</td>
+      <td>0.011786</td>
+      <td>0.022471</td>
+      <td>-0.046661</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.80</td>
-      <td>2.0</td>
+      <td>TRESSAUVES</td>
+      <td>0.005657</td>
+      <td>-0.013871</td>
+      <td>0.001121</td>
+      <td>-0.016305</td>
+      <td>-0.032297</td>
+      <td>-0.035932</td>
+      <td>0.018357</td>
+      <td>-0.005157</td>
+      <td>-0.014595</td>
+      <td>0.001863</td>
+      <td>-0.009567</td>
+      <td>0.044871</td>
+      <td>-0.055797</td>
+      <td>0.013337</td>
+      <td>0.070867</td>
+      <td>0.084563</td>
+      <td>0.061576</td>
+      <td>0.014960</td>
+      <td>-0.014920</td>
+      <td>0.023835</td>
+      <td>0.038701</td>
+      <td>0.014370</td>
+      <td>-0.037301</td>
+      <td>0.008758</td>
+      <td>-0.039598</td>
+      <td>-0.001962</td>
+      <td>-0.031433</td>
+      <td>-0.002929</td>
+      <td>-0.007618</td>
+      <td>0.011573</td>
+      <td>0.058905</td>
+      <td>-0.069329</td>
+      <td>0.021924</td>
+      <td>0.093167</td>
+      <td>-0.030236</td>
+      <td>-0.003894</td>
+      <td>0.031981</td>
+      <td>-0.031972</td>
+      <td>-0.029343</td>
+      <td>0.016428</td>
+      <td>-0.017917</td>
+      <td>0.011525</td>
+      <td>0.003153</td>
+      <td>0.023297</td>
+      <td>-0.020795</td>
+      <td>-0.047769</td>
+      <td>-0.065814</td>
+      <td>0.038661</td>
+      <td>-0.038272</td>
+      <td>0.019464</td>
+      <td>0.022979</td>
+      <td>0.018211</td>
+      <td>-0.016941</td>
+      <td>-0.075252</td>
+      <td>-0.023820</td>
+      <td>-0.015939</td>
+      <td>-0.047766</td>
+      <td>-0.002958</td>
+      <td>-0.034166</td>
+      <td>-0.012711</td>
+      <td>-0.046999</td>
+      <td>-0.025398</td>
+      <td>0.076294</td>
+      <td>0.003619</td>
+      <td>-0.029867</td>
+      <td>0.012237</td>
+      <td>-0.005692</td>
+      <td>-0.005821</td>
+      <td>0.049291</td>
+      <td>0.039734</td>
+      <td>-0.054734</td>
+      <td>0.020109</td>
+      <td>-0.056060</td>
+      <td>-0.000905</td>
+      <td>-0.035790</td>
+      <td>-0.041205</td>
+      <td>-0.002141</td>
+      <td>-0.020797</td>
+      <td>0.044857</td>
+      <td>0.020329</td>
+      <td>0.038140</td>
+      <td>-0.001031</td>
+      <td>0.065620</td>
+      <td>0.003313</td>
+      <td>-0.019683</td>
+      <td>-0.008516</td>
+      <td>-0.028156</td>
+      <td>-0.007862</td>
+      <td>-0.035926</td>
+      <td>-0.012559</td>
+      <td>-0.063133</td>
+      <td>0.056181</td>
+      <td>-0.016167</td>
+      <td>-0.037020</td>
+      <td>-0.048396</td>
+      <td>0.050684</td>
+      <td>-0.038428</td>
+      <td>-0.023405</td>
+      <td>0.044230</td>
+      <td>-0.004573</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>0.95</td>
-      <td>2.0</td>
+      <td>EPALLUD</td>
+      <td>-0.020300</td>
+      <td>0.056688</td>
+      <td>-0.027365</td>
+      <td>-0.032885</td>
+      <td>0.000773</td>
+      <td>-0.115034</td>
+      <td>-0.020260</td>
+      <td>0.013413</td>
+      <td>-0.072369</td>
+      <td>-0.048587</td>
+      <td>0.012785</td>
+      <td>0.084579</td>
+      <td>0.005562</td>
+      <td>-0.019586</td>
+      <td>0.052409</td>
+      <td>0.072438</td>
+      <td>-0.072716</td>
+      <td>0.042762</td>
+      <td>-0.032261</td>
+      <td>0.030171</td>
+      <td>0.028321</td>
+      <td>-0.088475</td>
+      <td>-0.071097</td>
+      <td>0.169774</td>
+      <td>0.030327</td>
+      <td>-0.008014</td>
+      <td>-0.002688</td>
+      <td>-0.101284</td>
+      <td>0.007413</td>
+      <td>0.015975</td>
+      <td>0.113991</td>
+      <td>-0.098062</td>
+      <td>0.052002</td>
+      <td>0.056671</td>
+      <td>-0.016894</td>
+      <td>0.049609</td>
+      <td>-0.009867</td>
+      <td>-0.011374</td>
+      <td>-0.022980</td>
+      <td>-0.053266</td>
+      <td>-0.018488</td>
+      <td>-0.048188</td>
+      <td>0.001364</td>
+      <td>0.063896</td>
+      <td>0.068247</td>
+      <td>-0.083782</td>
+      <td>-0.074071</td>
+      <td>0.079057</td>
+      <td>-0.003118</td>
+      <td>0.054031</td>
+      <td>-0.064100</td>
+      <td>0.035326</td>
+      <td>-0.021004</td>
+      <td>-0.092032</td>
+      <td>-0.045005</td>
+      <td>0.024287</td>
+      <td>-0.005948</td>
+      <td>0.016059</td>
+      <td>-0.056283</td>
+      <td>-0.027173</td>
+      <td>-0.049201</td>
+      <td>-0.015774</td>
+      <td>0.107958</td>
+      <td>0.009326</td>
+      <td>-0.035943</td>
+      <td>0.080378</td>
+      <td>-0.009844</td>
+      <td>0.051476</td>
+      <td>0.022447</td>
+      <td>0.011092</td>
+      <td>0.086064</td>
+      <td>-0.000997</td>
+      <td>-0.074737</td>
+      <td>0.070433</td>
+      <td>0.046561</td>
+      <td>0.003315</td>
+      <td>-0.026173</td>
+      <td>0.061065</td>
+      <td>0.081561</td>
+      <td>0.030561</td>
+      <td>0.008481</td>
+      <td>-0.005448</td>
+      <td>0.002069</td>
+      <td>0.001305</td>
+      <td>-0.038595</td>
+      <td>-0.047141</td>
+      <td>-0.025419</td>
+      <td>0.019450</td>
+      <td>-0.081895</td>
+      <td>-0.018430</td>
+      <td>-0.035824</td>
+      <td>0.027037</td>
+      <td>0.012261</td>
+      <td>-0.095701</td>
+      <td>-0.050800</td>
+      <td>-0.008333</td>
+      <td>-0.065321</td>
+      <td>-0.103993</td>
+      <td>0.089600</td>
+      <td>0.038019</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>ROCHAID</td>
+      <td>-0.046494</td>
+      <td>-0.025261</td>
+      <td>-0.038450</td>
+      <td>-0.026415</td>
+      <td>-0.028841</td>
+      <td>-0.072961</td>
+      <td>0.066588</td>
+      <td>-0.029331</td>
+      <td>-0.070188</td>
+      <td>0.010580</td>
+      <td>-0.011621</td>
+      <td>0.046203</td>
+      <td>-0.074151</td>
+      <td>0.024142</td>
+      <td>-0.014390</td>
+      <td>0.091149</td>
+      <td>0.075091</td>
+      <td>0.035810</td>
+      <td>-0.005276</td>
+      <td>0.045132</td>
+      <td>0.085885</td>
+      <td>-0.104814</td>
+      <td>0.055373</td>
+      <td>0.100524</td>
+      <td>-0.055691</td>
+      <td>-0.025636</td>
+      <td>-0.035586</td>
+      <td>-0.061743</td>
+      <td>-0.038795</td>
+      <td>0.033961</td>
+      <td>0.138125</td>
+      <td>-0.066397</td>
+      <td>0.047109</td>
+      <td>0.077780</td>
+      <td>-0.001199</td>
+      <td>0.002948</td>
+      <td>0.025644</td>
+      <td>-0.116149</td>
+      <td>-0.061656</td>
+      <td>0.009225</td>
+      <td>-0.092691</td>
+      <td>0.093630</td>
+      <td>0.035531</td>
+      <td>0.092576</td>
+      <td>0.035837</td>
+      <td>-0.063705</td>
+      <td>-0.106353</td>
+      <td>0.088001</td>
+      <td>-0.051792</td>
+      <td>0.052440</td>
+      <td>-0.004376</td>
+      <td>-0.000251</td>
+      <td>-0.068511</td>
+      <td>-0.136270</td>
+      <td>-0.019745</td>
+      <td>-0.031161</td>
+      <td>0.091314</td>
+      <td>0.042445</td>
+      <td>-0.056508</td>
+      <td>-0.030101</td>
+      <td>-0.049913</td>
+      <td>-0.070787</td>
+      <td>0.107330</td>
+      <td>0.042494</td>
+      <td>-0.006450</td>
+      <td>0.031816</td>
+      <td>0.019154</td>
+      <td>0.063103</td>
+      <td>0.062942</td>
+      <td>0.039770</td>
+      <td>-0.019907</td>
+      <td>-0.015229</td>
+      <td>-0.127232</td>
+      <td>0.029777</td>
+      <td>-0.003169</td>
+      <td>-0.042345</td>
+      <td>0.059721</td>
+      <td>0.029293</td>
+      <td>0.062811</td>
+      <td>0.048619</td>
+      <td>0.016746</td>
+      <td>0.023216</td>
+      <td>0.099410</td>
+      <td>0.073731</td>
+      <td>0.026503</td>
+      <td>0.026392</td>
+      <td>-0.066675</td>
+      <td>-0.054693</td>
+      <td>-0.050463</td>
+      <td>-0.025571</td>
+      <td>-0.054189</td>
+      <td>0.149629</td>
+      <td>-0.037958</td>
+      <td>-0.022602</td>
+      <td>-0.029006</td>
+      <td>0.019340</td>
+      <td>-0.070573</td>
+      <td>-0.029419</td>
+      <td>0.017403</td>
+      <td>-0.042091</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>COPPONAZ</td>
+      <td>-0.035739</td>
+      <td>-0.039988</td>
+      <td>0.018171</td>
+      <td>-0.045568</td>
+      <td>-0.112842</td>
+      <td>-0.056449</td>
+      <td>0.051139</td>
+      <td>0.095943</td>
+      <td>-0.087455</td>
+      <td>-0.010269</td>
+      <td>0.008426</td>
+      <td>0.124774</td>
+      <td>-0.025397</td>
+      <td>0.041430</td>
+      <td>0.053277</td>
+      <td>0.133248</td>
+      <td>0.146208</td>
+      <td>0.008444</td>
+      <td>0.052949</td>
+      <td>0.023150</td>
+      <td>0.120852</td>
+      <td>-0.013061</td>
+      <td>-0.000424</td>
+      <td>0.078164</td>
+      <td>-0.123814</td>
+      <td>0.068689</td>
+      <td>-0.098346</td>
+      <td>0.025533</td>
+      <td>-0.044673</td>
+      <td>0.126950</td>
+      <td>0.099522</td>
+      <td>-0.015614</td>
+      <td>0.004475</td>
+      <td>0.134234</td>
+      <td>-0.075648</td>
+      <td>-0.031502</td>
+      <td>0.033149</td>
+      <td>-0.102197</td>
+      <td>-0.039792</td>
+      <td>-0.061209</td>
+      <td>-0.011315</td>
+      <td>-0.017106</td>
+      <td>-0.012268</td>
+      <td>-0.001004</td>
+      <td>0.000065</td>
+      <td>-0.076533</td>
+      <td>-0.054781</td>
+      <td>0.107720</td>
+      <td>-0.021148</td>
+      <td>0.025010</td>
+      <td>0.002618</td>
+      <td>0.062037</td>
+      <td>-0.002917</td>
+      <td>-0.110612</td>
+      <td>-0.026663</td>
+      <td>-0.102028</td>
+      <td>0.034360</td>
+      <td>0.047821</td>
+      <td>-0.107470</td>
+      <td>-0.022211</td>
+      <td>-0.044953</td>
+      <td>-0.057893</td>
+      <td>0.093924</td>
+      <td>-0.082534</td>
+      <td>-0.072458</td>
+      <td>0.008575</td>
+      <td>-0.028226</td>
+      <td>-0.046046</td>
+      <td>0.010575</td>
+      <td>0.065046</td>
+      <td>-0.107711</td>
+      <td>-0.029714</td>
+      <td>-0.076237</td>
+      <td>-0.085379</td>
+      <td>0.044102</td>
+      <td>-0.095215</td>
+      <td>-0.010358</td>
+      <td>0.009219</td>
+      <td>0.068762</td>
+      <td>0.070173</td>
+      <td>0.117174</td>
+      <td>0.082598</td>
+      <td>0.116181</td>
+      <td>0.087240</td>
+      <td>-0.030040</td>
+      <td>-0.010068</td>
+      <td>-0.033604</td>
+      <td>0.004680</td>
+      <td>-0.104392</td>
+      <td>0.012755</td>
+      <td>-0.096428</td>
+      <td>0.020580</td>
+      <td>-0.098905</td>
+      <td>-0.155067</td>
+      <td>-0.055671</td>
+      <td>0.145853</td>
+      <td>-0.065814</td>
+      <td>-0.090708</td>
+      <td>0.095979</td>
+      <td>0.015840</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>BANNOT</td>
+      <td>0.066134</td>
+      <td>-0.004715</td>
+      <td>-0.019883</td>
+      <td>-0.006951</td>
+      <td>-0.029702</td>
+      <td>-0.107259</td>
+      <td>0.040271</td>
+      <td>-0.038820</td>
+      <td>0.003814</td>
+      <td>-0.035428</td>
+      <td>0.043641</td>
+      <td>0.084803</td>
+      <td>-0.090642</td>
+      <td>0.016835</td>
+      <td>0.046169</td>
+      <td>0.091553</td>
+      <td>0.153995</td>
+      <td>-0.013860</td>
+      <td>-0.032740</td>
+      <td>0.037113</td>
+      <td>0.061462</td>
+      <td>0.009666</td>
+      <td>0.031739</td>
+      <td>0.007442</td>
+      <td>-0.071513</td>
+      <td>0.010166</td>
+      <td>0.003403</td>
+      <td>-0.027929</td>
+      <td>-0.017778</td>
+      <td>0.039611</td>
+      <td>0.067564</td>
+      <td>-0.065839</td>
+      <td>0.046799</td>
+      <td>0.135054</td>
+      <td>-0.023342</td>
+      <td>0.011553</td>
+      <td>0.073334</td>
+      <td>-0.041336</td>
+      <td>-0.038593</td>
+      <td>0.019590</td>
+      <td>-0.056711</td>
+      <td>0.001158</td>
+      <td>0.004799</td>
+      <td>0.044466</td>
+      <td>-0.034893</td>
+      <td>-0.028753</td>
+      <td>-0.031409</td>
+      <td>0.029907</td>
+      <td>-0.018440</td>
+      <td>-0.023848</td>
+      <td>-0.018817</td>
+      <td>-0.039074</td>
+      <td>-0.057303</td>
+      <td>-0.035334</td>
+      <td>-0.021749</td>
+      <td>-0.004913</td>
+      <td>0.018634</td>
+      <td>0.019179</td>
+      <td>-0.057934</td>
+      <td>-0.034877</td>
+      <td>-0.064195</td>
+      <td>-0.018191</td>
+      <td>0.102793</td>
+      <td>0.025614</td>
+      <td>-0.033012</td>
+      <td>0.007195</td>
+      <td>-0.008328</td>
+      <td>0.013157</td>
+      <td>0.026993</td>
+      <td>0.038100</td>
+      <td>-0.027357</td>
+      <td>-0.051290</td>
+      <td>-0.073156</td>
+      <td>-0.021391</td>
+      <td>-0.000177</td>
+      <td>0.006908</td>
+      <td>-0.031681</td>
+      <td>-0.025294</td>
+      <td>0.010825</td>
+      <td>0.015848</td>
+      <td>0.107533</td>
+      <td>0.026290</td>
+      <td>0.120108</td>
+      <td>0.070129</td>
+      <td>-0.013005</td>
+      <td>-0.026225</td>
+      <td>0.038169</td>
+      <td>-0.018547</td>
+      <td>-0.047781</td>
+      <td>-0.077876</td>
+      <td>-0.080266</td>
+      <td>0.055719</td>
+      <td>-0.052114</td>
+      <td>0.022472</td>
+      <td>0.005363</td>
+      <td>0.082133</td>
+      <td>-0.055838</td>
+      <td>0.034364</td>
+      <td>-0.033459</td>
+      <td>-0.030439</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>SAULINE</td>
+      <td>-0.021597</td>
+      <td>0.009474</td>
+      <td>0.003078</td>
+      <td>0.003275</td>
+      <td>-0.002908</td>
+      <td>-0.032812</td>
+      <td>0.022039</td>
+      <td>0.019412</td>
+      <td>-0.061273</td>
+      <td>-0.003295</td>
+      <td>-0.008072</td>
+      <td>0.074460</td>
+      <td>-0.029216</td>
+      <td>0.002510</td>
+      <td>0.003419</td>
+      <td>0.120400</td>
+      <td>0.109677</td>
+      <td>0.009156</td>
+      <td>-0.038833</td>
+      <td>0.017185</td>
+      <td>0.048317</td>
+      <td>-0.036942</td>
+      <td>0.001547</td>
+      <td>-0.004026</td>
+      <td>-0.075737</td>
+      <td>-0.011072</td>
+      <td>-0.032058</td>
+      <td>-0.026436</td>
+      <td>0.005104</td>
+      <td>0.089241</td>
+      <td>0.076392</td>
+      <td>-0.035798</td>
+      <td>0.081806</td>
+      <td>0.129314</td>
+      <td>-0.069638</td>
+      <td>0.074380</td>
+      <td>0.021286</td>
+      <td>-0.011372</td>
+      <td>-0.049183</td>
+      <td>-0.021344</td>
+      <td>-0.056143</td>
+      <td>0.008552</td>
+      <td>0.011027</td>
+      <td>0.038380</td>
+      <td>-0.039879</td>
+      <td>-0.042012</td>
+      <td>-0.120692</td>
+      <td>0.076346</td>
+      <td>-0.001037</td>
+      <td>0.045705</td>
+      <td>0.014402</td>
+      <td>0.015599</td>
+      <td>-0.047112</td>
+      <td>-0.131409</td>
+      <td>-0.014478</td>
+      <td>-0.007013</td>
+      <td>-0.014973</td>
+      <td>0.031093</td>
+      <td>-0.042461</td>
+      <td>-0.037831</td>
+      <td>-0.084321</td>
+      <td>-0.049603</td>
+      <td>0.130848</td>
+      <td>-0.020100</td>
+      <td>-0.040160</td>
+      <td>0.033332</td>
+      <td>-0.014219</td>
+      <td>0.001104</td>
+      <td>0.050844</td>
+      <td>0.049725</td>
+      <td>-0.041300</td>
+      <td>-0.018468</td>
+      <td>-0.091482</td>
+      <td>-0.021819</td>
+      <td>-0.016234</td>
+      <td>-0.048848</td>
+      <td>0.010635</td>
+      <td>-0.006473</td>
+      <td>0.094057</td>
+      <td>0.028010</td>
+      <td>0.094222</td>
+      <td>0.044318</td>
+      <td>0.106131</td>
+      <td>0.100325</td>
+      <td>0.004880</td>
+      <td>-0.017579</td>
+      <td>-0.048847</td>
+      <td>-0.008788</td>
+      <td>-0.042810</td>
+      <td>-0.026863</td>
+      <td>-0.087349</td>
+      <td>0.059223</td>
+      <td>-0.057466</td>
+      <td>0.004901</td>
+      <td>-0.012839</td>
+      <td>0.050808</td>
+      <td>-0.067370</td>
+      <td>0.020005</td>
+      <td>0.017952</td>
+      <td>-0.045492</td>
     </tr>
   </tbody>
 </table>
 </div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span>  <span class="o">=</span> <span class="s2">&quot;&quot;&quot; </span>
+<span class="s2">DROP TABLE ets_siretisation.list_weight_mots_insee_inpi_word2vec</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span>
+    <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+
+<span class="s2">CREATE TABLE siretisation.list_weight_mots_insee_inpi_word2vec</span>
+<span class="s2">WITH (</span>
+<span class="s2">  format=&#39;PARQUET&#39;</span>
+<span class="s2">) AS</span>
+<span class="s2">SELECT words,</span>
+<span class="s2">CONCAT(</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">middle</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span><span class="mi">99</span><span class="p">:</span>
+        <span class="n">middle</span>  <span class="o">=</span> <span class="s2">&quot;ARRAY[vec_</span><span class="si">{}</span><span class="s2">]) as list_weights&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">middle</span>  <span class="o">=</span> <span class="s2">&quot;ARRAY[vec_</span><span class="si">{}</span><span class="s2">],&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">query</span> <span class="o">+=</span> <span class="n">middle</span>
+<span class="n">bottom</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">FROM &quot;siretisation&quot;.&quot;weights_mots_insee_inpi_word2vec&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">query</span> <span class="o">+=</span> <span class="n">bottom</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;machine_learning&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span>
+    <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT * FROM &quot;siretisation&quot;.&quot;list_weight_mots_insee_inpi_word2vec&quot; limit 10;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span><span class="p">,</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;list_weights&#39;</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[24]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>words</th>
+      <th>list_weights</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ROCHASSON</td>
+      <td>[-0.15505515, 0.093883775, -0.033966012, 0.2534797, -0.06489318, 0.17946722, -0.054391373, 0.1016311, -0.16914685, 0.15937574, -0.04154642, 0.13341083, 0.15444687, 0.11288871, 0.031662054, -0.03529914, 0.14861926, -0.08413402, -0.13219091, -0.04097052, -0.10079224, -0.12634756, 0.12322913, -0.16285025, 0.16803114, 0.059177816, -0.09089909, 0.23779702, -0.050569154, 0.10448242, -0.18810362, 0.013763787, 0.07364392, -0.1560408, -0.09408261, 0.038302753, 0.03337482, 0.0054334085, 0.015338535, -0.22524305, -0.07768685, 0.047333047, 0.08550405, 0.19247411, -0.056106143, -0.11469632, 0.055166587, -0.1556934, 0.09193467, -0.052424625, 0.22873425, -0.09989267, 0.069525234, 0.16854934, -0.0995897, -0.10493309, 0.10701693, 0.16067299, 0.122143395, -0.19392642, -0.06129457, 0.05827555, 0.04654823, -0.19402282, 0.17169535, -0.0077373944, -0.08611253, 0.25907335, 0.11095033, 0.028004913, -0.05868213, 0.05519585, 0.2731603, 0.047333598, 0.016569557, -0.32400185, 0.23907462, -0.121745236, 0.027484305, -0.22236514, -0.05109907, 0.19931382, 0.0037267315, -0.26535425, 0.1311118, 0.17326622, -0.108341485, -0.064668395, 0.14913878, -0.07196956, -0.06652021, -0.14728852, 0.13347211, -0.01721949, -0.24913378, 0.057351574, 0.2052998, -0.13185878, 0.1686598, 0.11215024]</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>CHAZELAS</td>
+      <td>[-0.109636135, -0.006103641, -0.020040277, 0.25316262, 0.17592265, 0.0021767267, 0.21980242, -0.024480069, -0.14120255, 0.05474786, 0.027812812, 0.04513831, 0.029098026, 0.0030846673, -0.00539035, -0.09400612, 0.11184292, -0.01602443, 0.0115694525, 0.05249722, -0.187549, -0.10268482, 0.09660874, -0.10146321, 0.13509831, -0.08203639, -0.0629421, 0.17226475, -0.15483484, -0.16726069, -0.25711542, -0.078375034, 0.11044509, -0.16180228, 0.03683474, -0.031754546, 0.015964506, 0.057652254, -0.105912864, -0.2873093, -0.1873157, 0.052587498, 0.13631055, 0.3230033, 0.1565452, -0.07020149, 0.06384636, -0.30271593, 0.14033082, 0.13798465, 0.13022412, -0.17196886, -0.14510338, 0.24091557, -0.09998665, -0.1052452, 0.14813451, 0.13544735, 0.016420549, -0.12737694, -0.10318103, -0.16602415, 0.14094923, -0.2089594, 0.26379076, 0.26919323, -0.066454366, 0.3257606, 0.07683249, -0.1249642, -0.044172022, -0.09030118, 0.2537347, 0.10437621, -0.046535973, -0.39586705, -0.0021818948, -0.15096949, 0.10897314, -0.14621219, 0.15821601, 0.14773566, -0.075632796, -0.13970292, -0.046372198, 0.14502375, -0.059973612, -0.045822527, 0.10589532, -0.03682669, -0.02011218, -0.26233143, 0.01983468, 0.06380002, -0.29612628, 0.079973325, 0.100622535, -0.29357985, 0.15031388, -0.047712695]</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>LEONEL</td>
+      <td>[0.22252406, 0.15130779, -0.04575958, -0.03778899, 0.050965697, 0.2528365, 0.018160814, -0.05288271, -0.3096865, 0.15462294, -0.10952012, 0.103372656, 0.1766996, 0.14707415, -0.40393823, -0.0045590955, -0.08265266, 0.15897411, -0.1957459, -0.034631956, -0.23276713, -0.08667215, 0.08821165, -0.046707783, 0.4971337, -0.11718625, -0.015904767, 0.15228818, -0.037390776, 0.13003631, 0.17405774, 0.32302254, 0.026345475, -0.1321597, -0.2566077, -0.02405712, -0.002467111, 0.052005704, -0.117853604, -0.051207546, -0.10167364, 0.15466388, 0.1607747, 0.21277027, 0.10131277, -0.16147445, 0.19742428, 0.32157636, 0.17883445, 0.1538676, 0.20712359, -0.15016088, 0.16003759, 0.024373092, -0.25615543, -0.1933014, -0.06807186, 0.017983167, 0.0093089435, -0.2014114, 0.013771088, 0.7058783, 0.10410591, -0.04987616, -0.03312663, 0.23713182, 0.04491722, 0.07384343, 0.19469029, 0.016708972, -0.16072538, -0.042086538, 0.3998515, -0.18968931, -0.39038587, -0.11685083, 0.11906388, -0.3684878, 0.040702224, 0.121342085, 0.011019275, 0.54542446, -0.03512373, -0.085705616, 0.25045523, 0.03258992, -0.113921486, -0.24779823, 0.0072337575, -0.15306129, -0.2715002, 0.2968101, 0.050990313, 0.40448356, -0.5213212, 0.19155724, 0.03948027, -0.07173173, 0.21267113, 0.027185535]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Test-acceptance/Analyse-du-mod&#232;le">Test acceptance/Analyse du mod&#232;le<a class="anchor-link" href="#Test-acceptance/Analyse-du-mod&#232;le">&#182;</a></h1><p>La librairie <code>gensim</code> a une fonction integrée pour calculer la similarité. Toutefois, nous devons cacluler le cosine manuelement dans Athena car il n'y a pas de fonction SQL prévue a cet effet.</p>
+<h2 id="Similarit&#233;---cosine">Similarit&#233; - cosine<a class="anchor-link" href="#Similarit&#233;---cosine">&#182;</a></h2><p>La fonction cosine se calcule de la facon suivante:</p>
+$$\frac{u \cdot v}{\|u\|_{2}\|v\|_{2}}$$<ul>
+<li>Source 1: Calcul cosine:<ul>
+<li><a href="https://en.wikipedia.org/wiki/Cosine_similarity">Cosine similarity</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Magnitude_(mathematics">Magnitude (mathematics)</a>#Euclidean_vector_space)</li>
+<li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cosine.html">Scipy Cosine</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Dans ce notebook, nous allons expliquer comment calculer la distance de cosine en SQL, via les fonctions Presto</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<ol>
+<li>Creation table exemple</li>
+</ol>
+<p>On va récupérer deux mots, RTE et ROUTE</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[25]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">CREATE TABLE siretisation.exemple_cosine_sql</span>
+<span class="s2">WITH (</span>
+<span class="s2">  format=&#39;PARQUET&#39;</span>
+<span class="s2">) AS</span>
+<span class="s2">WITH db AS (</span>
+<span class="s2">SELECT &#39;PAIR&#39; AS pairs,words as words_1, list_weights as list_weights_1</span>
+<span class="s2">FROM list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">WHERE words = &#39;RTE&#39;</span>
+<span class="s2">)</span>
+<span class="s2">SELECT db.pairs, words_1,words_2, list_weights_1,list_weights_2</span>
+<span class="s2">FROM db</span>
+<span class="s2">LEFT JOIN (</span>
+<span class="s2">  </span>
+<span class="s2">  SELECT &#39;PAIR&#39; AS pairs,words as words_2, list_weights as list_weights_2</span>
+<span class="s2">FROM list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">WHERE words = &#39;ROUTE&#39;</span>
+<span class="s2">  </span>
+<span class="s2">  ) AS tb_list2</span>
+<span class="s2">  ON db.pairs = tb_list2.pairs</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+        <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s1">&#39;siretisation&#39;</span><span class="p">,</span>
+        <span class="n">s3_output</span><span class="o">=</span><span class="s1">&#39;INPI/sql_output&#39;</span>
+    <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[26]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT * FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">tb_rte_route</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_rte_route&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+<span class="n">tb_rte_route</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[26]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pairs</th>
+      <th>words_1</th>
+      <th>words_2</th>
+      <th>list_weights_1</th>
+      <th>list_weights_2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>PAIR</td>
+      <td>RTE</td>
+      <td>ROUTE</td>
+      <td>[-0.906287, 0.35330036, -0.45031732, -0.44005623, 0.4382724, 0.90547234, 0.2720212, 1.5743147, 2.2702737, 0.012816742, 0.11886748, 1.6181163, -1.5880803, 0.049638018, -1.0179683, -0.47134385, 2.8443403, -1.2850525, -0.37764302, 0.54929864, 2.277727, -0.9306328, -0.9771653, 1.8885164, -1.3320053, -1.0202668, -3.8396924, -1.6275727, 1.0053705, -0.19837037, 0.5501364, 0.3265179, -0.032989323, -2.5345073, 0.86746955, 0.18929328, 2.0648468, 0.8580351, 0.3278052, -0.5825579, -0.04941983, 0.9473246, -1.3866509, 2.189582, 1.9775363, -1.2988862, 1.2236702, -0.99055576, 1.9203395, 2.1116378, 1.078011, -1.1966137, -0.74431413, 0.2712173, 0.20042796, 0.16099955, 0.80259293, -2.8260934, -0.24784257, -0.9690624, 0.5863302, -0.0848784, -3.8474228, 0.6043199, 0.19716166, 0.48339006, 0.022308467, 2.9877596, -0.22003816, 0.5030187, 0.40742403, 2.3884847, 1.3377057, 0.03965891, 2.2390943, 2.4587617, -1.0826445, 1.3741084, 0.9702326, -1.0039244, -0.11839072, 1.4302572, 1.2645842, -0.99718225, 2.663692, -1.1477947, 0.7652534, -0.6031758, -0.17729475, -0.992262, 1.989643, -0.72117364, 0.0916418, 1.3735677, 0.35776773, 1.3185933, -1.0422467, -0.40227982, 1.9068569, 0.26661342]</td>
+      <td>[-0.2844909, 0.39486414, -0.29922548, 0.026530692, 1.2402308, 0.6849597, 0.22171415, 1.1757132, 1.6040323, -1.1198272, -0.8969306, 2.486966, -1.9380313, 0.26788518, 1.270719, 0.008989361, 2.015358, -0.995867, 0.28859442, -0.21244797, 1.8975848, 0.7015464, 0.15380877, 1.515052, -1.5326287, -1.0253289, -2.7549756, -0.81292415, 1.754881, 2.0618231, -0.164788, 0.9021463, 0.24025336, -0.8273677, 2.0715895, -0.5560104, 1.5273378, 0.5394673, -0.24066179, 0.012111424, 0.07375086, 0.6852015, -1.7510698, 0.930581, 1.0507412, -1.5666918, 1.6675467, -1.5944803, 1.7269504, 1.1746826, 1.7738193, -1.4851779, -0.4614606, 1.2705019, -0.47668794, -0.9183224, 1.0675664, -0.98648226, 0.3117699, 0.4450617, 1.1351311, -0.6601455, -2.7705634, 0.27910224, 0.5883243, 0.28529423, 0.8831947, 3.2832482, 0.21316877, 0.107157536, 1.0145535, 0.7118645, 0.62196463, -0.67991567, 1.9766676, 1.5993948, 0.5753832, 1.2972467, -0.85221344, 0.11414911, 1.6582446, 0.5911942, 1.1361358, 0.048497565, 1.8349174, -0.57384175, -0.2044813, -0.5567194, -1.3511335, -0.38534522, 2.1614444, -0.5642625, 0.59345967, 1.231725, 0.6929633, -0.06359955, 0.6900589, -0.15387042, 1.7884512, 0.70258224]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<ol>
+<li>Calcul du nominateur </li>
+</ol>
+<p>Le nominateur est simplement le dot product entre la liste 1 et la liste 2:</p>
+$$u \cdot v$$<p>Pour rappel, le dot product s'effectue de la manière suivante: $a · b = ax × bx + ay × by$</p>
+<p>Le dot product doit, par définition, retourner un scalaire!</p>
+<p>Fonction presto:</p>
+<ul>
+<li><code>REDUCE</code>: <a href="https://prestodb.io/docs/0.172/functions/lambda.html#reduce">https://prestodb.io/docs/0.172/functions/lambda.html#reduce</a><ul>
+<li>Va permettre de sommer le produit x*y</li>
+</ul>
+</li>
+<li><code>zip_with</code>: <a href="https://prestodb.io/docs/0.172/functions/lambda.html#zip_with">https://prestodb.io/docs/0.172/functions/lambda.html#zip_with</a><ul>
+<li>Va permettre de calculer produit x*y</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT </span>
+<span class="s2">pairs, words_1, words_2, </span>
+<span class="s2">REDUCE(</span>
+<span class="s2">              zip_with(</span>
+<span class="s2">                list_weights_1, </span>
+<span class="s2">                list_weights_2, </span>
+<span class="s2">                (x, y) -&gt; x * y</span>
+<span class="s2">              ), </span>
+<span class="s2">              CAST(</span>
+<span class="s2">                ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              (s, x) -&gt; CAST(</span>
+<span class="s2">                ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              s -&gt; s.sum</span>
+<span class="s2">            ) AS dot_product,</span>
+<span class="s2">            list_weights_1, list_weights_2</span>
+
+<span class="s2">FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_dotproruct&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[27]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pairs</th>
+      <th>words_1</th>
+      <th>words_2</th>
+      <th>dot_product</th>
+      <th>list_weights_1</th>
+      <th>list_weights_2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>PAIR</td>
+      <td>RTE</td>
+      <td>ROUTE</td>
+      <td>126.949244</td>
+      <td>[-0.906287, 0.35330036, -0.45031732, -0.44005623, 0.4382724, 0.90547234, 0.2720212, 1.5743147, 2.2702737, 0.012816742, 0.11886748, 1.6181163, -1.5880803, 0.049638018, -1.0179683, -0.47134385, 2.8443403, -1.2850525, -0.37764302, 0.54929864, 2.277727, -0.9306328, -0.9771653, 1.8885164, -1.3320053, -1.0202668, -3.8396924, -1.6275727, 1.0053705, -0.19837037, 0.5501364, 0.3265179, -0.032989323, -2.5345073, 0.86746955, 0.18929328, 2.0648468, 0.8580351, 0.3278052, -0.5825579, -0.04941983, 0.9473246, -1.3866509, 2.189582, 1.9775363, -1.2988862, 1.2236702, -0.99055576, 1.9203395, 2.1116378, 1.078011, -1.1966137, -0.74431413, 0.2712173, 0.20042796, 0.16099955, 0.80259293, -2.8260934, -0.24784257, -0.9690624, 0.5863302, -0.0848784, -3.8474228, 0.6043199, 0.19716166, 0.48339006, 0.022308467, 2.9877596, -0.22003816, 0.5030187, 0.40742403, 2.3884847, 1.3377057, 0.03965891, 2.2390943, 2.4587617, -1.0826445, 1.3741084, 0.9702326, -1.0039244, -0.11839072, 1.4302572, 1.2645842, -0.99718225, 2.663692, -1.1477947, 0.7652534, -0.6031758, -0.17729475, -0.992262, 1.989643, -0.72117364, 0.0916418, 1.3735677, 0.35776773, 1.3185933, -1.0422467, -0.40227982, 1.9068569, 0.26661342]</td>
+      <td>[-0.2844909, 0.39486414, -0.29922548, 0.026530692, 1.2402308, 0.6849597, 0.22171415, 1.1757132, 1.6040323, -1.1198272, -0.8969306, 2.486966, -1.9380313, 0.26788518, 1.270719, 0.008989361, 2.015358, -0.995867, 0.28859442, -0.21244797, 1.8975848, 0.7015464, 0.15380877, 1.515052, -1.5326287, -1.0253289, -2.7549756, -0.81292415, 1.754881, 2.0618231, -0.164788, 0.9021463, 0.24025336, -0.8273677, 2.0715895, -0.5560104, 1.5273378, 0.5394673, -0.24066179, 0.012111424, 0.07375086, 0.6852015, -1.7510698, 0.930581, 1.0507412, -1.5666918, 1.6675467, -1.5944803, 1.7269504, 1.1746826, 1.7738193, -1.4851779, -0.4614606, 1.2705019, -0.47668794, -0.9183224, 1.0675664, -0.98648226, 0.3117699, 0.4450617, 1.1351311, -0.6601455, -2.7705634, 0.27910224, 0.5883243, 0.28529423, 0.8831947, 3.2832482, 0.21316877, 0.107157536, 1.0145535, 0.7118645, 0.62196463, -0.67991567, 1.9766676, 1.5993948, 0.5753832, 1.2972467, -0.85221344, 0.11414911, 1.6582446, 0.5911942, 1.1361358, 0.048497565, 1.8349174, -0.57384175, -0.2044813, -0.5567194, -1.3511335, -0.38534522, 2.1614444, -0.5642625, 0.59345967, 1.231725, 0.6929633, -0.06359955, 0.6900589, -0.15387042, 1.7884512, 0.70258224]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>On va vérifier notre résultat avec numpy</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">sql_array_to_array</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">tb_rte_route</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+ <span class="o">.</span><span class="n">str</span>
+ <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;\[|\]|,&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">str</span>
+ <span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">expand</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+ <span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_1&#39;</span><span class="p">),</span><span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_2&#39;</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[29]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>126.94924545677813</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<ol>
+<li>Calcul du dénominateur</li>
+</ol>
+<p>Le denominateur est $\|u\|_{2}\|v\|_{2}$, ce qui correspond à la norme. La norme est une extension de la valeur absolue des nombres aux vecteurs. Elle permet de mesurer la longueur commune à toutes les représentations d'un vecteur dans un espace affine, mais définit aussi une distance entre deux vecteurs invariante par translation et compatible avec la multiplication externe.</p>
+<p>La norme usuelle (euclidienne) d'un vecteur peut se calculer à l'aide de ses coordonnées dans un repère orthonormé à l'aide du théorème de Pythagore.
+Dans le plan, si le vecteur ${\displaystyle {\vec {u}}}{\vec {u}}$ a pour coordonnées ${\displaystyle (x,y)}(x,y)$, sa norme s'écrire:</p>
+$$\|{\vec  u}\|={\sqrt  {x^{2}+y^{2}}}.$$
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SELECT </span>
+<span class="s2">pairs, words_1, </span>
+<span class="s2">SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_1, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              ) as norme_w1 </span>
+
+<span class="s2">FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_cosine_sql&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[30]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pairs</th>
+      <th>words_1</th>
+      <th>norme_w1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>PAIR</td>
+      <td>RTE</td>
+      <td>13.612547</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Résultat via numpy</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[31]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_1&#39;</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[31]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>13.612547364554665</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>On calcule du cosine</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[32]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span><span class="s2">&quot;&quot;&quot; </span>
+<span class="s2">SELECT </span>
+<span class="s2">pairs, words_1, words_2, </span>
+<span class="s2"> REDUCE(</span>
+<span class="s2">              zip_with(</span>
+<span class="s2">                list_weights_1, </span>
+<span class="s2">                list_weights_2, </span>
+<span class="s2">                (x, y) -&gt; x * y</span>
+<span class="s2">              ), </span>
+<span class="s2">              CAST(</span>
+<span class="s2">                ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              (s, x) -&gt; CAST(</span>
+<span class="s2">                ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              s -&gt; s.sum</span>
+<span class="s2">            ) / (</span>
+<span class="s2">              SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_1, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              ) * SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_2, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              )</span>
+<span class="s2">            ) AS cosine_distance</span>
+
+<span class="s2">FROM &quot;siretisation&quot;.&quot;exemple_cosine_sql&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;exemple_cosine&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[32]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>pairs</th>
+      <th>words_1</th>
+      <th>words_2</th>
+      <th>cosine_distance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>PAIR</td>
+      <td>RTE</td>
+      <td>ROUTE</td>
+      <td>0.780276</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[33]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
+
+<span class="mi">1</span> <span class="o">-</span> <span class="n">distance</span><span class="o">.</span><span class="n">cosine</span><span class="p">(</span>
+     <span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_1&#39;</span><span class="p">),</span>
+     <span class="n">sql_array_to_array</span><span class="p">(</span><span class="s1">&#39;list_weights_2&#39;</span><span class="p">)</span>
+ <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[33]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.7802756671384312</pre>
 </div>
 
 </div>
@@ -15685,7 +15826,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[34]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">ipykernel</span><span class="o">,</span> <span class="nn">json</span>
@@ -15700,7 +15841,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="prompt input_prompt">In&nbsp;[35]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_report</span><span class="p">(</span><span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span><span class="p">,</span> <span class="n">keep_code</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
@@ -15769,13 +15910,32 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[36]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">create_report</span><span class="p">(</span><span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span><span class="p">,</span> <span class="n">keep_code</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Report Available at this adress:
+ C:\Users\PERNETTH\Documents\Projects\InseeInpi_matching\Notebooks_matching\Data_preprocessed\programme_matching\11_sumup_siretisation\Reports\05_creation_table_poids_Word2Vec.html
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 

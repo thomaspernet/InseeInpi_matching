@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>02_test_list_num_voie</title>
+<title>06_calcul_cosine_levhenstein</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13077,10 +13077,13 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Creation-table-contenant-le-test-de-la-liste-num&#233;ro-de-voie">Creation table contenant le test de la liste num&#233;ro de voie<a class="anchor-link" href="#Creation-table-contenant-le-test-de-la-liste-num&#233;ro-de-voie">&#182;</a></h1><h1 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h1><ul>
-<li>Comparer les listes INSEE/INPI contenant les digits de l’adresse:<ul>
-<li><code>intersection_numero_voie</code>: Nombre de numéros en commun</li>
-<li><code>union_numero_voie</code>: Ensemble des numéros des deux listes</li>
+<h1 id="Calcul-de-la-distance-de-Cosine-et-Levhenstein">Calcul de la distance de Cosine et Levhenstein<a class="anchor-link" href="#Calcul-de-la-distance-de-Cosine-et-Levhenstein">&#182;</a></h1><h1 id="Objective(s)">Objective(s)<a class="anchor-link" href="#Objective(s)">&#182;</a></h1><ul>
+<li>Lors de cette US, nous allons créer 6 variables qui vont permettre a la réalisation des tests test_similarite_exception_words et test_distance_levhenstein_exception_words. Les six variables sont les suivantes:<ul>
+<li>unzip_inpi: Mot comparé coté inpi</li>
+<li>unzip_insee: Mot comparé coté insee</li>
+<li>max_cosine_distance: Score de similarité entre le mot compaté coté inpi et coté insee</li>
+<li>levenshtein_distance: Nombre d'édition qu'il faut réaliser pour arriver à reproduire les deux mots</li>
+<li>key_except_to_test: Champs clé-valeur pour toutes les possibiltés des mots qui ne sont pas en communs entre l'insee et l'inpi</li>
 </ul>
 </li>
 </ul>
@@ -13089,7 +13092,7 @@ div#notebook {
 <li>US: US 5</li>
 <li>Date Begin: 9/29/2020</li>
 <li>Duration Task: 0</li>
-<li>Description: Creation de la table  ets_insee_inpi_list_num_voie qui compare la liste des digits de l’adresse INPI avec la liste de l’adresse INSEE</li>
+<li>Description: Creation des variables permettant de calculer la distance de levhenstein et le cosine</li>
 <li>Step type: Transform table</li>
 <li>Status: Active<ul>
 <li>Change Status task: Active</li>
@@ -13102,7 +13105,7 @@ div#notebook {
 <li>Watchers: Thomas Pernet</li>
 <li>User Account: <a href="https://937882855452.signin.aws.amazon.com/console">https://937882855452.signin.aws.amazon.com/console</a></li>
 <li>Estimated Log points: 5</li>
-<li>Task tag: #athena,#sql,#data-preparation,#inpi,#insee</li>
+<li>Task tag: #computation,#athena</li>
 <li>Toggl Tag: #documentation</li>
 </ul>
 <h1 id="Input-Cloud-Storage-[AWS/GCP]">Input Cloud Storage [AWS/GCP]<a class="anchor-link" href="#Input-Cloud-Storage-[AWS/GCP]">&#182;</a></h1><h2 id="Table/file">Table/file<a class="anchor-link" href="#Table/file">&#182;</a></h2><ul>
@@ -13119,9 +13122,9 @@ div#notebook {
 <li>Origin: </li>
 <li>Athena</li>
 <li>Name:</li>
-<li>ets_insee_inpi_list_num_voie</li>
+<li>ets_inpi_similarite_max_word2vec</li>
 <li>GitHub:</li>
-<li><a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/02_test_list_num_voie.md">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/02_test_list_num_voie.md</a></li>
+<li><a href="https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/06_calcul_cosine_levhenstein.md">https://github.com/thomaspernet/InseeInpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/06_calcul_cosine_levhenstein.md</a></li>
 </ul>
 
 </div>
@@ -13136,7 +13139,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">awsPy.aws_authorization</span> <span class="kn">import</span> <span class="n">aws_connector</span>
@@ -13164,7 +13167,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">con</span> <span class="o">=</span> <span class="n">aws_connector</span><span class="o">.</span><span class="n">aws_instantiate</span><span class="p">(</span><span class="n">credential</span> <span class="o">=</span> <span class="n">path_cred</span><span class="p">,</span>
@@ -13181,7 +13184,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">pandas_setting</span> <span class="o">=</span> <span class="kc">True</span>
@@ -13199,10 +13202,15 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h1><p>Pour préparer le test sur la voie, il faut avoir deux variables indiquant la ressemblance de la liste des numéros de l'INSEE et celle de l'INPI. Ainsi, dans ce notebook, nous allons créer:</p>
+<h1 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h1><p>Lors de cette US, nous allons créer 6 variables qui vont permettre a la réalisation des tests <code>test_similarite_exception_words</code> et <code>test_distance_levhenstein_exception_words</code>. Les six variables sont les suivantes:</p>
 <ul>
-<li><code>intersection_numero_voie</code>: Nombre de numéros en commun</li>
-<li><code>union_numero_voie</code>: Ensemble des numéros des deux listes</li>
+<li><code>unzip_inpi</code>: Mot comparé coté inpi</li>
+<li><code>unzip_insee</code>: Mot comparé coté insee</li>
+<li><code>max_cosine_distance</code>: Score de similarité entre le mot compaté coté inpi et coté insee</li>
+<li><code>levenshtein_distance</code>: Nombre d'édition qu'il faut réaliser pour arriver à reproduire les deux mots</li>
+<li><code>key_except_to_test</code>: Champs clé-valeur pour toutes les possibiltés des mots qui ne sont pas en communs entre l'insee et l'inpi</li>
+<li>Il faut penser a garder la variable <code>row_id</code> </li>
+<li>La similarité doit etre calculée sur l'ensemble des éléments non communs, puis il faut récupérer la distance la plus élevée.</li>
 </ul>
 <p>Le tableau ci dessous récapitule les sous-ensembles 1 à 6, qui vont de la création des types de ressemble entre l'adresse de l'INSEE et de l'INPI jusqu'aux tests sur la date, l'état administratif et de l'ensemble</p>
 <table>
@@ -13336,7 +13344,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">s3_output</span> <span class="o">=</span> <span class="s1">&#39;SQL_OUTPUT_ATHENA&#39;</span>
@@ -13350,142 +13358,19 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">DROP TABLE ets_siretisation.ets_insee_inpi_list_num_voie;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[5]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 10000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 547000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;df05d415-3023-4d0c-b0af-03e6e5095f70&#39;}</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">create_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">CREATE TABLE ets_siretisation.ets_insee_inpi_list_num_voie</span>
-<span class="s2">WITH (</span>
-<span class="s2">  format=&#39;PARQUET&#39;</span>
-<span class="s2">) AS</span>
-<span class="s2">SELECT </span>
-<span class="s2">row_id,</span>
-<span class="s2">siret, </span>
-<span class="s2">list_numero_voie_matching_inpi, </span>
-<span class="s2">list_numero_voie_matching_insee,</span>
-<span class="s2">CAST(</span>
-<span class="s2">      cardinality(</span>
-<span class="s2">        array_distinct(</span>
-<span class="s2">          array_intersect(</span>
-<span class="s2">            list_numero_voie_matching_inpi, </span>
-<span class="s2">            list_numero_voie_matching_insee</span>
-<span class="s2">          )</span>
-<span class="s2">        )</span>
-<span class="s2">      ) AS DECIMAL(10, 2)</span>
-<span class="s2">    ) as intersection_numero_voie, </span>
-<span class="s2">    CAST(</span>
-<span class="s2">      cardinality(</span>
-<span class="s2">        array_distinct(</span>
-<span class="s2">          array_union(</span>
-<span class="s2">            list_numero_voie_matching_inpi, </span>
-<span class="s2">            list_numero_voie_matching_insee</span>
-<span class="s2">          )</span>
-<span class="s2">        )</span>
-<span class="s2">      ) AS DECIMAL(10, 2)</span>
-<span class="s2">    ) as union_numero_voie</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi </span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">create_table</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[6]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
-  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 37, 650000, tzinfo=tzlocal()),
-  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 12, 28, 50, 191000, tzinfo=tzlocal())},
- &#39;QueryID&#39;: &#39;00db2417-5020-4010-ab11-48919bfab56c&#39;}</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT *</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi_list_num_voie</span>
-<span class="s2">LIMIT 10</span>
+<span class="s2">DROP TABLE ets_siretisation.ets_inpi_similarite_max_word2vec;</span>
 <span class="s2">&quot;&quot;&quot;</span>
-
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
             <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;test_list_num_voie&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
-<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -13499,6 +13384,351 @@ div#notebook {
 <div class="output_area">
 
     <div class="prompt output_prompt">Out[7]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 13, 26, 18, 550000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 13, 26, 19, 746000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;2924c893-c8fb-4b35-95f3-d319e9b68055&#39;}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">CREATE TABLE ets_siretisation.ets_inpi_similarite_max_word2vec</span>
+<span class="s2">WITH (</span>
+<span class="s2">  format=&#39;PARQUET&#39;</span>
+<span class="s2">) AS</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  SELECT </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi.row_id, </span>
+<span class="s2">    index_id, </span>
+<span class="s2">    status_cas, </span>
+<span class="s2">    inpi_except, </span>
+<span class="s2">    insee_except, </span>
+<span class="s2">    transform(</span>
+<span class="s2">      sequence(</span>
+<span class="s2">        1, </span>
+<span class="s2">        CARDINALITY(insee_except)</span>
+<span class="s2">      ), </span>
+<span class="s2">      x -&gt; insee_except</span>
+<span class="s2">    ), </span>
+<span class="s2">    ZIP(</span>
+<span class="s2">      inpi_except, </span>
+<span class="s2">      transform(</span>
+<span class="s2">        sequence(</span>
+<span class="s2">          1, </span>
+<span class="s2">          CARDINALITY(inpi_except)</span>
+<span class="s2">        ), </span>
+<span class="s2">        x -&gt; insee_except</span>
+<span class="s2">      )</span>
+<span class="s2">    ) as test </span>
+<span class="s2">  FROM </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi  </span>
+<span class="s2">    </span>
+<span class="s2">  LEFT JOIN ets_siretisation.ets_insee_inpi_statut_cas </span>
+<span class="s2">  ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_statut_cas.row_id</span>
+<span class="s2">  where </span>
+<span class="s2">    (status_cas != &#39;CAS_2&#39; AND CARDINALITY(inpi_except)  &gt; 0 AND CARDINALITY(insee_except) &gt; 0)</span>
+<span class="s2">  )</span>
+<span class="s2"> SELECT </span>
+<span class="s2">  * </span>
+<span class="s2">FROM </span>
+<span class="s2">  (</span>
+<span class="s2">    WITH distance AS (</span>
+<span class="s2">      SELECT </span>
+<span class="s2">        * </span>
+<span class="s2">      FROM </span>
+<span class="s2">        (</span>
+<span class="s2">          WITH list_weights_insee_inpi AS (</span>
+<span class="s2">            SELECT </span>
+<span class="s2">              row_id, </span>
+<span class="s2">              index_id, </span>
+<span class="s2">              status_cas, </span>
+<span class="s2">              inpi_except, </span>
+<span class="s2">              insee_except, </span>
+<span class="s2">              unzip_inpi, </span>
+<span class="s2">              unzip_insee, </span>
+<span class="s2">              list_weights_inpi, </span>
+<span class="s2">              list_weights_insee </span>
+<span class="s2">            FROM </span>
+<span class="s2">              (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  row_id, </span>
+<span class="s2">                  index_id, </span>
+<span class="s2">                  status_cas, </span>
+<span class="s2">                  inpi_except, </span>
+<span class="s2">                  insee_except, </span>
+<span class="s2">                  unzip.field0 as unzip_inpi, </span>
+<span class="s2">                  unzip.field1 as insee, </span>
+<span class="s2">                  test </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  dataset CROSS </span>
+<span class="s2">                  JOIN UNNEST(test) AS new (unzip)</span>
+<span class="s2">              ) CROSS </span>
+<span class="s2">              JOIN UNNEST(insee) as test (unzip_insee) </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_inpi </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_inpi ON unzip_inpi = tb_weight_inpi.words </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_insee </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_insee ON unzip_insee = tb_weight_insee.words </span>
+<span class="s2">          ) </span>
+<span class="s2">          SELECT </span>
+<span class="s2">            row_id, </span>
+<span class="s2">            index_id, </span>
+<span class="s2">            status_cas, </span>
+<span class="s2">            inpi_except, </span>
+<span class="s2">            insee_except, </span>
+<span class="s2">            unzip_inpi, </span>
+<span class="s2">            unzip_insee, </span>
+<span class="s2">            REDUCE(</span>
+<span class="s2">              zip_with(</span>
+<span class="s2">                list_weights_inpi, </span>
+<span class="s2">                list_weights_insee, </span>
+<span class="s2">                (x, y) -&gt; x * y</span>
+<span class="s2">              ), </span>
+<span class="s2">              CAST(</span>
+<span class="s2">                ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              (s, x) -&gt; CAST(</span>
+<span class="s2">                ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              s -&gt; s.sum</span>
+<span class="s2">            ) / (</span>
+<span class="s2">              SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_inpi, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              ) * SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_insee, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              )</span>
+<span class="s2">            ) AS cosine_distance </span>
+<span class="s2">          FROM </span>
+<span class="s2">            list_weights_insee_inpi</span>
+<span class="s2">        )</span>
+<span class="s2">    ) </span>
+<span class="s2">    SELECT </span>
+<span class="s2">      row_id, </span>
+<span class="s2">      dataset.index_id, </span>
+<span class="s2">      inpi_except, </span>
+<span class="s2">      insee_except, </span>
+<span class="s2">      unzip_inpi, </span>
+<span class="s2">      unzip_insee, </span>
+<span class="s2">      max_cosine_distance,</span>
+<span class="s2">      -- CASE WHEN max_cosine_distance &gt;= .6 THEN &#39;TRUE&#39; ELSE &#39;FALSE&#39; END AS test_distance_cosine,</span>
+<span class="s2">      test as key_except_to_test,</span>
+<span class="s2">      levenshtein_distance(unzip_inpi, unzip_insee) AS levenshtein_distance</span>
+<span class="s2">      -- CASE WHEN levenshtein_distance(unzip_inpi, unzip_insee) &lt;=1  THEN &#39;TRUE&#39; ELSE &#39;FALSE&#39; END AS test_distance_levhenstein</span>
+<span class="s2">    </span>
+<span class="s2">    FROM </span>
+<span class="s2">      dataset </span>
+<span class="s2">      LEFT JOIN (</span>
+<span class="s2">        SELECT </span>
+<span class="s2">          distance.index_id, </span>
+<span class="s2">          unzip_inpi, </span>
+<span class="s2">          unzip_insee, </span>
+<span class="s2">          max_cosine_distance </span>
+<span class="s2">        FROM </span>
+<span class="s2">          distance </span>
+<span class="s2">          RIGHT JOIN (</span>
+<span class="s2">            SELECT </span>
+<span class="s2">              index_id, </span>
+<span class="s2">              MAX(cosine_distance) as max_cosine_distance </span>
+<span class="s2">            FROM </span>
+<span class="s2">              distance </span>
+<span class="s2">            GROUP BY </span>
+<span class="s2">              index_id</span>
+<span class="s2">          ) as tb_max_distance ON distance.index_id = tb_max_distance.index_id </span>
+<span class="s2">          AND distance.cosine_distance = tb_max_distance.max_cosine_distance</span>
+<span class="s2">      ) as tb_max_distance_lookup ON dataset.index_id = tb_max_distance_lookup.index_id</span>
+<span class="s2">  )</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[10]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;Results&#39;: {&#39;State&#39;: &#39;SUCCEEDED&#39;,
+  &#39;SubmissionDateTime&#39;: datetime.datetime(2020, 9, 29, 13, 32, 36, 872000, tzinfo=tzlocal()),
+  &#39;CompletionDateTime&#39;: datetime.datetime(2020, 9, 29, 13, 34, 44, 285000, tzinfo=tzlocal())},
+ &#39;QueryID&#39;: &#39;cd8cdd85-0f3a-4c29-9578-2ba1559f6748&#39;}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Pas-a-pas">Pas a pas<a class="anchor-link" href="#Pas-a-pas">&#182;</a></h1><p>Pour récupérer la similarité la plus élevée entre les mots qui ne sont pas communs entre l'adresse de l'INSEE et de l'INPI, il faut suivre plusieurs étapes. Les étapes sont les suivantes:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="1.-filtre-et-creation-ensemble-des-similarit&#233;s-a-calculer">1. filtre et creation ensemble des similarit&#233;s a calculer<a class="anchor-link" href="#1.-filtre-et-creation-ensemble-des-similarit&#233;s-a-calculer">&#182;</a></h3><ul>
+<li>Filtrer les lignes qui ne correspondent pas au cas 2 et qui ont une cardinalité des mots <code>except</code> supérieure à 0. Effectivement, il n'est pas nécéssaire de calculer une similarité si l'une des listes, insee ou inpi, est vide.</li>
+<li>Création d'un champ clé valeur qui indique l'ensemble des similarités a calculer</li>
+</ul>
+<p>On utilise les fonctions:</p>
+<ul>
+<li><code>transform</code></li>
+<li><code>ZIP</code></li>
+<li><code>sequence</code></li>
+</ul>
+<p>La difficulté dans cette étape était de trouver un moyen de dupliquer la liste de l'INSEE pour chacune des clés de la liste de l'INPI. Le trick est d'utiliser <code>sequence</code> afin de répeter autant de fois la liste de l'INSEE qu'il y a de clé à l'INPI. Plus précisément, si la liste de l'INPI a deux valeurs, ie deux clés, et que la liste de l'INSEE a trois éléments. La taille de l'INSEE n'a pas d'impact, ce qui est important c'est de connaitre la taille de l'INPI. Dans notre exemple, le code va répéter la liste de l'INSEE 2 fois, car il y a deux clés à l'INPI.</p>
+<p>Exemple concret:</p>
+<ul>
+<li>INPI -&gt; [FRERES, AMADEO]</li>
+<li>INSEE -&gt; [MARTYRS, RESISTANCE]</li>
+<li>Il faut comparer: <ul>
+<li>FRERES -&gt; [MARTYRS, RESISTANCE] </li>
+<li>AMADEO -&gt; [MARTYRS, RESISTANCE]</li>
+</ul>
+</li>
+<li>Clé valeur finale -&gt; [
+{field0=FRERES, field1=[MARTYRS, RESISTANCE]},
+{field0=AMADEO, field1=[MARTYRS, RESISTANCE]}
+]</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  SELECT </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi.row_id, </span>
+<span class="s2">    index_id, </span>
+<span class="s2">    status_cas, </span>
+<span class="s2">    inpi_except, </span>
+<span class="s2">    insee_except, </span>
+<span class="s2">    transform(</span>
+<span class="s2">      sequence(</span>
+<span class="s2">        1, </span>
+<span class="s2">        CARDINALITY(insee_except)</span>
+<span class="s2">      ), </span>
+<span class="s2">      x -&gt; insee_except</span>
+<span class="s2">    ), </span>
+<span class="s2">    ZIP(</span>
+<span class="s2">      inpi_except, </span>
+<span class="s2">      transform(</span>
+<span class="s2">        sequence(</span>
+<span class="s2">          1, </span>
+<span class="s2">          CARDINALITY(inpi_except)</span>
+<span class="s2">        ), </span>
+<span class="s2">        x -&gt; insee_except</span>
+<span class="s2">      )</span>
+<span class="s2">    ) as test </span>
+<span class="s2">  FROM </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi  </span>
+<span class="s2">    </span>
+<span class="s2">  LEFT JOIN ets_siretisation.ets_insee_inpi_statut_cas </span>
+<span class="s2">  ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_statut_cas.row_id</span>
+<span class="s2">  where </span>
+<span class="s2">    (status_cas != &#39;CAS_2&#39; AND CARDINALITY(inpi_except)  &gt; 0 AND CARDINALITY(insee_except) &gt; 0)</span>
+<span class="s2">  LIMIT 10</span>
+<span class="s2">  )</span>
+<span class="s2">  </span>
+<span class="s2"> SELECT </span>
+<span class="s2">  * </span>
+<span class="s2">  FROM dataset</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[22]:</div>
 
 
 
@@ -13522,103 +13752,114 @@ div#notebook {
     <tr style="text-align: right;">
       <th></th>
       <th>row_id</th>
-      <th>siret</th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>intersection_numero_voie</th>
-      <th>union_numero_voie</th>
+      <th>index_id</th>
+      <th>status_cas</th>
+      <th>inpi_except</th>
+      <th>insee_except</th>
+      <th>_col5</th>
+      <th>test</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>6398554</td>
-      <td>45316986400015</td>
-      <td>[1]</td>
-      <td>[1]</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>189285</td>
+      <td>482760</td>
+      <td>CAS_4</td>
+      <td>[CIGROGNE]</td>
+      <td>[MONNET, D, AIGUENOIRE]</td>
+      <td>[[MONNET, D, AIGUENOIRE], [MONNET, D, AIGUENOIRE], [MONNET, D, AIGUENOIRE]]</td>
+      <td>[{field0=CIGROGNE, field1=[MONNET, D, AIGUENOIRE]}]</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>6398555</td>
-      <td>45317288400026</td>
-      <td>[8]</td>
-      <td>[27]</td>
-      <td>0.0</td>
-      <td>2.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>[[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N], [GAL, VITROLLES, CTRE, CCIAL, CELLULE, N], [GAL, VITROLLES, CTRE, CCIAL, CELLULE, N], [GAL, VITROLLES, CTRE, CCIAL, CELLULE, N], [GAL, VITROLLES, CTRE, CCIAL, CELLULE, N], [GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]]</td>
+      <td>[{field0=CENTRE, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}, {field0=COMMERCIAL, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}, {field0=ROUTE, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}, {field0=NATIONALE, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}]</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>6398556</td>
-      <td>45317288400018</td>
-      <td>[8]</td>
-      <td>[8]</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>189438</td>
+      <td>518810</td>
+      <td>CAS_3</td>
+      <td>[RESIDENCE, PECHERIE, BATIMENT, N]</td>
+      <td>[BAT, NO, RES, PECHER]</td>
+      <td>[[BAT, NO, RES, PECHER], [BAT, NO, RES, PECHER], [BAT, NO, RES, PECHER], [BAT, NO, RES, PECHER]]</td>
+      <td>[{field0=RESIDENCE, field1=[BAT, NO, RES, PECHER]}, {field0=PECHERIE, field1=[BAT, NO, RES, PECHER]}, {field0=BATIMENT, field1=[BAT, NO, RES, PECHER]}, {field0=N, field1=[BAT, NO, RES, PECHER]}]</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>6398557</td>
-      <td>45318372500028</td>
-      <td>[18]</td>
-      <td>[15]</td>
-      <td>0.0</td>
-      <td>2.0</td>
+      <td>189441</td>
+      <td>145625</td>
+      <td>CAS_4</td>
+      <td>[ROCHE]</td>
+      <td>[DOCTEUR, BRETONNEAU]</td>
+      <td>[[DOCTEUR, BRETONNEAU], [DOCTEUR, BRETONNEAU]]</td>
+      <td>[{field0=ROCHE, field1=[DOCTEUR, BRETONNEAU]}]</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>6398558</td>
-      <td>45318372500010</td>
-      <td>[18]</td>
-      <td>[18]</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>189509</td>
+      <td>99851</td>
+      <td>CAS_3</td>
+      <td>[B]</td>
+      <td>[BIS]</td>
+      <td>[[BIS]]</td>
+      <td>[{field0=B, field1=[BIS]}]</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>6398559</td>
-      <td>45318372500028</td>
-      <td>[15]</td>
-      <td>[15]</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>189570</td>
+      <td>166751</td>
+      <td>CAS_3</td>
+      <td>[RUE]</td>
+      <td>[AVENUE]</td>
+      <td>[[AVENUE]]</td>
+      <td>[{field0=RUE, field1=[AVENUE]}]</td>
     </tr>
     <tr>
       <th>6</th>
-      <td>6398560</td>
-      <td>45318372500010</td>
-      <td>[15]</td>
-      <td>[18]</td>
-      <td>0.0</td>
-      <td>2.0</td>
+      <td>189640</td>
+      <td>348269</td>
+      <td>CAS_4</td>
+      <td>[CLEMENCAU]</td>
+      <td>[GEORGES, CLEMENCEAU]</td>
+      <td>[[GEORGES, CLEMENCEAU], [GEORGES, CLEMENCEAU]]</td>
+      <td>[{field0=CLEMENCAU, field1=[GEORGES, CLEMENCEAU]}]</td>
     </tr>
     <tr>
       <th>7</th>
-      <td>6398561</td>
-      <td>45292440000016</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
+      <td>189665</td>
+      <td>349094</td>
+      <td>CAS_4</td>
+      <td>[TOUR, T, RUE]</td>
+      <td>[PLACE]</td>
+      <td>[[PLACE]]</td>
+      <td>[{field0=TOUR, field1=[PLACE]}, {field0=T, field1=[PLACE]}, {field0=RUE, field1=[PLACE]}]</td>
     </tr>
     <tr>
       <th>8</th>
-      <td>6398562</td>
-      <td>45292440000016</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
+      <td>189722</td>
+      <td>167995</td>
+      <td>CAS_3</td>
+      <td>[MARIE, CURIE]</td>
+      <td>[LEON, FOUCAULT]</td>
+      <td>[[LEON, FOUCAULT], [LEON, FOUCAULT]]</td>
+      <td>[{field0=MARIE, field1=[LEON, FOUCAULT]}, {field0=CURIE, field1=[LEON, FOUCAULT]}]</td>
     </tr>
     <tr>
       <th>9</th>
-      <td>6398563</td>
-      <td>45293141300028</td>
-      <td>[10]</td>
-      <td>[10]</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>189725</td>
+      <td>167995</td>
+      <td>CAS_4</td>
+      <td>[MARIE, CURIE]</td>
+      <td>[LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE]</td>
+      <td>[[LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE], [LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE], [LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE], [LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE], [LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE]]</td>
+      <td>[{field0=MARIE, field1=[LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE]}, {field0=CURIE, field1=[LEON, FOUCAULT, ZONE, INDUSTRIELLE, SPHERE]}]</td>
     </tr>
   </tbody>
 </table>
@@ -13634,1845 +13875,101 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Analyse">Analyse<a class="anchor-link" href="#Analyse">&#182;</a></h1><ol>
-<li>Vérifier que le nombre de lignes est indentique avant et après la création des variables</li>
-<li>Calculer le nombre d'occurence pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><ul>
-<li>Afficher le top 50 et bottom 50</li>
-</ul>
-</li>
-<li>Calculer le nombre d'occurence par cardinalité pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code></li>
-<li>Donner la distribution de  <code>intersection_numero_voie</code> et <code>union_numero_voie</code><ul>
-<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
-</ul>
-</li>
-</ol>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="1.-V&#233;rifier-que-le-nombre-de-lignes-est-indentique-avant-et-apr&#232;s-la-cr&#233;ation-des-variables">1. V&#233;rifier que le nombre de lignes est indentique avant et apr&#232;s la cr&#233;ation des variables<a class="anchor-link" href="#1.-V&#233;rifier-que-le-nombre-de-lignes-est-indentique-avant-et-apr&#232;s-la-cr&#233;ation-des-variables">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT COUNT(*) as CNT</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[8]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>CNT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>11168038</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT COUNT(*) as CNT</span>
-<span class="s2">FROM ets_siretisation.ets_insee_inpi_list_num_voie</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;count_ets_insee_inpi_list_num&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[9]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>CNT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>11168038</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="2.-Calculer-le-nombre-d'occurence-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">2. Calculer le nombre d'occurence pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><a class="anchor-link" href="#2.-Calculer-le-nombre-d'occurence-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_inpi</code></p>
+<h3 id="2.-Produit-cartesien-possibilit&#233;-et-liste-poids">2. Produit cartesien possibilit&#233; et liste poids<a class="anchor-link" href="#2.-Produit-cartesien-possibilit&#233;-et-liste-poids">&#182;</a></h3><p>Dans la seconde étape, nous allons "exploser" la clé-valeur afin de pouvoir attribuler la liste des poids aux mots de l'INPI et de l'INSEE.</p>
+<p>Nous allons poursuivre le reste du pas à pas avec l'index <code>345408</code>, qui fait référence à l'exemple ci dessus.</p>
+<p>L'explosion du champs <code>test</code> se fait avec la fonction <code>CROSS JOIN</code>. La variable <code>unzip_inpi</code> correspond aux clés du champs <code>test</code> alors que la variable <code>unzip_insee</code> correspond aux valeurs. Le <code>CROSS JOIN</code> implique 4 lignes au total.</p>
+<p>Nous avons donc deux colonnes avec les pairs de mots qu'il faut calculer la similarité, et deux colonnes avec les poids.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT list_numero_voie_matching_inpi, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY list_numero_voie_matching_inpi</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Top 50</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[11]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>NaN</td>
-      <td>1680509</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>[1]</td>
-      <td>384355</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>[2]</td>
-      <td>369221</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>[3]</td>
-      <td>301710</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>[4]</td>
-      <td>292724</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>[5]</td>
-      <td>271919</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>[6]</td>
-      <td>256993</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>[7]</td>
-      <td>236006</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>[8]</td>
-      <td>235133</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>[10]</td>
-      <td>222849</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>[9]</td>
-      <td>206331</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>[11]</td>
-      <td>188070</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>[12]</td>
-      <td>179761</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>[14]</td>
-      <td>162157</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>[15]</td>
-      <td>148072</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>[13]</td>
-      <td>147080</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>[16]</td>
-      <td>140991</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>[18]</td>
-      <td>135433</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>[17]</td>
-      <td>134096</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>[20]</td>
-      <td>122181</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>[19]</td>
-      <td>116612</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>[21]</td>
-      <td>106709</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>[22]</td>
-      <td>106284</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>[24]</td>
-      <td>96983</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>[23]</td>
-      <td>96673</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>[26]</td>
-      <td>95176</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>[25]</td>
-      <td>93407</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>[27]</td>
-      <td>80792</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>[28]</td>
-      <td>78567</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>[30]</td>
-      <td>78552</td>
-    </tr>
-    <tr>
-      <th>30</th>
-      <td>[29]</td>
-      <td>75093</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>[31]</td>
-      <td>68499</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>[32]</td>
-      <td>67110</td>
-    </tr>
-    <tr>
-      <th>33</th>
-      <td>[33]</td>
-      <td>65958</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>[34]</td>
-      <td>62429</td>
-    </tr>
-    <tr>
-      <th>35</th>
-      <td>[35]</td>
-      <td>62085</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>[40]</td>
-      <td>58922</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>[36]</td>
-      <td>58898</td>
-    </tr>
-    <tr>
-      <th>38</th>
-      <td>[37]</td>
-      <td>58220</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>[38]</td>
-      <td>56247</td>
-    </tr>
-    <tr>
-      <th>40</th>
-      <td>[39]</td>
-      <td>51078</td>
-    </tr>
-    <tr>
-      <th>41</th>
-      <td>[42]</td>
-      <td>50189</td>
-    </tr>
-    <tr>
-      <th>42</th>
-      <td>[41]</td>
-      <td>48484</td>
-    </tr>
-    <tr>
-      <th>43</th>
-      <td>[45]</td>
-      <td>46351</td>
-    </tr>
-    <tr>
-      <th>44</th>
-      <td>[47]</td>
-      <td>45435</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>[43]</td>
-      <td>42679</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>[44]</td>
-      <td>42600</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>[50]</td>
-      <td>42024</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>[46]</td>
-      <td>39246</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>[49]</td>
-      <td>38411</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Bottom 50</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[12]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_inpi</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>77823</th>
-      <td>[4494]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77824</th>
-      <td>[3404, 4]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77825</th>
-      <td>[158, 159, 160, 161]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77826</th>
-      <td>[21, 233]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77827</th>
-      <td>[18, 1, 304]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77828</th>
-      <td>[3, 661365]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77829</th>
-      <td>[333, 323]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77830</th>
-      <td>[26, 905]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77831</th>
-      <td>[150, 15]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77832</th>
-      <td>[642, 2, 34]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77833</th>
-      <td>[4712]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77834</th>
-      <td>[1, 5301]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77835</th>
-      <td>[074, 18]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77836</th>
-      <td>[21, 1871]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77837</th>
-      <td>[5750]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77838</th>
-      <td>[29, 08]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77839</th>
-      <td>[39, 118]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77840</th>
-      <td>[17, 531]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77841</th>
-      <td>[22, 92, 04]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77842</th>
-      <td>[28, 204]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77843</th>
-      <td>[200, 1945]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77844</th>
-      <td>[9, 0103]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77845</th>
-      <td>[2846, 40]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77846</th>
-      <td>[242, 15]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77847</th>
-      <td>[1, 004, 89]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77848</th>
-      <td>[597, 29]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77849</th>
-      <td>[0691]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77850</th>
-      <td>[171, 0167]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77851</th>
-      <td>[27, 11, 33]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77852</th>
-      <td>[222, 52]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77853</th>
-      <td>[10, 167]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77854</th>
-      <td>[298, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77855</th>
-      <td>[13, 19, 62]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77856</th>
-      <td>[2, 3525]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77857</th>
-      <td>[2, 2147]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77858</th>
-      <td>[326, 54]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77859</th>
-      <td>[159, 95]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77860</th>
-      <td>[29, 31, 30]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77861</th>
-      <td>[2137, 19, 7]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77862</th>
-      <td>[1, 0302]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77863</th>
-      <td>[2, 12, 3, 033, 035]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77864</th>
-      <td>[7, 1, 400]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77865</th>
-      <td>[002, 21]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77866</th>
-      <td>[44, 735]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77867</th>
-      <td>[717, 8]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77868</th>
-      <td>[10, 350]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77869</th>
-      <td>[12, 1, 0509]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77870</th>
-      <td>[9002, 1, 05]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77871</th>
-      <td>[673, 83]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>77872</th>
-      <td>[717, 1, 3]</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_insee</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT list_numero_voie_matching_insee, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY list_numero_voie_matching_insee</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Top 50</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[14]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>NaN</td>
-      <td>1664625</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>[1]</td>
-      <td>393197</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>[2]</td>
-      <td>374549</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>[3]</td>
-      <td>307497</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>[4]</td>
-      <td>296255</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>[5]</td>
-      <td>276934</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>[6]</td>
-      <td>261103</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>[7]</td>
-      <td>239457</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>[8]</td>
-      <td>237504</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>[10]</td>
-      <td>225908</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>[9]</td>
-      <td>208776</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>[11]</td>
-      <td>190501</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>[12]</td>
-      <td>182190</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>[14]</td>
-      <td>164393</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>[15]</td>
-      <td>149973</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>[13]</td>
-      <td>149329</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>[16]</td>
-      <td>142964</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>[18]</td>
-      <td>137656</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>[17]</td>
-      <td>136044</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>[20]</td>
-      <td>123420</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>[19]</td>
-      <td>117987</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>[21]</td>
-      <td>108492</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>[22]</td>
-      <td>107582</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>[23]</td>
-      <td>98383</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>[24]</td>
-      <td>98316</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>[26]</td>
-      <td>96689</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>[25]</td>
-      <td>94269</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>[27]</td>
-      <td>81692</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>[30]</td>
-      <td>80166</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>[28]</td>
-      <td>79552</td>
-    </tr>
-    <tr>
-      <th>30</th>
-      <td>[29]</td>
-      <td>75917</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>[31]</td>
-      <td>69419</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>[32]</td>
-      <td>67908</td>
-    </tr>
-    <tr>
-      <th>33</th>
-      <td>[33]</td>
-      <td>66432</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>[34]</td>
-      <td>63519</td>
-    </tr>
-    <tr>
-      <th>35</th>
-      <td>[35]</td>
-      <td>63288</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>[40]</td>
-      <td>59702</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>[36]</td>
-      <td>59374</td>
-    </tr>
-    <tr>
-      <th>38</th>
-      <td>[37]</td>
-      <td>58776</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>[38]</td>
-      <td>57510</td>
-    </tr>
-    <tr>
-      <th>40</th>
-      <td>[39]</td>
-      <td>51047</td>
-    </tr>
-    <tr>
-      <th>41</th>
-      <td>[42]</td>
-      <td>50238</td>
-    </tr>
-    <tr>
-      <th>42</th>
-      <td>[41]</td>
-      <td>49083</td>
-    </tr>
-    <tr>
-      <th>43</th>
-      <td>[45]</td>
-      <td>47175</td>
-    </tr>
-    <tr>
-      <th>44</th>
-      <td>[47]</td>
-      <td>46083</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>[44]</td>
-      <td>45408</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>[43]</td>
-      <td>43166</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>[50]</td>
-      <td>42571</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>[46]</td>
-      <td>39959</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>[49]</td>
-      <td>39082</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<ul>
-<li>Bottom 50</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tb</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[15]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>list_numero_voie_matching_insee</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>78605</th>
-      <td>[184, 33]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78606</th>
-      <td>[3086]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78607</th>
-      <td>[470, 01]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78608</th>
-      <td>[79, 124]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78609</th>
-      <td>[191, 521]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78610</th>
-      <td>[20, 14, 120]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78611</th>
-      <td>[144, 304]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78612</th>
-      <td>[385, 18, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78613</th>
-      <td>[697, 1889, 1977]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78614</th>
-      <td>[164, 117]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78615</th>
-      <td>[3, 4, 24, 1]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78616</th>
-      <td>[200, 4, 512]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78617</th>
-      <td>[3, 50300]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78618</th>
-      <td>[521, 3, 402]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78619</th>
-      <td>[107, 87]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78620</th>
-      <td>[63, 2, 106]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78621</th>
-      <td>[271, 1, 4, 2]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78622</th>
-      <td>[6, 0090]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78623</th>
-      <td>[8, 0701]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78624</th>
-      <td>[323, 4, 12]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78625</th>
-      <td>[13, 5, 87]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78626</th>
-      <td>[33, 1944]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78627</th>
-      <td>[797, 26]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78628</th>
-      <td>[100, 23]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78629</th>
-      <td>[184, 04]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78630</th>
-      <td>[2, 298]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78631</th>
-      <td>[12, 18, 14]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78632</th>
-      <td>[521, 11, 1918]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78633</th>
-      <td>[8, 10, 35, 37]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78634</th>
-      <td>[27, 250]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78635</th>
-      <td>[29, 445]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78636</th>
-      <td>[64, 68, 38]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78637</th>
-      <td>[160, 2, 4]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78638</th>
-      <td>[2400, 224]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78639</th>
-      <td>[121, 145]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78640</th>
-      <td>[161, 221]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78641</th>
-      <td>[47, 413]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78642</th>
-      <td>[10, 75, 79]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78643</th>
-      <td>[295, 207]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78644</th>
-      <td>[1350, 5, 1]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78645</th>
-      <td>[15, 187]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78646</th>
-      <td>[34, 570]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78647</th>
-      <td>[50, 503]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78648</th>
-      <td>[913, 55]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78649</th>
-      <td>[349225]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78650</th>
-      <td>[219, 21]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78651</th>
-      <td>[29, 623]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78652</th>
-      <td>[135, 63]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78653</th>
-      <td>[66, 76]</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>78654</th>
-      <td>[9225]</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="3.-Calculer-le-nombre-d'occurence-par-cardinalit&#233;-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">3. Calculer le nombre d'occurence par cardinalit&#233; pour <code>list_numero_voie_matching_inpi</code>, et <code>list_numero_voie_matching_insee</code><a class="anchor-link" href="#3.-Calculer-le-nombre-d'occurence-par-cardinalit&#233;-pour-list_numero_voie_matching_inpi,-et-list_numero_voie_matching_insee">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_inpi</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT  CARDINALITY(list_numero_voie_matching_inpi) as cadinality, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY CARDINALITY(list_numero_voie_matching_inpi)</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[16]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>cadinality</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1.0</td>
-      <td>8741531</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>NaN</td>
-      <td>1680509</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2.0</td>
-      <td>643940</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3.0</td>
-      <td>89259</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4.0</td>
-      <td>9911</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>5.0</td>
-      <td>1908</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6.0</td>
-      <td>613</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>7.0</td>
-      <td>220</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>8.0</td>
-      <td>106</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>10.0</td>
-      <td>25</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>9.0</td>
-      <td>11</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>12.0</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>11.0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>16.0</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>list_numero_voie_matching_insee</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SELECT  CARDINALITY(list_numero_voie_matching_insee) as cadinality, COUNT(*) as cnt</span>
-<span class="s2">FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;</span>
-<span class="s2">GROUP BY CARDINALITY(list_numero_voie_matching_insee)</span>
-<span class="s2">ORDER BY cnt DESC</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
-            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
-            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;occurence&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
-  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[17]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>cadinality</th>
-      <th>cnt</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1.0</td>
-      <td>8835067</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>NaN</td>
-      <td>1664625</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2.0</td>
-      <td>585764</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3.0</td>
-      <td>74018</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4.0</td>
-      <td>7007</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>5.0</td>
-      <td>1155</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>6.0</td>
-      <td>331</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>7.0</td>
-      <td>41</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>8.0</td>
-      <td>28</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>9.0</td>
-      <td>2</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="4.-Donner-la-distribution-de--intersection_numero_voie-et-union_numero_voie">4. Donner la distribution de  <code>intersection_numero_voie</code> et <code>union_numero_voie</code><a class="anchor-link" href="#4.-Donner-la-distribution-de--intersection_numero_voie-et-union_numero_voie">&#182;</a></h2><ul>
-<li>distribution -&gt; 0.1,0.25,0.5,0.75,0.8,0.95</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>intersection_numero_voie</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">WITH dataset AS (</span>
-<span class="s2">  </span>
 <span class="s2">  SELECT </span>
-<span class="s2">  MAP(</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
-<span class="s2">    approx_percentile(</span>
-<span class="s2">      intersection_numero_voie,</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
-<span class="s2">    ) AS nest</span>
-<span class="s2">    FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;  </span>
-<span class="s2">    ) </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi.row_id, </span>
+<span class="s2">    index_id, </span>
+<span class="s2">    status_cas, </span>
+<span class="s2">    inpi_except, </span>
+<span class="s2">    insee_except, </span>
+<span class="s2">    transform(</span>
+<span class="s2">      sequence(</span>
+<span class="s2">        1, </span>
+<span class="s2">        CARDINALITY(insee_except)</span>
+<span class="s2">      ), </span>
+<span class="s2">      x -&gt; insee_except</span>
+<span class="s2">    ), </span>
+<span class="s2">    ZIP(</span>
+<span class="s2">      inpi_except, </span>
+<span class="s2">      transform(</span>
+<span class="s2">        sequence(</span>
+<span class="s2">          1, </span>
+<span class="s2">          CARDINALITY(inpi_except)</span>
+<span class="s2">        ), </span>
+<span class="s2">        x -&gt; insee_except</span>
+<span class="s2">      )</span>
+<span class="s2">    ) as test </span>
+<span class="s2">  FROM </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi  </span>
 <span class="s2">    </span>
-<span class="s2">    SELECT </span>
-<span class="s2">    pct, </span>
-<span class="s2">    value AS  intersection_numero_voie</span>
-<span class="s2">    FROM dataset</span>
-<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
-
+<span class="s2">  LEFT JOIN ets_siretisation.ets_insee_inpi_statut_cas </span>
+<span class="s2">  ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_statut_cas.row_id</span>
+<span class="s2">  where </span>
+<span class="s2">    (status_cas != &#39;CAS_2&#39; AND CARDINALITY(inpi_except)  &gt; 0 AND CARDINALITY(insee_except) &gt; 0 AND index_id = 728021)</span>
+<span class="s2">  </span>
+<span class="s2">  )</span>
+<span class="s2">SELECT </span>
+<span class="s2">              row_id, </span>
+<span class="s2">              index_id, </span>
+<span class="s2">              status_cas, </span>
+<span class="s2">              inpi_except, </span>
+<span class="s2">              insee_except, </span>
+<span class="s2">              unzip_inpi, </span>
+<span class="s2">              unzip_insee, </span>
+<span class="s2">              list_weights_inpi, </span>
+<span class="s2">              list_weights_insee </span>
+<span class="s2">            FROM </span>
+<span class="s2">              (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  row_id, </span>
+<span class="s2">                  index_id, </span>
+<span class="s2">                  status_cas, </span>
+<span class="s2">                  inpi_except, </span>
+<span class="s2">                  insee_except, </span>
+<span class="s2">                  unzip.field0 as unzip_inpi, </span>
+<span class="s2">                  unzip.field1 as insee, </span>
+<span class="s2">                  test </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  dataset CROSS </span>
+<span class="s2">                  JOIN UNNEST(test) AS new (unzip)</span>
+<span class="s2">              ) CROSS </span>
+<span class="s2">              JOIN UNNEST(insee) as test (unzip_insee) </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_inpi </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_inpi ON unzip_inpi = tb_weight_inpi.words </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_insee </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_insee ON unzip_insee = tb_weight_insee.words </span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;distribution&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;explosion&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
         <span class="p">)</span>
-<span class="n">tb</span>
 </pre></div>
 
     </div>
@@ -15485,7 +13982,7 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[18]:</div>
+    <div class="prompt output_prompt">Out[23]:</div>
 
 
 
@@ -15508,40 +14005,305 @@ div#notebook {
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>pct</th>
-      <th>intersection_numero_voie</th>
+      <th>row_id</th>
+      <th>index_id</th>
+      <th>status_cas</th>
+      <th>inpi_except</th>
+      <th>insee_except</th>
+      <th>unzip_inpi</th>
+      <th>unzip_insee</th>
+      <th>list_weights_inpi</th>
+      <th>list_weights_insee</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>0.10</td>
-      <td>0.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>GAL</td>
+      <td>[-3.6606867, -4.136366, -2.7383819, -1.265028, -1.5484157, 0.0038905807, 2.51573, -2.974311, -2.1802652, 0.20572664, 1.9154445, -0.49423644, 2.0754907, 1.3970385, 2.99927, -0.81580275, 0.63558346, -2.1980596, 0.8234042, 1.4590161, 1.6304643, -2.3154092, -0.5512536, 0.16270679, 0.5605901, -1.0997434, -2.0538948, -1.4677457, 2.1276112, -3.1209009, -1.4507304, 0.35441118, -0.735152, -0.08135078, 0.58496547, -1.4048517, -1.5703428, 4.444563, -1.70161, -1.5930848, -0.8006613, -1.181032, -0.65606093, 0.15362717, 0.3979364, -2.3211176, 1.590989, -0.637005, -1.8272693, -0.4611013, -1.1247346, -2.2360954, 0.024510715, 0.035644326, -3.142264, -1.4902952, -0.023706486, 2.5047717, 0.86584485, 0.9794963, -1.9338956, 0.57204807, 1.6892347, 2.8172746, -0.34445432, 0.015110771, 3.9501925, -0.42022878, -0.7086441, 0.6486841, -1.5813456, 0.9829822, -0.41811815, -0.34400278, 0.7240713, -1.4237262, -0.5909087, -1.9383622, -0.016850952, -2.5178602, -1.4072318, 0.16349438, -1.7078975, 0.5409735, -0.23135632, 0.3779496, -1.1804557, -1.1560022, 0.5106507, -2.8954678, 0.6743512, 0.50307846, 1.1636084, -1.69067, -0.3031949, 2.7973685, 2.3443043, -1.7581416, 1.1552042, -2.2376394]</td>
+      <td>[-2.8296263, -1.5354885, -1.0850741, 1.4572183, 1.0037627, 0.8920523, -0.273557, 1.6151929, -2.8989837, 0.21190512, -0.24476424, 1.2834506, 2.9086516, 1.3448746, 0.40929118, -0.67047423, -0.5217506, 0.15890093, 1.3911892, -3.6486845, 1.8827534, -1.4617246, 0.62056535, -1.0136473, -0.7098165, 1.555696, 0.20822108, -0.64188635, -0.011036906, -0.56177616, 1.4897312, -0.565443, -2.5267873, -0.9611097, -0.2849253, 0.3509436, -0.124108754, -1.9416113, -2.4122295, 2.1941874, -2.6875842, -0.70769244, 0.40102217, -1.7614931, -1.7057651, -3.886696, 1.4790843, 1.2638766, 0.90352106, 0.723249, -2.6643507, -0.6464715, 0.77259564, -0.27632663, -0.4603913, -1.3126074, 1.4082799, 1.3662704, -1.0351702, -0.9024902, -0.98389, 0.9891948, 1.5746657, -0.056863762, 1.1593108, 0.88614136, 1.8817539, 1.7638302, -0.5173844, -3.1867628, -2.0778902, 1.0353314, -1.4492015, -0.39774206, -1.9893959, -0.17170864, -0.78176904, -0.5030655, 2.0171788, 0.90477896, 1.5170175, 0.96003807, 0.8045251, -1.8237262, -2.2832704, 0.65453005, 1.4304143, -0.9279267, -0.16950706, -0.0580036, 3.6383984, -0.89000696, 0.1976986, 0.5105009, 0.7527753, -0.5912294, -0.033289593, -1.5989, -1.5794888, 0.031445947]</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>0.25</td>
-      <td>1.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>VITROLLES</td>
+      <td>[-3.6606867, -4.136366, -2.7383819, -1.265028, -1.5484157, 0.0038905807, 2.51573, -2.974311, -2.1802652, 0.20572664, 1.9154445, -0.49423644, 2.0754907, 1.3970385, 2.99927, -0.81580275, 0.63558346, -2.1980596, 0.8234042, 1.4590161, 1.6304643, -2.3154092, -0.5512536, 0.16270679, 0.5605901, -1.0997434, -2.0538948, -1.4677457, 2.1276112, -3.1209009, -1.4507304, 0.35441118, -0.735152, -0.08135078, 0.58496547, -1.4048517, -1.5703428, 4.444563, -1.70161, -1.5930848, -0.8006613, -1.181032, -0.65606093, 0.15362717, 0.3979364, -2.3211176, 1.590989, -0.637005, -1.8272693, -0.4611013, -1.1247346, -2.2360954, 0.024510715, 0.035644326, -3.142264, -1.4902952, -0.023706486, 2.5047717, 0.86584485, 0.9794963, -1.9338956, 0.57204807, 1.6892347, 2.8172746, -0.34445432, 0.015110771, 3.9501925, -0.42022878, -0.7086441, 0.6486841, -1.5813456, 0.9829822, -0.41811815, -0.34400278, 0.7240713, -1.4237262, -0.5909087, -1.9383622, -0.016850952, -2.5178602, -1.4072318, 0.16349438, -1.7078975, 0.5409735, -0.23135632, 0.3779496, -1.1804557, -1.1560022, 0.5106507, -2.8954678, 0.6743512, 0.50307846, 1.1636084, -1.69067, -0.3031949, 2.7973685, 2.3443043, -1.7581416, 1.1552042, -2.2376394]</td>
+      <td>[-0.51858985, -0.79608667, -0.27434167, 0.43774346, 0.13403374, 0.6955053, -0.48544377, -0.7822972, -0.44157124, 0.20370457, -0.32635784, 0.23495826, 1.1446015, -0.0016702854, 0.75631464, 1.0356389, -0.3032027, 0.14287083, -0.16156612, 0.36195865, 0.53173155, -1.0223347, 0.024985986, -0.8908876, 0.16894978, -0.0052749207, -0.91928, 0.034052204, -0.47485417, 0.5296288, 1.0011374, 0.03810791, -0.60411996, -0.67433405, 0.8633594, 0.6768191, 0.31774458, 0.3645539, -1.2507206, -0.02585316, -0.5161773, 0.5566125, -0.44873744, 0.18356432, 0.88470525, -0.5499588, 0.26460293, 0.5442603, -0.48430008, -0.73945284, -0.19378395, -0.1262607, 0.91213685, -0.19049925, -1.4530401, -0.5956118, -0.33118942, -0.22383781, -0.592579, -1.5895152, -0.20166148, -0.9858819, 1.0887142, -0.29967052, -0.6418929, 1.0925146, 0.6296837, -1.3558631, -0.60091686, -0.08654504, -0.8841482, -0.5775546, 0.21434696, -0.17189293, -0.07146374, -0.27288023, -0.67159414, -0.3745598, -0.06059645, -0.056758873, -0.49612412, 0.4400222, 0.68358135, 1.5944928, -0.67433083, 0.26725987, 1.7176542, 0.2363774, -0.1429064, -0.87335634, 0.46516258, -0.049530383, 0.66263884, -0.18103805, -0.8949379, -0.35814026, -0.29279575, 0.6426999, 0.43153152, 0.4438623]</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0.50</td>
-      <td>1.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>CTRE</td>
+      <td>[-3.6606867, -4.136366, -2.7383819, -1.265028, -1.5484157, 0.0038905807, 2.51573, -2.974311, -2.1802652, 0.20572664, 1.9154445, -0.49423644, 2.0754907, 1.3970385, 2.99927, -0.81580275, 0.63558346, -2.1980596, 0.8234042, 1.4590161, 1.6304643, -2.3154092, -0.5512536, 0.16270679, 0.5605901, -1.0997434, -2.0538948, -1.4677457, 2.1276112, -3.1209009, -1.4507304, 0.35441118, -0.735152, -0.08135078, 0.58496547, -1.4048517, -1.5703428, 4.444563, -1.70161, -1.5930848, -0.8006613, -1.181032, -0.65606093, 0.15362717, 0.3979364, -2.3211176, 1.590989, -0.637005, -1.8272693, -0.4611013, -1.1247346, -2.2360954, 0.024510715, 0.035644326, -3.142264, -1.4902952, -0.023706486, 2.5047717, 0.86584485, 0.9794963, -1.9338956, 0.57204807, 1.6892347, 2.8172746, -0.34445432, 0.015110771, 3.9501925, -0.42022878, -0.7086441, 0.6486841, -1.5813456, 0.9829822, -0.41811815, -0.34400278, 0.7240713, -1.4237262, -0.5909087, -1.9383622, -0.016850952, -2.5178602, -1.4072318, 0.16349438, -1.7078975, 0.5409735, -0.23135632, 0.3779496, -1.1804557, -1.1560022, 0.5106507, -2.8954678, 0.6743512, 0.50307846, 1.1636084, -1.69067, -0.3031949, 2.7973685, 2.3443043, -1.7581416, 1.1552042, -2.2376394]</td>
+      <td>[-2.0219305, -3.8918395, -1.7115382, -0.5412251, -0.29041147, 2.06789, 0.9751935, -2.4897637, -0.29884776, 0.96232057, -0.2731724, -0.21846168, 3.872083, 1.5588214, 2.8174632, -0.956158, -1.2272776, -1.5435148, 0.3886229, 2.8130236, 1.7979017, -0.7636948, 0.5724105, 0.03416737, 0.06712736, -1.0850549, -1.5730394, -0.90607196, 0.90302247, -3.664367, -1.3942599, 0.51028967, -1.1403933, 1.3083758, -0.13814604, -1.1281608, -0.8708236, 1.8289671, -0.67572504, -1.2307695, -0.99774235, 0.041544206, -1.3585525, 0.680209, -0.15922913, -0.85800266, 0.7917658, 1.950577, -0.67848134, -0.20088726, -1.0908419, -1.2821579, 2.032251, -1.2373164, -1.9394372, -1.8360873, 0.74330837, 0.9447373, 3.1652577, 0.16444652, -3.3115606, 1.662408, 2.1625297, 2.220072, 0.123239934, -0.9221235, 2.4914205, 0.6990802, 0.93488973, -2.4074883, -1.9613615, 2.0342774, -1.2352704, 0.28561708, 1.1257901, -0.5457232, -2.2016883, -1.2753719, 0.010415403, -3.2781336, -1.5098681, 0.5804764, 0.6405859, 0.11754597, -1.6523998, 0.23636852, -0.2502241, -0.6243457, -1.9948186, -3.2819061, 1.7272195, 0.20159097, 2.6798582, -1.5042601, 0.4614676, 3.252352, 1.8165411, -1.0264812, 0.67359865, -1.2884388]</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.75</td>
-      <td>1.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>CCIAL</td>
+      <td>[-3.6606867, -4.136366, -2.7383819, -1.265028, -1.5484157, 0.0038905807, 2.51573, -2.974311, -2.1802652, 0.20572664, 1.9154445, -0.49423644, 2.0754907, 1.3970385, 2.99927, -0.81580275, 0.63558346, -2.1980596, 0.8234042, 1.4590161, 1.6304643, -2.3154092, -0.5512536, 0.16270679, 0.5605901, -1.0997434, -2.0538948, -1.4677457, 2.1276112, -3.1209009, -1.4507304, 0.35441118, -0.735152, -0.08135078, 0.58496547, -1.4048517, -1.5703428, 4.444563, -1.70161, -1.5930848, -0.8006613, -1.181032, -0.65606093, 0.15362717, 0.3979364, -2.3211176, 1.590989, -0.637005, -1.8272693, -0.4611013, -1.1247346, -2.2360954, 0.024510715, 0.035644326, -3.142264, -1.4902952, -0.023706486, 2.5047717, 0.86584485, 0.9794963, -1.9338956, 0.57204807, 1.6892347, 2.8172746, -0.34445432, 0.015110771, 3.9501925, -0.42022878, -0.7086441, 0.6486841, -1.5813456, 0.9829822, -0.41811815, -0.34400278, 0.7240713, -1.4237262, -0.5909087, -1.9383622, -0.016850952, -2.5178602, -1.4072318, 0.16349438, -1.7078975, 0.5409735, -0.23135632, 0.3779496, -1.1804557, -1.1560022, 0.5106507, -2.8954678, 0.6743512, 0.50307846, 1.1636084, -1.69067, -0.3031949, 2.7973685, 2.3443043, -1.7581416, 1.1552042, -2.2376394]</td>
+      <td>[-1.9297086, -4.0409436, -0.25941342, -0.7859506, -0.4652606, 2.2804756, 1.0681757, 0.72852355, -2.7355075, 1.0278999, 2.2360685, -0.03623223, 4.11945, 1.5377272, 2.5242136, 2.082954, -0.7249928, -0.23796822, -0.17558627, 0.19722576, 1.4990003, -0.79382044, 1.9714954, -0.46313703, 1.9647813, -0.3468441, -1.1249101, 1.5074009, 1.2859945, 0.7523762, -2.8549774, -1.0922265, -1.8848443, 1.4217745, 0.29113436, 0.9000691, 0.59672105, 2.1925743, -0.9475998, 2.918246, -2.6306212, -0.9720437, -0.9176794, 0.1048784, 2.5920258, 0.98284227, 1.4525789, -1.6322492, -0.18009353, -0.90609133, -1.1056329, -1.7399676, -0.9218928, -0.91078883, -3.3616328, 0.027253885, 1.5255218, 2.4093175, -0.6903315, -0.8898981, -1.4414381, -2.4607484, 1.0322328, 2.8582118, -1.1725731, 0.866098, 0.5282245, 0.5347404, 1.0254059, 0.13462004, -1.2707883, 2.100081, 0.38197178, 0.8758506, 2.1550853, -0.4059613, -1.2262079, -1.7167703, -0.008644429, -1.1231833, -1.0071813, 1.1097206, 1.4115605, 0.28792122, -0.20272064, -0.18343842, -1.4334143, 2.130211, -0.12741345, -1.3788555, -0.23488352, 0.7329416, 1.184776, 0.7113282, 1.6217849, -0.555547, -0.78290445, 1.3385233, 0.09870087, -0.16841361]</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.80</td>
-      <td>1.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>CELLULE</td>
+      <td>[-3.6606867, -4.136366, -2.7383819, -1.265028, -1.5484157, 0.0038905807, 2.51573, -2.974311, -2.1802652, 0.20572664, 1.9154445, -0.49423644, 2.0754907, 1.3970385, 2.99927, -0.81580275, 0.63558346, -2.1980596, 0.8234042, 1.4590161, 1.6304643, -2.3154092, -0.5512536, 0.16270679, 0.5605901, -1.0997434, -2.0538948, -1.4677457, 2.1276112, -3.1209009, -1.4507304, 0.35441118, -0.735152, -0.08135078, 0.58496547, -1.4048517, -1.5703428, 4.444563, -1.70161, -1.5930848, -0.8006613, -1.181032, -0.65606093, 0.15362717, 0.3979364, -2.3211176, 1.590989, -0.637005, -1.8272693, -0.4611013, -1.1247346, -2.2360954, 0.024510715, 0.035644326, -3.142264, -1.4902952, -0.023706486, 2.5047717, 0.86584485, 0.9794963, -1.9338956, 0.57204807, 1.6892347, 2.8172746, -0.34445432, 0.015110771, 3.9501925, -0.42022878, -0.7086441, 0.6486841, -1.5813456, 0.9829822, -0.41811815, -0.34400278, 0.7240713, -1.4237262, -0.5909087, -1.9383622, -0.016850952, -2.5178602, -1.4072318, 0.16349438, -1.7078975, 0.5409735, -0.23135632, 0.3779496, -1.1804557, -1.1560022, 0.5106507, -2.8954678, 0.6743512, 0.50307846, 1.1636084, -1.69067, -0.3031949, 2.7973685, 2.3443043, -1.7581416, 1.1552042, -2.2376394]</td>
+      <td>[-1.6129801, -0.10437651, 1.4974427, -0.036552005, -1.1222117, 2.103076, 0.43679154, 0.59636635, -1.5474347, -0.53553635, 2.1170242, 0.88433695, 3.2377195, 2.009139, 0.78063005, 2.4402344, -1.4386016, -2.331701, 0.9563559, 1.2001934, 1.6745092, 1.6268116, 1.137795, -1.142908, 2.5663874, 1.5467504, -1.6636788, 0.68367964, 0.28676966, -0.32365578, -1.7079984, -0.6640527, -1.5883033, -0.05603579, 0.014652561, 0.11015185, -1.2665884, 1.2997873, -0.25351298, -1.0273691, -1.4859822, -0.6892873, -2.495414, 0.78474104, 0.11347562, -1.7258034, 0.3245662, 0.22233066, -1.7672585, -0.3595019, -1.329712, 1.2591809, 0.87084246, -0.68716824, -2.2698116, -3.421683, 1.0717176, -0.14689627, 0.08610552, 0.6577486, 0.21394968, -0.6598186, 0.41336605, 1.087966, 1.476198, 0.07505647, 4.1221585, -0.08836032, 1.068494, -1.5098015, 0.26334718, 2.3863611, -0.91456825, -0.45496002, 2.1533904, -3.7674835, -1.5369811, -0.75728774, -1.7976301, -2.410854, 1.8959935, 0.38832211, -0.58734465, 1.8909758, -1.011042, 1.4504114, -1.1514721, 1.8693756, -2.495106, -0.5697566, 0.341372, 1.2621572, 0.011344785, 0.0013074186, -0.56495804, 0.8330197, -0.38225588, 1.3496951, -0.0714611, -0.3596793]</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>0.95</td>
-      <td>1.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>N</td>
+      <td>[-3.6606867, -4.136366, -2.7383819, -1.265028, -1.5484157, 0.0038905807, 2.51573, -2.974311, -2.1802652, 0.20572664, 1.9154445, -0.49423644, 2.0754907, 1.3970385, 2.99927, -0.81580275, 0.63558346, -2.1980596, 0.8234042, 1.4590161, 1.6304643, -2.3154092, -0.5512536, 0.16270679, 0.5605901, -1.0997434, -2.0538948, -1.4677457, 2.1276112, -3.1209009, -1.4507304, 0.35441118, -0.735152, -0.08135078, 0.58496547, -1.4048517, -1.5703428, 4.444563, -1.70161, -1.5930848, -0.8006613, -1.181032, -0.65606093, 0.15362717, 0.3979364, -2.3211176, 1.590989, -0.637005, -1.8272693, -0.4611013, -1.1247346, -2.2360954, 0.024510715, 0.035644326, -3.142264, -1.4902952, -0.023706486, 2.5047717, 0.86584485, 0.9794963, -1.9338956, 0.57204807, 1.6892347, 2.8172746, -0.34445432, 0.015110771, 3.9501925, -0.42022878, -0.7086441, 0.6486841, -1.5813456, 0.9829822, -0.41811815, -0.34400278, 0.7240713, -1.4237262, -0.5909087, -1.9383622, -0.016850952, -2.5178602, -1.4072318, 0.16349438, -1.7078975, 0.5409735, -0.23135632, 0.3779496, -1.1804557, -1.1560022, 0.5106507, -2.8954678, 0.6743512, 0.50307846, 1.1636084, -1.69067, -0.3031949, 2.7973685, 2.3443043, -1.7581416, 1.1552042, -2.2376394]</td>
+      <td>[-1.7969333, -2.7726927, -2.155229, -0.061681036, -0.108478464, 0.1293993, -0.9444827, 1.900657, -0.18695174, 0.24765383, -0.5334192, -1.9715568, 3.7090368, 1.1139084, 0.097767085, -0.40595388, 0.7864385, 0.86948866, 0.21909983, 0.45629632, 2.2950082, 0.5063718, 0.7823449, -0.6197482, 0.90374637, 0.82009685, 0.7015072, 3.1487632, -0.3282665, -1.1228353, -1.0424778, -0.9640697, -2.0392115, -0.19089617, -0.692922, -1.5359132, 0.61550194, -1.3931459, 1.1719415, 1.5058025, -0.4069421, -1.291164, -0.44899395, -1.7781677, 0.6894689, -2.4309688, -0.7266463, 0.8483574, -0.029610492, 2.0342245, 0.72494864, -2.0654514, 2.6675622, -0.15682457, -3.1909647, 0.2643293, 1.1939231, 0.91697866, -0.9991814, -0.9677605, -2.3359635, -0.831496, 1.0337974, -0.21172203, 0.5653107, 0.49726152, 0.17029822, -1.6335481, -1.0047877, -0.1698612, 0.7281107, 0.28721365, 0.8035219, 0.9982882, 2.4304376, -0.2420219, -1.1852397, -0.01705652, 9.099994E-4, -1.8828458, -0.714051, 0.41710627, -0.3201463, 2.1025867, -0.40449262, -0.6616635, 0.009476388, 0.6657053, -2.7443779, -2.6973267, 0.7788065, 0.00171362, -0.46450263, -0.07510954, -1.0331392, -1.4788597, 1.3594207, -1.3472216, 2.0735934, 1.4588997]</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>GAL</td>
+      <td>[0.89951915, -4.446304, -0.5602883, 0.07418862, -0.016211111, 4.7569914, 0.75164694, 1.6809607, -1.9519918, 1.9304539, 1.2973372, -0.97736764, 5.4465046, 1.6386249, 2.5820117, 0.36738604, -1.2187066, 0.3110225, -0.44302636, -0.5119896, 1.90148, -0.11927708, 3.0167308, -0.20651676, 1.1357841, -0.82924116, -1.9468687, 0.023339488, -1.5378648, 2.2863154, -4.286857, -1.570342, -3.0297282, 1.5807213, -0.91376513, 1.9188288, 1.8259835, 0.52995664, -0.5887506, 2.988368, -3.7019331, 1.0042912, -1.2320014, -0.010872452, 4.155509, 2.8412228, 0.20206858, -0.43091708, 0.75574994, -0.94480276, -1.7161356, -0.9367206, 0.73887867, -0.9755447, -3.0611782, -0.9898671, 2.326192, 0.71609247, -0.055920023, -1.7379942, -1.7370176, -2.7425888, -0.97200584, 1.6471916, -1.5506704, 1.2809473, -0.19285777, 0.43879983, 2.2952733, -2.181397, -1.3079237, 1.7021388, -0.33412364, 0.64111656, 0.5717312, -0.38145688, -2.0502667, -0.9090833, -0.8536912, 0.05326915, -0.80591786, 0.91597307, 3.1302454, -0.24033014, -0.5217088, -0.6601888, -1.6049289, 2.0973172, -3.8169446, -1.6529827, 0.4742794, 1.5299704, 2.0646565, 1.4639206, 2.7325187, 0.77863675, -1.6821792, 0.4720751, -0.19836633, 0.16300836]</td>
+      <td>[-2.8296263, -1.5354885, -1.0850741, 1.4572183, 1.0037627, 0.8920523, -0.273557, 1.6151929, -2.8989837, 0.21190512, -0.24476424, 1.2834506, 2.9086516, 1.3448746, 0.40929118, -0.67047423, -0.5217506, 0.15890093, 1.3911892, -3.6486845, 1.8827534, -1.4617246, 0.62056535, -1.0136473, -0.7098165, 1.555696, 0.20822108, -0.64188635, -0.011036906, -0.56177616, 1.4897312, -0.565443, -2.5267873, -0.9611097, -0.2849253, 0.3509436, -0.124108754, -1.9416113, -2.4122295, 2.1941874, -2.6875842, -0.70769244, 0.40102217, -1.7614931, -1.7057651, -3.886696, 1.4790843, 1.2638766, 0.90352106, 0.723249, -2.6643507, -0.6464715, 0.77259564, -0.27632663, -0.4603913, -1.3126074, 1.4082799, 1.3662704, -1.0351702, -0.9024902, -0.98389, 0.9891948, 1.5746657, -0.056863762, 1.1593108, 0.88614136, 1.8817539, 1.7638302, -0.5173844, -3.1867628, -2.0778902, 1.0353314, -1.4492015, -0.39774206, -1.9893959, -0.17170864, -0.78176904, -0.5030655, 2.0171788, 0.90477896, 1.5170175, 0.96003807, 0.8045251, -1.8237262, -2.2832704, 0.65453005, 1.4304143, -0.9279267, -0.16950706, -0.0580036, 3.6383984, -0.89000696, 0.1976986, 0.5105009, 0.7527753, -0.5912294, -0.033289593, -1.5989, -1.5794888, 0.031445947]</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>VITROLLES</td>
+      <td>[0.89951915, -4.446304, -0.5602883, 0.07418862, -0.016211111, 4.7569914, 0.75164694, 1.6809607, -1.9519918, 1.9304539, 1.2973372, -0.97736764, 5.4465046, 1.6386249, 2.5820117, 0.36738604, -1.2187066, 0.3110225, -0.44302636, -0.5119896, 1.90148, -0.11927708, 3.0167308, -0.20651676, 1.1357841, -0.82924116, -1.9468687, 0.023339488, -1.5378648, 2.2863154, -4.286857, -1.570342, -3.0297282, 1.5807213, -0.91376513, 1.9188288, 1.8259835, 0.52995664, -0.5887506, 2.988368, -3.7019331, 1.0042912, -1.2320014, -0.010872452, 4.155509, 2.8412228, 0.20206858, -0.43091708, 0.75574994, -0.94480276, -1.7161356, -0.9367206, 0.73887867, -0.9755447, -3.0611782, -0.9898671, 2.326192, 0.71609247, -0.055920023, -1.7379942, -1.7370176, -2.7425888, -0.97200584, 1.6471916, -1.5506704, 1.2809473, -0.19285777, 0.43879983, 2.2952733, -2.181397, -1.3079237, 1.7021388, -0.33412364, 0.64111656, 0.5717312, -0.38145688, -2.0502667, -0.9090833, -0.8536912, 0.05326915, -0.80591786, 0.91597307, 3.1302454, -0.24033014, -0.5217088, -0.6601888, -1.6049289, 2.0973172, -3.8169446, -1.6529827, 0.4742794, 1.5299704, 2.0646565, 1.4639206, 2.7325187, 0.77863675, -1.6821792, 0.4720751, -0.19836633, 0.16300836]</td>
+      <td>[-0.51858985, -0.79608667, -0.27434167, 0.43774346, 0.13403374, 0.6955053, -0.48544377, -0.7822972, -0.44157124, 0.20370457, -0.32635784, 0.23495826, 1.1446015, -0.0016702854, 0.75631464, 1.0356389, -0.3032027, 0.14287083, -0.16156612, 0.36195865, 0.53173155, -1.0223347, 0.024985986, -0.8908876, 0.16894978, -0.0052749207, -0.91928, 0.034052204, -0.47485417, 0.5296288, 1.0011374, 0.03810791, -0.60411996, -0.67433405, 0.8633594, 0.6768191, 0.31774458, 0.3645539, -1.2507206, -0.02585316, -0.5161773, 0.5566125, -0.44873744, 0.18356432, 0.88470525, -0.5499588, 0.26460293, 0.5442603, -0.48430008, -0.73945284, -0.19378395, -0.1262607, 0.91213685, -0.19049925, -1.4530401, -0.5956118, -0.33118942, -0.22383781, -0.592579, -1.5895152, -0.20166148, -0.9858819, 1.0887142, -0.29967052, -0.6418929, 1.0925146, 0.6296837, -1.3558631, -0.60091686, -0.08654504, -0.8841482, -0.5775546, 0.21434696, -0.17189293, -0.07146374, -0.27288023, -0.67159414, -0.3745598, -0.06059645, -0.056758873, -0.49612412, 0.4400222, 0.68358135, 1.5944928, -0.67433083, 0.26725987, 1.7176542, 0.2363774, -0.1429064, -0.87335634, 0.46516258, -0.049530383, 0.66263884, -0.18103805, -0.8949379, -0.35814026, -0.29279575, 0.6426999, 0.43153152, 0.4438623]</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>CTRE</td>
+      <td>[0.89951915, -4.446304, -0.5602883, 0.07418862, -0.016211111, 4.7569914, 0.75164694, 1.6809607, -1.9519918, 1.9304539, 1.2973372, -0.97736764, 5.4465046, 1.6386249, 2.5820117, 0.36738604, -1.2187066, 0.3110225, -0.44302636, -0.5119896, 1.90148, -0.11927708, 3.0167308, -0.20651676, 1.1357841, -0.82924116, -1.9468687, 0.023339488, -1.5378648, 2.2863154, -4.286857, -1.570342, -3.0297282, 1.5807213, -0.91376513, 1.9188288, 1.8259835, 0.52995664, -0.5887506, 2.988368, -3.7019331, 1.0042912, -1.2320014, -0.010872452, 4.155509, 2.8412228, 0.20206858, -0.43091708, 0.75574994, -0.94480276, -1.7161356, -0.9367206, 0.73887867, -0.9755447, -3.0611782, -0.9898671, 2.326192, 0.71609247, -0.055920023, -1.7379942, -1.7370176, -2.7425888, -0.97200584, 1.6471916, -1.5506704, 1.2809473, -0.19285777, 0.43879983, 2.2952733, -2.181397, -1.3079237, 1.7021388, -0.33412364, 0.64111656, 0.5717312, -0.38145688, -2.0502667, -0.9090833, -0.8536912, 0.05326915, -0.80591786, 0.91597307, 3.1302454, -0.24033014, -0.5217088, -0.6601888, -1.6049289, 2.0973172, -3.8169446, -1.6529827, 0.4742794, 1.5299704, 2.0646565, 1.4639206, 2.7325187, 0.77863675, -1.6821792, 0.4720751, -0.19836633, 0.16300836]</td>
+      <td>[-2.0219305, -3.8918395, -1.7115382, -0.5412251, -0.29041147, 2.06789, 0.9751935, -2.4897637, -0.29884776, 0.96232057, -0.2731724, -0.21846168, 3.872083, 1.5588214, 2.8174632, -0.956158, -1.2272776, -1.5435148, 0.3886229, 2.8130236, 1.7979017, -0.7636948, 0.5724105, 0.03416737, 0.06712736, -1.0850549, -1.5730394, -0.90607196, 0.90302247, -3.664367, -1.3942599, 0.51028967, -1.1403933, 1.3083758, -0.13814604, -1.1281608, -0.8708236, 1.8289671, -0.67572504, -1.2307695, -0.99774235, 0.041544206, -1.3585525, 0.680209, -0.15922913, -0.85800266, 0.7917658, 1.950577, -0.67848134, -0.20088726, -1.0908419, -1.2821579, 2.032251, -1.2373164, -1.9394372, -1.8360873, 0.74330837, 0.9447373, 3.1652577, 0.16444652, -3.3115606, 1.662408, 2.1625297, 2.220072, 0.123239934, -0.9221235, 2.4914205, 0.6990802, 0.93488973, -2.4074883, -1.9613615, 2.0342774, -1.2352704, 0.28561708, 1.1257901, -0.5457232, -2.2016883, -1.2753719, 0.010415403, -3.2781336, -1.5098681, 0.5804764, 0.6405859, 0.11754597, -1.6523998, 0.23636852, -0.2502241, -0.6243457, -1.9948186, -3.2819061, 1.7272195, 0.20159097, 2.6798582, -1.5042601, 0.4614676, 3.252352, 1.8165411, -1.0264812, 0.67359865, -1.2884388]</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>CCIAL</td>
+      <td>[0.89951915, -4.446304, -0.5602883, 0.07418862, -0.016211111, 4.7569914, 0.75164694, 1.6809607, -1.9519918, 1.9304539, 1.2973372, -0.97736764, 5.4465046, 1.6386249, 2.5820117, 0.36738604, -1.2187066, 0.3110225, -0.44302636, -0.5119896, 1.90148, -0.11927708, 3.0167308, -0.20651676, 1.1357841, -0.82924116, -1.9468687, 0.023339488, -1.5378648, 2.2863154, -4.286857, -1.570342, -3.0297282, 1.5807213, -0.91376513, 1.9188288, 1.8259835, 0.52995664, -0.5887506, 2.988368, -3.7019331, 1.0042912, -1.2320014, -0.010872452, 4.155509, 2.8412228, 0.20206858, -0.43091708, 0.75574994, -0.94480276, -1.7161356, -0.9367206, 0.73887867, -0.9755447, -3.0611782, -0.9898671, 2.326192, 0.71609247, -0.055920023, -1.7379942, -1.7370176, -2.7425888, -0.97200584, 1.6471916, -1.5506704, 1.2809473, -0.19285777, 0.43879983, 2.2952733, -2.181397, -1.3079237, 1.7021388, -0.33412364, 0.64111656, 0.5717312, -0.38145688, -2.0502667, -0.9090833, -0.8536912, 0.05326915, -0.80591786, 0.91597307, 3.1302454, -0.24033014, -0.5217088, -0.6601888, -1.6049289, 2.0973172, -3.8169446, -1.6529827, 0.4742794, 1.5299704, 2.0646565, 1.4639206, 2.7325187, 0.77863675, -1.6821792, 0.4720751, -0.19836633, 0.16300836]</td>
+      <td>[-1.9297086, -4.0409436, -0.25941342, -0.7859506, -0.4652606, 2.2804756, 1.0681757, 0.72852355, -2.7355075, 1.0278999, 2.2360685, -0.03623223, 4.11945, 1.5377272, 2.5242136, 2.082954, -0.7249928, -0.23796822, -0.17558627, 0.19722576, 1.4990003, -0.79382044, 1.9714954, -0.46313703, 1.9647813, -0.3468441, -1.1249101, 1.5074009, 1.2859945, 0.7523762, -2.8549774, -1.0922265, -1.8848443, 1.4217745, 0.29113436, 0.9000691, 0.59672105, 2.1925743, -0.9475998, 2.918246, -2.6306212, -0.9720437, -0.9176794, 0.1048784, 2.5920258, 0.98284227, 1.4525789, -1.6322492, -0.18009353, -0.90609133, -1.1056329, -1.7399676, -0.9218928, -0.91078883, -3.3616328, 0.027253885, 1.5255218, 2.4093175, -0.6903315, -0.8898981, -1.4414381, -2.4607484, 1.0322328, 2.8582118, -1.1725731, 0.866098, 0.5282245, 0.5347404, 1.0254059, 0.13462004, -1.2707883, 2.100081, 0.38197178, 0.8758506, 2.1550853, -0.4059613, -1.2262079, -1.7167703, -0.008644429, -1.1231833, -1.0071813, 1.1097206, 1.4115605, 0.28792122, -0.20272064, -0.18343842, -1.4334143, 2.130211, -0.12741345, -1.3788555, -0.23488352, 0.7329416, 1.184776, 0.7113282, 1.6217849, -0.555547, -0.78290445, 1.3385233, 0.09870087, -0.16841361]</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>CELLULE</td>
+      <td>[0.89951915, -4.446304, -0.5602883, 0.07418862, -0.016211111, 4.7569914, 0.75164694, 1.6809607, -1.9519918, 1.9304539, 1.2973372, -0.97736764, 5.4465046, 1.6386249, 2.5820117, 0.36738604, -1.2187066, 0.3110225, -0.44302636, -0.5119896, 1.90148, -0.11927708, 3.0167308, -0.20651676, 1.1357841, -0.82924116, -1.9468687, 0.023339488, -1.5378648, 2.2863154, -4.286857, -1.570342, -3.0297282, 1.5807213, -0.91376513, 1.9188288, 1.8259835, 0.52995664, -0.5887506, 2.988368, -3.7019331, 1.0042912, -1.2320014, -0.010872452, 4.155509, 2.8412228, 0.20206858, -0.43091708, 0.75574994, -0.94480276, -1.7161356, -0.9367206, 0.73887867, -0.9755447, -3.0611782, -0.9898671, 2.326192, 0.71609247, -0.055920023, -1.7379942, -1.7370176, -2.7425888, -0.97200584, 1.6471916, -1.5506704, 1.2809473, -0.19285777, 0.43879983, 2.2952733, -2.181397, -1.3079237, 1.7021388, -0.33412364, 0.64111656, 0.5717312, -0.38145688, -2.0502667, -0.9090833, -0.8536912, 0.05326915, -0.80591786, 0.91597307, 3.1302454, -0.24033014, -0.5217088, -0.6601888, -1.6049289, 2.0973172, -3.8169446, -1.6529827, 0.4742794, 1.5299704, 2.0646565, 1.4639206, 2.7325187, 0.77863675, -1.6821792, 0.4720751, -0.19836633, 0.16300836]</td>
+      <td>[-1.6129801, -0.10437651, 1.4974427, -0.036552005, -1.1222117, 2.103076, 0.43679154, 0.59636635, -1.5474347, -0.53553635, 2.1170242, 0.88433695, 3.2377195, 2.009139, 0.78063005, 2.4402344, -1.4386016, -2.331701, 0.9563559, 1.2001934, 1.6745092, 1.6268116, 1.137795, -1.142908, 2.5663874, 1.5467504, -1.6636788, 0.68367964, 0.28676966, -0.32365578, -1.7079984, -0.6640527, -1.5883033, -0.05603579, 0.014652561, 0.11015185, -1.2665884, 1.2997873, -0.25351298, -1.0273691, -1.4859822, -0.6892873, -2.495414, 0.78474104, 0.11347562, -1.7258034, 0.3245662, 0.22233066, -1.7672585, -0.3595019, -1.329712, 1.2591809, 0.87084246, -0.68716824, -2.2698116, -3.421683, 1.0717176, -0.14689627, 0.08610552, 0.6577486, 0.21394968, -0.6598186, 0.41336605, 1.087966, 1.476198, 0.07505647, 4.1221585, -0.08836032, 1.068494, -1.5098015, 0.26334718, 2.3863611, -0.91456825, -0.45496002, 2.1533904, -3.7674835, -1.5369811, -0.75728774, -1.7976301, -2.410854, 1.8959935, 0.38832211, -0.58734465, 1.8909758, -1.011042, 1.4504114, -1.1514721, 1.8693756, -2.495106, -0.5697566, 0.341372, 1.2621572, 0.011344785, 0.0013074186, -0.56495804, 0.8330197, -0.38225588, 1.3496951, -0.0714611, -0.3596793]</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>N</td>
+      <td>[0.89951915, -4.446304, -0.5602883, 0.07418862, -0.016211111, 4.7569914, 0.75164694, 1.6809607, -1.9519918, 1.9304539, 1.2973372, -0.97736764, 5.4465046, 1.6386249, 2.5820117, 0.36738604, -1.2187066, 0.3110225, -0.44302636, -0.5119896, 1.90148, -0.11927708, 3.0167308, -0.20651676, 1.1357841, -0.82924116, -1.9468687, 0.023339488, -1.5378648, 2.2863154, -4.286857, -1.570342, -3.0297282, 1.5807213, -0.91376513, 1.9188288, 1.8259835, 0.52995664, -0.5887506, 2.988368, -3.7019331, 1.0042912, -1.2320014, -0.010872452, 4.155509, 2.8412228, 0.20206858, -0.43091708, 0.75574994, -0.94480276, -1.7161356, -0.9367206, 0.73887867, -0.9755447, -3.0611782, -0.9898671, 2.326192, 0.71609247, -0.055920023, -1.7379942, -1.7370176, -2.7425888, -0.97200584, 1.6471916, -1.5506704, 1.2809473, -0.19285777, 0.43879983, 2.2952733, -2.181397, -1.3079237, 1.7021388, -0.33412364, 0.64111656, 0.5717312, -0.38145688, -2.0502667, -0.9090833, -0.8536912, 0.05326915, -0.80591786, 0.91597307, 3.1302454, -0.24033014, -0.5217088, -0.6601888, -1.6049289, 2.0973172, -3.8169446, -1.6529827, 0.4742794, 1.5299704, 2.0646565, 1.4639206, 2.7325187, 0.77863675, -1.6821792, 0.4720751, -0.19836633, 0.16300836]</td>
+      <td>[-1.7969333, -2.7726927, -2.155229, -0.061681036, -0.108478464, 0.1293993, -0.9444827, 1.900657, -0.18695174, 0.24765383, -0.5334192, -1.9715568, 3.7090368, 1.1139084, 0.097767085, -0.40595388, 0.7864385, 0.86948866, 0.21909983, 0.45629632, 2.2950082, 0.5063718, 0.7823449, -0.6197482, 0.90374637, 0.82009685, 0.7015072, 3.1487632, -0.3282665, -1.1228353, -1.0424778, -0.9640697, -2.0392115, -0.19089617, -0.692922, -1.5359132, 0.61550194, -1.3931459, 1.1719415, 1.5058025, -0.4069421, -1.291164, -0.44899395, -1.7781677, 0.6894689, -2.4309688, -0.7266463, 0.8483574, -0.029610492, 2.0342245, 0.72494864, -2.0654514, 2.6675622, -0.15682457, -3.1909647, 0.2643293, 1.1939231, 0.91697866, -0.9991814, -0.9677605, -2.3359635, -0.831496, 1.0337974, -0.21172203, 0.5653107, 0.49726152, 0.17029822, -1.6335481, -1.0047877, -0.1698612, 0.7281107, 0.28721365, 0.8035219, 0.9982882, 2.4304376, -0.2420219, -1.1852397, -0.01705652, 9.099994E-4, -1.8828458, -0.714051, 0.41710627, -0.3201463, 2.1025867, -0.40449262, -0.6616635, 0.009476388, 0.6657053, -2.7443779, -2.6973267, 0.7788065, 0.00171362, -0.46450263, -0.07510954, -1.0331392, -1.4788597, 1.3594207, -1.3472216, 2.0735934, 1.4588997]</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>GAL</td>
+      <td>[0.75751305, -0.28829557, 0.2605678, 1.5267324, -0.9986162, 2.4870946, -0.97179425, -0.37725744, 2.0428922, -0.9127113, -0.7742546, -1.3288907, 1.9922508, 0.041528042, 0.7374069, 0.69905907, 0.05813965, -0.7624274, 0.8776724, -1.4218947, 0.112907946, 0.057596836, -0.5327151, 0.89774454, -1.0063835, 1.5041908, -0.9633376, 0.9463407, -0.6905021, 0.8390833, -0.51101005, -0.89380157, 1.2652491, 0.14919066, 0.43653986, -1.9929066, -0.16453803, 1.6427826, -1.4496148, -1.1669815, -1.3195983, 0.40315348, 0.3573543, 1.3468893, 0.20876382, -1.3829598, -0.1412844, 1.925142, -0.060562003, -2.475693, 0.39196584, 0.61227846, -1.227156, -0.5427727, 0.31248564, 0.70818955, -0.8384474, -0.35647243, -0.50284785, -0.843155, -1.3938192, 1.26752, 0.49476683, -3.0814967, -2.4240296, 2.7714767, 0.0072018565, -0.19888318, -1.2536184, 1.4975648, 0.13753062, -1.4614197, -0.65564775, 1.7019606, 0.8877284, -0.6391919, -3.4283853, -1.4198881, 1.1819942, 1.7045125, 0.30322465, 0.8992618, -0.50786585, -0.11795871, -1.4345279, 1.1423892, 0.10789643, -0.61220723, 0.33519706, -1.4340901, -1.5109038, -0.082423724, 0.3928124, 0.05314819, 0.56828386, -0.87005943, -1.7261531, -0.5924545, 1.2127885, -0.49405953]</td>
+      <td>[-2.8296263, -1.5354885, -1.0850741, 1.4572183, 1.0037627, 0.8920523, -0.273557, 1.6151929, -2.8989837, 0.21190512, -0.24476424, 1.2834506, 2.9086516, 1.3448746, 0.40929118, -0.67047423, -0.5217506, 0.15890093, 1.3911892, -3.6486845, 1.8827534, -1.4617246, 0.62056535, -1.0136473, -0.7098165, 1.555696, 0.20822108, -0.64188635, -0.011036906, -0.56177616, 1.4897312, -0.565443, -2.5267873, -0.9611097, -0.2849253, 0.3509436, -0.124108754, -1.9416113, -2.4122295, 2.1941874, -2.6875842, -0.70769244, 0.40102217, -1.7614931, -1.7057651, -3.886696, 1.4790843, 1.2638766, 0.90352106, 0.723249, -2.6643507, -0.6464715, 0.77259564, -0.27632663, -0.4603913, -1.3126074, 1.4082799, 1.3662704, -1.0351702, -0.9024902, -0.98389, 0.9891948, 1.5746657, -0.056863762, 1.1593108, 0.88614136, 1.8817539, 1.7638302, -0.5173844, -3.1867628, -2.0778902, 1.0353314, -1.4492015, -0.39774206, -1.9893959, -0.17170864, -0.78176904, -0.5030655, 2.0171788, 0.90477896, 1.5170175, 0.96003807, 0.8045251, -1.8237262, -2.2832704, 0.65453005, 1.4304143, -0.9279267, -0.16950706, -0.0580036, 3.6383984, -0.89000696, 0.1976986, 0.5105009, 0.7527753, -0.5912294, -0.033289593, -1.5989, -1.5794888, 0.031445947]</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>VITROLLES</td>
+      <td>[0.75751305, -0.28829557, 0.2605678, 1.5267324, -0.9986162, 2.4870946, -0.97179425, -0.37725744, 2.0428922, -0.9127113, -0.7742546, -1.3288907, 1.9922508, 0.041528042, 0.7374069, 0.69905907, 0.05813965, -0.7624274, 0.8776724, -1.4218947, 0.112907946, 0.057596836, -0.5327151, 0.89774454, -1.0063835, 1.5041908, -0.9633376, 0.9463407, -0.6905021, 0.8390833, -0.51101005, -0.89380157, 1.2652491, 0.14919066, 0.43653986, -1.9929066, -0.16453803, 1.6427826, -1.4496148, -1.1669815, -1.3195983, 0.40315348, 0.3573543, 1.3468893, 0.20876382, -1.3829598, -0.1412844, 1.925142, -0.060562003, -2.475693, 0.39196584, 0.61227846, -1.227156, -0.5427727, 0.31248564, 0.70818955, -0.8384474, -0.35647243, -0.50284785, -0.843155, -1.3938192, 1.26752, 0.49476683, -3.0814967, -2.4240296, 2.7714767, 0.0072018565, -0.19888318, -1.2536184, 1.4975648, 0.13753062, -1.4614197, -0.65564775, 1.7019606, 0.8877284, -0.6391919, -3.4283853, -1.4198881, 1.1819942, 1.7045125, 0.30322465, 0.8992618, -0.50786585, -0.11795871, -1.4345279, 1.1423892, 0.10789643, -0.61220723, 0.33519706, -1.4340901, -1.5109038, -0.082423724, 0.3928124, 0.05314819, 0.56828386, -0.87005943, -1.7261531, -0.5924545, 1.2127885, -0.49405953]</td>
+      <td>[-0.51858985, -0.79608667, -0.27434167, 0.43774346, 0.13403374, 0.6955053, -0.48544377, -0.7822972, -0.44157124, 0.20370457, -0.32635784, 0.23495826, 1.1446015, -0.0016702854, 0.75631464, 1.0356389, -0.3032027, 0.14287083, -0.16156612, 0.36195865, 0.53173155, -1.0223347, 0.024985986, -0.8908876, 0.16894978, -0.0052749207, -0.91928, 0.034052204, -0.47485417, 0.5296288, 1.0011374, 0.03810791, -0.60411996, -0.67433405, 0.8633594, 0.6768191, 0.31774458, 0.3645539, -1.2507206, -0.02585316, -0.5161773, 0.5566125, -0.44873744, 0.18356432, 0.88470525, -0.5499588, 0.26460293, 0.5442603, -0.48430008, -0.73945284, -0.19378395, -0.1262607, 0.91213685, -0.19049925, -1.4530401, -0.5956118, -0.33118942, -0.22383781, -0.592579, -1.5895152, -0.20166148, -0.9858819, 1.0887142, -0.29967052, -0.6418929, 1.0925146, 0.6296837, -1.3558631, -0.60091686, -0.08654504, -0.8841482, -0.5775546, 0.21434696, -0.17189293, -0.07146374, -0.27288023, -0.67159414, -0.3745598, -0.06059645, -0.056758873, -0.49612412, 0.4400222, 0.68358135, 1.5944928, -0.67433083, 0.26725987, 1.7176542, 0.2363774, -0.1429064, -0.87335634, 0.46516258, -0.049530383, 0.66263884, -0.18103805, -0.8949379, -0.35814026, -0.29279575, 0.6426999, 0.43153152, 0.4438623]</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>CTRE</td>
+      <td>[0.75751305, -0.28829557, 0.2605678, 1.5267324, -0.9986162, 2.4870946, -0.97179425, -0.37725744, 2.0428922, -0.9127113, -0.7742546, -1.3288907, 1.9922508, 0.041528042, 0.7374069, 0.69905907, 0.05813965, -0.7624274, 0.8776724, -1.4218947, 0.112907946, 0.057596836, -0.5327151, 0.89774454, -1.0063835, 1.5041908, -0.9633376, 0.9463407, -0.6905021, 0.8390833, -0.51101005, -0.89380157, 1.2652491, 0.14919066, 0.43653986, -1.9929066, -0.16453803, 1.6427826, -1.4496148, -1.1669815, -1.3195983, 0.40315348, 0.3573543, 1.3468893, 0.20876382, -1.3829598, -0.1412844, 1.925142, -0.060562003, -2.475693, 0.39196584, 0.61227846, -1.227156, -0.5427727, 0.31248564, 0.70818955, -0.8384474, -0.35647243, -0.50284785, -0.843155, -1.3938192, 1.26752, 0.49476683, -3.0814967, -2.4240296, 2.7714767, 0.0072018565, -0.19888318, -1.2536184, 1.4975648, 0.13753062, -1.4614197, -0.65564775, 1.7019606, 0.8877284, -0.6391919, -3.4283853, -1.4198881, 1.1819942, 1.7045125, 0.30322465, 0.8992618, -0.50786585, -0.11795871, -1.4345279, 1.1423892, 0.10789643, -0.61220723, 0.33519706, -1.4340901, -1.5109038, -0.082423724, 0.3928124, 0.05314819, 0.56828386, -0.87005943, -1.7261531, -0.5924545, 1.2127885, -0.49405953]</td>
+      <td>[-2.0219305, -3.8918395, -1.7115382, -0.5412251, -0.29041147, 2.06789, 0.9751935, -2.4897637, -0.29884776, 0.96232057, -0.2731724, -0.21846168, 3.872083, 1.5588214, 2.8174632, -0.956158, -1.2272776, -1.5435148, 0.3886229, 2.8130236, 1.7979017, -0.7636948, 0.5724105, 0.03416737, 0.06712736, -1.0850549, -1.5730394, -0.90607196, 0.90302247, -3.664367, -1.3942599, 0.51028967, -1.1403933, 1.3083758, -0.13814604, -1.1281608, -0.8708236, 1.8289671, -0.67572504, -1.2307695, -0.99774235, 0.041544206, -1.3585525, 0.680209, -0.15922913, -0.85800266, 0.7917658, 1.950577, -0.67848134, -0.20088726, -1.0908419, -1.2821579, 2.032251, -1.2373164, -1.9394372, -1.8360873, 0.74330837, 0.9447373, 3.1652577, 0.16444652, -3.3115606, 1.662408, 2.1625297, 2.220072, 0.123239934, -0.9221235, 2.4914205, 0.6990802, 0.93488973, -2.4074883, -1.9613615, 2.0342774, -1.2352704, 0.28561708, 1.1257901, -0.5457232, -2.2016883, -1.2753719, 0.010415403, -3.2781336, -1.5098681, 0.5804764, 0.6405859, 0.11754597, -1.6523998, 0.23636852, -0.2502241, -0.6243457, -1.9948186, -3.2819061, 1.7272195, 0.20159097, 2.6798582, -1.5042601, 0.4614676, 3.252352, 1.8165411, -1.0264812, 0.67359865, -1.2884388]</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>CCIAL</td>
+      <td>[0.75751305, -0.28829557, 0.2605678, 1.5267324, -0.9986162, 2.4870946, -0.97179425, -0.37725744, 2.0428922, -0.9127113, -0.7742546, -1.3288907, 1.9922508, 0.041528042, 0.7374069, 0.69905907, 0.05813965, -0.7624274, 0.8776724, -1.4218947, 0.112907946, 0.057596836, -0.5327151, 0.89774454, -1.0063835, 1.5041908, -0.9633376, 0.9463407, -0.6905021, 0.8390833, -0.51101005, -0.89380157, 1.2652491, 0.14919066, 0.43653986, -1.9929066, -0.16453803, 1.6427826, -1.4496148, -1.1669815, -1.3195983, 0.40315348, 0.3573543, 1.3468893, 0.20876382, -1.3829598, -0.1412844, 1.925142, -0.060562003, -2.475693, 0.39196584, 0.61227846, -1.227156, -0.5427727, 0.31248564, 0.70818955, -0.8384474, -0.35647243, -0.50284785, -0.843155, -1.3938192, 1.26752, 0.49476683, -3.0814967, -2.4240296, 2.7714767, 0.0072018565, -0.19888318, -1.2536184, 1.4975648, 0.13753062, -1.4614197, -0.65564775, 1.7019606, 0.8877284, -0.6391919, -3.4283853, -1.4198881, 1.1819942, 1.7045125, 0.30322465, 0.8992618, -0.50786585, -0.11795871, -1.4345279, 1.1423892, 0.10789643, -0.61220723, 0.33519706, -1.4340901, -1.5109038, -0.082423724, 0.3928124, 0.05314819, 0.56828386, -0.87005943, -1.7261531, -0.5924545, 1.2127885, -0.49405953]</td>
+      <td>[-1.9297086, -4.0409436, -0.25941342, -0.7859506, -0.4652606, 2.2804756, 1.0681757, 0.72852355, -2.7355075, 1.0278999, 2.2360685, -0.03623223, 4.11945, 1.5377272, 2.5242136, 2.082954, -0.7249928, -0.23796822, -0.17558627, 0.19722576, 1.4990003, -0.79382044, 1.9714954, -0.46313703, 1.9647813, -0.3468441, -1.1249101, 1.5074009, 1.2859945, 0.7523762, -2.8549774, -1.0922265, -1.8848443, 1.4217745, 0.29113436, 0.9000691, 0.59672105, 2.1925743, -0.9475998, 2.918246, -2.6306212, -0.9720437, -0.9176794, 0.1048784, 2.5920258, 0.98284227, 1.4525789, -1.6322492, -0.18009353, -0.90609133, -1.1056329, -1.7399676, -0.9218928, -0.91078883, -3.3616328, 0.027253885, 1.5255218, 2.4093175, -0.6903315, -0.8898981, -1.4414381, -2.4607484, 1.0322328, 2.8582118, -1.1725731, 0.866098, 0.5282245, 0.5347404, 1.0254059, 0.13462004, -1.2707883, 2.100081, 0.38197178, 0.8758506, 2.1550853, -0.4059613, -1.2262079, -1.7167703, -0.008644429, -1.1231833, -1.0071813, 1.1097206, 1.4115605, 0.28792122, -0.20272064, -0.18343842, -1.4334143, 2.130211, -0.12741345, -1.3788555, -0.23488352, 0.7329416, 1.184776, 0.7113282, 1.6217849, -0.555547, -0.78290445, 1.3385233, 0.09870087, -0.16841361]</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>CELLULE</td>
+      <td>[0.75751305, -0.28829557, 0.2605678, 1.5267324, -0.9986162, 2.4870946, -0.97179425, -0.37725744, 2.0428922, -0.9127113, -0.7742546, -1.3288907, 1.9922508, 0.041528042, 0.7374069, 0.69905907, 0.05813965, -0.7624274, 0.8776724, -1.4218947, 0.112907946, 0.057596836, -0.5327151, 0.89774454, -1.0063835, 1.5041908, -0.9633376, 0.9463407, -0.6905021, 0.8390833, -0.51101005, -0.89380157, 1.2652491, 0.14919066, 0.43653986, -1.9929066, -0.16453803, 1.6427826, -1.4496148, -1.1669815, -1.3195983, 0.40315348, 0.3573543, 1.3468893, 0.20876382, -1.3829598, -0.1412844, 1.925142, -0.060562003, -2.475693, 0.39196584, 0.61227846, -1.227156, -0.5427727, 0.31248564, 0.70818955, -0.8384474, -0.35647243, -0.50284785, -0.843155, -1.3938192, 1.26752, 0.49476683, -3.0814967, -2.4240296, 2.7714767, 0.0072018565, -0.19888318, -1.2536184, 1.4975648, 0.13753062, -1.4614197, -0.65564775, 1.7019606, 0.8877284, -0.6391919, -3.4283853, -1.4198881, 1.1819942, 1.7045125, 0.30322465, 0.8992618, -0.50786585, -0.11795871, -1.4345279, 1.1423892, 0.10789643, -0.61220723, 0.33519706, -1.4340901, -1.5109038, -0.082423724, 0.3928124, 0.05314819, 0.56828386, -0.87005943, -1.7261531, -0.5924545, 1.2127885, -0.49405953]</td>
+      <td>[-1.6129801, -0.10437651, 1.4974427, -0.036552005, -1.1222117, 2.103076, 0.43679154, 0.59636635, -1.5474347, -0.53553635, 2.1170242, 0.88433695, 3.2377195, 2.009139, 0.78063005, 2.4402344, -1.4386016, -2.331701, 0.9563559, 1.2001934, 1.6745092, 1.6268116, 1.137795, -1.142908, 2.5663874, 1.5467504, -1.6636788, 0.68367964, 0.28676966, -0.32365578, -1.7079984, -0.6640527, -1.5883033, -0.05603579, 0.014652561, 0.11015185, -1.2665884, 1.2997873, -0.25351298, -1.0273691, -1.4859822, -0.6892873, -2.495414, 0.78474104, 0.11347562, -1.7258034, 0.3245662, 0.22233066, -1.7672585, -0.3595019, -1.329712, 1.2591809, 0.87084246, -0.68716824, -2.2698116, -3.421683, 1.0717176, -0.14689627, 0.08610552, 0.6577486, 0.21394968, -0.6598186, 0.41336605, 1.087966, 1.476198, 0.07505647, 4.1221585, -0.08836032, 1.068494, -1.5098015, 0.26334718, 2.3863611, -0.91456825, -0.45496002, 2.1533904, -3.7674835, -1.5369811, -0.75728774, -1.7976301, -2.410854, 1.8959935, 0.38832211, -0.58734465, 1.8909758, -1.011042, 1.4504114, -1.1514721, 1.8693756, -2.495106, -0.5697566, 0.341372, 1.2621572, 0.011344785, 0.0013074186, -0.56495804, 0.8330197, -0.38225588, 1.3496951, -0.0714611, -0.3596793]</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>N</td>
+      <td>[0.75751305, -0.28829557, 0.2605678, 1.5267324, -0.9986162, 2.4870946, -0.97179425, -0.37725744, 2.0428922, -0.9127113, -0.7742546, -1.3288907, 1.9922508, 0.041528042, 0.7374069, 0.69905907, 0.05813965, -0.7624274, 0.8776724, -1.4218947, 0.112907946, 0.057596836, -0.5327151, 0.89774454, -1.0063835, 1.5041908, -0.9633376, 0.9463407, -0.6905021, 0.8390833, -0.51101005, -0.89380157, 1.2652491, 0.14919066, 0.43653986, -1.9929066, -0.16453803, 1.6427826, -1.4496148, -1.1669815, -1.3195983, 0.40315348, 0.3573543, 1.3468893, 0.20876382, -1.3829598, -0.1412844, 1.925142, -0.060562003, -2.475693, 0.39196584, 0.61227846, -1.227156, -0.5427727, 0.31248564, 0.70818955, -0.8384474, -0.35647243, -0.50284785, -0.843155, -1.3938192, 1.26752, 0.49476683, -3.0814967, -2.4240296, 2.7714767, 0.0072018565, -0.19888318, -1.2536184, 1.4975648, 0.13753062, -1.4614197, -0.65564775, 1.7019606, 0.8877284, -0.6391919, -3.4283853, -1.4198881, 1.1819942, 1.7045125, 0.30322465, 0.8992618, -0.50786585, -0.11795871, -1.4345279, 1.1423892, 0.10789643, -0.61220723, 0.33519706, -1.4340901, -1.5109038, -0.082423724, 0.3928124, 0.05314819, 0.56828386, -0.87005943, -1.7261531, -0.5924545, 1.2127885, -0.49405953]</td>
+      <td>[-1.7969333, -2.7726927, -2.155229, -0.061681036, -0.108478464, 0.1293993, -0.9444827, 1.900657, -0.18695174, 0.24765383, -0.5334192, -1.9715568, 3.7090368, 1.1139084, 0.097767085, -0.40595388, 0.7864385, 0.86948866, 0.21909983, 0.45629632, 2.2950082, 0.5063718, 0.7823449, -0.6197482, 0.90374637, 0.82009685, 0.7015072, 3.1487632, -0.3282665, -1.1228353, -1.0424778, -0.9640697, -2.0392115, -0.19089617, -0.692922, -1.5359132, 0.61550194, -1.3931459, 1.1719415, 1.5058025, -0.4069421, -1.291164, -0.44899395, -1.7781677, 0.6894689, -2.4309688, -0.7266463, 0.8483574, -0.029610492, 2.0342245, 0.72494864, -2.0654514, 2.6675622, -0.15682457, -3.1909647, 0.2643293, 1.1939231, 0.91697866, -0.9991814, -0.9677605, -2.3359635, -0.831496, 1.0337974, -0.21172203, 0.5653107, 0.49726152, 0.17029822, -1.6335481, -1.0047877, -0.1698612, 0.7281107, 0.28721365, 0.8035219, 0.9982882, 2.4304376, -0.2420219, -1.1852397, -0.01705652, 9.099994E-4, -1.8828458, -0.714051, 0.41710627, -0.3201463, 2.1025867, -0.40449262, -0.6616635, 0.009476388, 0.6657053, -2.7443779, -2.6973267, 0.7788065, 0.00171362, -0.46450263, -0.07510954, -1.0331392, -1.4788597, 1.3594207, -1.3472216, 2.0735934, 1.4588997]</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>GAL</td>
+      <td>[-0.40383568, -2.4560475, -2.0241725, -1.1169826, 0.25705075, -0.06515516, 0.7283697, -0.794644, 0.41110903, -0.77483845, 0.36467126, -1.4904175, 1.4450341, -0.9626747, 1.5860302, 1.7199601, -0.5197809, -0.28229505, 1.7162033, -0.9579225, 2.2604125, 0.24697454, 1.2130316, -2.3880725, 1.3023345, -0.5096294, -1.2514404, -0.87026227, 0.9663782, 0.9541621, 1.3428134, -0.12749301, -1.0981637, -0.71891195, 0.8915852, -0.79354787, 0.7047056, -1.3246417, 0.39292186, 0.6759215, 0.73072696, 0.08977838, -1.3743805, 1.0305315, 1.5145246, -0.11518059, 1.3406706, 0.15746713, -0.4647347, -0.51634395, -0.7706991, 0.42282048, 0.3620588, -0.91496795, -2.2681375, -1.8582603, 0.4339257, 0.4437455, -0.6233547, -0.0861309, -0.15891205, -0.543328, 1.5158373, 1.7981697, -1.3177186, 1.0575259, -0.6101017, -0.27842632, -0.76754856, 0.81192106, 0.048519555, 0.0824207, -0.13206087, 0.50030726, 0.5118375, -2.267211, 0.71742547, -1.2657775, -1.5190916, 0.44192162, 0.9274282, -0.5581665, 0.8229067, 2.244016, -1.0286566, 1.7164487, 1.9575914, 1.7674198, -2.2547615, -0.8541962, 1.1188914, -1.3830585, 0.29136363, 0.91940635, -0.7775327, -0.34279707, -2.2286227, -1.1091324, 2.2409196, 1.0523692]</td>
+      <td>[-2.8296263, -1.5354885, -1.0850741, 1.4572183, 1.0037627, 0.8920523, -0.273557, 1.6151929, -2.8989837, 0.21190512, -0.24476424, 1.2834506, 2.9086516, 1.3448746, 0.40929118, -0.67047423, -0.5217506, 0.15890093, 1.3911892, -3.6486845, 1.8827534, -1.4617246, 0.62056535, -1.0136473, -0.7098165, 1.555696, 0.20822108, -0.64188635, -0.011036906, -0.56177616, 1.4897312, -0.565443, -2.5267873, -0.9611097, -0.2849253, 0.3509436, -0.124108754, -1.9416113, -2.4122295, 2.1941874, -2.6875842, -0.70769244, 0.40102217, -1.7614931, -1.7057651, -3.886696, 1.4790843, 1.2638766, 0.90352106, 0.723249, -2.6643507, -0.6464715, 0.77259564, -0.27632663, -0.4603913, -1.3126074, 1.4082799, 1.3662704, -1.0351702, -0.9024902, -0.98389, 0.9891948, 1.5746657, -0.056863762, 1.1593108, 0.88614136, 1.8817539, 1.7638302, -0.5173844, -3.1867628, -2.0778902, 1.0353314, -1.4492015, -0.39774206, -1.9893959, -0.17170864, -0.78176904, -0.5030655, 2.0171788, 0.90477896, 1.5170175, 0.96003807, 0.8045251, -1.8237262, -2.2832704, 0.65453005, 1.4304143, -0.9279267, -0.16950706, -0.0580036, 3.6383984, -0.89000696, 0.1976986, 0.5105009, 0.7527753, -0.5912294, -0.033289593, -1.5989, -1.5794888, 0.031445947]</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>VITROLLES</td>
+      <td>[-0.40383568, -2.4560475, -2.0241725, -1.1169826, 0.25705075, -0.06515516, 0.7283697, -0.794644, 0.41110903, -0.77483845, 0.36467126, -1.4904175, 1.4450341, -0.9626747, 1.5860302, 1.7199601, -0.5197809, -0.28229505, 1.7162033, -0.9579225, 2.2604125, 0.24697454, 1.2130316, -2.3880725, 1.3023345, -0.5096294, -1.2514404, -0.87026227, 0.9663782, 0.9541621, 1.3428134, -0.12749301, -1.0981637, -0.71891195, 0.8915852, -0.79354787, 0.7047056, -1.3246417, 0.39292186, 0.6759215, 0.73072696, 0.08977838, -1.3743805, 1.0305315, 1.5145246, -0.11518059, 1.3406706, 0.15746713, -0.4647347, -0.51634395, -0.7706991, 0.42282048, 0.3620588, -0.91496795, -2.2681375, -1.8582603, 0.4339257, 0.4437455, -0.6233547, -0.0861309, -0.15891205, -0.543328, 1.5158373, 1.7981697, -1.3177186, 1.0575259, -0.6101017, -0.27842632, -0.76754856, 0.81192106, 0.048519555, 0.0824207, -0.13206087, 0.50030726, 0.5118375, -2.267211, 0.71742547, -1.2657775, -1.5190916, 0.44192162, 0.9274282, -0.5581665, 0.8229067, 2.244016, -1.0286566, 1.7164487, 1.9575914, 1.7674198, -2.2547615, -0.8541962, 1.1188914, -1.3830585, 0.29136363, 0.91940635, -0.7775327, -0.34279707, -2.2286227, -1.1091324, 2.2409196, 1.0523692]</td>
+      <td>[-0.51858985, -0.79608667, -0.27434167, 0.43774346, 0.13403374, 0.6955053, -0.48544377, -0.7822972, -0.44157124, 0.20370457, -0.32635784, 0.23495826, 1.1446015, -0.0016702854, 0.75631464, 1.0356389, -0.3032027, 0.14287083, -0.16156612, 0.36195865, 0.53173155, -1.0223347, 0.024985986, -0.8908876, 0.16894978, -0.0052749207, -0.91928, 0.034052204, -0.47485417, 0.5296288, 1.0011374, 0.03810791, -0.60411996, -0.67433405, 0.8633594, 0.6768191, 0.31774458, 0.3645539, -1.2507206, -0.02585316, -0.5161773, 0.5566125, -0.44873744, 0.18356432, 0.88470525, -0.5499588, 0.26460293, 0.5442603, -0.48430008, -0.73945284, -0.19378395, -0.1262607, 0.91213685, -0.19049925, -1.4530401, -0.5956118, -0.33118942, -0.22383781, -0.592579, -1.5895152, -0.20166148, -0.9858819, 1.0887142, -0.29967052, -0.6418929, 1.0925146, 0.6296837, -1.3558631, -0.60091686, -0.08654504, -0.8841482, -0.5775546, 0.21434696, -0.17189293, -0.07146374, -0.27288023, -0.67159414, -0.3745598, -0.06059645, -0.056758873, -0.49612412, 0.4400222, 0.68358135, 1.5944928, -0.67433083, 0.26725987, 1.7176542, 0.2363774, -0.1429064, -0.87335634, 0.46516258, -0.049530383, 0.66263884, -0.18103805, -0.8949379, -0.35814026, -0.29279575, 0.6426999, 0.43153152, 0.4438623]</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>CTRE</td>
+      <td>[-0.40383568, -2.4560475, -2.0241725, -1.1169826, 0.25705075, -0.06515516, 0.7283697, -0.794644, 0.41110903, -0.77483845, 0.36467126, -1.4904175, 1.4450341, -0.9626747, 1.5860302, 1.7199601, -0.5197809, -0.28229505, 1.7162033, -0.9579225, 2.2604125, 0.24697454, 1.2130316, -2.3880725, 1.3023345, -0.5096294, -1.2514404, -0.87026227, 0.9663782, 0.9541621, 1.3428134, -0.12749301, -1.0981637, -0.71891195, 0.8915852, -0.79354787, 0.7047056, -1.3246417, 0.39292186, 0.6759215, 0.73072696, 0.08977838, -1.3743805, 1.0305315, 1.5145246, -0.11518059, 1.3406706, 0.15746713, -0.4647347, -0.51634395, -0.7706991, 0.42282048, 0.3620588, -0.91496795, -2.2681375, -1.8582603, 0.4339257, 0.4437455, -0.6233547, -0.0861309, -0.15891205, -0.543328, 1.5158373, 1.7981697, -1.3177186, 1.0575259, -0.6101017, -0.27842632, -0.76754856, 0.81192106, 0.048519555, 0.0824207, -0.13206087, 0.50030726, 0.5118375, -2.267211, 0.71742547, -1.2657775, -1.5190916, 0.44192162, 0.9274282, -0.5581665, 0.8229067, 2.244016, -1.0286566, 1.7164487, 1.9575914, 1.7674198, -2.2547615, -0.8541962, 1.1188914, -1.3830585, 0.29136363, 0.91940635, -0.7775327, -0.34279707, -2.2286227, -1.1091324, 2.2409196, 1.0523692]</td>
+      <td>[-2.0219305, -3.8918395, -1.7115382, -0.5412251, -0.29041147, 2.06789, 0.9751935, -2.4897637, -0.29884776, 0.96232057, -0.2731724, -0.21846168, 3.872083, 1.5588214, 2.8174632, -0.956158, -1.2272776, -1.5435148, 0.3886229, 2.8130236, 1.7979017, -0.7636948, 0.5724105, 0.03416737, 0.06712736, -1.0850549, -1.5730394, -0.90607196, 0.90302247, -3.664367, -1.3942599, 0.51028967, -1.1403933, 1.3083758, -0.13814604, -1.1281608, -0.8708236, 1.8289671, -0.67572504, -1.2307695, -0.99774235, 0.041544206, -1.3585525, 0.680209, -0.15922913, -0.85800266, 0.7917658, 1.950577, -0.67848134, -0.20088726, -1.0908419, -1.2821579, 2.032251, -1.2373164, -1.9394372, -1.8360873, 0.74330837, 0.9447373, 3.1652577, 0.16444652, -3.3115606, 1.662408, 2.1625297, 2.220072, 0.123239934, -0.9221235, 2.4914205, 0.6990802, 0.93488973, -2.4074883, -1.9613615, 2.0342774, -1.2352704, 0.28561708, 1.1257901, -0.5457232, -2.2016883, -1.2753719, 0.010415403, -3.2781336, -1.5098681, 0.5804764, 0.6405859, 0.11754597, -1.6523998, 0.23636852, -0.2502241, -0.6243457, -1.9948186, -3.2819061, 1.7272195, 0.20159097, 2.6798582, -1.5042601, 0.4614676, 3.252352, 1.8165411, -1.0264812, 0.67359865, -1.2884388]</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>CCIAL</td>
+      <td>[-0.40383568, -2.4560475, -2.0241725, -1.1169826, 0.25705075, -0.06515516, 0.7283697, -0.794644, 0.41110903, -0.77483845, 0.36467126, -1.4904175, 1.4450341, -0.9626747, 1.5860302, 1.7199601, -0.5197809, -0.28229505, 1.7162033, -0.9579225, 2.2604125, 0.24697454, 1.2130316, -2.3880725, 1.3023345, -0.5096294, -1.2514404, -0.87026227, 0.9663782, 0.9541621, 1.3428134, -0.12749301, -1.0981637, -0.71891195, 0.8915852, -0.79354787, 0.7047056, -1.3246417, 0.39292186, 0.6759215, 0.73072696, 0.08977838, -1.3743805, 1.0305315, 1.5145246, -0.11518059, 1.3406706, 0.15746713, -0.4647347, -0.51634395, -0.7706991, 0.42282048, 0.3620588, -0.91496795, -2.2681375, -1.8582603, 0.4339257, 0.4437455, -0.6233547, -0.0861309, -0.15891205, -0.543328, 1.5158373, 1.7981697, -1.3177186, 1.0575259, -0.6101017, -0.27842632, -0.76754856, 0.81192106, 0.048519555, 0.0824207, -0.13206087, 0.50030726, 0.5118375, -2.267211, 0.71742547, -1.2657775, -1.5190916, 0.44192162, 0.9274282, -0.5581665, 0.8229067, 2.244016, -1.0286566, 1.7164487, 1.9575914, 1.7674198, -2.2547615, -0.8541962, 1.1188914, -1.3830585, 0.29136363, 0.91940635, -0.7775327, -0.34279707, -2.2286227, -1.1091324, 2.2409196, 1.0523692]</td>
+      <td>[-1.9297086, -4.0409436, -0.25941342, -0.7859506, -0.4652606, 2.2804756, 1.0681757, 0.72852355, -2.7355075, 1.0278999, 2.2360685, -0.03623223, 4.11945, 1.5377272, 2.5242136, 2.082954, -0.7249928, -0.23796822, -0.17558627, 0.19722576, 1.4990003, -0.79382044, 1.9714954, -0.46313703, 1.9647813, -0.3468441, -1.1249101, 1.5074009, 1.2859945, 0.7523762, -2.8549774, -1.0922265, -1.8848443, 1.4217745, 0.29113436, 0.9000691, 0.59672105, 2.1925743, -0.9475998, 2.918246, -2.6306212, -0.9720437, -0.9176794, 0.1048784, 2.5920258, 0.98284227, 1.4525789, -1.6322492, -0.18009353, -0.90609133, -1.1056329, -1.7399676, -0.9218928, -0.91078883, -3.3616328, 0.027253885, 1.5255218, 2.4093175, -0.6903315, -0.8898981, -1.4414381, -2.4607484, 1.0322328, 2.8582118, -1.1725731, 0.866098, 0.5282245, 0.5347404, 1.0254059, 0.13462004, -1.2707883, 2.100081, 0.38197178, 0.8758506, 2.1550853, -0.4059613, -1.2262079, -1.7167703, -0.008644429, -1.1231833, -1.0071813, 1.1097206, 1.4115605, 0.28792122, -0.20272064, -0.18343842, -1.4334143, 2.130211, -0.12741345, -1.3788555, -0.23488352, 0.7329416, 1.184776, 0.7113282, 1.6217849, -0.555547, -0.78290445, 1.3385233, 0.09870087, -0.16841361]</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>CELLULE</td>
+      <td>[-0.40383568, -2.4560475, -2.0241725, -1.1169826, 0.25705075, -0.06515516, 0.7283697, -0.794644, 0.41110903, -0.77483845, 0.36467126, -1.4904175, 1.4450341, -0.9626747, 1.5860302, 1.7199601, -0.5197809, -0.28229505, 1.7162033, -0.9579225, 2.2604125, 0.24697454, 1.2130316, -2.3880725, 1.3023345, -0.5096294, -1.2514404, -0.87026227, 0.9663782, 0.9541621, 1.3428134, -0.12749301, -1.0981637, -0.71891195, 0.8915852, -0.79354787, 0.7047056, -1.3246417, 0.39292186, 0.6759215, 0.73072696, 0.08977838, -1.3743805, 1.0305315, 1.5145246, -0.11518059, 1.3406706, 0.15746713, -0.4647347, -0.51634395, -0.7706991, 0.42282048, 0.3620588, -0.91496795, -2.2681375, -1.8582603, 0.4339257, 0.4437455, -0.6233547, -0.0861309, -0.15891205, -0.543328, 1.5158373, 1.7981697, -1.3177186, 1.0575259, -0.6101017, -0.27842632, -0.76754856, 0.81192106, 0.048519555, 0.0824207, -0.13206087, 0.50030726, 0.5118375, -2.267211, 0.71742547, -1.2657775, -1.5190916, 0.44192162, 0.9274282, -0.5581665, 0.8229067, 2.244016, -1.0286566, 1.7164487, 1.9575914, 1.7674198, -2.2547615, -0.8541962, 1.1188914, -1.3830585, 0.29136363, 0.91940635, -0.7775327, -0.34279707, -2.2286227, -1.1091324, 2.2409196, 1.0523692]</td>
+      <td>[-1.6129801, -0.10437651, 1.4974427, -0.036552005, -1.1222117, 2.103076, 0.43679154, 0.59636635, -1.5474347, -0.53553635, 2.1170242, 0.88433695, 3.2377195, 2.009139, 0.78063005, 2.4402344, -1.4386016, -2.331701, 0.9563559, 1.2001934, 1.6745092, 1.6268116, 1.137795, -1.142908, 2.5663874, 1.5467504, -1.6636788, 0.68367964, 0.28676966, -0.32365578, -1.7079984, -0.6640527, -1.5883033, -0.05603579, 0.014652561, 0.11015185, -1.2665884, 1.2997873, -0.25351298, -1.0273691, -1.4859822, -0.6892873, -2.495414, 0.78474104, 0.11347562, -1.7258034, 0.3245662, 0.22233066, -1.7672585, -0.3595019, -1.329712, 1.2591809, 0.87084246, -0.68716824, -2.2698116, -3.421683, 1.0717176, -0.14689627, 0.08610552, 0.6577486, 0.21394968, -0.6598186, 0.41336605, 1.087966, 1.476198, 0.07505647, 4.1221585, -0.08836032, 1.068494, -1.5098015, 0.26334718, 2.3863611, -0.91456825, -0.45496002, 2.1533904, -3.7674835, -1.5369811, -0.75728774, -1.7976301, -2.410854, 1.8959935, 0.38832211, -0.58734465, 1.8909758, -1.011042, 1.4504114, -1.1514721, 1.8693756, -2.495106, -0.5697566, 0.341372, 1.2621572, 0.011344785, 0.0013074186, -0.56495804, 0.8330197, -0.38225588, 1.3496951, -0.0714611, -0.3596793]</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>N</td>
+      <td>[-0.40383568, -2.4560475, -2.0241725, -1.1169826, 0.25705075, -0.06515516, 0.7283697, -0.794644, 0.41110903, -0.77483845, 0.36467126, -1.4904175, 1.4450341, -0.9626747, 1.5860302, 1.7199601, -0.5197809, -0.28229505, 1.7162033, -0.9579225, 2.2604125, 0.24697454, 1.2130316, -2.3880725, 1.3023345, -0.5096294, -1.2514404, -0.87026227, 0.9663782, 0.9541621, 1.3428134, -0.12749301, -1.0981637, -0.71891195, 0.8915852, -0.79354787, 0.7047056, -1.3246417, 0.39292186, 0.6759215, 0.73072696, 0.08977838, -1.3743805, 1.0305315, 1.5145246, -0.11518059, 1.3406706, 0.15746713, -0.4647347, -0.51634395, -0.7706991, 0.42282048, 0.3620588, -0.91496795, -2.2681375, -1.8582603, 0.4339257, 0.4437455, -0.6233547, -0.0861309, -0.15891205, -0.543328, 1.5158373, 1.7981697, -1.3177186, 1.0575259, -0.6101017, -0.27842632, -0.76754856, 0.81192106, 0.048519555, 0.0824207, -0.13206087, 0.50030726, 0.5118375, -2.267211, 0.71742547, -1.2657775, -1.5190916, 0.44192162, 0.9274282, -0.5581665, 0.8229067, 2.244016, -1.0286566, 1.7164487, 1.9575914, 1.7674198, -2.2547615, -0.8541962, 1.1188914, -1.3830585, 0.29136363, 0.91940635, -0.7775327, -0.34279707, -2.2286227, -1.1091324, 2.2409196, 1.0523692]</td>
+      <td>[-1.7969333, -2.7726927, -2.155229, -0.061681036, -0.108478464, 0.1293993, -0.9444827, 1.900657, -0.18695174, 0.24765383, -0.5334192, -1.9715568, 3.7090368, 1.1139084, 0.097767085, -0.40595388, 0.7864385, 0.86948866, 0.21909983, 0.45629632, 2.2950082, 0.5063718, 0.7823449, -0.6197482, 0.90374637, 0.82009685, 0.7015072, 3.1487632, -0.3282665, -1.1228353, -1.0424778, -0.9640697, -2.0392115, -0.19089617, -0.692922, -1.5359132, 0.61550194, -1.3931459, 1.1719415, 1.5058025, -0.4069421, -1.291164, -0.44899395, -1.7781677, 0.6894689, -2.4309688, -0.7266463, 0.8483574, -0.029610492, 2.0342245, 0.72494864, -2.0654514, 2.6675622, -0.15682457, -3.1909647, 0.2643293, 1.1939231, 0.91697866, -0.9991814, -0.9677605, -2.3359635, -0.831496, 1.0337974, -0.21172203, 0.5653107, 0.49726152, 0.17029822, -1.6335481, -1.0047877, -0.1698612, 0.7281107, 0.28721365, 0.8035219, 0.9982882, 2.4304376, -0.2420219, -1.1852397, -0.01705652, 9.099994E-4, -1.8828458, -0.714051, 0.41710627, -0.3201463, 2.1025867, -0.40449262, -0.6616635, 0.009476388, 0.6657053, -2.7443779, -2.6973267, 0.7788065, 0.00171362, -0.46450263, -0.07510954, -1.0331392, -1.4788597, 1.3594207, -1.3472216, 2.0735934, 1.4588997]</td>
     </tr>
   </tbody>
 </table>
@@ -15557,44 +14319,156 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>union_numero_voie</code></p>
+<h3 id="3.-Calcul-de-la-similarit&#233;">3. Calcul de la similarit&#233;<a class="anchor-link" href="#3.-Calcul-de-la-similarit&#233;">&#182;</a></h3><p>Le calcul de la similarité s'effectue avec la distance de cosine. Pour connaitre le pas a pas, veuillez vous référer au notebook <a href="https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/blob/master/Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/05_creation_table_poids_Word2Vec.md">07_creation_table_poids_Word2Vec.md#test-acceptanceanalyse-du-modele</a> pour comprendre les étapes</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="prompt input_prompt">In&nbsp;[24]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span>  <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">WITH dataset AS (</span>
-<span class="s2">  </span>
 <span class="s2">  SELECT </span>
-<span class="s2">  MAP(</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95],</span>
-<span class="s2">    approx_percentile(</span>
-<span class="s2">      union_numero_voie,</span>
-<span class="s2">    ARRAY[0.1,0.25,0.5,0.75,0.8,0.95])</span>
-<span class="s2">    ) AS nest</span>
-<span class="s2">    FROM &quot;ets_siretisation&quot;.&quot;ets_insee_inpi_list_num_voie&quot;  </span>
-<span class="s2">    ) </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi.row_id, </span>
+<span class="s2">    index_id, </span>
+<span class="s2">    status_cas, </span>
+<span class="s2">    inpi_except, </span>
+<span class="s2">    insee_except, </span>
+<span class="s2">    transform(</span>
+<span class="s2">      sequence(</span>
+<span class="s2">        1, </span>
+<span class="s2">        CARDINALITY(insee_except)</span>
+<span class="s2">      ), </span>
+<span class="s2">      x -&gt; insee_except</span>
+<span class="s2">    ), </span>
+<span class="s2">    ZIP(</span>
+<span class="s2">      inpi_except, </span>
+<span class="s2">      transform(</span>
+<span class="s2">        sequence(</span>
+<span class="s2">          1, </span>
+<span class="s2">          CARDINALITY(inpi_except)</span>
+<span class="s2">        ), </span>
+<span class="s2">        x -&gt; insee_except</span>
+<span class="s2">      )</span>
+<span class="s2">    ) as test </span>
+<span class="s2">  FROM </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi  </span>
 <span class="s2">    </span>
-<span class="s2">    SELECT </span>
-<span class="s2">    pct, </span>
-<span class="s2">    value AS  union_numero_voie</span>
-<span class="s2">    FROM dataset</span>
-<span class="s2">    CROSS JOIN UNNEST(nest) as t(pct, value)</span>
-
+<span class="s2">  LEFT JOIN ets_siretisation.ets_insee_inpi_statut_cas </span>
+<span class="s2">  ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_statut_cas.row_id</span>
+<span class="s2">  where </span>
+<span class="s2">    (status_cas != &#39;CAS_2&#39; AND CARDINALITY(inpi_except)  &gt; 0 AND CARDINALITY(insee_except) &gt; 0 AND index_id = 728021)</span>
+<span class="s2">  )</span>
+<span class="s2">  SELECT </span>
+<span class="s2">  * </span>
+<span class="s2">FROM </span>
+<span class="s2">  (</span>
+<span class="s2">    WITH distance AS (</span>
+<span class="s2">SELECT </span>
+<span class="s2">              row_id, </span>
+<span class="s2">              index_id, </span>
+<span class="s2">              status_cas, </span>
+<span class="s2">              inpi_except, </span>
+<span class="s2">              insee_except, </span>
+<span class="s2">              unzip_inpi, </span>
+<span class="s2">              unzip_insee, </span>
+<span class="s2">              list_weights_inpi, </span>
+<span class="s2">              list_weights_insee </span>
+<span class="s2">            FROM </span>
+<span class="s2">              (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  row_id, </span>
+<span class="s2">                  index_id, </span>
+<span class="s2">                  status_cas, </span>
+<span class="s2">                  inpi_except, </span>
+<span class="s2">                  insee_except, </span>
+<span class="s2">                  unzip.field0 as unzip_inpi, </span>
+<span class="s2">                  unzip.field1 as insee, </span>
+<span class="s2">                  test </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  dataset CROSS </span>
+<span class="s2">                  JOIN UNNEST(test) AS new (unzip)</span>
+<span class="s2">              ) CROSS </span>
+<span class="s2">              JOIN UNNEST(insee) as test (unzip_insee) </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_inpi </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_inpi ON unzip_inpi = tb_weight_inpi.words </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_insee </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_insee ON unzip_insee = tb_weight_insee.words </span>
+<span class="s2">      )</span>
+<span class="s2">    SELECT row_id, </span>
+<span class="s2">            index_id, </span>
+<span class="s2">            status_cas, </span>
+<span class="s2">            inpi_except, </span>
+<span class="s2">            insee_except, </span>
+<span class="s2">            unzip_inpi, </span>
+<span class="s2">            unzip_insee, </span>
+<span class="s2">            REDUCE(</span>
+<span class="s2">              zip_with(</span>
+<span class="s2">                list_weights_inpi, </span>
+<span class="s2">                list_weights_insee, </span>
+<span class="s2">                (x, y) -&gt; x * y</span>
+<span class="s2">              ), </span>
+<span class="s2">              CAST(</span>
+<span class="s2">                ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              (s, x) -&gt; CAST(</span>
+<span class="s2">                ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              s -&gt; s.sum</span>
+<span class="s2">            ) / (</span>
+<span class="s2">              SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_inpi, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              ) * SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_insee, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              )</span>
+<span class="s2">            ) AS cosine_distance  </span>
+<span class="s2">    FROM distance</span>
+<span class="s2">    )</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">tb</span> <span class="o">=</span> <span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
-            <span class="n">database</span><span class="o">=</span><span class="s1">&#39;ets_siretisation&#39;</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
             <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
-  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;distribution&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;cosine&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
   <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
-        <span class="p">)</span>
-<span class="n">tb</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;cosine_distance&#39;</span><span class="p">,</span> <span class="n">ascending</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -15607,7 +14481,7 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[19]:</div>
+    <div class="prompt output_prompt">Out[24]:</div>
 
 
 
@@ -15630,40 +14504,544 @@ div#notebook {
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>pct</th>
-      <th>union_numero_voie</th>
+      <th>row_id</th>
+      <th>index_id</th>
+      <th>status_cas</th>
+      <th>inpi_except</th>
+      <th>insee_except</th>
+      <th>unzip_inpi</th>
+      <th>unzip_insee</th>
+      <th>cosine_distance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>9</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>CCIAL</td>
+      <td>0.801802</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>CTRE</td>
+      <td>0.767657</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>VITROLLES</td>
+      <td>0.489562</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>CCIAL</td>
+      <td>0.462875</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>CELLULE</td>
+      <td>0.409481</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>CTRE</td>
+      <td>0.398426</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>CELLULE</td>
+      <td>0.393910</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>CCIAL</td>
+      <td>0.346246</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>N</td>
+      <td>0.337116</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>N</td>
+      <td>0.332599</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>CELLULE</td>
+      <td>0.330774</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>VITROLLES</td>
+      <td>0.309082</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>VITROLLES</td>
+      <td>0.272309</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>N</td>
+      <td>0.258003</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>VITROLLES</td>
+      <td>0.243715</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>GAL</td>
+      <td>0.228244</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>CTRE</td>
+      <td>0.215399</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>CENTRE</td>
+      <td>GAL</td>
+      <td>0.186951</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>NATIONALE</td>
+      <td>GAL</td>
+      <td>0.149274</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>N</td>
+      <td>0.052992</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>CTRE</td>
+      <td>0.045158</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>CCIAL</td>
+      <td>0.038585</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>GAL</td>
+      <td>0.032668</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>189356</td>
+      <td>728021</td>
+      <td>CAS_4</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>ROUTE</td>
+      <td>CELLULE</td>
+      <td>0.021381</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="4.-Recup&#233;ration-de-la-similarit&#233;-maximum-par-row_id-et-calcul-Levensthein">4. Recup&#233;ration de la similarit&#233; maximum par <code>row_id</code> et calcul Levensthein<a class="anchor-link" href="#4.-Recup&#233;ration-de-la-similarit&#233;-maximum-par-row_id-et-calcul-Levensthein">&#182;</a></h3><p>La dernière étape consiste a récupérer la similarité maximum sur les doublons provenant du <code>row_id</code> de sorte à n'avoir qu'une ligne par pair</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">WITH dataset AS (</span>
+<span class="s2">  SELECT </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi.row_id, </span>
+<span class="s2">    index_id, </span>
+<span class="s2">    status_cas, </span>
+<span class="s2">    inpi_except, </span>
+<span class="s2">    insee_except, </span>
+<span class="s2">    transform(</span>
+<span class="s2">      sequence(</span>
+<span class="s2">        1, </span>
+<span class="s2">        CARDINALITY(insee_except)</span>
+<span class="s2">      ), </span>
+<span class="s2">      x -&gt; insee_except</span>
+<span class="s2">    ), </span>
+<span class="s2">    ZIP(</span>
+<span class="s2">      inpi_except, </span>
+<span class="s2">      transform(</span>
+<span class="s2">        sequence(</span>
+<span class="s2">          1, </span>
+<span class="s2">          CARDINALITY(inpi_except)</span>
+<span class="s2">        ), </span>
+<span class="s2">        x -&gt; insee_except</span>
+<span class="s2">      )</span>
+<span class="s2">    ) as test </span>
+<span class="s2">  FROM </span>
+<span class="s2">    ets_siretisation.ets_insee_inpi  </span>
+<span class="s2">    </span>
+<span class="s2">  LEFT JOIN ets_siretisation.ets_insee_inpi_statut_cas </span>
+<span class="s2">  ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_statut_cas.row_id</span>
+<span class="s2">  where </span>
+<span class="s2">    (status_cas != &#39;CAS_2&#39; AND CARDINALITY(inpi_except)  &gt; 0 AND CARDINALITY(insee_except) &gt; 0 AND index_id = 728021)</span>
+<span class="s2">  )</span>
+<span class="s2"> SELECT </span>
+<span class="s2">  * </span>
+<span class="s2">FROM </span>
+<span class="s2">  (</span>
+<span class="s2">    WITH distance AS (</span>
+<span class="s2">      SELECT </span>
+<span class="s2">        * </span>
+<span class="s2">      FROM </span>
+<span class="s2">        (</span>
+<span class="s2">          WITH list_weights_insee_inpi AS (</span>
+<span class="s2">            SELECT </span>
+<span class="s2">              row_id, </span>
+<span class="s2">              index_id, </span>
+<span class="s2">              status_cas, </span>
+<span class="s2">              inpi_except, </span>
+<span class="s2">              insee_except, </span>
+<span class="s2">              unzip_inpi, </span>
+<span class="s2">              unzip_insee, </span>
+<span class="s2">              list_weights_inpi, </span>
+<span class="s2">              list_weights_insee </span>
+<span class="s2">            FROM </span>
+<span class="s2">              (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  row_id, </span>
+<span class="s2">                  index_id, </span>
+<span class="s2">                  status_cas, </span>
+<span class="s2">                  inpi_except, </span>
+<span class="s2">                  insee_except, </span>
+<span class="s2">                  unzip.field0 as unzip_inpi, </span>
+<span class="s2">                  unzip.field1 as insee, </span>
+<span class="s2">                  test </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  dataset CROSS </span>
+<span class="s2">                  JOIN UNNEST(test) AS new (unzip)</span>
+<span class="s2">              ) CROSS </span>
+<span class="s2">              JOIN UNNEST(insee) as test (unzip_insee) </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_inpi </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_inpi ON unzip_inpi = tb_weight_inpi.words </span>
+<span class="s2">              LEFT JOIN (</span>
+<span class="s2">                SELECT </span>
+<span class="s2">                  words, </span>
+<span class="s2">                  list_weights as list_weights_insee </span>
+<span class="s2">                FROM </span>
+<span class="s2">                  ets_siretisation.list_weight_mots_insee_inpi_word2vec </span>
+<span class="s2">              ) tb_weight_insee ON unzip_insee = tb_weight_insee.words </span>
+<span class="s2">          ) </span>
+<span class="s2">          SELECT </span>
+<span class="s2">            row_id, </span>
+<span class="s2">            index_id, </span>
+<span class="s2">            status_cas, </span>
+<span class="s2">            inpi_except, </span>
+<span class="s2">            insee_except, </span>
+<span class="s2">            unzip_inpi, </span>
+<span class="s2">            unzip_insee, </span>
+<span class="s2">            REDUCE(</span>
+<span class="s2">              zip_with(</span>
+<span class="s2">                list_weights_inpi, </span>
+<span class="s2">                list_weights_insee, </span>
+<span class="s2">                (x, y) -&gt; x * y</span>
+<span class="s2">              ), </span>
+<span class="s2">              CAST(</span>
+<span class="s2">                ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              (s, x) -&gt; CAST(</span>
+<span class="s2">                ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">              ), </span>
+<span class="s2">              s -&gt; s.sum</span>
+<span class="s2">            ) / (</span>
+<span class="s2">              SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_inpi, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              ) * SQRT(</span>
+<span class="s2">                REDUCE(</span>
+<span class="s2">                  transform(</span>
+<span class="s2">                    list_weights_insee, </span>
+<span class="s2">                    (x) -&gt; POW(x, 2)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  CAST(</span>
+<span class="s2">                    ROW(0.0) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  (s, x) -&gt; CAST(</span>
+<span class="s2">                    ROW(x + s.sum) AS ROW(sum DOUBLE)</span>
+<span class="s2">                  ), </span>
+<span class="s2">                  s -&gt; s.sum</span>
+<span class="s2">                )</span>
+<span class="s2">              )</span>
+<span class="s2">            ) AS cosine_distance </span>
+<span class="s2">          FROM </span>
+<span class="s2">            list_weights_insee_inpi</span>
+<span class="s2">        )</span>
+<span class="s2">    ) </span>
+<span class="s2">    SELECT </span>
+<span class="s2">      row_id, </span>
+<span class="s2">      dataset.index_id, </span>
+<span class="s2">      inpi_except, </span>
+<span class="s2">      insee_except, </span>
+<span class="s2">      unzip_inpi, </span>
+<span class="s2">      unzip_insee, </span>
+<span class="s2">      max_cosine_distance,</span>
+<span class="s2">      test as key_except_to_test,</span>
+<span class="s2">      levenshtein_distance(unzip_inpi, unzip_insee) AS levenshtein_distance</span>
+<span class="s2">    </span>
+<span class="s2">    FROM </span>
+<span class="s2">      dataset </span>
+<span class="s2">      LEFT JOIN (</span>
+<span class="s2">        SELECT </span>
+<span class="s2">          distance.index_id, </span>
+<span class="s2">          unzip_inpi, </span>
+<span class="s2">          unzip_insee, </span>
+<span class="s2">          max_cosine_distance </span>
+<span class="s2">        FROM </span>
+<span class="s2">          distance </span>
+<span class="s2">          RIGHT JOIN (</span>
+<span class="s2">            SELECT </span>
+<span class="s2">              index_id, </span>
+<span class="s2">              MAX(cosine_distance) as max_cosine_distance </span>
+<span class="s2">            FROM </span>
+<span class="s2">              distance </span>
+<span class="s2">            GROUP BY </span>
+<span class="s2">              index_id</span>
+<span class="s2">          ) as tb_max_distance ON distance.index_id = tb_max_distance.index_id </span>
+<span class="s2">          AND distance.cosine_distance = tb_max_distance.max_cosine_distance</span>
+<span class="s2">      ) as tb_max_distance_lookup ON dataset.index_id = tb_max_distance_lookup.index_id</span>
+<span class="s2">  )</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">s3</span><span class="o">.</span><span class="n">run_query</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">s3_output</span><span class="o">=</span><span class="n">s3_output</span><span class="p">,</span>
+  <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;max_cosine&#39;</span><span class="p">,</span> <span class="c1">## Add filename to print dataframe</span>
+  <span class="n">destination_key</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">### Add destination key if need to copy output</span>
+        <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[30]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>row_id</th>
+      <th>index_id</th>
+      <th>inpi_except</th>
+      <th>insee_except</th>
+      <th>unzip_inpi</th>
+      <th>unzip_insee</th>
+      <th>max_cosine_distance</th>
+      <th>key_except_to_test</th>
+      <th>levenshtein_distance</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>0.10</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>0.25</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.50</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>0.75</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.80</td>
-      <td>2.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>0.95</td>
-      <td>2.0</td>
+      <td>189356</td>
+      <td>728021</td>
+      <td>[CENTRE, COMMERCIAL, ROUTE, NATIONALE]</td>
+      <td>[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]</td>
+      <td>COMMERCIAL</td>
+      <td>CCIAL</td>
+      <td>0.801802</td>
+      <td>[{field0=CENTRE, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}, {field0=COMMERCIAL, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}, {field0=ROUTE, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}, {field0=NATIONALE, field1=[GAL, VITROLLES, CTRE, CCIAL, CELLULE, N]}]</td>
+      <td>5</td>
     </tr>
   </tbody>
 </table>
@@ -15685,7 +15063,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[31]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">urllib</span><span class="o">,</span> <span class="nn">ipykernel</span><span class="o">,</span> <span class="nn">json</span>
@@ -15700,7 +15078,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="prompt input_prompt">In&nbsp;[32]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_report</span><span class="p">(</span><span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span><span class="p">,</span> <span class="n">keep_code</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
