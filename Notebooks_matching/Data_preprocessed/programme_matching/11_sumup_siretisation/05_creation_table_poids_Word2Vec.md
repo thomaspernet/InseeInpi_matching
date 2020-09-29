@@ -364,7 +364,7 @@ s3.run_query(
 ```python
 query = """
 
-CREATE TABLE siretisation.list_weight_mots_insee_inpi_word2vec
+CREATE TABLE ets_siretisation.list_weight_mots_insee_inpi_word2vec
 WITH (
   format='PARQUET'
 ) AS
@@ -380,24 +380,25 @@ for i in range(0, 100):
         middle  = "ARRAY[vec_{}],".format(i)
     query += middle
 bottom = """
-FROM "siretisation"."weights_mots_insee_inpi_word2vec"
+FROM "ets_siretisation"."weights_mots_insee_inpi_word2vec"
 """
 query += bottom
 output = s3.run_query(
         query=query,
-        database='machine_learning',
-        s3_output='INPI/sql_output'
+        database='ets_siretisation',
+        s3_output=s3_output
     )
+output
 ```
 
 ```python
 query = """
-SELECT * FROM "siretisation"."list_weight_mots_insee_inpi_word2vec" limit 10;
+SELECT * FROM "ets_siretisation"."list_weight_mots_insee_inpi_word2vec" limit 10;
 """
 s3.run_query(
         query=query,
-        database='siretisation',
-        s3_output='INPI/sql_output',
+        database='ets_siretisation',
+        s3_output=s3_output,
     filename = 'list_weights'
     ).head(3)
 ```
