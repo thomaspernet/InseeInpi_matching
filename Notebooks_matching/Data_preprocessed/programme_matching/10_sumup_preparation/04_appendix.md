@@ -989,9 +989,13 @@ Il y a, dans de nombreuses fois, une différence de type d’établissement entr
 * Les informations ont disparu dans le moteur de recherche de l’INPI
 
 # Evenements sur ETS non créé
-Description problème 
+
+## Description problème 
+
  Il y a des établissements ayant fait l’objet d’une modification alors que l’établissement n’a pas été créé. C’est le cas lorsque le greffe se trompe dans l’identifiant de l’établissement. En effet, une séquence (siren, code greffe, numéro de gestion, id établissement) doit être unique au cours de la vie de l’établissement. Néanmoins, le greffe semble créer de nouveaux id établissement lors d’un événement sans raison sous-jacente.
-Exemples
+
+### Exemples
+
 * Metadata
   *  Resolu: NON
   * Sequence:
@@ -1010,7 +1014,8 @@ Exemples
     * INPI 
     * INSEE
 
-Description problème 
+## Description problème 
+
 *  Ce siren contient plusieurs problèmes:
   * Du coté de l’INSEE:
     * Le moteur de recherche de l’INSEE indique un seul établissement à l’adresse 1105 AV PIERRE BERNARD-REYMOND 
