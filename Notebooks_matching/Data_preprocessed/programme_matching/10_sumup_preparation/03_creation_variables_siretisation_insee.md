@@ -406,7 +406,7 @@ step_8 = {
 ```
 
 ```python
-to_remove = True
+to_remove = False
 if to_remove:
     parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].pop(-1)
 ```
