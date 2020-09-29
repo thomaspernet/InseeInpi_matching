@@ -87,7 +87,6 @@ jupyter:
 
 ```python
 from awsPy.aws_authorization import aws_connector
-from awsPy.aws_athena import service_athena
 from awsPy.aws_s3 import service_s3
 from pathlib import Path
 import pandas as pd
@@ -123,7 +122,7 @@ if pandas_setting:
 
 # Introduction
 
-nous allons créer une table appelée `ets_insee_inpi_regle` qui fait un rapprochement des tables:
+Nous allons créer une table appelée `ets_insee_inpi_regle` qui fait un rapprochement des tables:
 
 - `ets_insee_inpi_status_cas`
 - `ets_insee_inpi_list_num_voie`
@@ -151,6 +150,11 @@ WHEN (intersection_numero_voie IS NULL OR union_numero_voie IS NULL ) THEN 'NULL
 WHEN intersection_numero_voie >0 AND intersection_numero_voie != union_numero_voie THEN 'PARTIAL'
 ELSE 'FALSE' END AS test_list_num_voie
 ```
+
+* TRUE → Tous les numéros sont identiques
+  * FALSE → Aucun des numéros ne sont identiques
+  * NULL → Aucun numéro présent dans l’adresse INSEE ou INPI
+  * PARTIAL → au moins un des numéros est commun aux deux listes
 
 ### `test_enseigne`
 
@@ -234,13 +238,13 @@ CASE WHEN etatadministratifetablissement = status_admin THEN 'TRUE' WHEN etatadm
 ```
 
 ```python
-s3_output = 'inpi/sql_output'
-database = 'siretisation'
+s3_output = 'SQL_OUTPUT_ATHENA'
+database = 'ets_siretisation'
 ```
 
 ```python
 query = """
-DROP TABLE siretisation.ets_insee_inpi_regle;
+DROP TABLE ets_siretisation.ets_insee_inpi_regle;
 """
 
 s3.run_query(
@@ -254,7 +258,7 @@ s3.run_query(
 
 ```python
 query = """
-CREATE TABLE siretisation.ets_insee_inpi_regle
+CREATE TABLE ets_siretisation.ets_insee_inpi_regle
 WITH (
   format='PARQUET'
 ) AS
@@ -276,7 +280,7 @@ CASE WHEN count_inpi_index_id_siret > 1 THEN 'TRUE' ELSE 'FALSE' END AS test_ind
 CASE WHEN count_initial_insee = count_inpi_siren_siret THEN 'TRUE' ELSE 'FALSE' END AS test_siren_insee_siren_inpi,
 
 -- status cas
-ets_insee_inpi.adresse_distance_insee, ets_insee_inpi.adresse_distance_inpi, ets_insee_inpi_status_cas.insee_except, ets_insee_inpi_status_cas.inpi_except, intersection, union_, ets_insee_inpi_var_group_max.pct_intersection, index_id_max_intersection,
+ets_insee_inpi.adresse_distance_insee, ets_insee_inpi.adresse_distance_inpi, ets_insee_inpi_statut_cas.insee_except, ets_insee_inpi_statut_cas.inpi_except, intersection, union_, ets_insee_inpi_var_group_max.pct_intersection, index_id_max_intersection,
 status_cas,
 
 CASE WHEN ets_insee_inpi_var_group_max.pct_intersection = index_id_max_intersection THEN 'TRUE' ELSE 'FALSE' END AS test_pct_intersection,
@@ -284,11 +288,11 @@ CASE WHEN ets_insee_inpi_var_group_max.pct_intersection = index_id_max_intersect
 -- ets_insee_inpi_similarite_max_word2vec
 unzip_inpi, unzip_insee, max_cosine_distance, key_except_to_test, levenshtein_distance, 
 CASE WHEN max_cosine_distance >= .6 THEN 'TRUE' 
-WHEN CARDINALITY(ets_insee_inpi_status_cas.inpi_except)  IS NULL AND CARDINALITY(ets_insee_inpi_status_cas.insee_except) IS NULL THEN 'NULL'
+WHEN CARDINALITY(ets_insee_inpi_statut_cas.inpi_except)  IS NULL AND CARDINALITY(ets_insee_inpi_statut_cas.insee_except) IS NULL THEN 'NULL'
 ELSE 'FALSE' END AS test_similarite_exception_words,
 
 CASE WHEN levenshtein_distance(unzip_inpi, unzip_insee) <=1  THEN 'TRUE' 
-WHEN CARDINALITY(ets_insee_inpi_status_cas.inpi_except)  IS NULL AND CARDINALITY(ets_insee_inpi_status_cas.insee_except) IS NULL THEN 'NULL'
+WHEN CARDINALITY(ets_insee_inpi_statut_cas.inpi_except)  IS NULL AND CARDINALITY(ets_insee_inpi_statut_cas.insee_except) IS NULL THEN 'NULL'
 ELSE 'FALSE' END AS test_distance_levhenstein_exception_words,
 
 -- liste num voie
@@ -312,9 +316,9 @@ OR ets_insee_inpi.enseigne = '' THEN 'NULL' WHEN list_enseigne_contain = TRUE TH
 
 
 -- Test date
-datecreationetablissement, "date_début_activité",
-CASE WHEN datecreationetablissement = "date_début_activité" THEN 'TRUE' WHEN datecreationetablissement = '' 
-OR "date_début_activité" ='' THEN 'NULL' ELSE 'FALSE' END AS test_date,
+datecreationetablissement, date_debut_activite,
+CASE WHEN datecreationetablissement = date_debut_activite THEN 'TRUE' WHEN datecreationetablissement = '' 
+OR date_debut_activite ='' THEN 'NULL' ELSE 'FALSE' END AS test_date,
 
 -- Test siege
 etablissementsiege,status_ets,
@@ -329,27 +333,27 @@ CASE WHEN etatadministratifetablissement = status_admin THEN 'TRUE' WHEN etatadm
         OR status_admin IS NULL THEN 'NULL' WHEN etatadministratifetablissement = '' 
         OR status_admin = '' THEN 'NULL' ELSE 'FALSE' END AS test_status_admin
 
-FROM siretisation.ets_insee_inpi 
+FROM ets_siretisation.ets_insee_inpi 
 
 -- status cas
-LEFT JOIN siretisation.ets_insee_inpi_status_cas 
-ON siretisation.ets_insee_inpi.row_id = siretisation.ets_insee_inpi_status_cas.row_id
+LEFT JOIN ets_siretisation.ets_insee_inpi_statut_cas 
+ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_statut_cas.row_id
 
 -- liste num voie
-LEFT JOIN siretisation.ets_insee_inpi_list_num_voie  
-ON siretisation.ets_insee_inpi.row_id = siretisation.ets_insee_inpi_list_num_voie.row_id
+LEFT JOIN ets_siretisation.ets_insee_inpi_list_num_voie  
+ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_list_num_voie.row_id
 
 -- ets_insee_inpi_list_enseigne
-LEFT JOIN siretisation.ets_insee_inpi_list_enseigne  
-ON siretisation.ets_insee_inpi.row_id = siretisation.ets_insee_inpi_list_enseigne.row_id
+LEFT JOIN ets_siretisation.ets_insee_inpi_list_enseigne  
+ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_list_enseigne.row_id
 
 -- ets_insee_inpi_var_group_max
-LEFT JOIN siretisation.ets_insee_inpi_var_group_max  
-ON siretisation.ets_insee_inpi.row_id = siretisation.ets_insee_inpi_var_group_max.row_id
+LEFT JOIN ets_siretisation.ets_insee_inpi_var_group_max  
+ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_insee_inpi_var_group_max.row_id
 
 -- ets_insee_inpi_similarite_max_word2vec
-LEFT JOIN siretisation.ets_inpi_similarite_max_word2vec  
-ON siretisation.ets_insee_inpi.row_id = siretisation.ets_inpi_similarite_max_word2vec.row_id
+LEFT JOIN ets_siretisation.ets_inpi_similarite_max_word2vec  
+ON ets_siretisation.ets_insee_inpi.row_id = ets_siretisation.ets_inpi_similarite_max_word2vec.row_id
 
   )
   SELECT rank, 
@@ -403,7 +407,7 @@ creation_test.test_enseigne,
 
 -- Test date
 datecreationetablissement, 
-"date_début_activité",
+date_debut_activite,
 creation_test.test_date,
 
 -- Test siege
@@ -417,7 +421,7 @@ status_admin,
 creation_test.test_status_admin
 
   FROM creation_test
-  LEFT JOIN siretisation.rank_matrice_regles_gestion  
+  LEFT JOIN ets_siretisation.rank_matrice_regles_gestion  
 
   ON  creation_test.test_pct_intersection = rank_matrice_regles_gestion.test_pct_intersection
 
@@ -447,7 +451,7 @@ s3.run_query(
         )
 ```
 
-# Test acceptance
+# Analyse
 
 ## test sur `test_list_num_voie`
 
@@ -1040,7 +1044,7 @@ FROM siretisation.ets_insee_inpi_regle
 
 s3.run_query(
             query=query,
-            database='siretisation',
+            database='ets_siretisation',
             s3_output=s3_output,
   filename = 'exemple_other_test', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
