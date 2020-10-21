@@ -165,7 +165,7 @@ df.first()
 Load weights
 
 ```python
-from pyspark.sql.types import StructType, ArrayType, StringType, FloatType
+from pyspark.sql.types import StructType, ArrayType, StringType, FloatType, MapType
 import pyspark.sql.functions as F
 from pyspark.sql.types import IntegerType
 from pyspark.mllib.linalg import DenseVector, Vectors, VectorUDT
@@ -220,6 +220,9 @@ slen = F.udf(lambda s: len(s), IntegerType())
 #def dot(x, y):
 #    return Vectors.dense(x).dot(Vectors.dense(y))
 ```
+
+# Calcul Cosine depuis deux listes en Spark 3.0
+
 
 Comme la fonction du cosine est assez simple, il n'y a pas besoin de créer une fonction (et le décorateur). Une fonction lambda est amplement suffisante
 
@@ -296,74 +299,72 @@ df_pandas = test.toPandas()
 df_pandas.head()
 ```
 
-# Generation report
+# Calcul Cosine depuis deux listes en Spark, version < 2.2
 
 ```python
-import os, time, shutil, urllib, ipykernel, json
-from pathlib import Path
-from notebook import notebookapp
+list_a = ["RUE", "CHARLES", "GILLE"]
+list_b = ["BOULEVARD", "PREUILLY"]
+
+test_list =[dict(zip([i], [list_b])) for i in list_a]
+test_list
 ```
 
 ```python
-def create_report(extension = "html", keep_code = False):
-    """
-    Create a report from the current notebook and save it in the 
-    Report folder (Parent-> child directory)
-    
-    1. Exctract the current notbook name
-    2. Convert the Notebook 
-    3. Move the newly created report
-    
-    Args:
-    extension: string. Can be "html", "pdf", "md"
-    
-    
-    """
-    
-    ### Get notebook name
-    connection_file = os.path.basename(ipykernel.get_connection_file())
-    kernel_id = connection_file.split('-', 1)[0].split('.')[0]
-
-    for srv in notebookapp.list_running_servers():
-        try:
-            if srv['token']=='' and not srv['password']:  
-                req = urllib.request.urlopen(srv['url']+'api/sessions')
-            else:
-                req = urllib.request.urlopen(srv['url']+ \
-                                             'api/sessions?token=' + \
-                                             srv['token'])
-            sessions = json.load(req)
-            notebookname = sessions[0]['name']
-        except:
-            pass  
-    
-    sep = '.'
-    path = os.getcwd()
-    #parent_path = str(Path(path).parent)
-    
-    ### Path report
-    #path_report = "{}/Reports".format(parent_path)
-    #path_report = "{}/Reports".format(path)
-    
-    ### Path destination
-    name_no_extension = notebookname.split(sep, 1)[0]
-    source_to_move = name_no_extension +'.{}'.format(extension)
-    dest = os.path.join(path,'Reports', source_to_move)
-    
-    ### Generate notebook
-    if keep_code:
-        os.system('jupyter nbconvert --to {} {}'.format(
-    extension,notebookname))
-    else:
-        os.system('jupyter nbconvert --no-input --to {} {}'.format(
-    extension,notebookname))
-    
-    ### Move notebook to report folder
-    #time.sleep(5)
-    shutil.move(source_to_move, dest)
-    print("Report Available at this adress:\n {}".format(dest))
+zip_except = F.udf(lambda x, y: [dict(zip([i], [y])) for i in x],
+                   ArrayType(MapType(StringType(), ArrayType(StringType()))))
 ```
 
 ```python
-create_report(extension = "html")
+cosine = F.udf(lambda x, y: 
+               (np.dot(x, y)/ (np.linalg.norm(x) * np.linalg.norm(y))).item(),
+               FloatType())
+```
+
+```python
+test = (
+    df
+    .filter("row_id = {}".format(test_id))
+    .select(
+        'row_id',
+        'inpi_except',
+        'insee_except',
+        F.explode(zip_except("inpi_except","insee_except")).alias("zip_except")
+    )
+    .select(
+    'row_id',
+        'inpi_except',
+        'insee_except',
+        F.explode("zip_except").alias("inpi", "value")
+    )
+    .select(
+    'row_id',
+        'inpi_except',
+        'insee_except',
+        'inpi',
+         F.explode("value")
+        .alias("insee")
+    )
+    .join((weights.withColumnRenamed("words","inpi")),
+        on = ['inpi'], how = 'left')
+    .withColumnRenamed("list_weights","list_weights_inpi")
+    .join((weights.withColumnRenamed("words","insee")),
+       on = ['insee'], how = 'left')
+    .withColumnRenamed("list_weights","list_weights_insee")
+    .select('row_id',
+            'inpi',
+            'insee',
+            "list_weights_inpi",
+            "list_weights_insee",
+            cosine("list_weights_inpi", "list_weights_insee").alias("cosine"),
+           )
+)
+
+```
+
+```python
+test
+```
+
+```python
+test.show(truncate =True)
 ```
