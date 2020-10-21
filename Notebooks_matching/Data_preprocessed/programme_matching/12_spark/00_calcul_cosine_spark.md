@@ -129,21 +129,24 @@ output.head()
 ```
 
 ```python
-result = output.to_json(orient="records")
-parsed = json.loads(result)
-parsed
+output.to_json('test_cosine_inpi_insee.json',orient="records")
+```
+
+```python
+with open('test_cosine_inpi_insee.json') as f:
+    data = json.load(f)
 ```
 
 ```python
 list_ = []
-for key, value in enumerate(parsed):
+for key, value in enumerate(data):
     dic = {
         'row_id':value['row_id'],
         'inpi_except':value['inpi_except'].strip('][').split(', ') ,
         'insee_except': value['insee_except'].strip('][').split(', ')
     }
     list_.append(dic)
-with open('test_list.json', 'w') as outfile:
+with open('test_cosine_inpi_insee_clean.json', 'w') as outfile:
     json.dump(list_, outfile)
 ```
 
@@ -169,10 +172,6 @@ from pyspark.sql.types import StructType, ArrayType, StringType, FloatType, MapT
 import pyspark.sql.functions as F
 from pyspark.sql.types import IntegerType
 from pyspark.mllib.linalg import DenseVector, Vectors, VectorUDT
-```
-
-```python
-list_to_vector_udf = F.udf(lambda x: Vectors.dense(x), VectorUDT())
 ```
 
 ```python
