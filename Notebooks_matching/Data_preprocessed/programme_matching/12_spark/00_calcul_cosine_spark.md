@@ -52,22 +52,22 @@ Metadata
 
 ```python
 from awsPy.aws_authorization import aws_connector
-from awsPy.aws_athena import service_athena
 from awsPy.aws_s3 import service_s3
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import os, shutil
+import os, shutil, json
 
 path = os.getcwd()
-parent_path = str(Path(path).parent.parent.parent)
+parent_path = str(Path(path).parent)
 
+path_cred = r"{}/credential_AWS.json".format(parent_path)
+con = aws_connector.aws_instantiate(credential = path_cred,
+                                       region = 'eu-west-3')
 
-name_credential = 'XXX_credentials.csv'
-region = ''
-bucket = ''
-path_cred = "{0}/creds/{1}".format(parent_path, name_credential)
+region = 'eu-west-3'
+bucket = 'calfdata'
 ```
 
 ```python
@@ -91,12 +91,30 @@ if pandas_setting:
 ## Steps
 
 ```python
-s3_output = 'XX'
-database = ''
+from pyspark.sql import SparkSession
+
+spark = (SparkSession 
+    .builder 
+    .appName("Python Spark SQL basic example") 
+    .config('spark.executor.memory', '4G') 
+    .getOrCreate()
+        )
 ```
 
 ```python
+spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
+spark.conf.set("spark.sql.debug.maxToStringFields", 1000)
+```
+
+```python
+s3_output = 'SQL_OUTPUT_ATHENA'
+database = 'ets_siretisation'
+
 query = """
+SELECT row_id, inpi_except, insee_except
+FROM "ets_siretisation"."ets_insee_inpi_statut_cas"
+WHERE inpi_except IS NOT NULL AND insee_except IS NOT NULL
+LIMIT 10
 
 """
 
@@ -104,9 +122,178 @@ output = s3.run_query(
             query=query,
             database=database,
             s3_output=s3_output,
-  filename = None, ## Add filename to print dataframe
+  filename = 'test_list_spark', ## Add filename to print dataframe
   destination_key = None ### Add destination key if need to copy output
         )
+output.head()
+```
+
+```python
+result = output.to_json(orient="records")
+parsed = json.loads(result)
+parsed
+```
+
+```python
+list_ = []
+for key, value in enumerate(parsed):
+    dic = {
+        'row_id':value['row_id'],
+        'inpi_except':value['inpi_except'].strip('][').split(', ') ,
+        'insee_except': value['insee_except'].strip('][').split(', ')
+    }
+    list_.append(dic)
+with open('test_list.json', 'w') as outfile:
+    json.dump(list_, outfile)
+```
+
+Recupération premier ID
+
+```python
+test_id = parsed[0]['row_id']
+```
+
+```python
+df = spark.createDataFrame(list_)
+df.printSchema()
+```
+
+```python
+df.first()
+```
+
+Load weights
+
+```python
+from pyspark.sql.types import StructType, ArrayType, StringType, FloatType
+import pyspark.sql.functions as F
+from pyspark.sql.types import IntegerType
+from pyspark.mllib.linalg import DenseVector, Vectors, VectorUDT
+```
+
+```python
+list_to_vector_udf = F.udf(lambda x: Vectors.dense(x), VectorUDT())
+```
+
+```python
+path_list = 'word2vec_weights_100_v2.csv'
+schema  = (
+    StructType()
+    .add('words', StringType(),True)
+    .add("list_weigths", ArrayType(FloatType(), True))
+)
+
+cols = [str(i) for i in range(1, 101)]
+weights = (spark.read.csv(path_list, header = True)
+           .select('0',(F.array(cols)).cast(ArrayType(FloatType(), True)).alias('list_weights'))
+           .withColumnRenamed("0","words")
+           #.select('words', list_to_vector_udf("list_weights").alias('list_weights'))
+          )
+weights.dtypes
+```
+
+```python
+weights.show()
+```
+
+Function UDF
+
+https://spark.apache.org/docs/latest/api/python/pyspark.sql.html?highlight=udf#pyspark.sql.functions.udf
+
+```python
+slen = F.udf(lambda s: len(s), IntegerType())
+```
+
+```python
+(
+    weights
+    .select(
+        'words',
+        slen('words')
+    )
+    .show()
+)
+```
+
+```python
+#@F.udf(returnType=FloatType())
+#def dot(x, y):
+#    return Vectors.dense(x).dot(Vectors.dense(y))
+```
+
+Comme la fonction du cosine est assez simple, il n'y a pas besoin de créer une fonction (et le décorateur). Une fonction lambda est amplement suffisante
+
+```python
+cosine = F.udf(lambda x, y: 
+               (np.dot(x, y)/ (np.linalg.norm(x) * np.linalg.norm(y))).item(),
+               FloatType())
+```
+
+```python
+test = (
+    df
+    .filter("row_id = {}".format(test_id))
+    .select(
+        'row_id',
+        F.expr(
+        """
+explode(
+map_from_entries(    
+ arrays_zip(
+  inpi_except, 
+  transform(
+    sequence(
+      1, 
+      size(inpi_except)
+    ), 
+    x -> insee_except
+    )
+    )
+  )
+)
+      """
+                        )
+         .alias("inpi", "value")
+    )
+       
+    .select(
+        'row_id',
+        "inpi",
+        F.explode_outer("value")
+        .alias("insee")
+   )
+    .join((weights.withColumnRenamed("words","inpi")),
+        on = ['inpi'], how = 'left')
+    .withColumnRenamed("list_weights","list_weights_inpi")
+    .join((weights.withColumnRenamed("words","insee")),
+       on = ['insee'], how = 'left')
+    .withColumnRenamed("list_weights","list_weights_insee")
+    .select('row_id',
+            'inpi',
+            'insee',
+            "list_weights_inpi",
+            "list_weights_insee",
+            cosine("list_weights_inpi", "list_weights_insee").alias("cosine"),
+           )
+)
+```
+
+```python
+test.dtypes
+```
+
+```python
+test.show(truncate = True)
+```
+
+Verification 
+
+```python
+df_pandas = test.toPandas()
+```
+
+```python
+df_pandas.head()
 ```
 
 # Generation report
