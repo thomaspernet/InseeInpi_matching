@@ -1216,6 +1216,10 @@ step_1 = {
 ```
 
 ```python
+step_1
+```
+
+```python
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_1)
 ```
 

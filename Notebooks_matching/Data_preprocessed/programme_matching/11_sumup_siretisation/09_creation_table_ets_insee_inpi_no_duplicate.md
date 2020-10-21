@@ -661,6 +661,78 @@ s3.run_query(
         )
 ```
 
+# Analysis 
+
+
+
+```python
+from scipy.stats import chi2_contingency
+from scipy.stats import chi2
+from statsmodels.stats.multicomp import MultiComparison
+import scipy.stats as stats
+```
+
+```python
+primary_key = "nom_greffe"
+proba = .9
+dic_tables = {}
+
+to_include_cat = []
+to_include_cont = []
+```
+
+```python
+query = """
+SELECT nom_greffe, origin, COUNT(*) AS COUNT
+FROM ets_filtre_enrichie_historique 
+GROUP BY nom_greffe, origin
+"""
+df_ = s3.run_query(
+            query=query,
+            database="ets_inpi",
+            s3_output='INPI/sql_output',
+      filename = 'test_chi', ## Add filename to print dataframe
+      destination_key = None ### Add destination key if need to copy output
+        )
+```
+
+```python
+col = 'origin'
+table = (
+    df_
+    .set_index(['nom_greffe', 'origin'])
+    .unstack('origin')
+    .fillna(0)
+)
+```
+
+```python
+stat, p, dof, expected = chi2_contingency(table)
+critical = chi2.ppf(proba, dof)
+
+if abs(stat) >= critical:
+    to_include_cat.append('PO Sub Type')
+    result = 'Dependent (reject H0)'
+    to_include_cat.append(col)
+else:
+    result = 'Independent (fail to reject H0)'
+
+dic_results = {
+            'test': 'Chi Square',
+            'primary_key': primary_key,
+            'secondary_key': col,
+            'statistic': stat,
+            'p_value': p,
+            'dof': dof,
+            'critical': critical,
+            'result': result
+        }
+```
+
+```python
+dic_results
+```
+
 # Generation report
 
 ```python
