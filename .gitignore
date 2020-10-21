@@ -135,7 +135,7 @@ venv.bak/
 dmypy.json
 
 # File extension
-*.json
+#*.json
 *.xml
 
 # Pyre type checker
@@ -176,3 +176,6 @@ Notebooks_matching/Data_preprocessed/programme_matching/10_sumup_preparation/XX_
 Notebooks_matching/Data_preprocessed/programme_matching/11_sumup_siretisation/Regle_tests.csv
 Notebooks_matching/Data_preprocessed/programme_matching/12_spark/list_weight_mots_insee_inpi_word2vec.csv
 Notebooks_matching/Data_preprocessed/programme_matching/12_spark/word2vec_weights_100_v2.csv
+Notebooks_matching/Data_preprocessed/programme_matching/12_spark/test_cosine_inpi_insee.csv
+Notebooks_matching/Data_preprocessed/programme_matching/credential_AWS.json
+Notebooks_matching/Data_preprocessed/programme_matching/10_sumup_preparation/parameters_ETL_TEMPLATE.json
