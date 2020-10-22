@@ -190,3 +190,6 @@ Notebooks_matching/Data_preprocessed/programme_matching/data/logs/InitialPartiel
 Notebooks_matching/Data_preprocessed/programme_matching/data/logs/InitialPartielEVTNEW/7_inpi_ets_exemple_2_InitialPartielEVTNEW_logs.json
 US_Datum/Archive/Schema_fields/US_XXXX/fields_2234.json
 US_Datum/Credentials/credential_AWS.json
+12_spark/list_weight_mots_insee_inpi_word2vec.csv
+12_spark/word2vec_weights_100_v2.csv
+ARCHIVE/*
