@@ -16,7 +16,7 @@ jupyter:
 <!-- #region -->
 # Introduction entreprises et etablissements
 
-Le projet de rapprochement de la donnée disponible dans l’Open Data requière un minimum de connaissances sur certains concepts économiques et juridiques. En effet, l’objectif principal de noter projet est de joindre les informations économiques misent a disposition de la part de l’INSEE avec celle des tribunaux de commerce, qui diffuse l’information juridique. 
+Le projet de rapprochement de la donnée disponible dans l’Open Data requière un minimum de connaissances sur certains concepts économiques et juridiques. En effet, l’objectif principal de noter projet est de joindre les informations économiques misent a disposition de la part de l’INSEE avec celle des tribunaux de commerce, qui diffuse l’information juridique.
 
 Les concepts d’entreprise, d’établissements mais aussi de statut juridique est central dans le projet. Dans une première partie, nous allons expliquer, de manière non exhaustive, chacun des concepts, avant d’expliquer le contenu et la transformation des bases de données des tribunaux de commerce.
 
@@ -42,7 +42,7 @@ Il faut faire attention à la terminologie des mots. La définition de l'unité 
 
 L'établissement est une unité de production géographiquement individualisée, mais juridiquement dépendante de l'unité légale. Il produit des biens ou des services : ce peut être une usine, une boulangerie, un magasin de vêtements, un des hôtels d'une chaîne hôtelière, la « boutique » d'un réparateur de matériel informatique...
 
-L'établissement, unité de production, constitue le niveau le mieux adapté à une approche géographique de l'économie. 
+L'établissement, unité de production, constitue le niveau le mieux adapté à une approche géographique de l'économie.
 
 La population des établissements est relativement stable dans le temps et est moins affectée par les mouvements de restructuration juridique et financière que celle des entreprises.
 
@@ -66,7 +66,7 @@ Dans la partie précédente, nous avons fourni une définition non-exhaustive de
 
 Chaque entreprise se voit attribuer un numéro d’identification unique à 9 chiffres, appelé le SIREN, alors que les établissements sont identifiés grâce à un SIRET, qui lui contient 14 chiffres.
 
-## SIREN 
+## SIREN
 
 Chaque entreprise est identifiée par un numéro Siren (Système d'identification du Répertoire des entreprises), utilisé par tous les organismes publics et les administrations en relation avec l'entreprise.
 
@@ -75,11 +75,11 @@ Le siren est attribué par l'Insee lors de l'inscription de l'entreprise au rép
 * Il se décompose en trois groupes de trois chiffres attribués d'une manière non significative en fonction de l'ordre d'inscription de l'entreprise.
 * Ex. : 231 654 987
 
-Par exemple, le SIREN de l’entreprise CALF est le 692 029 457. 
+Par exemple, le SIREN de l’entreprise CALF est le 692 029 457.
 
 Le numéro SIREN ne changera jamais pour une entreprise. Il sera toujours rendu public sauf si une demande de droit à l’oubli a été formulé.
 
-## SIRET 
+## SIRET
 
 Le numéro Siret (Système d'identification du Répertoire des établissements) identifie les établissements de l'entreprise. Il se compose de 14 chiffres correspondant :
   *  au numéro Siren,
@@ -97,7 +97,7 @@ Source:  [INSEE](http://avis-situation-sirene.insee.fr/IdentificationListeSiret.
 
 Une entreprise est constituée d’autant d’établissements qu’il y a de lieux différents où elle exerce son activité. L’établissement est fermé quand l’activité cesse dans l’établissement concerné ou lorsque l’établissement change d’adresse.
 
-Il est indispensable de comprendre que l’attribution du siret se fait avec l’adresse de l’établissement. Une entreprise n’a, en soi, pas d’adresse car elle exerce, via ses établissements, sur un territoire donnée. Néanmoins, un établissement est rattaché à une adresse. L’entreprise peut posséder autant d’établissements qu’elle le souhaite, dans la mesure de la profitabilité de ses derniers. L’entreprise possédera autant de siret quelle a d’établissements. Dès lors qu’un établissement déménage, un nouveau siret sera attribué. L’établissement localisé à la première adresse va être fermé administrativement, et un nouvel établissement sera ouvert. 
+Il est indispensable de comprendre que l’attribution du siret se fait avec l’adresse de l’établissement. Une entreprise n’a, en soi, pas d’adresse car elle exerce, via ses établissements, sur un territoire donnée. Néanmoins, un établissement est rattaché à une adresse. L’entreprise peut posséder autant d’établissements qu’elle le souhaite, dans la mesure de la profitabilité de ses derniers. L’entreprise possédera autant de siret quelle a d’établissements. Dès lors qu’un établissement déménage, un nouveau siret sera attribué. L’établissement localisé à la première adresse va être fermé administrativement, et un nouvel établissement sera ouvert.
 
 Pour rechercher des informations sur une entreprise, il est possible de se rendre dans l’un des sites suivants:   
 *  Insee
@@ -114,7 +114,7 @@ Comme énoncé en introduction, une entreprise possède sont caractère légale 
 
 ## Etablissement siège
 
-Le siège social d’une société est tout simplement son “domicile juridique”, son "adresse administrative". En pratique, plusieurs options sont disponibles pour fixer le siège social d'une société : chez un des dirigeants, dans un local commercial, dans un centre d'affaires, etc. 
+Le siège social d’une société est tout simplement son “domicile juridique”, son "adresse administrative". En pratique, plusieurs options sont disponibles pour fixer le siège social d'une société : chez un des dirigeants, dans un local commercial, dans un centre d'affaires, etc.
 
 Il est obligatoirement fixé dans les statuts. Autrement dit, c'est l'adresse "officielle" qui figurera sur l’[extrait Kbis](https://www.legalstart.fr/fiches-pratiques/creer-sa-societe/extrait-kbis/) et qui devra être mentionnée sur toutes les factures et courriers. C'est souvent à cette adresse que l'Assemblée Générale des associés (en SAS ou en SARL) se regroupe pour prendre les décisions importantes. Au delà de la signification même du siège social, le choix n'est pas anodin car plusieurs conséquences juridiques en découlent : le siège social détermine par exemple la nationalité de l'entreprise ou encore le tribunal compétent en cas de litige (pour certains contentieux).
 
@@ -122,7 +122,7 @@ Une société n'a qu'un seul siège social, mais elle peut avoir plusieurs "éta
 
 Le siège social est important car il détermine la nationalité de la société. Ainsi, une société ayant son siège en France sera considérée comme française, et se verra appliquer le droit français. Il détermine également le tribunal territorialement compétent
 
-## 
+##
 Etablissement principal
 L'établissement est entendu comme un lieu d'exploitation commerciale, et donc rattaché à un fonds de commerce ou à une activité, contrairement au siège social.
 
@@ -136,11 +136,11 @@ Lors de l'ouverture d'un premier établissement dans le ressort d'un tribunal o�
 
 Si un second établissement est ouvert dans le même greffe "secondaire" (il y a donc au moins 2 établissements secondaires dans ce même ressort), le dirigeant procède pareillement à l'inscription de ce nouvel établissement, mais le greffe "principal" ne sera cette fois pas informé
 
-En résumé, les notions juridiques d’établissement siège, principal et secondaire sont très importantes. Elles permettent de distinguer le caractère juridique d’une entreprise et donc d’établir l’objectif de l’établissement. Par exemple, prendre en considération la localisation d’un siège pour faire une analyse économique n’est pas forcément pertinent car l’activité économique de l’entreprise se trouve sur le principal (si différent du siège) et dans les établissements secondaires. 
+En résumé, les notions juridiques d’établissement siège, principal et secondaire sont très importantes. Elles permettent de distinguer le caractère juridique d’une entreprise et donc d’établir l’objectif de l’établissement. Par exemple, prendre en considération la localisation d’un siège pour faire une analyse économique n’est pas forcément pertinent car l’activité économique de l’entreprise se trouve sur le principal (si différent du siège) et dans les établissements secondaires.
 
 # Fournisseurs de données de l’administration française: INSEE & INPI
 
-Il y a deux grands fournisseurs de données en France, a savoir l’INSEE et l’INPI. 
+Il y a deux grands fournisseurs de données en France, a savoir l’INSEE et l’INPI.
 
 L’Institut national de la statistique et des études économiques est chargé de la production, de l'analyse et de la publication des statistiques officielles en France : comptabilité nationale annuelle et trimestrielle, évaluation de la démographie nationale, du taux de chômage, etc. Il constitue une direction générale du ministère chargé des finances. Il dispose d’une indépendance de fait vis-à-vis du gouvernement, désormais garantie en droit par la loi. L’INSEE est en charge de la gestion du répertoire SIRENE, Système Informatique pour le Répertoire des ENtreprises et des Etablissements.
 
@@ -172,7 +172,7 @@ Toutes les mises à jour d’entreprises et d’établissements (créations, mod
 Il a été établi dans la partie dédiée aux types d’établissements que l’unité légale fournie les informations sur le siège. Les informations inhérentes au siège sont forcément les mêmes pour tous les autres établissements de l’entreprise. Dès lors, l’INSEE a distingué deux grands ensembles de données:
 
 * Les unités légales
-* Les établissements 
+* Les établissements
 
 Les fichiers relatifs aux unités légales fournissent des informations plus exhaustives sur le siège, alors que les fichiers correspondants aux entreprises sont plus spécifiques. Il y a des informations dans les unités légales qui se chevauchent avec les établissements car le siège d’une entreprise se trouve forcément dans les unités légales. Il est bon de souligner que tous les siren ne sont pas dans les unités légales. Seul les siren enregistrés au RNCS apparaissent dans les unités légales. En effet, il existe des catégories d’entreprises qui n’ont pas l’obligation de s’inscrire au RNCS, c’est le cas par exemple des auto-entrepreneurs.
 
@@ -211,7 +211,7 @@ Les variables historisées au niveau de l'unité légale sont les suivantes :
 
 Il est important de noter que l’unité légale fournie de l’information sur le siège uniquement. La table unité légale est le point d’entré pour cartographier les sociétés. Toutes les entreprises possédant un SIREN doivent obligatoirement être présentes dans cette table. Les informations complémentaire dans cette table sont a rapprocher avec le siège de l’entreprise uniquement.
 
-Les données des unités légales sont disponibles sur le site de l’INSEE, a cette adresse, [base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret](https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/). 
+Les données des unités légales sont disponibles sur le site de l’INSEE, a cette adresse, [base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret](https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/).
 
 Les champs et leur définition sont présents dans le Gitlab, [Documentation/INSEE#Unité légales](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/tree/master/Documentation/INSEE#unit%C3%A9-l%C3%A9gale)
 
@@ -236,19 +236,19 @@ Les variables historisées au niveau de l'établissement sont les suivantes :
 * L'état administratif ;
 * Le caractère employeur de l'établissement.
 
-Les données des unités légales sont disponibles sur le site de l’INSEE, a cette adresse, base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret. 
+Les données des unités légales sont disponibles sur le site de l’INSEE, a cette adresse, base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret.
 
 Les champs et leur définition sont présents dans le Gitlab, Documentation/INSEE#etablissement
 
 Les données des établissements dans la base de données de l’INPI disponible depuis le FTP. A la différence de l’INSEE, l’INPI envoie de manière quotidienne des CSV qui contiennent les ajouts ou modification d’information relative aux établissements. Pour trouver les CSV faisant référence aux établissements, il faut récupérer ceux qui ont un suffixe égal à “ETS”. Le détail sur la façon dont l’INPI transfert la donnée sera évoquée dans une prochaine partie.
 
-Pour récupérer les données du FTP, il faut un compte. La création d’un compte est gratuite, mais nécessite plusieurs jours d’attente. 
+Pour récupérer les données du FTP, il faut un compte. La création d’un compte est gratuite, mais nécessite plusieurs jours d’attente.
 
-Les champs et leur définition sont présents dans le Gitlab, IMR#etablissements. 
+Les champs et leur définition sont présents dans le Gitlab, IMR#etablissements.
 
 # Les formes juridiques
 
-https://app.lucidchart.com/publicSegments/view/f3567a5b-de15-4fd1-8989-1d876d093def/image.jpeg
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/IMAGES/00_formes_juridique.jpeg)
 
 # La suppression et la radiation
 
@@ -352,10 +352,10 @@ https://app.lucidchart.com/publicSegments/view/f3567a5b-de15-4fd1-8989-1d876d093
 
 # La donnée de l’INPI
 
-Le contenu mis à disposition par l’INPI comprend : 
+Le contenu mis à disposition par l’INPI comprend :
 *  Les dossiers des données relatives aux personnes actives (morales et physiques) :
-  * Un stock initial constitué à la date du 4 mai 2017 pour les données issues des Tribunaux de commerce (TC) 
-  * Un stock initial constitué à la date du 5 mai 2018 pour les données issues des Tribunaux d’instance et Tribunaux mixtes de commerce (TI/TMC) 
+  * Un stock initial constitué à la date du 4 mai 2017 pour les données issues des Tribunaux de commerce (TC)
+  * Un stock initial constitué à la date du 5 mai 2018 pour les données issues des Tribunaux d’instance et Tribunaux mixtes de commerce (TI/TMC)
 * Des stocks partiels constitués des dossiers complets relivrés à la demande de l’INPI après détection d’anomalies . Les fichiers des données contenues dans les nouvelles inscriptions (immatriculations, modifications et radiations) du Registre national du commerce et des sociétés ainsi que les informations relatives aux dépôts des actes et comptes annuels, telles que transmises par les greffes à compter du 5 mai 2017 (données de flux).
 Au total, ce sont les données d’environ 5 millions de personnes actives (morales et physiques) qui sont mises à la disposition de l’ensemble des ré-utilisateurs.
 Ces données sont mises à jour quotidiennement (environ 1,4 million de nouvelles inscriptions par an).
@@ -367,7 +367,7 @@ Les tribunaux représentés sont au nombre de 148 répartis comme suit (liste fo
 
 ## Tribunaux De Commerce
 
-L’INPI met a disposition la donnée via un FTP. Le FTP contient les données des TC et des TI/TMC. Dans notre projet, nous nous focalisons uniquement sur les TC. Les données du FTP sont séparées selon deux branches, une branche dite de stock et une branche de flux. Au sein de ses deux branches, il y a plusieurs types d’information, a savoir le statut juridique ou l’établissement, mais aussi les actes et observations. 
+L’INPI met a disposition la donnée via un FTP. Le FTP contient les données des TC et des TI/TMC. Dans notre projet, nous nous focalisons uniquement sur les TC. Les données du FTP sont séparées selon deux branches, une branche dite de stock et une branche de flux. Au sein de ses deux branches, il y a plusieurs types d’information, a savoir le statut juridique ou l’établissement, mais aussi les actes et observations.
 
 Plus précisément, il y a 7 sources de données dans les tribunaux de commerce. Chacune des sources fait référence aux caractéristiques des entreprises (statut juridique et établissements). Nous avons indiqué le schéma dans le Gitlab, et mis à disposition de l’utilisateur via le lien URL affiché
 * PM
@@ -396,11 +396,11 @@ et deux informations relatives à l’établissement
 
 Effectivement, le numéro de siret n’est pas présent dans les données de l’INPI. Dès lors, ce dernier crée un numéro d’établissement. Ainsi, pour distinguer les différents établissements présents dans une entreprise, il faut utiliser les 4 informations fournis par l’INPI, à savoir, le code greffe, le numéro de gestion, le siren et l’identification d’établissement. Pour le moment, nous distinguerons un établissement au sens de l’INPI et celui de l’INSEE. Un établissement au sens de l’INSEE est assez facile à distinguer, il est référencé par son SIREN-SIRET alors que l’établissement au sens de l’INPI est catégorisé selon le quadruplet code greffe-numéro gestion-siren-id etablissement. Nous verrons plus tard pourquoi nous distinguons les établissements ayant pour origine l’INPI et l’INSEE.
 
-La branche des stocks contient deux types d’information. Premièrement, elle rassemble toutes les entreprises créées avant le 5 mai 2017. L’ensemble de ce CSV s’appelle stock initial. Deuxièmement, elle contient des CSV correcteur de mauvaise transmission de dossier de la part du greffe. Autrement dit, le greffe peut envoyer à l’INPI des dossiers qui contiennent des anomalies ou des erreurs. L’INPI en informe infogreffe, qui en retour, va transmettre une correction à l’INPI. L’INPI va mettre a disposition des CSV correcteurs dans la branches des stocks, que nous appellerons par la suite, stock partiel. 
+La branche des stocks contient deux types d’information. Premièrement, elle rassemble toutes les entreprises créées avant le 5 mai 2017. L’ensemble de ce CSV s’appelle stock initial. Deuxièmement, elle contient des CSV correcteur de mauvaise transmission de dossier de la part du greffe. Autrement dit, le greffe peut envoyer à l’INPI des dossiers qui contiennent des anomalies ou des erreurs. L’INPI en informe infogreffe, qui en retour, va transmettre une correction à l’INPI. L’INPI va mettre a disposition des CSV correcteurs dans la branches des stocks, que nous appellerons par la suite, stock partiel.
 
 La branche des flux va contenir toutes les informations relatives à la création d’établissement, modification ou suppression. l’INPI assigne les labels suivants dans la variable libelle_evt , selon le type d’événement:
 * Création d’établissement: Etablissement ouvert
-* Modification d’information relative a un établissement: Modifications relatives à un établissement 
+* Modification d’information relative a un établissement: Modifications relatives à un établissement
 * Fermeture d’établissement: Etablissement supprimé
 
 Les CSV de l’INPI ont une typologie très normée:
@@ -414,29 +414,29 @@ Les CSV de l’INPI ont une typologie très normée:
 * Fichier de flux - suppression
 <code_greffe>_<num_transmission>_<AA><MM><JJ>_<HH><MM><SS>_10_ets_supprime_EVT.csv
 
-En commun, le code greffe et le numéro de transmission et la date de transmission. La date de transmission pour le stock initial a uniquement la valeur 20170504, alors que les stock partiels ont une valeur égale à la date de transmission. Les csv dans les flux ont une information supplémentaire, à savoir l’heure de transmission. Cette information est importante pour plusieurs raisons. En effet, l’INPI recoit les informations des greffes à  des heures de la journée différente d’une transmission à l’autre. Par exemple, le greffe peut envoyer un ensemble de dossier à 8h30 aujourd’hui et transmettre un autre ensemble à 15h15 le lendemain. 
+En commun, le code greffe et le numéro de transmission et la date de transmission. La date de transmission pour le stock initial a uniquement la valeur 20170504, alors que les stock partiels ont une valeur égale à la date de transmission. Les csv dans les flux ont une information supplémentaire, à savoir l’heure de transmission. Cette information est importante pour plusieurs raisons. En effet, l’INPI recoit les informations des greffes à  des heures de la journée différente d’une transmission à l’autre. Par exemple, le greffe peut envoyer un ensemble de dossier à 8h30 aujourd’hui et transmettre un autre ensemble à 15h15 le lendemain.
 
-Chacune des transmissions peut contenir des dossiers identiques ou différents, ce qui complexifie un peu la tache. Sans raison particulière, l’INPI peut recevoir les informations d’un même dossier étaler sur plusieurs jours, mois ou année. Ainsi, l’INPI recommande d’ingérer la donnée de manière incrémentale, et de prioriser la dernière transmission, aux précédentes. Ce dernier point est très important car l’ensemble de la partie relative au filtrage et enrichissement de la donnée de l’INPI va être fondée dessus. 
+Chacune des transmissions peut contenir des dossiers identiques ou différents, ce qui complexifie un peu la tache. Sans raison particulière, l’INPI peut recevoir les informations d’un même dossier étaler sur plusieurs jours, mois ou année. Ainsi, l’INPI recommande d’ingérer la donnée de manière incrémentale, et de prioriser la dernière transmission, aux précédentes. Ce dernier point est très important car l’ensemble de la partie relative au filtrage et enrichissement de la donnée de l’INPI va être fondée dessus.
 
 # Relation INSEE-INPI
-    
+
 Il y a deux grands fournisseurs de données concernant les entreprises en France:
 * INSEE
 * INPI
 
-L’INSEE se charge de toute la partie donnée d’entreprise et est rattaché au ministère de l’économie et des finances. L’INPI est rattaché au ministère des finances (et du premier ministre). L’INPI s’occupe de toute la partie juridique. 
+L’INSEE se charge de toute la partie donnée d’entreprise et est rattaché au ministère de l’économie et des finances. L’INPI est rattaché au ministère des finances (et du premier ministre). L’INPI s’occupe de toute la partie juridique.
 
 Le type de chambre de commerce va dépendre du type d’activité de l’entreprise, et suivant sa taille ou son status, l’entreprise se doit de s’inscrire à l’INPI. C’est le cas par exemple des sociétés commerciale (SARL/SA/EURL) qui sont rattachées à la CCI et de fait doivent s’inscrire à l’INPI. Les professions libérales ou micro-entreprises n’ont pas besoin de s’inscrire à l’INPI à moins que la personne soit un agent commercial.
 
-![](https://drive.google.com/uc?export=view&id=1RpvACHqvSVOn44tdEBBhbM56Tcdrizjm)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/IMAGES/03_nouveau_schema_institution.PNG)
 
-Le point d’entré de la cartographie des entreprises en France se fait via les unités légales. En effet, cette dernière a un caractère juridique qui fourni la preuve d’immatriculation de l’entreprise. Ensuite, pour connaitre les informations sur le choix juridique de l’entité (Personne Morale ou Personne Physique), il faut se concentrer sur les tables des PP et des PM fourni par l’INPI. Chacune des deux tables tables comportent le siren avec un ensemble d’information spécifique à la personne morale et/ou physique. 
+Le point d’entré de la cartographie des entreprises en France se fait via les unités légales. En effet, cette dernière a un caractère juridique qui fourni la preuve d’immatriculation de l’entreprise. Ensuite, pour connaitre les informations sur le choix juridique de l’entité (Personne Morale ou Personne Physique), il faut se concentrer sur les tables des PP et des PM fourni par l’INPI. Chacune des deux tables tables comportent le siren avec un ensemble d’information spécifique à la personne morale et/ou physique.
 
-Comme  nous le savons déjà, chaque entreprise peut posséder un ou plusieurs établissement(s). C’est le rôle de l’INSEE de fournir un numéro NIC, qui va permettre de constituer le SIRET. Le siret est tout simplement un identifiant unique permettant de géolocaliser une entreprise. Le SIRET n’est pas présent à l’INPI. Toutefois, avec quelques règles de gestion, il est possible de rapprocher les deux tables, à savoir établissement INPI et établissement INSEE. 
+Comme  nous le savons déjà, chaque entreprise peut posséder un ou plusieurs établissement(s). C’est le rôle de l’INSEE de fournir un numéro NIC, qui va permettre de constituer le SIRET. Le siret est tout simplement un identifiant unique permettant de géolocaliser une entreprise. Le SIRET n’est pas présent à l’INPI. Toutefois, avec quelques règles de gestion, il est possible de rapprocher les deux tables, à savoir établissement INPI et établissement INSEE.
 
-Nous savons aussi que le SIRET de l’unité légale est celui du siège. Lors du rapprochement des différentes tables, il est possible de rassembler et recouper la plupart des informations entre elles pour reconstituer la cartographie de l’entreprise. 
+Nous savons aussi que le SIRET de l’unité légale est celui du siège. Lors du rapprochement des différentes tables, il est possible de rassembler et recouper la plupart des informations entre elles pour reconstituer la cartographie de l’entreprise.
 
-![](https://app.lucidchart.com/publicSegments/view/2a1a8c67-097c-4022-931e-6ee13d24371b/image.png)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/IMAGES/01_relation_inpi_insee.png)
 
 Sources:
 * https://fr.wikipedia.org/wiki/Entreprise
