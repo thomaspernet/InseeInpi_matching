@@ -1,0 +1,34 @@
+Nom,Libellé,url,Longueur,Type,Ordre
+activitePrincipaleUniteLegale,Activité principale de l’unité légale,https://www.sirene.fr/sirene/public/variable/activitePrincipaleUniteLegale,6,Liste de codes,29
+anneeCategorieEntreprise,Année de validité de la catégorie d’entreprise,https://www.sirene.fr/sirene/public/variable/anneeCategorieEntreprise,4,Date,19
+anneeEffectifsUniteLegale,Année de validité de la tranche d’effectif salarié de l’unité légale,https://www.sirene.fr/sirene/public/variable/anneeEffectifsUniteLegale,4,Date,15
+caractereEmployeurUniteLegale,Caractère employeur de l’unité légale,https://www.sirene.fr/sirene/public/variable/caractereEmployeurUniteLegale,1,Liste de codes,33
+categorieEntreprise,Catégorie à laquelle appartient l’entreprise,https://www.sirene.fr/sirene/public/variable/categorieEntreprise,3,Liste de codes,18
+categorieJuridiqueUniteLegale,Catégorie juridique de l’unité légale,https://www.sirene.fr/sirene/public/variable/categorieJuridiqueUniteLegale,4,Liste de codes,28
+dateCreationUniteLegale,Date de création de l'unité légale,https://www.sirene.fr/sirene/public/variable/dateCreationUniteLegale,10,Date,4
+dateDebut,Date de début d'une période d'historique d'une unité légale,https://www.sirene.fr/sirene/public/variable/dateDebut,10,Date,20
+dateDernierTraitementUniteLegale,Date du dernier traitement de l’unité légale dans le répertoire Sirene,https://www.sirene.fr/sirene/public/variable/dateDernierTraitementUniteLegale,19,Date,16
+denominationUniteLegale,Dénomination de l’unité légale,https://www.sirene.fr/sirene/public/variable/denominationUniteLegale,120,Texte,24
+denominationUsuelle1UniteLegale,Dénomination usuelle de l’unité légale,https://www.sirene.fr/sirene/public/variable/denominationUsuelle1UniteLegale,70,Texte,25
+denominationUsuelle2UniteLegale,Dénomination usuelle de l’unité légale – deuxième champ,https://www.sirene.fr/sirene/public/variable/denominationUsuelle2UniteLegale,70,Texte,26
+denominationUsuelle3UniteLegale,Dénomination usuelle de l’unité légale – troisième champ,https://www.sirene.fr/sirene/public/variable/denominationUsuelle3UniteLegale,70,Texte,27
+economieSocialeSolidaireUniteLegale,Appartenance au champ de l’économie sociale et solidaire,https://www.sirene.fr/sirene/public/variable/economieSocialeSolidaireUniteLegale,1,Liste de codes,32
+etatAdministratifUniteLegale,État administratif de l’unité légale,https://www.sirene.fr/sirene/public/variable/etatAdministratifUniteLegale,1,Liste de codes,21
+identifiantAssociationUniteLegale,Numéro au Répertoire National des Associations,https://www.sirene.fr/sirene/public/variable/identifiantAssociationUniteLegale,10,Texte,13
+nicSiegeUniteLegale,Numéro interne de classement (Nic) de l’unité légale,https://www.sirene.fr/sirene/public/variable/nicSiegeUniteLegale,5,Texte,31
+nombrePeriodesUniteLegale,Nombre de périodes de l’unité légale,https://www.sirene.fr/sirene/public/variable/nombrePeriodesUniteLegale,2,Numérique,17
+nomenclatureActivitePrincipaleUniteLegale,Nomenclature d’activité de la variable activitePrincipaleUniteLegale,https://www.sirene.fr/sirene/public/variable/nomenclatureActivitePrincipaleUniteLegale,8,Liste de codes,30
+nomUniteLegale,Nom de naissance de la personnes physique,https://www.sirene.fr/sirene/public/variable/nomUniteLegale,100,Texte,22
+nomUsageUniteLegale,Nom d’usage de la personne physique,https://www.sirene.fr/sirene/public/variable/nomUsageUniteLegale,100,Texte,23
+prenom1UniteLegale,Premier prénom déclaré pour un personne physique,https://www.sirene.fr/sirene/public/variable/prenom1UniteLegale,20,Texte,7
+prenom2UniteLegale,Deuxième prénom déclaré pour un personne physique,https://www.sirene.fr/sirene/public/variable/prenom2UniteLegale,20,Texte,8
+prenom3UniteLegale,Troisième prénom déclaré pour un personne physique,https://www.sirene.fr/sirene/public/variable/prenom3UniteLegale,20,Texte,9
+prenom4UniteLegale,Quatrième prénom déclaré pour un personne physique,https://www.sirene.fr/sirene/public/variable/prenom4UniteLegale,20,Texte,10
+prenomUsuelUniteLegale,Prénom usuel de la personne physique,https://www.sirene.fr/sirene/public/variable/prenomUsuelUniteLegale,20,Texte,11
+pseudonymeUniteLegale,Pseudonyme de la personne physique,https://www.sirene.fr/sirene/public/variable/pseudonymeUniteLegale,100,Texte,12
+sexeUniteLegale,Caractère féminin ou masculin de la personne physique,https://www.sirene.fr/sirene/public/variable/sexeUniteLegale,1,Liste de codes,6
+sigleUniteLegale,Sigle de l’unité légale,https://www.sirene.fr/sirene/public/variable/sigleUniteLegale,20,Texte,5
+siren,Numéro Siren,https://www.sirene.fr/sirene/public/variable/siren,9,Texte,1
+statutDiffusionUniteLegale,Statut de diffusion de l’unité légale,https://www.sirene.fr/sirene/public/variable/statutDiffusionUniteLegale,1,Liste de codes,2
+trancheEffectifsUniteLegale,Tranche d’effectif salarié de l’unité légale,https://www.sirene.fr/sirene/public/variable/trancheEffectifsUniteLegale,2,Liste de codes,14
+unitePurgeeUniteLegale,Unité légale purgée,https://www.sirene.fr/sirene/public/variable/unitePurgeeUniteLegale,5,Texte,3
