@@ -40,6 +40,5 @@ Le workflow actuel repose sur 5 étapes séquentielles, a savoir le télécharge
         8. [07_creation_table_regles_gestion](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/07_creation_table_regles_gestion.ipynb)
         9. [08_creation_table_match_regles_gestion_insee_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/08_creation_table_match_regles_gestion_insee_inpi.ipynb)
         10. [09_creation_table_ets_insee_inpi_no_duplicate](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/09_creation_table_ets_insee_inpi_no_duplicate.ipynb)
-
-   3. [Exemple Spark Calcul Cosine](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/12_spark)
-        1. [01_replicate_cosine_spark_datum](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/12_spark/01_replicate_cosine_spark_datum.ipynb)
+3. [Exemple Spark Calcul Cosine](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/12_spark)
+   1. [01_replicate_cosine_spark_datum](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/12_spark/01_replicate_cosine_spark_datum.ipynb)
