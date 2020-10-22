@@ -29,7 +29,7 @@ Le workflow actuel repose sur 5 étapes séquentielles, a savoir le télécharge
         1. [00_filtrage_enrichissement_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/10_sumup_preparation/00_filtrage_enrichissement_inpi.ipynb)
         2. [02_creation_variables_siretisation_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/10_sumup_preparation/02_creation_variables_siretisation_inpi.ipynb)
         3. [03_creation_variables_siretisation_insee](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/10_sumup_preparation/03_creation_variables_siretisation_insee.ipynb)
-   2. [rapprochement INPI + INSEE & siretisation](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/11_sumup_siretisation)
+        2. [rapprochement INPI + INSEE & siretisation](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/11_sumup_siretisation)
         1. [00_merge_ets_insee_inpi]https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/00_merge_ets_insee_inpi.ipynb)
         2. [01_cas_de_figure](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/01_cas_de_figure.ipynb)
         3. [02_test_list_num_voie](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/02_test_list_num_voie.ipynb)
