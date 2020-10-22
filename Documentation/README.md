@@ -428,7 +428,7 @@ L’INSEE se charge de toute la partie donnée d’entreprise et est rattaché a
 
 Le type de chambre de commerce va dépendre du type d’activité de l’entreprise, et suivant sa taille ou son status, l’entreprise se doit de s’inscrire à l’INPI. C’est le cas par exemple des sociétés commerciale (SARL/SA/EURL) qui sont rattachées à la CCI et de fait doivent s’inscrire à l’INPI. Les professions libérales ou micro-entreprises n’ont pas besoin de s’inscrire à l’INPI à moins que la personne soit un agent commercial.
 
-![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/IMAGES/03_nouveau_schema_institution.PNG)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/raw/master/IMAGES/00_formes_juridique.jpeg)
 
 Le point d’entré de la cartographie des entreprises en France se fait via les unités légales. En effet, cette dernière a un caractère juridique qui fourni la preuve d’immatriculation de l’entreprise. Ensuite, pour connaitre les informations sur le choix juridique de l’entité (Personne Morale ou Personne Physique), il faut se concentrer sur les tables des PP et des PM fourni par l’INPI. Chacune des deux tables tables comportent le siren avec un ensemble d’information spécifique à la personne morale et/ou physique.
 
