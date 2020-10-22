@@ -23,7 +23,7 @@ Le workflow actuel repose sur 5 étapes séquentielles, a savoir le télécharge
          1. [Unite legale](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Documentation/INSEE/Description%20fichier%20StockUniteLegale.pdf)
          2. [Etablissement](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Documentation/INSEE/description-fichier-stocketablissement.pdf)
   3. Definition entreprise & Etablissements
-      1. [Introduction entreprise et etablissements](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/Documentation/README.md)
+      1. [Introduction entreprise et etablissements](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/wikis/home)
 2. Integration données INSEE/INPI
    1. [Preparation INPI + INSEE](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/10_sumup_preparation)
         1. [00_filtrage_enrichissement_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/10_sumup_preparation/00_filtrage_enrichissement_inpi.ipynb)
