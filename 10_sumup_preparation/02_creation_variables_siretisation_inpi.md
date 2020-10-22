@@ -218,8 +218,36 @@ if to_remove:
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_6)
 ```
 
+Query executée
+
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in [ "STEPS_6"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    ### CREATE TOP
+                    table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                    "top"
+                ].format(step_n["database"], step_n["name"],)
+
+                
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
+
 ```
 
 ```python id="MEw20IRNDIoQ"
@@ -299,6 +327,39 @@ for key, value in parameters["TABLES"]["PREPARATION"].items():
                     print(output)
 ```
 
+Appercu tables créées
+
+```python
+pd.set_option('display.max_colwidth', 50)
+```
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_6']:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    query = """
+                    SELECT *
+                    FROM {}
+                    LIMIT 10
+                    """.format(step_n['name'])
+                    
+                    output = s3.run_query(
+                    query=query,
+                    database=db,
+                    s3_output=s3_output,
+                    filename='show_{}'.format(step_n['name']),  ## Add filename to print dataframe
+                    destination_key=None,  ### Add destination key if need to copy output
+                )
+                    
+                    display(output)
+
+```
+
 ### Etap 2: Creation variables simples et groupings
 
 Dès lors que l'index et la sequence ont été créée, nous allons pouvoir calculer les variables de grouping sur ce dernier. De plus, nous allons créer les variables dites "simples" au préalable.
@@ -341,7 +402,7 @@ step_7 = {
 ```
 
 ```python
-to_remove = True
+to_remove = False
 if to_remove:
     parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].pop(-1)
 ```
@@ -350,8 +411,35 @@ if to_remove:
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_7)
 ```
 
+Query executée
+
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in [ "STEPS_6"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    ### CREATE TOP
+                    table_top = parameters["TABLES"]["PREPARATION"]["template"][
+                    "top"
+                ].format(step_n["database"], step_n["name"],)
+
+                
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
 ```
 
 ```python
@@ -417,13 +505,6 @@ s3.upload_file(json_filename, 'DATA/ETL')
 <!-- #region id="tkXIgOQcDIog" -->
 Get the schema of the lattest job
 <!-- #endregion -->
-
-```python id="GEDqS67nDIoh"
-schema = glue.get_table_information(
-    database = step_n['database'],
-    table = step_n['name'])['Table']
-schema
-```
 
 <!-- #region id="DvROvxftDIok" -->
 # Analytics
@@ -961,5 +1042,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python id="5qEsk80XDIpG"
-create_report(extension = "html", keep_code = True)
+#create_report(extension = "html", keep_code = True)
 ```
