@@ -98,7 +98,7 @@ Le dédoublonnement de cette table va être faite par l'intermédiaire de règle
 Le processus de siretisation est découpé en 3 ensembles (figure ci dessous). Premièrement, il faut joindre les tables de l'INSEE et de l'INPI. Ensuite, il est nécéssaire de créer les variables qui vont être utiliser lors des tests puis bien sur générer les tests. Troisièmenent, le rapprochement avec la matrice des règles de gestion va permettre de dédoublonner les lignes avec plusieurs probables.
 <!-- #endregion -->
 
-![](https://app.lucidchart.com/publicSegments/view/53fcea7f-7468-4aaf-967f-8ab0f24cdea4/image.png)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/raw/master/IMAGES/09_schema_siretisation.png)
 
 
 ## Connexion serveur

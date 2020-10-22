@@ -31,7 +31,7 @@ Select the US you just created →Filtrage et enrichissement de la donnée de l�
 *  La préparation de la donnée de l’INPI requière plusieurs étapes de filtrate et d’enrichissement de la donnée. Dans cette US, nous allons détailler comment procéder pour préparer la donnée de l’INPI mais aussi mettre en avant les “problèmes” et points d’attention rencontrées.
 * Le schéma se résume au diagramme ci-dessous
 
-![](https://app.lucidchart.com/publicSegments/view/9e73b3ff-1648-4cda-ab7c-204290721629/image.png)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/raw/master/IMAGES/07_schema_preparation.png)
 
 
 # Metadata
@@ -270,7 +270,7 @@ La préparation de la table des ETS se fait en 3 étapes:
 2. Filtrage et enrichissement des flux intra day et intra date de greffe
 3. Enrichissements des lignes d'un événement a l'autre et filtrage des événements partiels
 
-![](https://app.lucidchart.com/publicSegments/view/5c24129a-f50a-4977-97b3-9a62eaa936b7/image.png)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/raw/master/IMAGES/08_schema_preparation.png)
 
 La première étape est relativement simple car elle consiste a créer les tables des stocks et des flux. L'arborescence du S3 est la suivante:
 

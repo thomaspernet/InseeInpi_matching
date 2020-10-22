@@ -111,20 +111,20 @@ La création de cette variable repose sur des variables intermédiaire:
 * `pct_intersection`: `intersection` / `union_`
 
 
-![](https://app.lucidchart.com/publicSegments/view/dc9a6210-77ac-4358-96c9-ab5a714cfac1/image.png)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/raw/master/IMAGES/10_schema_siretisation.png)
 
 
 ## Similarité adresse 
 
 Le rapprochement entre les deux tables, à savoir l’INSEE et l’INPI, va amener à la création de deux vecteurs d’adresse. Un vecteur avec des mots contenus spécifiquement à l’INSEE, et un second vecteur avec les mots de l’adresse de l’INPI. Notre objectif est de comparé ses deux vecteurs pour définir si ils sont identiques ou non. Nous avons distingué 7 cas de figures possibles entre les deux vecteurs (figure ci dessous).
 
-![](https://drive.google.com/uc?export=view&id=1Qj_HooHrhFYSuTsoqFbl4Vxy9tN3V5Bu)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/raw/master/IMAGES/11_cas_de_figure.jpeg)
 
 ### Définition
 
 La comparaison de l'adresse de l'INSEE et de l'INPI repose sur les concepts d'union et d'intersection (figure ci dessous)
 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Intersection_of_sets_A_and_B.svg/400px-Intersection_of_sets_A_and_B.svg.png)
+![](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/raw/master/IMAGES/12_union_intersection.png)
 
 
 
