@@ -24,8 +24,22 @@ Le workflow actuel repose sur 5 étapes séquentielles, a savoir le télécharge
          2. [Etablissement](https://github.com/thomaspernet/InseeInpi_matching/blob/master/Documentation/INSEE/description-fichier-stocketablissement.pdf)
   3. Definition entreprise & Etablissements
       1. [Introduction entreprise et etablissements](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/Documentation/README.md)
-      2.
 2. Integration données INSEE/INPI
    1. [Preparation INPI + INSEE](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/10_sumup_preparation)
+        1. [00_filtrage_enrichissement_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/10_sumup_preparation/00_filtrage_enrichissement_inpi.ipynb)
+        2. [02_creation_variables_siretisation_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/10_sumup_preparation/02_creation_variables_siretisation_inpi.ipynb)
+        3. [03_creation_variables_siretisation_insee](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/10_sumup_preparation/03_creation_variables_siretisation_insee.ipynb)
    2. [rapprochement INPI + INSEE & siretisation](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/11_sumup_siretisation)
+        1. [00_merge_ets_insee_inpi]https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/00_merge_ets_insee_inpi.ipynb)
+        2. [01_cas_de_figure](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/01_cas_de_figure.ipynb)
+        3. [02_test_list_num_voie](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/02_test_list_num_voie.ipynb)
+        4. [03_test_enseigne](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/03_test_enseigne.ipynb)
+        5. [04_creation_nb_siret_siren_max_pct](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/04_creation_nb_siret_siren_max_pct.ipynb)
+        6. [05_creation_table_poids_Word2Vec](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/05_creation_table_poids_Word2Vec.ipynb)
+        7. [06_calcul_cosine_levhenstein](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/06_calcul_cosine_levhenstein.ipynb)
+        8. [07_creation_table_regles_gestion](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/07_creation_table_regles_gestion.ipynb)
+        9. [08_creation_table_match_regles_gestion_insee_inpi](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/08_creation_table_match_regles_gestion_insee_inpi.ipynb)
+        10. [09_creation_table_ets_insee_inpi_no_duplicate](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/11_sumup_siretisation/09_creation_table_ets_insee_inpi_no_duplicate.ipynb)
+
    3. [Exemple Spark Calcul Cosine](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/tree/master/12_spark)
+        1. [01_replicate_cosine_spark_datum](https://scm.saas.cagip.group.gca/PERNETTH/inseeinpi_matching/-/blob/master/12_spark/01_replicate_cosine_spark_datum.ipynb)
