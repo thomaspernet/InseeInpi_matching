@@ -135,10 +135,6 @@ with open('parameters_ETL.json', 'r') as fp:
     parameters = json.load(fp)
 ```
 
-```python id="S482exQ8DIUp"
-parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
-```
-
 <!-- #region id="oxyFXf8iDIUs" -->
 ## 2. Prepare `TABLES.CREATION`
 
@@ -224,17 +220,6 @@ table_raw_insee = [{
     ]
 }
 ]
-#len(parameters['TABLES']['CREATION']['ALL_SCHEMA'])
-```
-
-```python
-#filte = "42dcc900-50a8-4ab5-83e2-9778ca6fea72.csv"
-#list_ = []
-#for i in list(pd.read_csv(filte).columns):
-#    list_.append(
-#    {'Name': i, 'Type': 'string', 'Comment': ''}
-#    )
-#list_
 ```
 
 <!-- #region id="fwcsoOPCDIUx" -->
@@ -251,8 +236,46 @@ if to_remove:
 parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(table_raw_insee)
 ```
 
+Query executée
+
 ```python id="-mmdbMCoDIU4"
-parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_insee_raw_juillet']:
+                # CREATE QUERY
+
+                ### Create top/bottom query
+                table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
+                            table_info["database"], table_info["name"]
+                        )
+                table_bottom = parameters["TABLES"]["CREATION"]["template"][
+                            "bottom_OpenCSVSerde"
+                        ].format(table_info["separator"], table_info["s3URI"])
+
+                ### Create middle
+                table_middle = ""
+                nb_var = len(table_info["schema"])
+                for i, val in enumerate(table_info["schema"]):
+                    if i == nb_var - 1:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ")")
+                    else:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ",")
+
+                query = (
+                    table_top + 
+                    "\n" + 
+                    table_middle +
+                    "\n" + 
+                    table_bottom
+                )
+                
+                print(query)
+
 ```
 
 ```python id="IqqQ6sbPDIU6"
@@ -340,6 +363,33 @@ for key, value in parameters["TABLES"]["CREATION"].items():
                 print(output)
 ```
 
+Appercu tables créées
+
+```python
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_insee_raw_juillet']:
+                print(table_info['name'])
+                
+                query = """
+                SELECT *
+                FROM  {}
+                LIMIT 10
+                """.format(table_info['name'])
+                
+                output = s3.run_query(
+                            query=query,
+                            database=table_info["database"],
+                            s3_output=s3_output,
+                            filename="table_{}".format(table_info['name']),  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+                
+                display(output)
+
+```
+
 ## Creation table transformée
 
 La tale tranformée contient 6 variables supplémentaires qui vont être utilisées pour la réalisation des tests. Les 6 variables sont les suivantes:
@@ -415,8 +465,30 @@ if to_remove:
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_8)
 ```
 
+Query executée
+
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in [ "STEPS_8"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
+
 ```
 
 ```python
@@ -477,6 +549,35 @@ for key, value in parameters["TABLES"]["PREPARATION"].items():
                     #)
 
                     print(output)
+```
+
+Appercu tables créées
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_8']:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    query = """
+                    SELECT *
+                    FROM {}
+                    LIMIT 10
+                    """.format(step_n['name'])
+                    
+                    output = s3.run_query(
+                    query=query,
+                    database='ets_insee',
+                    s3_output=s3_output,
+                    filename='show_{}'.format(step_n['name']),  ## Add filename to print dataframe
+                    destination_key=None,  ### Add destination key if need to copy output
+                )
+                    
+                    display(output)
+
 ```
 
 <!-- #region id="8K6P4GUMDIVN" -->
@@ -607,7 +708,7 @@ schema = {
 					"comment": ""
 				}
 			],
-		"location": "s3://calfdata/SQL_OUTPUT_ATHENA/tables/51d2765a-0852-4a0a-9333-943ee7e66f5d/",
+		"location": "s3://calfdata/SQL_OUTPUT_ATHENA/tables/f8be1a95-a81f-4c76-b912-fc88a90533f4/",
 		"inputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
 		"outputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
 		"compressed": "false",
@@ -641,14 +742,14 @@ today
 ```
 
 ```python
-#table_info["name"] = "ets_insee_transformed"
+db = 'ets_insee'
 ```
 
 ```python id="B4PV0taoDIVS"
 table_top = parameters["ANALYSIS"]["COUNT_MISSING"]["top"]
 table_middle = ""
 table_bottom = parameters["ANALYSIS"]["COUNT_MISSING"]["bottom"].format(
-    table_info["database"], table_info["name"]
+    db, parameters["TABLES"]["PREPARATION"]['ALL_SCHEMA'][-1]['STEPS_8']['execution'][0]['name']
 )
 
 for key, value in enumerate(schema["StorageDescriptor"]["Columns"]):
@@ -705,7 +806,7 @@ for field in schema["StorageDescriptor"]["Columns"]:
         print("Nb of obs for {}".format(field["Name"]))
 
         query = parameters["ANALYSIS"]["CATEGORICAL"]["PAIR"].format(
-            table_info["database"], table_info["name"], field["Name"]
+            db, parameters["TABLES"]["PREPARATION"]['ALL_SCHEMA'][-1]['STEPS_8']['execution'][0]['name'], field["Name"]
         )
         output = s3.run_query(
             query=query,
