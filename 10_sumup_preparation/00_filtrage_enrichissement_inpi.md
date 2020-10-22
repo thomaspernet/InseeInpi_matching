@@ -333,10 +333,6 @@ with open('parameters_ETL_TEMPLATE.json', 'r') as fp:
 parameters['GLOBAL']['DATABASE'] = 'ets_inpi'
 ```
 
-```python
-parameters
-```
-
 ## 2. Prepare `TABLES.CREATION`
 
 This part usually starts with raw/transformed data in S3. The typical architecture in the S3 is:
@@ -786,10 +782,6 @@ parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(new_table)
 ```
 
 ```python
-#print(json.dumps(parameters['TABLES']['CREATION']['ALL_SCHEMA'], indent=4, sort_keys=False, ensure_ascii=False))
-```
-
-```python
 json_filename ='parameters_ETL.json'
 json_file = json.dumps(parameters)
 f = open(json_filename,"w")
@@ -955,8 +947,29 @@ if to_remove:
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].extend(step_0)
 ```
 
+Queries executées
+
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA']
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_0', "STEPS_1"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
 ```
 
 ```python
@@ -1017,6 +1030,39 @@ for key, value in parameters["TABLES"]["PREPARATION"].items():
                 #print(query)
 
                 print(output)
+```
+
+Appercu tables créées
+
+```python
+pd.set_option('display.max_colwidth', 50)
+```
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_0', "STEPS_1"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    query = """
+                    SELECT *
+                    FROM {}
+                    LIMIT 10
+                    """.format(step_n['name'])
+                    
+                    output = s3.run_query(
+                    query=query,
+                    database=db,
+                    s3_output=s3_output,
+                    filename='show_{}'.format(step_n['name']),  ## Add filename to print dataframe
+                    destination_key=None,  ### Add destination key if need to copy output
+                )
+                    
+                    display(output)
+
 ```
 
 ## Step 2: filtrage intra day et intra date de greffe
@@ -1179,7 +1225,6 @@ greffes = [
 "1001",
 "0401"]
 ]
-
 ```
 
 ```python
@@ -1216,15 +1261,30 @@ step_1 = {
 ```
 
 ```python
-step_1
-```
-
-```python
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_1)
 ```
 
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in [ "STEPS_2"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
 ```
 
 ```python
@@ -1237,14 +1297,7 @@ s3.upload_file(json_filename, 'DATA/ETL')
 ```
 
 ```python
-for greffe in greffes[-2:]:
-    ### Preparer le filtre
-    filter_greffe = "' OR code_greffe = '".join(greffe)
-    namefile = '_'.join(greffe)
-```
-
-```python
-for greffe in greffes[-4:]:
+for greffe in greffes:
     ### Preparer le filtre
     filter_greffe = "' OR code_greffe = '".join(greffe)
     namefile = '_'.join(greffe)
@@ -1350,20 +1403,53 @@ parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(table_filre_timestamp)
 ```
 
 ```python
-parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
-```
-
-```python
-#parameters['TABLES']['CREATION']['ALL_SCHEMA'].pop(-1)
-```
-
-```python
 json_filename ='parameters_ETL.json'
 json_file = json.dumps(parameters)
 f = open(json_filename,"w")
 f.write(json_file)
 f.close()
 s3.upload_file(json_filename, 'DATA/ETL')
+```
+
+Query executée
+
+```python
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_flux_filtre_enrichie_timestamp']:
+                # CREATE QUERY
+
+                ### Create top/bottom query
+                table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
+                            table_info["database"], table_info["name"]
+                        )
+                table_bottom = parameters["TABLES"]["CREATION"]["template"][
+                            "bottom_OpenCSVSerde"
+                        ].format(table_info["separator"], table_info["s3URI"])
+
+                ### Create middle
+                table_middle = ""
+                nb_var = len(table_info["schema"])
+                for i, val in enumerate(table_info["schema"]):
+                    if i == nb_var - 1:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ")")
+                    else:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ",")
+
+                query = (
+                    table_top + 
+                    "\n" + 
+                    table_middle +
+                    "\n" + 
+                    table_bottom
+                )
+                
+                print(query)
 ```
 
 ```python
@@ -1425,6 +1511,32 @@ for key, value in parameters["TABLES"]["CREATION"].items():
                 print(output)
 ```
 
+Appercu tables créées
+
+```python
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_flux_filtre_enrichie_timestamp']:
+                print(table_info['name'])
+                
+                query = """
+                SELECT *
+                FROM  {}
+                LIMIT 10
+                """.format(table_info['name'])
+                
+                output = s3.run_query(
+                            query=query,
+                            database=table_info["database"],
+                            s3_output=s3_output,
+                            filename="table_{}".format(table_info['name']),  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+                
+                display(output)
+```
+
 ### Table filtree et enrichie intermediaire date greffe
 
 Etant donnée la taille de la data, nous allons préparer les flux selon les greffes. Les fichiers sont stockés dans le S3, [calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE](https://s3.console.aws.amazon.com/s3/buckets/calfdata/INPI/TC_1/02_preparation_donnee/TEMP_ETS_FLUX_FILTRE/?region=eu-west-3&tab=overview) et vont etre récupéré dans la query suivante pour créer une table reconstruite. Chacun des csv portera le nom du greffe.
@@ -1466,8 +1578,29 @@ step_3 = {
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_3)
 ```
 
+Query executée
+
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in [ "STEPS_3"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
 ```
 
 ```python
@@ -1579,10 +1712,6 @@ table_filre_greffe = [{
 ```
 
 ```python
-#parameters['TABLES']['CREATION']['ALL_SCHEMA']
-```
-
-```python
 to_remove = False
 if to_remove:
     parameters['TABLES']['CREATION']['ALL_SCHEMA'].pop(-1)
@@ -1592,8 +1721,45 @@ if to_remove:
 parameters['TABLES']['CREATION']['ALL_SCHEMA'].extend(table_filre_greffe)
 ```
 
+Query executée
+
 ```python
-parameters['TABLES']['CREATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_flux_filtre_enrichie_date_greffe']:
+                # CREATE QUERY
+
+                ### Create top/bottom query
+                table_top = parameters["TABLES"]["CREATION"]["template"]["top"].format(
+                            table_info["database"], table_info["name"]
+                        )
+                table_bottom = parameters["TABLES"]["CREATION"]["template"][
+                            "bottom_OpenCSVSerde"
+                        ].format(table_info["separator"], table_info["s3URI"])
+
+                ### Create middle
+                table_middle = ""
+                nb_var = len(table_info["schema"])
+                for i, val in enumerate(table_info["schema"]):
+                    if i == nb_var - 1:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ")")
+                    else:
+                        table_middle += parameters["TABLES"]["CREATION"]["template"][
+                                    "middle"
+                                ].format(val['Name'], val['Type'], ",")
+
+                query = (
+                    table_top + 
+                     "\n" +
+                    table_middle +
+                     "\n" +
+                    table_bottom
+                )
+                
+                print(query)
 ```
 
 ```python
@@ -1664,6 +1830,32 @@ for key, value in parameters["TABLES"]["CREATION"].items():
                 print(output)
 ```
 
+Appercu tables créées
+
+```python
+for key, value in parameters["TABLES"]["CREATION"].items():
+    if key == "ALL_SCHEMA":
+        for table_info in value:
+            if table_info['name'] in ['ets_flux_filtre_enrichie_date_greffe']:
+                print(table_info['name'])
+                
+                query = """
+                SELECT *
+                FROM  {}
+                LIMIT 10
+                """.format(table_info['name'])
+                
+                output = s3.run_query(
+                            query=query,
+                            database=table_info["database"],
+                            s3_output=s3_output,
+                            filename="table_{}".format(table_info['name']),  ## Add filename to print dataframe
+                            destination_key=None,  ### Add destination key if need to copy output
+                        )
+                
+                display(output)
+```
+
 ## Step 3: Enrichissements des lignes d'un événement a l'autre et filtrage des événements partiels
 
 Nous avons dès à présent 3 tables contenant l'ensemble des événements d'un établissement. La table initial, la table des flux filtrés et enrichis et la table des partiels. Il faut reconstituer la table finale en concatenant ses trois tables puis en enrichissant les lignes selon l'événement précédents et en indiquant les lignes a ignorer en cas de partiel. 
@@ -1715,8 +1907,29 @@ if to_remove:
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_4)
 ```
 
+Query executée
+
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in [ "STEPS_4"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
 ```
 
 ```python
@@ -1782,6 +1995,34 @@ for key, value in parameters["TABLES"]["PREPARATION"].items():
                         #s3.move_object_s3(source_key, destination_key, remove = True)
 ```
 
+Appercu tables créées
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_4']:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    query = """
+                    SELECT *
+                    FROM {}
+                    LIMIT 10
+                    """.format(step_n['name'])
+                    
+                    output = s3.run_query(
+                    query=query,
+                    database=db,
+                    s3_output=s3_output,
+                    filename='show_{}'.format(step_n['name']),  ## Add filename to print dataframe
+                    destination_key=None,  ### Add destination key if need to copy output
+                )
+                    
+                    display(output)
+```
+
 La seconde partie de l'étape va procéder a l'enrichissement des valeurs sur les flux à partir du moment ou la ligne n'est pas à ignore
 
 ```python
@@ -1827,8 +2068,29 @@ if to_remove:
 parameters['TABLES']['PREPARATION']['ALL_SCHEMA'].append(step_5)
 ```
 
+Query executée
+
 ```python
-parameters['TABLES']['PREPARATION']['ALL_SCHEMA'][-1]
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in [ "STEPS_5"]:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    ### COMPILE QUERY
+                    query = (
+                        table_top
+                        + "\n"
+                        + step_n["query"]["top"]
+                        + "\n"
+                        + step_n["query"]["middle"]
+                        + "\n"
+                        + step_n["query"]["bottom"]
+                    )
+
+                    print(query)
 ```
 
 ```python
@@ -1888,6 +2150,34 @@ for key, value in parameters["TABLES"]["PREPARATION"].items():
                         #    schema=steps[step_name]["schema"],
                         #)
                     print(output)
+```
+
+Appercu tables créées
+
+```python
+for key, value in parameters["TABLES"]["PREPARATION"].items():
+    if key == "ALL_SCHEMA":
+        ### LOOP STEPS
+        for i, steps in enumerate(value):
+            step_name = "STEPS_{}".format(i)
+            if step_name in ['STEPS_5']:
+                print('\n', steps[step_name]['name'], '\n')
+                for j, step_n in enumerate(steps[step_name]["execution"]):
+                    query = """
+                    SELECT *
+                    FROM {}
+                    LIMIT 10
+                    """.format(step_n['name'])
+                    
+                    output = s3.run_query(
+                    query=query,
+                    database=db,
+                    s3_output=s3_output,
+                    filename='show_{}'.format(step_n['name']),  ## Add filename to print dataframe
+                    destination_key=None,  ### Add destination key if need to copy output
+                )
+                    
+                    display(output)
 ```
 
 Finalisation ETL avec les ID des queries executées.
@@ -2382,5 +2672,5 @@ def create_report(extension = "html", keep_code = False):
 ```
 
 ```python
-create_report(extension = "html", keep_code = True)
+#create_report(extension = "html", keep_code = True)
 ```
