@@ -193,3 +193,4 @@ US_Datum/Credentials/credential_AWS.json
 12_spark/list_weight_mots_insee_inpi_word2vec.csv
 12_spark/word2vec_weights_100_v2.csv
 ARCHIVE/*
+credential_AWS.json
